@@ -1,0 +1,39 @@
+package org.example.utils;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class MyDataBase_Unimind {
+    final String USERNAME = "root";
+    final String URL = "jdbc:mysql://localhost:3306/unimind_db";
+    final String PASSWORD = "";
+
+    Connection connection;
+    static MyDataBase_Unimind instance;
+
+    //constructeur
+    private MyDataBase_Unimind(){
+        try {
+            connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+
+            System.out.println("Connection established");
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+
+
+    }
+
+    public static MyDataBase_Unimind getInstance() {
+
+        if(instance == null){
+            instance = new MyDataBase_Unimind();
+        }
+        return instance;
+    }
+
+    public Connection getConnection() {
+        return connection;
+    }
+}
