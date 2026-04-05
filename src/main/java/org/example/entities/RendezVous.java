@@ -32,7 +32,18 @@ public class RendezVous {
         this.etudiantId = etudiantId;
         this.psyId = psyId;
         this.motif = motif;
-        this.statut = StatutRendezVous.Demande;
+        this.statut = StatutRendezVous.demande;
+        this.createdAt = new Timestamp(System.currentTimeMillis());
+    }
+
+    //Constructeur avec ID (pour la modification)
+    public RendezVous(int rendezVousId, int dispoId, int etudiantId, int psyId, String motif) {
+        this.rendezVousId = rendezVousId;
+        this.dispoId = dispoId;
+        this.etudiantId = etudiantId;
+        this.psyId = psyId;
+        this.motif = motif;
+        this.statut = StatutRendezVous.demande;
         this.createdAt = new Timestamp(System.currentTimeMillis());
     }
 

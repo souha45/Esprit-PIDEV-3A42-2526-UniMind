@@ -61,6 +61,7 @@ public class DisponibilitePsyService  implements ICrud<DisponibilitePsy>{
 
     }
 
+
     @Override
     public List<DisponibilitePsy> afficher() throws SQLException {
         List<DisponibilitePsy> disponibilites = new ArrayList<>();
@@ -88,5 +89,91 @@ public class DisponibilitePsyService  implements ICrud<DisponibilitePsy>{
         }
 
         return disponibilites;
+    }
+
+
+    // Afficher uniquement les disponibilités disponibles (statut = DISPONIBLE)
+    public List<DisponibilitePsy> afficherDisponibilitesDisponibles() throws SQLException {
+        List<DisponibilitePsy> disponibilitesDisponibles = new ArrayList<>();
+
+        String sql = "SELECT * FROM disponibilite_psy WHERE statut = 'disponible'";
+        Statement statement = con.createStatement();
+        ResultSet rs = statement.executeQuery(sql);
+
+        while (rs.next()) {
+            DisponibilitePsy dp = new DisponibilitePsy();
+            dp.setDispoId(rs.getInt("dispo_id"));
+            dp.setDateDispo(rs.getDate("date_dispo"));
+            dp.setHeureDebut(rs.getTime("heure_debut"));
+            dp.setHeureFin(rs.getTime("heure_fin"));
+            dp.setTypeConsult(TypeConsultation.valueOf(rs.getString("type_consult")));
+            dp.setLieu(rs.getString("lieu"));
+            dp.setStatut(StatutDisponibilite.valueOf(rs.getString("statut")));
+            dp.setCreatedAt(rs.getTimestamp("created_at"));
+            dp.setUpdatedAt(rs.getTimestamp("updated_at"));
+            dp.setUserId(rs.getInt("user_id"));
+
+            disponibilitesDisponibles.add(dp);
+        }
+
+        return disponibilitesDisponibles;
+    }
+
+
+    // Afficher uniquement les disponibilités disponibles (de psy concerné uniquement)
+
+    public List<DisponibilitePsy> afficherDisponibilitesPsy(int userId) throws SQLException {
+        List<DisponibilitePsy> disponibilitesPsy = new ArrayList<>();
+
+        String sql = "SELECT * FROM disponibilite_psy WHERE user_id= ?";
+
+        PreparedStatement preparedStatement = con.prepareStatement(sql);
+        preparedStatement.setInt(1, userId);
+
+
+        ResultSet rs = preparedStatement.executeQuery();
+
+        while (rs.next()) {
+            DisponibilitePsy dp = new DisponibilitePsy();
+            dp.setDispoId(rs.getInt("dispo_id"));
+            dp.setDateDispo(rs.getDate("date_dispo"));
+            dp.setHeureDebut(rs.getTime("heure_debut"));
+            dp.setHeureFin(rs.getTime("heure_fin"));
+            dp.setTypeConsult(TypeConsultation.valueOf(rs.getString("type_consult")));
+            dp.setLieu(rs.getString("lieu"));
+            dp.setStatut(StatutDisponibilite.valueOf(rs.getString("statut")));
+            dp.setCreatedAt(rs.getTimestamp("created_at"));
+            dp.setUpdatedAt(rs.getTimestamp("updated_at"));
+            dp.setUserId(rs.getInt("user_id"));
+
+            disponibilitesPsy.add(dp);
+        }
+
+        return disponibilitesPsy;
+    }
+
+
+    // Methode pour récupérer une seule dispo choisie
+    public DisponibilitePsy getOne(int dispoId) throws SQLException {
+        String sql = "SELECT * FROM disponibilite_psy WHERE dispo_id = ?";
+        PreparedStatement pst = con.prepareStatement(sql);
+        pst.setInt(1, dispoId);
+        ResultSet rs = pst.executeQuery();
+
+        if (rs.next()) {
+            DisponibilitePsy dp = new DisponibilitePsy();
+            dp.setDispoId(rs.getInt("dispo_id"));
+            dp.setDateDispo(rs.getDate("date_dispo"));
+            dp.setHeureDebut(rs.getTime("heure_debut"));
+            dp.setHeureFin(rs.getTime("heure_fin"));
+            dp.setTypeConsult(TypeConsultation.valueOf(rs.getString("type_consult")));
+            dp.setLieu(rs.getString("lieu"));
+            dp.setStatut(StatutDisponibilite.valueOf(rs.getString("statut")));
+            dp.setCreatedAt(rs.getTimestamp("created_at"));
+            dp.setUpdatedAt(rs.getTimestamp("updated_at"));
+            dp.setUserId(rs.getInt("user_id"));
+            return dp;
+        }
+        return null;
     }
 }

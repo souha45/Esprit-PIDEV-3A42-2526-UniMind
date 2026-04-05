@@ -25,11 +25,11 @@ public class DisponibilitePsy {
     //private Psychologue psychologue;
 
     // Constructeur par défaut
-    public DisponibilitePsy(int i, Date date, Time time, Time valueOf, TypeConsultation presentiel, String france2, int i1) {
+    public DisponibilitePsy() {
     }
 
     // Constructeur sans ID (pour la création)
-    public DisponibilitePsy() {
+    public DisponibilitePsy(int userId, Date dateDispo, Time heureDebut, Time heureFin, TypeConsultation typeConsult, String lieu) {
         this.userId = userId;
         this.dateDispo = dateDispo;
         this.heureDebut = heureDebut;
