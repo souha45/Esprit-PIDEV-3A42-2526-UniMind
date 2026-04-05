@@ -1,9 +1,12 @@
 package org.example;
 
+import org.example.entities.Consultation;
+import org.example.entities.ConsultationDetail;
 import org.example.entities.DisponibilitePsy;
 import org.example.entities.RendezVous;
 import org.example.enums.StatutDisponibilite;
 import org.example.services.DisponibilitePsyService;
+import org.example.services.ConsultationService;
 import org.example.enums.TypeConsultation;
 import org.example.services.RendezVousService;
 import org.example.utils.MyDataBase_Unimind;
@@ -12,6 +15,7 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws SQLException {
@@ -101,11 +105,35 @@ public class Main {
             System.out.println(rdService.afficherRendezVousById(3, 14));
 
 
-            //Test l'annulation d'un rdv
+            //Test l'annulation d'un rdv  et Test création automatique de consultation
             rdService.modifierStatutRendezVous(14, 3,4, "terminé");
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+
+        //     *********************** TEST CRUD CONSULTATION *************************
+
+        //Tetst modification consultation
+        ConsultationService cService = new ConsultationService();
+        try{
+            //Consultation consultationModifié = new Consultation(
+            //        1,
+             //       2,
+             //       4,
+              //      3,
+              //      "problème bizarre",
+               //     (short) 10
+            //);
+
+
+            //cService.modifier(consultationModifié);
+
+            //Test afficher liste consultation by etudiant
+           System.out.println(cService.getConsultationsDetailByPsy(4));
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
 
     }
 }

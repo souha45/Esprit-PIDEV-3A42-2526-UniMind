@@ -32,6 +32,17 @@ public class Consultation {
         this.dateRedaction = new Timestamp(System.currentTimeMillis());
     }
 
+    // Constructeur avec ID (pour la modification)
+    public Consultation(int consultationId, int rendezVousId, int psyUserId, int etudiantUserId, String avisPsy, short noteSatisfaction) {
+        this.consultationId = consultationId;
+        this.rendezVousId = rendezVousId;
+        this.psyUserId = psyUserId;
+        this.etudiantUserId = etudiantUserId;
+        this.dateModification = new Timestamp(System.currentTimeMillis());
+        this.avisPsy = avisPsy;
+        this.noteSatisfaction = noteSatisfaction;
+    }
+
     // Getters & Setters
     public int getConsultationId() {
         return consultationId;
