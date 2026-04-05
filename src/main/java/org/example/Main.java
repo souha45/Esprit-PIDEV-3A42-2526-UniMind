@@ -102,7 +102,7 @@ public class Main {
 
 
             //Test l'annulation d'un rdv
-            rdService.modifierStatutRendezVous(2, 3, "terminé");
+            rdService.modifierStatutRendezVous(14, 3,4, "terminé");
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }

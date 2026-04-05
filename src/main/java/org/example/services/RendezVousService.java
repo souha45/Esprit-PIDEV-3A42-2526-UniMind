@@ -1,5 +1,6 @@
 package org.example.services;
 
+import org.example.entities.Consultation;
 import org.example.entities.DisponibilitePsy;
 import org.example.entities.RendezVous;
 import org.example.entities.RendezVousDetail;
@@ -164,7 +165,7 @@ public class RendezVousService implements ICrud<RendezVous>{
      * @param nouveauStatut Le nouveau statut (Demande, CONFIRME, ANNULE, TERMINE)
      * @throws SQLException Si le rendez-vous n'existe pas ou modification non autorisée
      */
-    public void modifierStatutRendezVous(int rendezVousId, int etudiantId, String nouveauStatut) throws SQLException {
+    public void modifierStatutRendezVous(int rendezVousId, int etudiantId,int psyUserId, String nouveauStatut) throws SQLException {
         // ÉTAPE 1 : Vérifier que le rendez-vous existe et appartient à l'étudiant
         String checkSql = "SELECT statut, dispo_id FROM rendez_vous WHERE rendez_vous_id = ? AND etudiant_id = ?";
         PreparedStatement checkPst = con.prepareStatement(checkSql);
@@ -230,6 +231,17 @@ public class RendezVousService implements ICrud<RendezVous>{
             dispoPst.setInt(3, disponibiliteId);
             dispoPst.executeUpdate();
             System.out.println("✓ La disponibilité est maintenant libre");
+        }
+
+        // ÉTAPE 5 : Si le rendez-vous passe de "encours" à "termine", créer une consultation
+        if ("en-cours".equals(statutActuel) && "terminé".equals(nouveauStatut)) {
+            Consultation consultation = new Consultation(rendezVousId, psyUserId, etudiantId);
+            consultation.setAvisPsy("Consultation terminée");
+
+            ConsultationService consultationService = new ConsultationService();
+            consultationService.ajouter(consultation);
+
+            System.out.println("✓ Consultation créée automatiquement (ID: " + consultation.getConsultationId() + ")");
         }
 
         System.out.println("\n✓ Statut du rendez-vous modifié avec succès !");
