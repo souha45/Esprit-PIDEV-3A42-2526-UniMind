@@ -64,7 +64,13 @@ public class Questionnaire {
         this.nbreQuestions = nbreQuestions;
         this.adminId = adminId;
     }
-
+    //constructeur juest les 4 premiers champs
+    public Questionnaire(String code, String nom, String description, TypeQuestionnaire type) {
+        this.code = code;
+        this.nom = nom;
+        this.description = description;
+        this.type = type;
+    }
     // Getters et Setters
     public int getQuestionnaireId() {
         return questionnaireId;

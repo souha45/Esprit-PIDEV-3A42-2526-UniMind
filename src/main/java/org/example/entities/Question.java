@@ -39,6 +39,13 @@ public class Question {
         this.typeQuestion = typeQuestion;
         this.questionnaireId = questionnaireId;
     }
+    //constructeurrrr
+    public Question(String texte, int questionnaireId, String optionsQuest, String scoreOptions) {
+        this.texte = texte;
+        this.questionnaireId = questionnaireId;
+        this.optionsQuest = optionsQuest;
+        this.scoreOptions = scoreOptions;
+    }
 
     // Getters et Setters
     public int getQuestionId() {
