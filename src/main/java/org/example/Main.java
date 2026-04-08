@@ -19,7 +19,7 @@ public class Main {
 
         // Vérifier si la connexion est établie
         if (db.getConnection() != null) {
-            System.out.println("✓ Connexion à la base de données réussie !");
+            System.out.println("Connexion à la base de données réussie !");
 
             try {
                 System.out.println("\n--- TEST CRUD MODULE GESTION EVENEMENTS (COMPLET) ---");
@@ -126,7 +126,7 @@ public class Main {
                 System.out.println("\n[4] PARTICIPATION - Creation");
 
                 // Récupérer un étudiant qui existe vraiment dans la base
-                int etudiantId = 2;
+                int etudiantId = 0;
 
                 try {
                     java.sql.Connection conn = db.getConnection();
@@ -205,10 +205,10 @@ public class Main {
 
                 System.out.println("\n--- FIN TEST CRUD COMPLET ---");
             } catch (SQLException e) {
-                e.printStackTrace();
+                System.err.println("Erreur SQL: " + e.getMessage());
             }
         } else {
-            System.out.println("✗ Échec de la connexion à la base de données.");
+            System.out.println("Échec de la connexion à la base de données.");
         }
     }
 }
