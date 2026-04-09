@@ -145,12 +145,10 @@ public class SeanceMeditation {
     // Méthodes utilitaires
     public String getTypeFichierLabel() {
         switch (typeFichier) {
-            case AUDIO:
+            case audio:
                 return "Audio";
-            case VIDEO:
+            case video:
                 return "Vidéo";
-            case PDF:
-                return "PDF";
             default:
                 return typeFichier.toString();
         }
@@ -158,11 +156,11 @@ public class SeanceMeditation {
 
     public String getNiveauLabel() {
         switch (niveau) {
-            case DEBUTANT:
+            case debutant:
                 return "Débutant";
-            case INTERMEDIAIRE:
+            case intermediaire:
                 return "Intermédiaire";
-            case AVANCE:
+            case avance:
                 return "Avancé";
             default:
                 return niveau.toString();
