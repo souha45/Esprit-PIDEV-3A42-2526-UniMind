@@ -20,7 +20,7 @@ public class Main {
             System.out.println("✗ Échec de la connexion à la base de données.");
         }*/
 
-        CategorieMeditationServices cat = new CategorieMeditationServices();
+       /* CategorieMeditationServices cat = new CategorieMeditationServices();
         try {
             //cat.ajouter(new CategorieMeditation("test13", "testt","test1"));
             //cat.supprimer(34);
@@ -45,7 +45,7 @@ public class Main {
                                    15, true, NiveauMeditation.débutant, 33));*/
 
                 // 2.2 Modifier une séance (supposons ID = 1)
-                SeanceMeditation seanceModif = new SeanceMeditation();
+               /* SeanceMeditation seanceModif = new SeanceMeditation();
                 seanceModif.setSeanceId(17);
                 seanceModif.setTitre("Titre modifié");
                 seanceModif.setDescription("Description modifiée");
@@ -167,6 +167,6 @@ public class Main {
             //commentaireService.supprimer(64);
         } catch (SQLException e) {
             System.out.println("Erreur Commentaire : " + e.getMessage());
-        }
+        }*/
     }
 }
