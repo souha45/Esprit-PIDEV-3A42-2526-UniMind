@@ -74,7 +74,7 @@ public class ConsultationService implements ICrud<Consultation>{
             System.out.println("  - Nouvelle note : " + (consultation.getNoteSatisfaction() > 0 ? consultation.getNoteSatisfaction() + "/5" : "Non renseignée"));
             System.out.println("  - Date de modification : " + new Timestamp(System.currentTimeMillis()));
         } else {
-            throw new SQLException("❌ Consultation non trouvée avec l'ID: " + consultation.getConsultationId());
+            throw new SQLException(" Consultation non trouvée avec l'ID: " + consultation.getConsultationId());
         }
     }
 
