@@ -80,7 +80,7 @@ public class Consultation {
         return noteSatisfaction;
     }
 
-    public void setNoteSatisfaction(Short noteSatisfaction) {
+    public  void setNoteSatisfaction(Short noteSatisfaction) {
         this.noteSatisfaction = noteSatisfaction;
     }
 
@@ -88,7 +88,7 @@ public class Consultation {
         return rendezVousId;
     }
 
-    public void setRendezVousId(int rendezVousId) {
+    public  void setRendezVousId(int rendezVousId) {
         this.rendezVousId = rendezVousId;
     }
 

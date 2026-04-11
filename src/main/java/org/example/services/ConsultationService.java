@@ -2,6 +2,9 @@ package org.example.services;
 
 import org.example.entities.Consultation;
 import org.example.entities.ConsultationDetail;
+import org.example.entities.DisponibilitePsy;
+import org.example.enums.StatutDisponibilite;
+import org.example.enums.TypeConsultation;
 import org.example.utils.MyDataBase_Unimind;
 
 import java.sql.*;
@@ -85,7 +88,31 @@ public class ConsultationService implements ICrud<Consultation>{
 
     @Override
     public List<Consultation> afficher() throws SQLException {
-        return List.of();
+        List<Consultation> consultations = new ArrayList<>();
+
+        String sql = "SELECT * FROM consultation";
+        Statement statement = con.createStatement();
+        ResultSet rs = statement.executeQuery(sql);
+        while (rs.next()){
+            Consultation consultation = new Consultation();
+            consultation.setConsultationId(rs.getInt("consultation_id"));
+            consultation.setAvisPsy(rs.getString("avis_psy"));
+            consultation.setNoteSatisfaction(rs.getShort("note_satisfaction"));
+            consultation.setRendezVousId(rs.getInt("rendez_vous_id"));
+            consultation.setPsyUserId(rs.getInt("psy_user_id"));
+            consultation.setEtudiantUserId(rs.getInt("etudiant_user_id"));
+            consultation.setDateRedaction(rs.getTimestamp("date_redaction"));
+            consultation.setDateModification(rs.getTimestamp("date_modification"));
+
+
+            consultations.add(consultation);
+
+
+
+
+        }
+
+        return consultations;
     }
 
 
@@ -135,7 +162,7 @@ public class ConsultationService implements ICrud<Consultation>{
         return consultations;
     }
 
-    //Méthode pour afficher la liste de consultation pour un étudiant
+    //Méthode pour afficher la liste de consultation pour un psychologue
     public List<ConsultationDetail> getConsultationsDetailByPsy(int psyId) throws SQLException {
         List<ConsultationDetail> consultations = new ArrayList<>();
 
