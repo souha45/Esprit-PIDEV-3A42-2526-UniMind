@@ -52,7 +52,7 @@ public class DisponibilitePsyServiceTest {
     void modifier() throws SQLException {
             System.out.println("Testing modifier method...");
             DisponibilitePsy lastDispo = ds.afficher().get(ds.afficher().size() - 1);
-            lastDispo.setLieu("ElHamma1000");
+            lastDispo.setLieu("ElHamma");
             lastDispo.setHeureDebut(Time.valueOf(LocalTime.of(12, 0)));
             lastDispo.setHeureFin(Time.valueOf(LocalTime.of(19, 0)));
             lastDispo.setUserId(4);

@@ -41,7 +41,9 @@ public class DisponibilitePsyService  implements ICrud<DisponibilitePsy>{
         preparedStatement.setString(4, disponibilitePsy.getTypeConsult().toString());
         preparedStatement.setString(5, disponibilitePsy.getLieu());
         preparedStatement.setString(6, disponibilitePsy.getStatut().toString());
-        preparedStatement.setTimestamp(7, disponibilitePsy.getUpdatedAt());
+        // ✅ CORRECTION : Mettre l'heure actuelle automatiquement
+        Timestamp maintenant = new Timestamp(System.currentTimeMillis());
+        preparedStatement.setTimestamp(7, maintenant);  // ← au lieu de getUpdatedAt()
         preparedStatement.setInt(8, disponibilitePsy.getUserId());
         preparedStatement.setInt(9, disponibilitePsy.getDispoId());
 

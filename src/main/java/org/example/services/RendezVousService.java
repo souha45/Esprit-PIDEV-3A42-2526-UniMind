@@ -5,6 +5,7 @@ import org.example.entities.DisponibilitePsy;
 import org.example.entities.RendezVous;
 import org.example.entities.RendezVousDetail;
 import org.example.enums.StatutDisponibilite;
+import org.example.enums.StatutRendezVous;
 import org.example.utils.MyDataBase_Unimind;
 
 import java.sql.*;
@@ -67,7 +68,26 @@ public class RendezVousService implements ICrud<RendezVous>{
 
     @Override
     public List<RendezVous> afficher() throws SQLException {
-        return List.of();
+        List<RendezVous> rdvs = new ArrayList<>();
+        String sql = "SELECT * FROM rendez_vous";
+        Statement statement = con.createStatement();
+        ResultSet rs = statement.executeQuery(sql);
+        while (rs.next()){
+            RendezVous rendezVous = new RendezVous();
+            rendezVous.setDispoId(rs.getInt("dispo_id"));
+            rendezVous.setPsyId(rs.getInt("psy_id"));
+            rendezVous.setEtudiantId(rs.getInt("etudiant_id"));
+            rendezVous.setMotif(rs.getString("motif"));
+            rendezVous.setStatut(StatutRendezVous.valueOf(rs.getString("statut")));
+            rendezVous.setRendezVousId(rs.getInt("rendez_vous_id"));
+            rdvs.add(rendezVous);
+
+
+
+
+        }
+
+        return rdvs;
     }
 
 
@@ -160,9 +180,11 @@ public class RendezVousService implements ICrud<RendezVous>{
     //Méthodes pour annuler un rdv accepter ou refuser un rdv
     /**
      * Modifier le statut d'un rendez-vous (générique)
-     * @param rendezVousId L'ID du rendez-vous
-     * @param etudiantId L'ID de l'étudiant
+     *
+     * @param rendezVousId  L'ID du rendez-vous
+     * @param etudiantId    L'ID de l'étudiant
      * @param nouveauStatut Le nouveau statut (Demande, CONFIRME, ANNULE, TERMINE)
+     * @return
      * @throws SQLException Si le rendez-vous n'existe pas ou modification non autorisée
      */
     public void modifierStatutRendezVous(int rendezVousId, int etudiantId,int psyUserId, String nouveauStatut) throws SQLException {

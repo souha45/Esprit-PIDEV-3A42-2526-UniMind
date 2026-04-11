@@ -105,7 +105,7 @@ public class Main {
             System.out.println(rdService.afficherRendezVousById(3, 14));
 
 
-            //Test l'annulation d'un rdv  et Test création automatique de consultation
+            //Test l'annulation d'un rdv et Test création automatique de consultation
             rdService.modifierStatutRendezVous(14, 3,4, "terminé");
         } catch (SQLException e) {
             System.out.println(e.getMessage());
