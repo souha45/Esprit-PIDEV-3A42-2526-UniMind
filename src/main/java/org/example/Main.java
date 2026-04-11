@@ -41,7 +41,7 @@ public class Main {
                     Date.valueOf(LocalDate.of(2026, 9, 9)),    // dateDispo (2026-06-09)
                     Time.valueOf(LocalTime.of(12, 0)),         // heureDebut (12:00)
                     Time.valueOf(LocalTime.of(19, 0)),         // heureFin (17:00)
-                    TypeConsultation.EnLigne,               // typeConsult
+                    TypeConsultation.en_ligne,               // typeConsult
                    "sfax"// lieu
                     );
 
@@ -56,7 +56,7 @@ public class Main {
                     Date.valueOf(LocalDate.of(2026, 6, 9)),    // dateDispo
                     Time.valueOf(LocalTime.of(12, 0)),         // heureDebut
                     Time.valueOf(LocalTime.of(17, 0)),         // heureFin
-                    TypeConsultation.Presentiel,               // typeConsult
+                    TypeConsultation.présentiel,               // typeConsult
                     "France2",                                 // lieu
                     StatutDisponibilite.disponible             // statut
             );

@@ -1,6 +1,6 @@
 package org.example.enums;
 
 public enum TypeConsultation {
-    Presentiel,
-    EnLigne;
+    présentiel,
+    en_ligne;
 }

@@ -45,7 +45,7 @@ public class RendezVousService implements ICrud<RendezVous>{
         // ÉTAPE 5 : Mettre à jour le statut de la disponibilité à "RESERVE"
         String updateDispo = "UPDATE disponibilite_psy SET statut = ?, updated_at = ? WHERE dispo_id = ?";
         PreparedStatement pstDispo = con.prepareStatement(updateDispo);
-        pstDispo.setString(1, StatutDisponibilite.reservé.toString());
+        pstDispo.setString(1, StatutDisponibilite.réservé.toString());
         pstDispo.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
         pstDispo.setInt(3, rendezVous.getDispoId());
         pstDispo.executeUpdate();
