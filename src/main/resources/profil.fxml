@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<VBox spacing="15" style="-fx-padding: 30; -fx-background-color: #f5f5f5;"
+      prefWidth="500" prefHeight="550"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.controllers.ProfilController">
+
+    <Label text="Mon Profil" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #1565C0;"/>
+
+    <!-- Infos utilisateur -->
+    <VBox spacing="5" style="-fx-background-color: white; -fx-padding: 15; -fx-border-radius: 8;">
+        <HBox spacing="10">
+            <Label text="Nom :" style="-fx-font-weight: bold;" prefWidth="100"/>
+            <Label fx:id="nomPrenomLabel"/>
+        </HBox>
+        <HBox spacing="10">
+            <Label text="Rôle :" style="-fx-font-weight: bold;" prefWidth="100"/>
+            <Label fx:id="roleLabel" style="-fx-text-fill: #1565C0;"/>
+        </HBox>
+        <HBox spacing="10">
+            <Label text="Email :" style="-fx-font-weight: bold;" prefWidth="100"/>
+            <Label fx:id="emailLabel"/>
+        </HBox>
+        <HBox spacing="10">
+            <Label text="Statut :" style="-fx-font-weight: bold;" prefWidth="100"/>
+            <Label fx:id="statutLabel"/>
+        </HBox>
+    </VBox>
+
+    <Separator/>
+
+    <!-- Modifier profil -->
+    <Label text="Modifier mon profil" style="-fx-font-weight: bold;"/>
+    <GridPane hgap="10" vgap="8">
+        <Label text="Bio :" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="bioField" promptText="Parlez de vous..."
+                   GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="250"/>
+
+        <Label text="Téléphone :" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="telField" promptText="8 chiffres"
+                   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+    </GridPane>
+    <Button text="💾 Sauvegarder le profil" onAction="#sauvegarderProfil"
+            style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-cursor: hand;"/>
+
+    <Separator/>
+
+    <!-- Changer mot de passe -->
+    <Label text="Changer le mot de passe" style="-fx-font-weight: bold;"/>
+    <GridPane hgap="10" vgap="8">
+        <Label text="Ancien mdp :" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <PasswordField fx:id="ancienMdpField"
+                       GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="220"/>
+
+        <Label text="Nouveau mdp :" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <PasswordField fx:id="nouveauMdpField"
+                       GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Confirmer :" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <PasswordField fx:id="confirmMdpField"
+                       GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+    </GridPane>
+    <Button text="🔑 Changer le mot de passe" onAction="#changerMotDePasse"
+            style="-fx-background-color: #FF9800; -fx-text-fill: white; -fx-cursor: hand;"/>
+
+    <Label fx:id="messageInfo" style="-fx-text-fill: green;"/>
+
+    <Button text="Se déconnecter" onAction="#seDeconnecter"
+            style="-fx-background-color: #607D8B; -fx-text-fill: white; -fx-cursor: hand;"/>
+</VBox>

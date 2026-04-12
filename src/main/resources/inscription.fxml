@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<ScrollPane fitToWidth="true" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.InscriptionController">
+    <VBox spacing="12" style="-fx-padding: 30; -fx-background-color: #f5f5f5;">
+
+        <Label text="Créer un compte" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #1565C0;"/>
+        <Separator/>
+
+        <!-- Champs communs -->
+        <GridPane hgap="10" vgap="8">
+            <Label text="Nom *" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="nomField" promptText="Votre nom"
+                       GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="250"/>
+
+            <Label text="Prénom *" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <TextField fx:id="prenomField" promptText="Votre prénom"
+                       GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="Email *" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <TextField fx:id="emailField" promptText="email@exemple.tn"
+                       GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <Label text="Mot de passe *" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <PasswordField fx:id="passwordField"
+                           GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+            <Label text="Confirmer mdp *" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+            <PasswordField fx:id="confirmPasswordField"
+                           GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+            <Label text="CIN *" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+            <TextField fx:id="cinField" promptText="8 chiffres"
+                       GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+            <Label text="Rôle *" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="roleCombo" prefWidth="250"
+                      GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+        </GridPane>
+
+        <!-- Panneau Etudiant -->
+        <VBox fx:id="panneauEtudiant" spacing="8"
+              style="-fx-border-color: #1565C0; -fx-border-radius: 5; -fx-padding: 10;">
+            <Label text="Informations Étudiant" style="-fx-font-weight: bold; -fx-text-fill: #1565C0;"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Identifiant :" prefWidth="120"/>
+                <TextField fx:id="identifiantField" promptText="Numéro étudiant" prefWidth="200"/>
+            </HBox>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Établissement :" prefWidth="120"/>
+                <TextField fx:id="etablissementField" promptText="Esprit..." prefWidth="200"/>
+            </HBox>
+        </VBox>
+
+        <!-- Panneau Psychologue -->
+        <VBox fx:id="panneauPsy" spacing="8" visible="false" managed="false"
+              style="-fx-border-color: #388E3C; -fx-border-radius: 5; -fx-padding: 10;">
+            <Label text="Informations Psychologue" style="-fx-font-weight: bold; -fx-text-fill: #388E3C;"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Spécialité :" prefWidth="120"/>
+                <TextField fx:id="specialiteField" prefWidth="200"/>
+            </HBox>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Adresse :" prefWidth="120"/>
+                <TextField fx:id="adresseField" prefWidth="200"/>
+            </HBox>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Téléphone :" prefWidth="120"/>
+                <TextField fx:id="telephoneField" promptText="8 chiffres" prefWidth="200"/>
+            </HBox>
+        </VBox>
+
+        <!-- Panneau Responsable -->
+        <VBox fx:id="panneauResponsable" spacing="8" visible="false" managed="false"
+              style="-fx-border-color: #7B1FA2; -fx-border-radius: 5; -fx-padding: 10;">
+            <Label text="Informations Responsable" style="-fx-font-weight: bold; -fx-text-fill: #7B1FA2;"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Poste :" prefWidth="120"/>
+                <TextField fx:id="posteField" prefWidth="200"/>
+            </HBox>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Établissement :" prefWidth="120"/>
+                <TextField fx:id="etablissementRespField" prefWidth="200"/>
+            </HBox>
+        </VBox>
+
+        <Label fx:id="messageGlobal" style="-fx-text-fill: red; -fx-font-size: 11;"/>
+
+        <HBox spacing="10" alignment="CENTER">
+            <Button text="✓ S'inscrire" onAction="#sInscrire" prefWidth="150" prefHeight="35"
+                    style="-fx-background-color: #1565C0; -fx-text-fill: white; -fx-cursor: hand;"/>
+            <Button text="Déjà inscrit ? Se connecter" onAction="#allerConnexion"
+                    style="-fx-background-color: transparent; -fx-text-fill: #1565C0; -fx-cursor: hand;"/>
+        </HBox>
+    </VBox>
+</ScrollPane>

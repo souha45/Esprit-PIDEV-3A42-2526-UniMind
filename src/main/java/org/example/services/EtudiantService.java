@@ -13,7 +13,7 @@ public class EtudiantService extends UserService {
 
     public EtudiantService() { super(); }
 
-    // ── INSCRIPTION ETUDIANT ──────────────────────────────────────────
+    //  INSCRIPTION ETUDIANt
     @Override
     public void inscrire(User user) throws SQLException {
         if (emailExiste(user.getEmail())) {
@@ -43,7 +43,7 @@ public class EtudiantService extends UserService {
     @Override
     public void ajouter(User user) throws SQLException { inscrire(user); }
 
-    // ── MODIFIER COMPTE ───────────────────────────────────────────────
+    // MODIFIER COMPTE
     @Override
     public void modifier(User user) throws SQLException {
         Etudiant e = (Etudiant) user;
@@ -60,7 +60,7 @@ public class EtudiantService extends UserService {
         System.out.println("✓ Compte étudiant modifié.");
     }
 
-    // ── CHANGER MOT DE PASSE ──────────────────────────────────────────
+    // CHANGER MOT DE PASSE
     public void changerMotDePasse(int userId, String ancienMdp, String nouveauMdp) throws SQLException {
         String query = "SELECT password FROM user WHERE user_id=?";
         PreparedStatement ps = connection.prepareStatement(query);
@@ -82,7 +82,7 @@ public class EtudiantService extends UserService {
         }
     }
 
-    // ── MODIFIER PROFIL ───────────────────────────────────────────────
+    // MODIFIER PROFIL
     public void modifierProfil(Profil profil) throws SQLException {
         String checkQuery = "SELECT COUNT(*) FROM profil WHERE user_id=?";
         PreparedStatement checkPs = connection.prepareStatement(checkQuery);

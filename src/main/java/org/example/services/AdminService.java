@@ -15,8 +15,10 @@ public class AdminService extends UserService {
     @Override
     public void inscrire(User user) throws SQLException {
         if (emailExiste(user.getEmail())) {
-            System.out.println("✗ Email déjà utilisé.");
-            return;
+            throw new SQLException("Email déjà utilisé : " + user.getEmail());
+        }
+        if (cinExiste(user.getCin())) {
+            throw new SQLException("CIN déjà utilisé : " + user.getCin());
         }
         String hashedPassword = PasswordUtils.hasher(user.getPassword());
         String query = "INSERT INTO user (nom, prenom, email, password, cin, role, statut, is_active, is_verified, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)";
@@ -39,8 +41,10 @@ public class AdminService extends UserService {
     @Override
     public void ajouter(User user) throws SQLException {
         if (emailExiste(user.getEmail())) {
-            System.out.println("✗ Email déjà utilisé.");
-            return;
+            throw new SQLException("Email déjà utilisé : " + user.getEmail());
+        }
+        if (cinExiste(user.getCin())) {
+            throw new SQLException("CIN déjà utilisé : " + user.getCin());
         }
         String hashedPassword = PasswordUtils.hasher(user.getPassword());
         String query = "INSERT INTO user (nom, prenom, email, password, cin, role, statut, is_active, is_verified, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)";
@@ -62,6 +66,28 @@ public class AdminService extends UserService {
     // ── MODIFIER UN UTILISATEUR ───────────────────────────────────────
     @Override
     public void modifier(User user) throws SQLException {
+        // Vérifier unicité email (exclure l'utilisateur lui-même)
+        String checkEmail = "SELECT COUNT(*) FROM user WHERE email = ? AND user_id != ?";
+        PreparedStatement psEmail = connection.prepareStatement(checkEmail);
+        psEmail.setString(1, user.getEmail());
+        psEmail.setInt(2, user.getUserId());
+        ResultSet rsEmail = psEmail.executeQuery();
+        rsEmail.next();
+        if (rsEmail.getInt(1) > 0) {
+            throw new SQLException("Email déjà utilisé par un autre utilisateur !");
+        }
+
+        // Vérifier unicité CIN (exclure l'utilisateur lui-même)
+        String checkCin = "SELECT COUNT(*) FROM user WHERE cin = ? AND user_id != ?";
+        PreparedStatement psCin = connection.prepareStatement(checkCin);
+        psCin.setString(1, user.getCin());
+        psCin.setInt(2, user.getUserId());
+        ResultSet rsCin = psCin.executeQuery();
+        rsCin.next();
+        if (rsCin.getInt(1) > 0) {
+            throw new SQLException("CIN déjà utilisé par un autre utilisateur !");
+        }
+
         String query = "UPDATE user SET nom=?, prenom=?, email=?, cin=?, role=?, statut=? WHERE user_id=?";
         PreparedStatement ps = connection.prepareStatement(query);
         ps.setString(1, user.getNom());
@@ -75,15 +101,24 @@ public class AdminService extends UserService {
         System.out.println("✓ Utilisateur modifié avec succès.");
     }
 
-    // ── CHANGER MOT DE PASSE ──────────────────────────────────────────
-    public void changerMotDePasse(int userId, String newPassword) throws SQLException {
-        String hashedPassword = PasswordUtils.hasher(newPassword);
-        String query = "UPDATE user SET password=? WHERE user_id=?";
+    // ── CHANGER MOT DE PASSE (admin) ──────────────────────────────────
+    public void changerMotDePasse(int userId, String ancienMdp, String nouveauMdp) throws SQLException {
+        String query = "SELECT password FROM user WHERE user_id = ?";
         PreparedStatement ps = connection.prepareStatement(query);
-        ps.setString(1, hashedPassword);
-        ps.setInt(2, userId);
-        ps.executeUpdate();
-        System.out.println("✓ Mot de passe modifié avec succès.");
+        ps.setInt(1, userId);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            String hash = rs.getString("password");
+            if (!PasswordUtils.verifier(ancienMdp, hash)) {
+                throw new SQLException("Ancien mot de passe incorrect !");
+            }
+            String update = "UPDATE user SET password = ? WHERE user_id = ?";
+            PreparedStatement upd = connection.prepareStatement(update);
+            upd.setString(1, PasswordUtils.hasher(nouveauMdp));
+            upd.setInt(2, userId);
+            upd.executeUpdate();
+            System.out.println("✓ Mot de passe modifié avec succès.");
+        }
     }
 
     // ── SUPPRIMER UN UTILISATEUR ──────────────────────────────────────
@@ -167,12 +202,49 @@ public class AdminService extends UserService {
         return null;
     }
 
+    // ── MODIFIER PROFIL ───────────────────────────────────────────────
+    public void modifierProfil(Profil profil) throws SQLException {
+        String checkQuery = "SELECT COUNT(*) FROM profil WHERE user_id = ?";
+        PreparedStatement check = connection.prepareStatement(checkQuery);
+        check.setInt(1, profil.getUserId());
+        ResultSet rs = check.executeQuery();
+        rs.next();
+        boolean existe = rs.getInt(1) > 0;
+
+        if (existe) {
+            String update = "UPDATE profil SET bio=?, tel=?, updated_at=NOW() WHERE user_id=?";
+            PreparedStatement ps = connection.prepareStatement(update);
+            ps.setString(1, profil.getBio());
+            ps.setString(2, profil.getTel());
+            ps.setInt(3, profil.getUserId());
+            ps.executeUpdate();
+        } else {
+            String insert = "INSERT INTO profil (user_id, bio, tel, updated_at) VALUES (?,?,?,NOW())";
+            PreparedStatement ps = connection.prepareStatement(insert);
+            ps.setInt(1, profil.getUserId());
+            ps.setString(2, profil.getBio());
+            ps.setString(3, profil.getTel());
+            ps.executeUpdate();
+        }
+        System.out.println("✓ Profil admin mis à jour.");
+    }
+
+    // ── UNICITE CIN ───────────────────────────────────────────────────
+    protected boolean cinExiste(String cin) throws SQLException {
+        String query = "SELECT COUNT(*) FROM user WHERE cin = ?";
+        PreparedStatement ps = connection.prepareStatement(query);
+        ps.setString(1, cin);
+        ResultSet rs = ps.executeQuery();
+        rs.next();
+        return rs.getInt(1) > 0;
+    }
+
     // ── MAPPER ────────────────────────────────────────────────────────
     @Override
     public User mapUser(ResultSet rs) throws SQLException {
         String role = rs.getString("role");
 
-        if ("Etudiant".equals(role)) {
+        if ("Etudiant".equalsIgnoreCase(role)) {
             Etudiant e = new Etudiant();
             e.setUserId(rs.getInt("user_id"));
             e.setNom(rs.getString("nom"));
@@ -188,7 +260,7 @@ public class AdminService extends UserService {
             e.setNomEtablissement(rs.getString("nom_etablissement"));
             return e;
 
-        } else if ("Psychologue".equals(role)) {
+        } else if ("Psychologue".equalsIgnoreCase(role)) {
             Psychologue p = new Psychologue();
             p.setUserId(rs.getInt("user_id"));
             p.setNom(rs.getString("nom"));
@@ -205,7 +277,7 @@ public class AdminService extends UserService {
             p.setTelephone(rs.getString("telephone"));
             return p;
 
-        } else if ("Responsable Etudiant".equals(role)) {
+        } else if ("Responsable Etudiant".equalsIgnoreCase(role)) {
             ResponsableEtudiant r = new ResponsableEtudiant();
             r.setUserId(rs.getInt("user_id"));
             r.setNom(rs.getString("nom"));
@@ -222,7 +294,7 @@ public class AdminService extends UserService {
             return r;
 
         } else {
-            // ADMIN par défaut
+            // ADMIN — capture "ADMIN", "Admin", "admin"
             Admin admin = new Admin();
             admin.setUserId(rs.getInt("user_id"));
             admin.setNom(rs.getString("nom"));

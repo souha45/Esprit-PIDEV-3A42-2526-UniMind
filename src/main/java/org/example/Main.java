@@ -87,7 +87,7 @@ public class Main {
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // MENU ADMIN COMPLET
+    // MENU ADMIN
     // ═══════════════════════════════════════════════════════════════════
     private static User menuAdmin(AdminService service, User admin) throws SQLException {
         while (true) {
@@ -439,4 +439,14 @@ public class Main {
             }
         }
     }
+    // il faut ajouter les tetst unitaire des services
+    // interface graphique et tester les services (crud)avec eux sans console mch lezem design woow adi
+    //controle de saisie (champs vides /format des champs(email/tel/pass)/unicité des entites (deux users avec la meme email non))
+    //jamais utiliser id dans interface graphique pas afficher id (pas utiliser la saisie d'id )
+    // dans jointure n'afficher pas l'id de l'entiter il faut afficher le nom
+    //utiliser tableview /listeview (la seule contrainte est l'aspet visuelle )
+    //fonctionner les crud avec notre interface
+    //il faut mettre l'image dans le serveur et prendre l'url mte3ha w nhotouh fel bd
+    //on peut utiliser les templtes dans javafx(on peut utiliser html et css aussi) (la modif fi west tableview 5ir)(dans sceane builder fama lele image)
+
 }

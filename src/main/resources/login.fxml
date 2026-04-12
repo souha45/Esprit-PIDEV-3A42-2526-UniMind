@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="org.example.controllers.LoginController"
+           style="-fx-background-color: linear-gradient(to bottom right, #EDE9FE, #DBEAFE);">
+
+    <VBox style="-fx-background-color: white; -fx-background-radius: 16;
+                 -fx-effect: dropshadow(gaussian, rgba(124,58,237,0.15), 20, 0, 0, 4);
+                 -fx-padding: 40;"
+          spacing="18" maxWidth="420" alignment="CENTER">
+
+        <VBox alignment="CENTER" spacing="5">
+            <Label text="🧠 UniMind"
+                   style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1E1B4B;"/>
+            <Label text="Plateforme de santé mentale étudiante"
+                   style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"/>
+        </VBox>
+
+        <Separator/>
+
+        <VBox spacing="6">
+            <Label text="Adresse email"
+                   style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+            <TextField fx:id="emailField" promptText="votre@email.tn" prefWidth="340"
+                       style="-fx-padding: 10; -fx-background-radius: 8;
+                              -fx-border-color: #DDD6FE; -fx-border-radius: 8;"/>
+        </VBox>
+
+        <VBox spacing="6">
+            <Label text="Mot de passe"
+                   style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+            <PasswordField fx:id="passwordField" promptText="••••••••" prefWidth="340"
+                           style="-fx-padding: 10; -fx-background-radius: 8;
+                                  -fx-border-color: #DDD6FE; -fx-border-radius: 8;"/>
+        </VBox>
+
+        <Label fx:id="messageErreur"
+               style="-fx-text-fill: #DC2626; -fx-font-size: 12px;"
+               wrapText="true"/>
+
+        <Button text="Se connecter →" onAction="#seConnecter"
+                prefWidth="340" prefHeight="42"
+                style="-fx-background-color: linear-gradient(to right, #1565C0, #7C3AED);
+                       -fx-text-fill: white; -fx-font-size: 14px;
+                       -fx-font-weight: bold; -fx-bckground-radius: 8; -fx-cursor: hand;"/>
+
+        <Separator/>
+
+        <HBox alignment="CENTER" spacing="6">
+            <Label text="Pas encore de compte ?"
+                   style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"/>
+            <Button text="S'inscrire" onAction="#allerInscription"
+                    style="-fx-background-color: transparent; -fx-text-fill: #7C3AED;
+                           -fx-cursor: hand; -fx-underline: true; -fx-font-size: 13px;"/>
+        </HBox>
+    </VBox>
+</StackPane>

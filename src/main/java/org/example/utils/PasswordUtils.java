@@ -12,11 +12,25 @@ public class PasswordUtils {
     // ── VERIFIER LE MOT DE PASSE ──────────────────────────────────────
     public static boolean verifier(String plainPassword, String hashedPassword) {
         try {
+            if (hashedPassword == null || plainPassword == null) {
+                return false;
+            }
+
+            // ── Convertir $2y$ (PHP) → $2a$ (Java) ───────────────────
+            // Les deux sont identiques algorithmiquement
+            String hashPourVerif = hashedPassword;
+            if (hashedPassword.startsWith("$2y$")) {
+                hashPourVerif = "$2a$" + hashedPassword.substring(4);
+            }
+
             BCrypt.Result result = BCrypt.verifyer().verify(
-                    plainPassword.toCharArray(), hashedPassword
+                    plainPassword.toCharArray(),
+                    hashPourVerif
             );
             return result.verified;
+
         } catch (Exception e) {
+            System.out.println("Erreur BCrypt : " + e.getMessage());
             return false;
         }
     }
