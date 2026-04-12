@@ -1,20 +1,13 @@
 package org.example.services;
 
-import org.example.entities.Consultation;
+import org.example.models.Consultation;
 
-import org.example.entities.ConsultationDetail;
-import org.example.entities.RendezVousDetail;
-import org.example.enums.StatutDisponibilite;
-import org.example.enums.TypeConsultation;
+import org.example.models.ConsultationDetail;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.sql.Date;
 import java.sql.SQLException;
-import java.sql.Time;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 public class ConsultationServiceTest {

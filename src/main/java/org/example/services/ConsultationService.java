@@ -1,10 +1,7 @@
 package org.example.services;
 
-import org.example.entities.Consultation;
-import org.example.entities.ConsultationDetail;
-import org.example.entities.DisponibilitePsy;
-import org.example.enums.StatutDisponibilite;
-import org.example.enums.TypeConsultation;
+import org.example.models.Consultation;
+import org.example.models.ConsultationDetail;
 import org.example.utils.MyDataBase_Unimind;
 
 import java.sql.*;
@@ -163,6 +160,9 @@ public class ConsultationService implements ICrud<Consultation>{
     }
 
     //Méthode pour afficher la liste de consultation pour un psychologue
+    /**
+     * Affiche la liste des consultations pour un psychologue (avec infos étudiant)
+     */
     public List<ConsultationDetail> getConsultationsDetailByPsy(int psyId) throws SQLException {
         List<ConsultationDetail> consultations = new ArrayList<>();
 
@@ -175,6 +175,8 @@ public class ConsultationService implements ICrud<Consultation>{
                 "  u.nom as etudiant_nom, " +
                 "  u.prenom as etudiant_prenom, " +
                 "  u.email as etudiant_email, " +
+                "  u.user_id as etudiant_id, " +
+                "  c.rendez_vous_id, " +
                 "  dp.date_dispo, " +
                 "  dp.heure_debut, " +
                 "  dp.heure_fin " +
@@ -199,6 +201,8 @@ public class ConsultationService implements ICrud<Consultation>{
                     rs.getString("etudiant_nom"),
                     rs.getString("etudiant_prenom"),
                     rs.getString("etudiant_email"),
+                    rs.getInt("etudiant_id"),
+                    rs.getInt("rendez_vous_id"),
                     rs.getDate("date_dispo"),
                     rs.getTime("heure_debut"),
                     rs.getTime("heure_fin")

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.PrendreRendezVousModalController"
+            style="-fx-background-color: white; -fx-background-radius: 10;">
+
+    <!-- ========== PARTIE HAUTE : TITRE ========== -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 15 15 10 15; -fx-background-color: #f8f9fa; -fx-background-radius: 10 10 0 0;">
+            <Label text="📅 Prendre un rendez-vous" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="btnFermer" text="✕" style="-fx-background-color: transparent; -fx-text-fill: #7f8c8d; -fx-font-size: 16px; -fx-cursor: hand;" />
+        </HBox>
+    </top>
+
+    <!-- ========== PARTIE CENTRALE : FORMULAIRE ========== -->
+    <center>
+        <VBox spacing="15" style="-fx-padding: 20;">
+
+            <!-- Message d'information -->
+            <Label text="Sélectionnez un créneau disponible :" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+
+            <!-- Tableau des disponibilités -->
+            <TableView fx:id="tableViewDisponibilites" prefHeight="300">
+                <columns>
+                    <TableColumn fx:id="colPsychologue" text="Psychologue" prefWidth="180" />
+                    <TableColumn fx:id="colDate" text="Date" prefWidth="100" />
+                    <TableColumn fx:id="colHeure" text="Heure" prefWidth="120" />
+                    <TableColumn fx:id="colType" text="Type" prefWidth="100" />
+                    <TableColumn fx:id="colLieu" text="Lieu" prefWidth="150" />
+                </columns>
+            </TableView>
+
+            <!-- Label de sélection -->
+            <Label fx:id="lblSelection" style="-fx-text-fill: #3498db; -fx-font-size: 12px;" />
+
+            <Separator />
+
+            <!-- Motif (optionnel) -->
+            <Label text="Motif (optionnel) :" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+            <TextArea fx:id="txtMotif" promptText="Décrivez brièvement le motif de votre consultation..." prefHeight="80" wrapText="true" />
+
+        </VBox>
+    </center>
+
+    <!-- ========== PARTIE BASSE : BOUTONS ========== -->
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-padding: 15; -fx-background-color: #f8f9fa; -fx-background-radius: 0 0 10 10;">
+            <Button fx:id="btnAnnuler" text="Annuler" style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-padding: 8 20; -fx-cursor: hand;" />
+            <Button fx:id="btnConfirmer" text="Confirmer la réservation" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 8 20; -fx-font-weight: bold; -fx-cursor: hand;" />
+        </HBox>
+    </bottom>
+
+</BorderPane>

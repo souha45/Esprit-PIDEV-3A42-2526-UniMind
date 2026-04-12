@@ -1,9 +1,9 @@
 package org.example.services;
 
-import org.example.entities.Consultation;
-import org.example.entities.DisponibilitePsy;
-import org.example.entities.RendezVous;
-import org.example.entities.RendezVousDetail;
+import org.example.models.Consultation;
+import org.example.models.DisponibilitePsy;
+import org.example.models.RendezVous;
+import org.example.models.RendezVousDetail;
 import org.example.enums.StatutDisponibilite;
 import org.example.enums.StatutRendezVous;
 import org.example.utils.MyDataBase_Unimind;
@@ -64,6 +64,56 @@ public class RendezVousService implements ICrud<RendezVous>{
     @Override
     public void supprimer(int id) throws SQLException {
 
+    }
+
+    /**
+     * Affiche la liste des rendez-vous pour un psychologue
+     */
+    public List<RendezVousDetail> afficherRendezVousDetailsByPsy(int psyId) throws SQLException {
+        List<RendezVousDetail> rendezVousDetails = new ArrayList<>();
+
+        String sql = "SELECT " +
+                "  rdv.rendez_vous_id, " +
+                "  rdv.statut, " +
+                "  rdv.created_at, " +
+                "  dp.date_dispo, " +
+                "  dp.heure_debut, " +
+                "  dp.heure_fin, " +
+                "  dp.type_consult, " +
+                "  u.nom as etudiant_nom, " +
+                "  u.prenom as etudiant_prenom, " +
+                "  u.email as etudiant_email, " +
+                "  u.user_id as etudiant_id, " +
+                "  dp.dispo_id " +
+                "FROM rendez_vous rdv " +
+                "INNER JOIN disponibilite_psy dp ON rdv.dispo_id = dp.dispo_id " +
+                "INNER JOIN user u ON rdv.etudiant_id = u.user_id " +
+                "WHERE dp.user_id = ? " +
+                "ORDER BY dp.date_dispo DESC, dp.heure_debut ASC";
+
+        PreparedStatement pst = con.prepareStatement(sql);
+        pst.setInt(1, psyId);
+        ResultSet rs = pst.executeQuery();
+
+        while (rs.next()) {
+            RendezVousDetail detail = new RendezVousDetail(
+                    rs.getInt("rendez_vous_id"),
+                    rs.getString("statut"),
+                    rs.getTimestamp("created_at"),
+                    rs.getDate("date_dispo"),
+                    rs.getTime("heure_debut"),
+                    rs.getTime("heure_fin"),
+                    rs.getString("type_consult"),
+                    rs.getString("etudiant_nom"),
+                    rs.getString("etudiant_prenom"),
+                    rs.getString("etudiant_email"),
+                    rs.getInt("etudiant_id"),
+                    rs.getInt("dispo_id")
+            );
+            rendezVousDetails.add(detail);
+        }
+
+        return rendezVousDetails;
     }
 
     @Override

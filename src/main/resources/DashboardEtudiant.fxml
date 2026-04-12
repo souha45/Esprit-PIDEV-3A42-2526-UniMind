@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane style="-fx-background-color: #f5f5f5;" xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.DashboardEtudiantController">
+
+    <!-- ========== SIDEBAR GAUCHE (INCLUSE) ========== -->
+    <left>
+        <fx:include fx:id="sidebarEtudiant" source="SidebarEtudiant.fxml" />
+    </left>
+
+    <!-- ========== CONTENU PRINCIPAL ========== -->
+    <center>
+        <ScrollPane fitToWidth="true" style="-fx-background-color: #f5f5f5; -fx-background: #f5f5f5;">
+            <VBox spacing="20" style="-fx-padding: 20;">
+
+                <!-- Titre -->
+                <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" text="Dashboard Étudiant" />
+
+                <!-- ========== CARTES STATISTIQUES ========== -->
+                <HBox alignment="CENTER" spacing="20">
+
+                    <!-- Carte 1 : Prochains RDV -->
+                    <VBox alignment="CENTER" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);" HBox.hgrow="ALWAYS">
+                        <Label style="-fx-font-size: 30px;" text="📅" />
+                        <Label fx:id="lblProchainsRdv" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #3498db;" text="0" />
+                        <Label style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" text="Prochains RDV" />
+                        <Label style="-fx-text-fill: #95a5a6; -fx-font-size: 11px;" text="Cette semaine" />
+                    </VBox>
+
+                    <!-- Carte 2 : Consultations -->
+                    <VBox alignment="CENTER" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);" HBox.hgrow="ALWAYS">
+                        <Label style="-fx-font-size: 30px;" text="📋" />
+                        <Label fx:id="lblTotalConsultations" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2ecc71;" text="0" />
+                        <Label style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" text="Consultations" />
+                        <Label style="-fx-text-fill: #95a5a6; -fx-font-size: 11px;" text="Total" />
+                    </VBox>
+
+                    <!-- Carte 3 : Traitements -->
+                    <VBox alignment="CENTER" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);" HBox.hgrow="ALWAYS">
+                        <Label style="-fx-font-size: 30px;" text="💊" />
+                        <Label fx:id="lblTraitementsActifs" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #e67e22;" text="0" />
+                        <Label style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" text="Traitements" />
+                        <Label style="-fx-text-fill: #95a5a6; -fx-font-size: 11px;" text="Actifs" />
+                    </VBox>
+
+                    <!-- Carte 4 : Messages non lus -->
+                    <VBox alignment="CENTER" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);" HBox.hgrow="ALWAYS">
+                        <Label style="-fx-font-size: 30px;" text="💬" />
+                        <Label fx:id="lblMessagesNonLus" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #e74c3c;" text="0" />
+                        <Label style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" text="Messages non lus" />
+                        <Label style="-fx-text-fill: #95a5a6; -fx-font-size: 11px;" text="Nouveaux" />
+                    </VBox>
+
+                </HBox>
+
+                <!-- ========== PROCHAINS RENDEZ-VOUS ========== -->
+                <VBox spacing="10">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" text="📅 Mes Prochains Rendez-vous" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnPrendreRdv" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8 15; -fx-cursor: hand;" text="+ Prendre RDV" />
+                    </HBox>
+
+                    <!-- Carte du prochain rendez-vous -->
+                    <VBox fx:id="carteProchainRdv" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);" visible="false">
+                        <HBox spacing="15">
+                            <VBox alignment="CENTER" style="-fx-background-color: #3498db; -fx-background-radius: 10; -fx-padding: 15;">
+                                <Label fx:id="lblRdvDate" style="-fx-text-fill: white; -fx-font-size: 28px; -fx-font-weight: bold;" text="23" />
+                                <Label fx:id="lblRdvMois" style="-fx-text-fill: white; -fx-font-size: 14px;" text="AVR" />
+                            </VBox>
+                            <VBox spacing="5">
+                                <Label fx:id="lblRdvPsychologue" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" text="Consultation avec Dr. psy" />
+                                <Label fx:id="lblRdvHoraire" style="-fx-text-fill: #7f8c8d; -fx-font-size: 14px;" text="17:30" />
+                                <Label fx:id="lblRdvType" style="-fx-background-color: #ecf0f1; -fx-text-fill: #2c3e50; -fx-padding: 3 8; -fx-background-radius: 5; -fx-font-size: 11px;" text="PRÉSENTIEL" />
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Message aucun rendez-vous -->
+                    <Label fx:id="lblAucunRdv" style="-fx-text-fill: #95a5a6; -fx-padding: 20;" text="Aucun rendez-vous à venir" visible="false" />
+                </VBox>
+
+                <!-- ========== RENDEZ-VOUS PASSÉS ========== -->
+                <VBox spacing="10">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" text="📋 Rendez-vous passés" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnVoirTout" style="-fx-background-color: transparent; -fx-text-fill: #3498db; -fx-cursor: hand;" text="Voir tout" />
+                    </HBox>
+
+                    <TableView fx:id="tableViewRdvsPasses" prefHeight="200" style="-fx-background-radius: 10;">
+                        <columns>
+                            <TableColumn fx:id="colPsychologue" prefWidth="200" text="Psychologue" />
+                            <TableColumn fx:id="colDate" prefWidth="100" text="Date" />
+                            <TableColumn fx:id="colHeure" prefWidth="80" text="Heure" />
+                            <TableColumn fx:id="colType" prefWidth="100" text="Type" />
+                            <TableColumn fx:id="colStatut" prefWidth="100" text="Statut" />
+                            <TableColumn fx:id="colAction" prefWidth="100" text="Actions" />
+                        </columns>
+                    </TableView>
+                </VBox>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

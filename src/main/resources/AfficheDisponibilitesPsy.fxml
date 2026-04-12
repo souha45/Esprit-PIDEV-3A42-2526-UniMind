@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Region?>
+
+<?import javafx.scene.control.Separator?>
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.AffichageDisponibilitePsyController">
+
+    <!-- ========== SIDEBAR GAUCHE (INCLUSE) ========== -->
+    <left>
+        <fx:include fx:id="sidebarPsy" source="SidebarPsy.fxml" />
+    </left>
+
+    <!-- ========== CONTENU PRINCIPAL ========== -->
+    <center>
+        <VBox spacing="15" style="-fx-background-color: #ecf0f1; -fx-padding: 20;">
+
+            <!-- En-tête -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"
+                       text="Mes disponibilités" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="lblDate" style="-fx-text-fill: #7f8c8d; -fx-font-size: 14px;" />
+            </HBox>
+
+            <Separator />
+
+            <!-- Barre de boutons -->
+            <HBox alignment="CENTER_RIGHT" spacing="10">
+                <Button fx:id="btnAjouter" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="+ Nouvelle disponibilité" />
+                <Button fx:id="btnRafraichir" style="-fx-background-color: #2196F3; -fx-text-fill: white;" text="🔄 Rafraîchir" />
+            </HBox>
+
+            <!-- TableView pour afficher les disponibilités -->
+            <TableView fx:id="tableViewDisponibilites" prefHeight="500" style="-fx-background-radius: 10;">
+                <columns>
+                    <TableColumn fx:id="colId" prefWidth="50" text="ID" />
+                    <TableColumn fx:id="colDate" prefWidth="100" text="Date" />
+                    <TableColumn fx:id="colHeureDebut" prefWidth="100" text="Heure début" />
+                    <TableColumn fx:id="colHeureFin" prefWidth="100" text="Heure fin" />
+                    <TableColumn fx:id="colTypeConsult" prefWidth="120" text="Type" />
+                    <TableColumn fx:id="colLieu" prefWidth="150" text="Lieu" />
+                    <TableColumn fx:id="colStatut" prefWidth="100" text="Statut" />
+                    <TableColumn fx:id="colAction" prefWidth="150" text="Actions" />
+                </columns>
+            </TableView>
+
+            <!-- Label de statut -->
+            <Label fx:id="lblStatut" style="-fx-text-fill: gray;" />
+
+        </VBox>
+    </center>
+
+</BorderPane>

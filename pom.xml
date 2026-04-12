@@ -39,6 +39,19 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- Spring Security Crypto (compatible PHP) -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+            <version>6.1.5</version>
+        </dependency>
+
+        <!-- Dépendance manquante pour Spring Security -->
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.2</version>
+        </dependency>
 
     </dependencies>
     <build>
@@ -48,7 +61,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.esprit.main.MainGUI</mainClass>
+                    <mainClass>org.example.main.MainGUI</mainClass>
                 </configuration>
             </plugin>
         </plugins>

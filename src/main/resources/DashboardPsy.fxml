@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.DashboardPsyController">
+
+    <!-- ========== SIDEBAR GAUCHE (INCLUSE) ========== -->
+    <left>
+        <fx:include fx:id="sidebarPsy" source="SidebarPsy.fxml" />
+    </left>
+
+    <!-- ========== CONTENU PRINCIPAL ========== -->
+    <center>
+        <VBox spacing="15" style="-fx-background-color: #ecf0f1; -fx-padding: 20;">
+
+            <!-- En-tête -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"
+                       text="Tableau de bord - Psychologue" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="lblDate" style="-fx-text-fill: #7f8c8d; -fx-font-size: 14px;" />
+            </HBox>
+
+            <Separator />
+
+            <!-- Contenu Dashboard (statistiques) -->
+            <VBox fx:id="contenuDashboard" spacing="15">
+                <!-- Cartes de statistiques -->
+                <HBox spacing="20" alignment="CENTER">
+                    <VBox style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15;">
+                        <Label text="📅 RDV AUJOURD'HUI" style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" />
+                        <Label fx:id="lblRdvAujourdhui" text="0" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #3498db;" />
+                    </VBox>
+
+                    <VBox style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15;">
+                        <Label text="👥 PATIENTS ACTIFS" style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" />
+                        <Label fx:id="lblPatientsActifs" text="0" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2ecc71;" />
+                    </VBox>
+
+                    <VBox style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15;">
+                        <Label text="📆 RDV CETTE SEMAINE" style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" />
+                        <Label fx:id="lblRdvSemaine" text="0" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #e67e22;" />
+                    </VBox>
+
+                    <VBox style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15;">
+                        <Label text="📊 TAUX DE REMPLISSAGE" style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" />
+                        <Label fx:id="lblTauxRemplissage" text="0%" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #9b59b6;" />
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <!-- Contenu dynamique pour les autres pages -->
+            <VBox fx:id="contenuPrincipal" spacing="10" visible="false" managed="false" />
+
+        </VBox>
+    </center>
+
+</BorderPane>

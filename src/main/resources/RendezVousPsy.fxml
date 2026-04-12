@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.RendezVousPsyController">
+
+    <!-- ========== SIDEBAR GAUCHE (INCLUSE) ========== -->
+    <left>
+        <fx:include fx:id="sidebarPsy" source="SidebarPsy.fxml" />
+    </left>
+
+    <!-- ========== CONTENU PRINCIPAL ========== -->
+    <center>
+        <VBox spacing="15" style="-fx-background-color: #ecf0f1; -fx-padding: 20;">
+
+            <!-- En-tête -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"
+                       text="Liste de mes rendez-vous" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="lblDate" style="-fx-text-fill: #7f8c8d; -fx-font-size: 14px;" />
+            </HBox>
+
+            <Separator />
+
+            <!-- Barre d'outils -->
+            <HBox alignment="CENTER_RIGHT" spacing="10">
+                <Button fx:id="btnRafraichir" text="🔄 Rafraîchir"
+                        style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8 20; -fx-cursor: hand;" />
+            </HBox>
+
+            <!-- Tableau des rendez-vous -->
+            <TableView fx:id="tableViewRendezVous" prefHeight="500" style="-fx-background-radius: 10;">
+                <columns>
+                    <TableColumn fx:id="colEtudiant" text="ÉTUDIANT" prefWidth="200" />
+                    <TableColumn fx:id="colDateHeure" text="DATE &amp; HEURE" prefWidth="180" />
+                    <TableColumn fx:id="colType" text="TYPE" prefWidth="100" />
+                    <TableColumn fx:id="colStatut" text="STATUT" prefWidth="120" />
+                    <TableColumn fx:id="colActions" text="ACTIONS" prefWidth="200" />
+                </columns>
+            </TableView>
+
+            <!-- Label de statut -->
+            <Label fx:id="lblStatut" style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" />
+
+        </VBox>
+    </center>
+
+</BorderPane>

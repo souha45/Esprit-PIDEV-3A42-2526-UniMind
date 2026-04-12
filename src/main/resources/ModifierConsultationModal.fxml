@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.ModifierConsultationModalController"
+            style="-fx-background-color: white; -fx-background-radius: 10;">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 15 15 10 15; -fx-background-color: #f8f9fa; -fx-background-radius: 10 10 0 0;">
+            <Label text="✏️ Avis du psychologue" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="btnFermer" text="✕" style="-fx-background-color: transparent; -fx-text-fill: #7f8c8d; -fx-font-size: 16px; -fx-cursor: hand;" />
+        </HBox>
+    </top>
+
+    <center>
+        <VBox spacing="15" style="-fx-padding: 20;">
+
+            <Label text="Avis du psychologue :" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+            <TextArea fx:id="txtAvis" promptText="Saisissez votre avis sur la consultation..."
+                      prefHeight="100" wrapText="true" style="-fx-background-radius: 5;" />
+
+            <Label text="🔒 Confidentiel - visible uniquement par vous"
+                   style="-fx-text-fill: #7f8c8d; -fx-font-size: 11px;" />
+
+            <Separator />
+
+            <!-- Note avec étoiles -->
+            <VBox spacing="8" style="-fx-background-color: #f8f9fa; -fx-background-radius: 8; -fx-padding: 15;" alignment="CENTER">
+
+                <HBox alignment="CENTER" spacing="8">
+                    <Label text="★" style="-fx-text-fill: #e74c3c; -fx-font-size: 16px;" />
+                    <Label text="Note de satisfaction"
+                           style="-fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-font-size: 14px;" />
+                </HBox>
+
+                <HBox spacing="15" alignment="CENTER">
+                    <HBox fx:id="etoilesContainer" spacing="8" alignment="CENTER" />
+                    <Label fx:id="lblNoteValue"
+                           style="-fx-text-fill: #e67e22; -fx-font-size: 28px; -fx-font-weight: bold;" />
+                    <Button fx:id="btnEffacer" text="× Effacer"
+                            style="-fx-background-color: transparent;
+                                   -fx-text-fill: #e74c3c;
+                                   -fx-border-color: #e74c3c;
+                                   -fx-border-radius: 4;
+                                   -fx-background-radius: 4;
+                                   -fx-font-size: 12px;
+                                   -fx-padding: 5 12;
+                                   -fx-cursor: hand;" />
+                </HBox>
+
+                <Label text="Cliquez sur une étoile pour noter la consultation"
+                       style="-fx-text-fill: #95a5a6; -fx-font-size: 11px;" />
+
+            </VBox>
+
+        </VBox>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-padding: 15; -fx-background-color: #f8f9fa; -fx-background-radius: 0 0 10 10;">
+            <Button fx:id="btnAnnuler" text="× Annuler" style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-padding: 8 20; -fx-cursor: hand;" />
+            <Button fx:id="btnEnregistrer" text="💾 Enregistrer" style="-fx-background-color: #6c5ce7; -fx-text-fill: white; -fx-padding: 8 20; -fx-font-weight: bold; -fx-cursor: hand;" />
+        </HBox>
+    </bottom>
+
+</BorderPane>

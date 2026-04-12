@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane style="-fx-background-color: #f5f5f5;" xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.RendezVousEtudiantController">
+
+    <!-- ========== SIDEBAR GAUCHE (INCLUSE) ========== -->
+    <left>
+        <fx:include fx:id="sidebarEtudiant" source="SidebarEtudiant.fxml" />
+    </left>
+
+    <!-- ========== CONTENU PRINCIPAL ========== -->
+    <center>
+        <VBox spacing="15" style="-fx-background-color: #f5f5f5; -fx-padding: 20;">
+
+            <!-- Titre -->
+            <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" text="Mes Rendez-vous" />
+
+            <Separator />
+
+            <!-- Barre d'outils -->
+            <HBox alignment="CENTER_RIGHT" spacing="10">
+                <Button fx:id="btnPrendreRdv" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 8 20; -fx-font-weight: bold; -fx-cursor: hand;" text="+ Prendre rendez-vous" />
+                <Button fx:id="btnRafraichir" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8 20; -fx-cursor: hand;" text="🔄 Rafraîchir" />
+            </HBox>
+
+            <!-- Tableau des rendez-vous -->
+            <TableView fx:id="tableViewRendezVous" prefHeight="500" style="-fx-background-radius: 10;">
+                <columns>
+                    <TableColumn fx:id="colDate" prefWidth="120" text="Date" />
+                    <TableColumn fx:id="colHeure" prefWidth="188.0" text="Heure" />
+                    <TableColumn fx:id="colPsychologue" prefWidth="169.0" text="Psychologue" />
+                    <TableColumn fx:id="colType" prefWidth="100.0" text="Type" />
+                    <TableColumn fx:id="colStatut" prefWidth="70.0" text="Statut" />
+                    <TableColumn fx:id="colActions" prefWidth="250.0" text="Actions" />
+                </columns>
+            </TableView>
+
+            <!-- Label de statut -->
+            <Label fx:id="lblStatut" style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" />
+
+        </VBox>
+    </center>
+
+</BorderPane>

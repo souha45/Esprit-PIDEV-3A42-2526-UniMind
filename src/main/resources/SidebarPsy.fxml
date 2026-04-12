@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<!--
+    Sidebar pour le Dashboard Psychologue
+    Ce fichier sera inclus dans toutes les pages du psychologue
+-->
+
+<VBox prefWidth="250" spacing="15" style="-fx-background-color: #2c3e50; -fx-padding: 20;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.SidebarPsyController">
+
+    <!-- Avatar et infos utilisateur -->
+    <VBox alignment="CENTER" spacing="5">
+        <Label fx:id="lblInitiales" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 24px; -fx-font-weight: bold; -fx-padding: 15; -fx-background-radius: 50;" text="JD" />
+        <Label fx:id="lblNomComplet" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="Jean Dupont" />
+        <Label fx:id="lblRole" style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;" text="Psychologue" />
+    </VBox>
+
+    <Separator style="-fx-background-color: #34495e;" />
+
+    <!-- Menu de navigation -->
+    <VBox spacing="5">
+        <Button fx:id="btnDashboard" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-alignment: CENTER_LEFT; -fx-padding: 10 15; -fx-cursor: hand;" text="📊 Dashboard">
+         <font>
+            <Font size="18.0" />
+         </font></Button>
+        <Button fx:id="btnDisponibilites" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: CENTER_LEFT; -fx-padding: 10 15; -fx-cursor: hand;" text="📅 Disponibilités">
+         <font>
+            <Font size="18.0" />
+         </font></Button>
+        <Button fx:id="btnRendezVous" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: CENTER_LEFT; -fx-padding: 10 15; -fx-cursor: hand;" text="📋 Rendez-vous">
+         <font>
+            <Font size="18.0" />
+         </font></Button>
+        <Button fx:id="btnConsultations" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: CENTER_LEFT; -fx-padding: 10 15; -fx-cursor: hand;" text="📝 Consultations">
+         <font>
+            <Font size="18.0" />
+         </font></Button>
+        <Button fx:id="btnPatients" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: CENTER_LEFT; -fx-padding: 10 15; -fx-cursor: hand;" text="👥 Patients">
+         <font>
+            <Font size="18.0" />
+         </font></Button>
+    </VBox>
+
+    <Region VBox.vgrow="ALWAYS" />
+
+    <Button fx:id="btnDeconnexion" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-padding: 10; -fx-cursor: hand;" text="🚪 Déconnexion">
+      <font>
+         <Font size="18.0" />
+      </font></Button>
+
+</VBox>

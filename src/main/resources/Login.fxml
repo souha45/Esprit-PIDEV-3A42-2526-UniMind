@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?> <!-- importe tous les composants (Button, Label, TextField...) -->
+<?import javafx.scene.control.*?>  <!-- importe les conteneurs (VBox, HBox, GridPane...) -->
+<?import javafx.scene.layout.*?>   <!-- permet de gérer les marges intérieures -->
+
+<VBox alignment="CENTER" spacing="20" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.LoginController">   <!--Conteneur qui organise les éléments verticalement (les uns sous les autres)-->
+    <padding>
+        <Insets bottom="30" left="30" right="30" top="30" />
+    </padding>
+
+    <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" text="Unimind - Connexion" />
+
+    <GridPane hgap="15" vgap="15">
+        <padding>
+            <Insets top="20" />
+        </padding>
+
+        <Label text="Email :" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <TextField fx:id="txtEmail" promptText="exemple@email.com" prefWidth="250" GridPane.columnIndex="1" GridPane.rowIndex="0" /> <!--fx:id="txtEmail" : Identifiant unique qui permet au contrôleur Java de récupérer ce champ-->
+
+        <Label text="Mot de passe :" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <PasswordField fx:id="txtPassword" promptText="••••••••" prefWidth="250" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+    </GridPane><!--GridPane : Grille qui organise les éléments en lignes et colonnes (comme un tableau Excel)-->
+
+    <Button fx:id="btnLogin" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 8 20;" text="Se connecter" />
+
+    <Label fx:id="lblErreur" style="-fx-text-fill: red; -fx-font-size: 12px;" /><!--Label pour afficher les messages d'erreur-->
+</VBox>

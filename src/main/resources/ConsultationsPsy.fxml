@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.ConsultationsPsyController">
+
+    <!-- ========== SIDEBAR GAUCHE (INCLUSE) ========== -->
+    <left>
+        <fx:include fx:id="sidebarPsy" source="SidebarPsy.fxml" />
+    </left>
+
+    <!-- ========== CONTENU PRINCIPAL ========== -->
+    <center>
+        <VBox spacing="15" style="-fx-background-color: #ecf0f1; -fx-padding: 20;">
+
+            <!-- En-tête -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"
+                       text="Historique des Consultations" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="lblDate" style="-fx-text-fill: #7f8c8d; -fx-font-size: 14px;" />
+            </HBox>
+
+            <Separator />
+
+            <!-- Barre d'outils -->
+            <HBox alignment="CENTER_RIGHT" spacing="10">
+                <Label fx:id="lblTotal" style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" />
+                <Button fx:id="btnRafraichir" text="🔄 Rafraîchir"
+                        style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8 20; -fx-cursor: hand;" />
+            </HBox>
+
+            <!-- Tableau des consultations -->
+            <TableView fx:id="tableViewConsultations" prefHeight="500" style="-fx-background-radius: 10;">
+                <columns>
+                    <TableColumn fx:id="colPatient" text="PATIENT" prefWidth="200" />
+                    <TableColumn fx:id="colDateRdv" text="DATE RDV" prefWidth="100" />
+                    <TableColumn fx:id="colHeureRdv" text="HEURE" prefWidth="100" />
+                    <TableColumn fx:id="colNote" text="NOTE" prefWidth="80" />
+                    <TableColumn fx:id="colAvis" text="AVIS" prefWidth="250" />
+                    <TableColumn fx:id="colActions" text="ACTIONS" prefWidth="120" />
+                </columns>
+            </TableView>
+
+        </VBox>
+    </center>
+
+</BorderPane>
