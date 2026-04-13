@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<ScrollPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.example.controllers.EtudiantSeancesCategorieController"
+            styleClass="etudiant-scroll"
+            stylesheets="/css/etudiant.css"
+            fitToWidth="true" hbarPolicy="NEVER">
+
+    <VBox styleClass="etudiant-page" spacing="0">
+
+        <!-- HEADER -->
+        <VBox styleClass="page-header">
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Button text="← Retour" styleClass="btn-back" onAction="#retourCategories"/>
+                <Label text="🌸 Séances  ›" styleClass="page-title"/>
+                <Label fx:id="lblNomCategorie" text="" styleClass="page-title-accent"/>
+            </HBox>
+            <Label fx:id="lblDescCategorie" text="" styleClass="page-subtitle" wrapText="true"/>
+        </VBox>
+
+        <!-- CONSEILS BOX -->
+        <HBox styleClass="section-container" spacing="20">
+            <VBox styleClass="conseils-card" prefWidth="300" spacing="10">
+                <Label text="💡 Conseils pour une bonne séance" styleClass="conseils-title"/>
+                <Separator/>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="🔇" style="-fx-font-size:16px;"/>
+                    <VBox spacing="2">
+                        <Label text="Environnement calme" styleClass="conseils-point"/>
+                        <Label text="Trouvez un endroit tranquille sans distractions."
+                               styleClass="conseils-text" wrapText="true"/>
+                    </VBox>
+                </HBox>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="🌸" style="-fx-font-size:16px;"/>
+                    <VBox spacing="2">
+                        <Label text="Position confortable" styleClass="conseils-point"/>
+                        <Label text="Asseyez-vous ou allongez-vous confortablement."
+                               styleClass="conseils-text" wrapText="true"/>
+                    </VBox>
+                </HBox>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="🌬" style="-fx-font-size:16px;"/>
+                    <VBox spacing="2">
+                        <Label text="Respiration consciente" styleClass="conseils-point"/>
+                        <Label text="Portez attention à votre respiration naturelle."
+                               styleClass="conseils-text" wrapText="true"/>
+                    </VBox>
+                </HBox>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="🕊" style="-fx-font-size:16px;"/>
+                    <VBox spacing="2">
+                        <Label text="Acceptation" styleClass="conseils-point"/>
+                        <Label text="Accueillez vos pensées sans jugement."
+                               styleClass="conseils-text" wrapText="true"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <!-- Séances grid -->
+            <VBox HBox.hgrow="ALWAYS" spacing="12">
+                <Label text="🎵 Séances disponibles" styleClass="section-title"/>
+                <FlowPane fx:id="seancesGrid" hgap="16" vgap="16"/>
+            </VBox>
+        </HBox>
+
+    </VBox>
+</ScrollPane>

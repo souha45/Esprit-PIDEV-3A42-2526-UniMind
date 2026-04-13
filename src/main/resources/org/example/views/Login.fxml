@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.*?>
+
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="org.example.controllers.LoginController"
+           styleClass="login-root">
+
+    <!-- Background gradient -->
+    <VBox alignment="CENTER" styleClass="login-bg">
+
+        <VBox styleClass="login-card" alignment="CENTER" spacing="0" maxWidth="420">
+
+            <!-- Logo -->
+            <VBox alignment="CENTER" styleClass="login-logo-box">
+                <Label text="" style="-fx-font-size: 48px;"/>
+                <Label text="Unimind" styleClass="login-brand"/>
+                <Label text="Plateforme de bien-être étudiant" styleClass="login-tagline"/>
+            </VBox>
+
+            <VBox styleClass="login-form" spacing="16">
+                <Label text="Connexion" styleClass="login-title"/>
+
+                <VBox spacing="6">
+                    <Label text="Email" styleClass="form-label"/>
+                    <TextField fx:id="tfEmail" promptText="votre@email.com" styleClass="form-input"/>
+                </VBox>
+
+                <VBox spacing="6">
+                    <Label text="Mot de passe" styleClass="form-label"/>
+                    <PasswordField fx:id="tfPassword" promptText="••••••••" styleClass="form-input"/>
+                </VBox>
+
+                <Label fx:id="errLogin" styleClass="error-label" text="" visible="false" managed="false" wrapText="true"/>
+
+                <Button text="Se connecter" styleClass="btn-primary" maxWidth="Infinity"
+                        onAction="#onLogin"/>
+
+                <!-- Quick test buttons -->
+                <Separator/>
+                <Label text="Accès rapide (test)" styleClass="login-tagline" alignment="CENTER" maxWidth="Infinity"/>
+                <HBox spacing="10">
+                    <Button text="👤 Étudiant test" styleClass="btn-secondary" HBox.hgrow="ALWAYS"
+                            maxWidth="Infinity" onAction="#loginAsStudent"/>
+                    <Button text="🔧 Admin test" styleClass="btn-secondary" HBox.hgrow="ALWAYS"
+                            maxWidth="Infinity" onAction="#loginAsAdmin"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </VBox>
+</StackPane>

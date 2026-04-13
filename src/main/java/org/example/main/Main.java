@@ -1,12 +1,4 @@
-package org.example;
-
-import org.example.entities.*;
-import org.example.enums.NiveauMeditation;
-import org.example.services.*;
-import org.example.utils.MyDataBase_Unimind;
-
-import java.sql.SQLException;
-import java.util.List;
+package org.example.main;
 
 public class Main {
     public static void main(String[] args) {
