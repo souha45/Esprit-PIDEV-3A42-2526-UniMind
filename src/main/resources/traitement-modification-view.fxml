@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.TraitementModificationController" stylesheets="@/css/traitements-suivis.css">
+
+    <!-- En-tête de la page -->
+    <VBox styleClass="page-header">
+        <Label text="Modifier un Traitement" styleClass="page-title"/>
+        <Label text="Modifiez les informations du traitement" styleClass="page-subtitle"/>
+    </VBox>
+
+    <!-- Formulaire principal -->
+    <VBox styleClass="form-container" spacing="20">
+        <padding>
+            <Insets top="20" right="30" bottom="20" left="30"/>
+        </padding>
+
+        <!-- Grille du formulaire -->
+        <GridPane hgap="20" vgap="15" styleClass="form-grid">
+
+            <!-- Ligne 1 : Titre -->
+            <Label text="Titre" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="txtTitre" promptText="Entrez le titre du traitement" styleClass="form-field" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Type" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+            <TextField fx:id="txtType" promptText="Type de traitement" styleClass="form-field" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+            <!-- Ligne 2 : Catégorie et Statut -->
+            <Label text="Catégorie" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="cmbCategorie" styleClass="form-combo" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="Statut" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+            <ComboBox fx:id="cmbStatut" styleClass="form-combo" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+            <!-- Ligne 3 : Priorité et Date Début -->
+            <Label text="Priorité" styleClass="form-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="cmbPriorite" styleClass="form-combo" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <Label text="Date Début" styleClass="form-label" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+            <DatePicker fx:id="dpDateDebut" styleClass="form-datepicker" promptText="jj/mm/aaaa" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
+
+            <!-- Ligne 4 : Dosage et Date Fin -->
+            <Label text="Dosage" styleClass="form-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <TextField fx:id="txtDosage" promptText="Dosage du traitement" styleClass="form-field" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+            <Label text="Date Fin" styleClass="form-label" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+            <DatePicker fx:id="dpDateFin" styleClass="form-datepicker" promptText="jj/mm/aaaa" GridPane.rowIndex="3" GridPane.columnIndex="3"/>
+
+            <!-- Ligne 5 : Étudiant et Psychologue -->
+            <Label text="Étudiant" styleClass="form-label" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="cmbEtudiant" styleClass="form-combo" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+            <Label text="Psychologue" styleClass="form-label" GridPane.rowIndex="4" GridPane.columnIndex="2"/>
+            <TextField fx:id="txtNomPsychologue" styleClass="form-field-readonly" editable="false" GridPane.rowIndex="4" GridPane.columnIndex="3"/>
+
+            <!-- Ligne 6 : Objectif Thérapeutique (pleine largeur) -->
+            <Label text="Objectif Thérapeutique" styleClass="form-label" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+            <TextField fx:id="txtObjectifTherapeutique" promptText="Objectif thérapeutique du traitement" styleClass="form-field-full" GridPane.rowIndex="5" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+
+            <!-- Ligne 7 : Description (pleine largeur) -->
+            <Label text="Description" styleClass="form-label" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+            <TextArea fx:id="txtDescription" promptText="Description détaillée du traitement..." styleClass="form-textarea" GridPane.rowIndex="6" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+
+        </GridPane>
+
+        <!-- Séparateur -->
+        <Separator styleClass="form-separator"/>
+
+        <!-- Boutons d'action -->
+        <HBox spacing="15" alignment="CENTER" styleClass="form-buttons">
+            <Button text="Enregistrer" onAction="#handleEnregistrer" styleClass="btn-primary"/>
+            <Button text="Réinitialiser" onAction="#handleReinitialiser" styleClass="btn-secondary"/>
+            <Button text="Annuler" onAction="#handleAnnuler" styleClass="btn-danger"/>
+        </HBox>
+
+        <!-- Barre de statut -->
+        <HBox styleClass="status-bar">
+            <Label fx:id="lblStatus" text="Prêt à modifier le traitement" styleClass="status-text"/>
+        </HBox>
+    </VBox>
+</VBox>

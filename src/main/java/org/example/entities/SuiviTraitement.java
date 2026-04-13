@@ -1,10 +1,11 @@
 package org.example.entities;
 
-import org.example.enums.RessentiSuivi;
-import org.example.enums.SaisiPar;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+
+import org.example.enums.RessentiSuivi;
+import org.example.enums.SaisiPar;
 
 public class SuiviTraitement {
     private int suivitraitementId;
@@ -271,8 +272,6 @@ public class SuiviTraitement {
                 return "Étudiant";
             case PSYCHOLOGUE:
                 return "Psychologue";
-            case SYSTEME:
-                return "Système";
             default:
                 return saisiPar.toString();
         }

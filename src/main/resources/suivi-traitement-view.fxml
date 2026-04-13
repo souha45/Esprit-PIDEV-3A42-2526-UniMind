@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.SuiviTraitementController" stylesheets="@/css/traitements-suivis.css">
+
+    <VBox styleClass="page-header">
+        <Label text="Suivi des Traitements" styleClass="page-title"/>
+        <Label text="Suivez la progression des traitements étudiants" styleClass="page-subtitle"/>
+    </VBox>
+
+    <HBox styleClass="filter-bar" spacing="15" alignment="CENTER_LEFT">
+        <HBox styleClass="search-box">
+            <Label text="🔍" styleClass="search-icon"/>
+            <TextField fx:id="txtRecherche" promptText="Rechercher par étudiant ou observations..." styleClass="search-field"/>
+        </HBox>
+
+        <ComboBox fx:id="cmbFiltrePeriode" prefWidth="150" promptText="Période" styleClass="filter-combo"/>
+
+        <Button fx:id="btnAppliquerFiltres" text="Appliquer" onAction="#handleAppliquerFiltres" styleClass="btn-primary-small"/>
+        <Button fx:id="btnReinitialiserFiltres" text="Réinitialiser" onAction="#handleReinitialiserFiltres" styleClass="btn-secondary-small"/>
+
+        <Region HBox.hgrow="ALWAYS"/>
+    </HBox>
+
+    <HBox styleClass="action-bar" spacing="15" alignment="CENTER_LEFT">
+        <Button fx:id="btnAjouter" text="+ Nouveau Suivi" onAction="#handleAjouter" styleClass="btn-primary"/>
+        <Button text="⟳ Rafraîchir" onAction="#handleRafraichir" styleClass="btn-secondary"/>
+        <Button text="📊 Voir Traitements" onAction="#ouvrirTraitementView" styleClass="btn-info"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblCount" styleClass="count-badge"/>
+    </HBox>
+
+    <VBox VBox.vgrow="ALWAYS" styleClass="table-container">
+        <TableView fx:id="tableViewSuiviTraitements" styleClass="custom-table" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn text="ÉTUDIANT / TRAITEMENT" />
+                <TableColumn text="DATE SUIVI" />
+                <TableColumn text="OBSERVATIONS" />
+                <TableColumn fx:id="colActions" text="ACTIONS" />
+            </columns>
+        </TableView>
+    </VBox>
+
+    <HBox styleClass="status-bar">
+        <Label fx:id="lblStatus" text="✓ Prêt" styleClass="status-text"/>
+    </HBox>
+</VBox>

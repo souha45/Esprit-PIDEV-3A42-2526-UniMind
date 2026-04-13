@@ -1,10 +1,11 @@
 package org.example.entities;
 
+import java.sql.Date;
+import java.sql.Timestamp;
+
 import org.example.enums.CategorieTraitement;
 import org.example.enums.PrioriteTraitement;
 import org.example.enums.StatutTraitement;
-import java.sql.Date;
-import java.sql.Timestamp;
 
 public class Traitement {
     private int traitementId;
@@ -223,16 +224,16 @@ public class Traitement {
         return statut == StatutTraitement.SUSPENDU;
     }
 
-    public boolean isConfirme() {
-        return priorite == PrioriteTraitement.CONFIRME;
+    public boolean isBassePriorite() {
+        return priorite == PrioriteTraitement.BASSE;
     }
 
-    public boolean isEnAttente() {
-        return priorite == PrioriteTraitement.ATTENTE;
+    public boolean isMoyennePriorite() {
+        return priorite == PrioriteTraitement.MOYENNE;
     }
 
-    public boolean isAnnule() {
-        return priorite == PrioriteTraitement.ANNULE;
+    public boolean isHautePriorite() {
+        return priorite == PrioriteTraitement.HAUTE;
     }
 
     public String getCategorieLabel() {
@@ -265,12 +266,12 @@ public class Traitement {
 
     public String getPrioriteLabel() {
         switch (priorite) {
-            case CONFIRME:
-                return "Confirmé";
-            case ATTENTE:
-                return "En attente";
-            case ANNULE:
-                return "Annulé";
+            case BASSE:
+                return "Basse";
+            case MOYENNE:
+                return "Moyenne";
+            case HAUTE:
+                return "Haute";
             default:
                 return priorite.toString();
         }

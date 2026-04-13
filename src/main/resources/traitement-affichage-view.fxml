@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.TraitementAffichageController" stylesheets="@/css/traitements-suivis.css">
+
+    <!-- En-tête de la page -->
+    <VBox styleClass="page-header">
+        <Label text="Détails du Traitement" styleClass="page-title"/>
+        <Label text="Consultez les informations complètes du traitement" styleClass="page-subtitle"/>
+    </VBox>
+
+    <!-- Contenu principal -->
+    <VBox styleClass="form-container" spacing="20">
+        <padding>
+            <Insets top="20" right="30" bottom="20" left="30"/>
+        </padding>
+
+        <!-- Grille d'affichage -->
+        <GridPane hgap="20" vgap="15" styleClass="form-grid">
+
+            <!-- Ligne 1 : Titre et Type -->
+            <Label text="Titre" styleClass="detail-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <Label fx:id="lblTitre" styleClass="detail-value" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Type" styleClass="detail-label" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+            <Label fx:id="lblType" styleClass="detail-value" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+            <!-- Ligne 2 : Catégorie et Statut -->
+            <Label text="Catégorie" styleClass="detail-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <Label fx:id="lblCategorie" styleClass="detail-value" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="Statut" styleClass="detail-label" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+            <Label fx:id="lblStatut" styleClass="detail-value" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+            <!-- Ligne 3 : Priorité et Durée -->
+            <Label text="Priorité" styleClass="detail-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <Label fx:id="lblPriorite" styleClass="detail-value" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <Label text="Durée (jours)" styleClass="detail-label" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+            <Label fx:id="lblDureeJours" styleClass="detail-value" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
+
+            <!-- Ligne 4 : Date Début et Date Fin -->
+            <Label text="Date Début" styleClass="detail-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <Label fx:id="lblDateDebut" styleClass="detail-value" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+            <Label text="Date Fin" styleClass="detail-label" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+            <Label fx:id="lblDateFin" styleClass="detail-value" GridPane.rowIndex="3" GridPane.columnIndex="3"/>
+
+            <!-- Ligne 5 : Dosage et Étudiant -->
+            <Label text="Dosage" styleClass="detail-label" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+            <Label fx:id="lblDosage" styleClass="detail-value" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+            <Label text="Étudiant" styleClass="detail-label" GridPane.rowIndex="4" GridPane.columnIndex="2"/>
+            <Label fx:id="lblEtudiant" styleClass="detail-value" GridPane.rowIndex="4" GridPane.columnIndex="3"/>
+
+            <!-- Ligne 6 : Psychologue -->
+            <Label text="Psychologue" styleClass="detail-label" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+            <Label fx:id="lblPsychologue" styleClass="detail-value" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+            <!-- Ligne 7 : Objectif Thérapeutique (pleine largeur) -->
+            <Label text="Objectif Thérapeutique" styleClass="detail-label" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+            <Label fx:id="lblObjectifTherapeutique" styleClass="detail-value-full" GridPane.rowIndex="6" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+
+            <!-- Ligne 8 : Description (pleine largeur) -->
+            <Label text="Description" styleClass="detail-label" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+            <Label fx:id="lblDescription" styleClass="detail-value-full" GridPane.rowIndex="7" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+
+        </GridPane>
+
+        <!-- Séparateur -->
+        <Separator styleClass="form-separator"/>
+
+        <!-- Boutons d'action -->
+        <HBox spacing="15" alignment="CENTER" styleClass="form-buttons">
+            <Button text="Fermer" onAction="#handleFermer" styleClass="btn-primary"/>
+        </HBox>
+
+        <!-- Barre de statut -->
+        <HBox styleClass="status-bar">
+            <Label fx:id="lblStatus" text="✓ Détails du traitement chargés" styleClass="status-text"/>
+        </HBox>
+    </VBox>
+</VBox>

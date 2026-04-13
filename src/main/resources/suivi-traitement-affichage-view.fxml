@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.SuiviTraitementAffichageController" stylesheets="@/css/traitements-suivis.css">
+
+    <!-- En-tête de la page -->
+    <VBox styleClass="page-header">
+        <Label text="Détails du Suivi de Traitement" styleClass="page-title"/>
+        <Label text="Consultez les informations complètes du suivi" styleClass="page-subtitle"/>
+    </VBox>
+
+    <!-- Contenu principal -->
+    <VBox styleClass="form-container" spacing="20">
+        <padding>
+            <Insets top="20" right="30" bottom="20" left="30"/>
+        </padding>
+
+        <!-- Grille d'affichage -->
+        <GridPane hgap="20" vgap="15" styleClass="form-grid">
+
+            <!-- Ligne 1 : Date Suivi et Traitement -->
+            <Label text="Date Suivi" styleClass="detail-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <Label fx:id="lblDateSuivi" styleClass="detail-value" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Traitement" styleClass="detail-label" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+            <Label fx:id="lblTraitement" styleClass="detail-value" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+            <!-- Ligne 2 : Étudiant et Psychologue -->
+            <Label text="Étudiant" styleClass="detail-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <Label fx:id="lblEtudiant" styleClass="detail-value" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="Psychologue" styleClass="detail-label" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+            <Label fx:id="lblPsychologue" styleClass="detail-value" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+            <!-- Ligne 3 : Saisi Par -->
+            <Label text="Saisi Par" styleClass="detail-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <Label fx:id="lblSaisiPar" styleClass="detail-value" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <!-- Ligne 4 : Notes (pleine largeur) -->
+            <Label text="Notes / Observations" styleClass="detail-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <Label fx:id="lblNotes" styleClass="detail-value-full" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+
+        </GridPane>
+
+        <!-- Séparateur -->
+        <Separator styleClass="form-separator"/>
+
+        <!-- Boutons d'action -->
+        <HBox spacing="15" alignment="CENTER" styleClass="form-buttons">
+            <Button text="Fermer" onAction="#handleFermer" styleClass="btn-primary"/>
+        </HBox>
+
+        <!-- Barre de statut -->
+        <HBox styleClass="status-bar">
+            <Label fx:id="lblStatus" text="✓ Détails du suivi chargés" styleClass="status-text"/>
+        </HBox>
+    </VBox>
+</VBox>
