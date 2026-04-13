@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.geometry.*?>
 
 <StackPane xmlns:fx="http://javafx.com/fxml/1"
@@ -12,8 +13,12 @@
                  -fx-padding: 40;"
           spacing="18" maxWidth="420" alignment="CENTER">
 
+        <!-- LOGO + TITRE -->
         <VBox alignment="CENTER" spacing="5">
-            <Label text="🧠 UniMind"
+            <ImageView fitWidth="55" fitHeight="55" preserveRatio="true">
+                <image><Image url="@/images/unimind.png"/></image>
+            </ImageView>
+            <Label text="UniMind"
                    style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1E1B4B;"/>
             <Label text="Plateforme de santé mentale étudiante"
                    style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"/>
@@ -21,20 +26,38 @@
 
         <Separator/>
 
+        <!-- EMAIL -->
         <VBox spacing="6">
             <Label text="Adresse email"
                    style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
             <TextField fx:id="emailField" promptText="votre@email.tn" prefWidth="340"
                        style="-fx-padding: 10; -fx-background-radius: 8;
-                              -fx-border-color: #DDD6FE; -fx-border-radius: 8;"/>
+                              -fx-border-color: #DDD6FE; -fx-border-radius: 8; -fx-font-size: 13px;"/>
         </VBox>
 
+        <!-- MOT DE PASSE avec icône oeil -->
         <VBox spacing="6">
             <Label text="Mot de passe"
                    style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
-            <PasswordField fx:id="passwordField" promptText="••••••••" prefWidth="340"
-                           style="-fx-padding: 10; -fx-background-radius: 8;
-                                  -fx-border-color: #DDD6FE; -fx-border-radius: 8;"/>
+            <HBox alignment="CENTER_LEFT" spacing="0"
+                  style="-fx-border-color: #DDD6FE; -fx-border-radius: 8;
+                         -fx-background-radius: 8; -fx-background-color: white;">
+                <PasswordField fx:id="passwordField" promptText="••••••••"
+                               HBox.hgrow="ALWAYS"
+                               style="-fx-padding: 10; -fx-background-radius: 8 0 0 8;
+                                      -fx-border-color: transparent; -fx-font-size: 13px;
+                                      -fx-background-color: transparent;"/>
+                <TextField fx:id="passwordVisible" promptText="••••••••"
+                           HBox.hgrow="ALWAYS" visible="false" managed="false"
+                           style="-fx-padding: 10; -fx-background-radius: 8 0 0 8;
+                                  -fx-border-color: transparent; -fx-font-size: 13px;
+                                  -fx-background-color: transparent;"/>
+                <Button fx:id="btnOeilLogin" text="👁"
+                        onAction="#togglePasswordLogin"
+                        style="-fx-background-color: transparent; -fx-cursor: hand;
+                               -fx-font-size: 14px; -fx-padding: 8 12;
+                               -fx-border-color: transparent;"/>
+            </HBox>
         </VBox>
 
         <Label fx:id="messageErreur"
@@ -45,7 +68,7 @@
                 prefWidth="340" prefHeight="42"
                 style="-fx-background-color: linear-gradient(to right, #1565C0, #7C3AED);
                        -fx-text-fill: white; -fx-font-size: 14px;
-                       -fx-font-weight: bold; -fx-bckground-radius: 8; -fx-cursor: hand;"/>
+                       -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;"/>
 
         <Separator/>
 

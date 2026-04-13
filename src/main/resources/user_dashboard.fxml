@@ -10,15 +10,16 @@
             prefWidth="1000" prefHeight="700"
             style="-fx-background-color: #F3F0FF;">
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <!-- NAVBAR -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <top>
         <HBox alignment="CENTER_LEFT" spacing="15" prefHeight="60"
               style="-fx-background-color: white; -fx-padding: 0 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 2);">
 
             <!-- Logo -->
-            <Label text="🧠 UniMind" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #7C3AED;"/>
+            <ImageView fitWidth="36" fitHeight="36" preserveRatio="true">
+                <image><Image url="@/images/unimind.png"/></image>
+            </ImageView>
+            <Label text="UniMind" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #7C3AED;"/>
             <Label text="|" style="-fx-text-fill: #D1D5DB; -fx-font-size: 16;"/>
             <Label fx:id="sidebarRole" text="Espace Personnel" style="-fx-font-size: 13; -fx-text-fill: #6B7280;"/>
 
@@ -37,9 +38,7 @@
         </HBox>
     </top>
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <!-- SIDEBAR -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <left>
         <VBox prefWidth="250" spacing="5" style="-fx-background-color: #5B21B6; -fx-padding: 20 0;">
 
@@ -71,9 +70,7 @@
         </VBox>
     </left>
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <!-- CONTENU PRINCIPAL -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <center>
         <ScrollPane fitToWidth="true" style="-fx-background-color: #F3F0FF; -fx-background: #F3F0FF; -fx-padding: 0;">
             <VBox spacing="20" style="-fx-padding: 25;">
@@ -140,7 +137,7 @@
                                 <GridPane hgap="15" vgap="12">
                                     <Label text="Pseudo :" GridPane.rowIndex="0" GridPane.columnIndex="0"
                                            prefWidth="90" style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
-                                    <TextField fx:id="pPseudo" promptText="@pseudo" prefWidth="300"
+                                    <TextField fx:id="pPseudo" promptText="Votre pseudo" prefWidth="300"
                                                GridPane.rowIndex="0" GridPane.columnIndex="1"
                                                style="-fx-padding: 8; -fx-background-radius: 6; -fx-border-color: #E5E7EB; -fx-border-radius: 6;"/>
 

@@ -74,7 +74,7 @@ public class InscriptionController {
         String cin = cinField.getText().trim();
         String role = roleCombo.getValue();
 
-        // ── VALIDATIONS COMMUNES ──────────────────────────────────────
+        // VALIDATIONS COMMUNES
         if (!ValidationUtils.isNonVide(nom) || !ValidationUtils.isNonVide(prenom)) {
             messageGlobal.setText("Nom et prénom obligatoires");
             return;

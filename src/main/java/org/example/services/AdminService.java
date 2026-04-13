@@ -11,7 +11,7 @@ public class AdminService extends UserService {
 
     public AdminService() { super(); }
 
-    // ── INSCRIPTION ADMIN ─────────────────────────────────────────────
+    // INSCRIPTION ADMIN
     @Override
     public void inscrire(User user) throws SQLException {
         if (emailExiste(user.getEmail())) {
@@ -37,7 +37,7 @@ public class AdminService extends UserService {
         System.out.println("✓ Admin créé avec succès.");
     }
 
-    // ── AJOUTER UN UTILISATEUR ────────────────────────────────────────
+    // AJOUTER UN UTILISATEUR
     @Override
     public void ajouter(User user) throws SQLException {
         if (emailExiste(user.getEmail())) {
@@ -63,10 +63,10 @@ public class AdminService extends UserService {
         System.out.println("✓ Utilisateur ajouté avec succès.");
     }
 
-    // ── MODIFIER UN UTILISATEUR ───────────────────────────────────────
+    // MODIFIER UN UTILISATEUR
     @Override
     public void modifier(User user) throws SQLException {
-        // Vérifier unicité email (exclure l'utilisateur lui-même)
+        // Vérifier unicité email
         String checkEmail = "SELECT COUNT(*) FROM user WHERE email = ? AND user_id != ?";
         PreparedStatement psEmail = connection.prepareStatement(checkEmail);
         psEmail.setString(1, user.getEmail());
@@ -77,7 +77,7 @@ public class AdminService extends UserService {
             throw new SQLException("Email déjà utilisé par un autre utilisateur !");
         }
 
-        // Vérifier unicité CIN (exclure l'utilisateur lui-même)
+        // Vérifier unicité CIN
         String checkCin = "SELECT COUNT(*) FROM user WHERE cin = ? AND user_id != ?";
         PreparedStatement psCin = connection.prepareStatement(checkCin);
         psCin.setString(1, user.getCin());
@@ -101,7 +101,7 @@ public class AdminService extends UserService {
         System.out.println("✓ Utilisateur modifié avec succès.");
     }
 
-    // ── CHANGER MOT DE PASSE (admin) ──────────────────────────────────
+    // CHANGER MOT DE PASSE (admin)
     public void changerMotDePasse(int userId, String ancienMdp, String nouveauMdp) throws SQLException {
         String query = "SELECT password FROM user WHERE user_id = ?";
         PreparedStatement ps = connection.prepareStatement(query);
@@ -121,7 +121,7 @@ public class AdminService extends UserService {
         }
     }
 
-    // ── SUPPRIMER UN UTILISATEUR ──────────────────────────────────────
+    // SUPPRIMER UN UTILISATEUR
     @Override
     public void supprimer(int id) throws SQLException {
         String query = "DELETE FROM user WHERE user_id = ?";
@@ -131,7 +131,7 @@ public class AdminService extends UserService {
         System.out.println("✓ Utilisateur supprimé avec succès.");
     }
 
-    // ── BLOQUER UN COMPTE ─────────────────────────────────────────────
+    // BLOQUER UN COMPTE
     public void bloquer(int userId) throws SQLException {
         String query = "UPDATE user SET is_active=0, statut='inactif' WHERE user_id=?";
         PreparedStatement ps = connection.prepareStatement(query);
@@ -140,7 +140,7 @@ public class AdminService extends UserService {
         System.out.println("✓ Compte bloqué avec succès.");
     }
 
-    // ── DEBLOQUER UN COMPTE ───────────────────────────────────────────
+    //  DEBLOQUER UN COMPTE
     public void debloquer(int userId) throws SQLException {
         String query = "UPDATE user SET is_active=1, statut='actif' WHERE user_id=?";
         PreparedStatement ps = connection.prepareStatement(query);
@@ -149,7 +149,7 @@ public class AdminService extends UserService {
         System.out.println("✓ Compte débloqué avec succès.");
     }
 
-    // ── ACCEPTER DEMANDE ──────────────────────────────────────────────
+    //ACCEPTER DEMANDE
     public void accepterDemande(int userId) throws SQLException {
         String query = "UPDATE user SET statut='actif', is_active=1, is_verified=1 WHERE user_id=? AND statut='en_attente'";
         PreparedStatement ps = connection.prepareStatement(query);
@@ -159,7 +159,7 @@ public class AdminService extends UserService {
         else System.out.println("✗ Aucune demande en attente pour cet utilisateur.");
     }
 
-    // ── REFUSER DEMANDE ───────────────────────────────────────────────
+    // REFUSER DEMANDE
     public void refuserDemande(int userId) throws SQLException {
         String query = "UPDATE user SET statut='rejeté', is_active=0 WHERE user_id=? AND statut='en_attente'";
         PreparedStatement ps = connection.prepareStatement(query);
@@ -169,7 +169,7 @@ public class AdminService extends UserService {
         else System.out.println("✗ Aucune demande en attente pour cet utilisateur.");
     }
 
-    // ── AFFICHER DEMANDES EN ATTENTE ──────────────────────────────────
+    // AFFICHER DEMANDES EN ATTENTE
     public List<User> afficherDemandesEnAttente() throws SQLException {
         List<User> liste = new ArrayList<>();
         String query = "SELECT * FROM user WHERE statut='en_attente' ORDER BY created_at DESC";
@@ -180,7 +180,7 @@ public class AdminService extends UserService {
         return liste;
     }
 
-    // ── AFFICHER TOUS ─────────────────────────────────────────────────
+    //  AFFICHER TOUS
     @Override
     public List<User> afficher() throws SQLException {
         List<User> liste = new ArrayList<>();
@@ -191,7 +191,7 @@ public class AdminService extends UserService {
         return liste;
     }
 
-    // ── RECHERCHER PAR ID ─────────────────────────────────────────────
+    // RECHERCHER PAR ID
     public User rechercherParId(int id) throws SQLException {
         String query = "SELECT * FROM user WHERE user_id=?";
         PreparedStatement ps = connection.prepareStatement(query);
@@ -202,7 +202,7 @@ public class AdminService extends UserService {
         return null;
     }
 
-    // ── MODIFIER PROFIL ───────────────────────────────────────────────
+    //  MODIFIER PROFIL
     public void modifierProfil(Profil profil) throws SQLException {
         String checkQuery = "SELECT COUNT(*) FROM profil WHERE user_id = ?";
         PreparedStatement check = connection.prepareStatement(checkQuery);
@@ -229,7 +229,7 @@ public class AdminService extends UserService {
         System.out.println("✓ Profil admin mis à jour.");
     }
 
-    // ── UNICITE CIN ───────────────────────────────────────────────────
+    // UNICITE CIN
     protected boolean cinExiste(String cin) throws SQLException {
         String query = "SELECT COUNT(*) FROM user WHERE cin = ?";
         PreparedStatement ps = connection.prepareStatement(query);
@@ -239,7 +239,7 @@ public class AdminService extends UserService {
         return rs.getInt(1) > 0;
     }
 
-    // ── MAPPER ────────────────────────────────────────────────────────
+    // MAPPER
     @Override
     public User mapUser(ResultSet rs) throws SQLException {
         String role = rs.getString("role");

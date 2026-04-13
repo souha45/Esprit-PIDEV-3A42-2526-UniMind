@@ -16,19 +16,38 @@ public class LoginController {
     @FXML private TextField emailField;
     @FXML private PasswordField passwordField;
     @FXML private Label messageErreur;
-
+    @FXML private TextField passwordVisible;
+    @FXML private Button btnOeilLogin;
+    private boolean passwordShown = false;
     private AdminService adminService = new AdminService();
     private EtudiantService etudiantService = new EtudiantService();
     private PsychologueService psychologueService = new PsychologueService();
     private ResponsableService responsableService = new ResponsableService();
 
     @FXML
+    public void togglePasswordLogin() {
+        passwordShown = !passwordShown;
+        if (passwordShown) {
+            passwordVisible.setText(passwordField.getText());
+            passwordVisible.setVisible(true);  passwordVisible.setManaged(true);
+            passwordField.setVisible(false);   passwordField.setManaged(false);
+            btnOeilLogin.setText("🙈");
+        } else {
+            passwordField.setText(passwordVisible.getText());
+            passwordField.setVisible(true);    passwordField.setManaged(true);
+            passwordVisible.setVisible(false); passwordVisible.setManaged(false);
+            btnOeilLogin.setText("👁");
+        }
+    }
+
+    @FXML
     public void seConnecter() {
         messageErreur.setText("");
         String email    = emailField.getText().trim();
-        String password = passwordField.getText();
-
-        // ── Validations ───────────────────────────────────────────────
+        String password = passwordShown
+                ? passwordVisible.getText()
+                : passwordField.getText();
+        // Validations
         if (!ValidationUtils.isNonVide(email)) {
             messageErreur.setText("Email obligatoire"); return;
         }

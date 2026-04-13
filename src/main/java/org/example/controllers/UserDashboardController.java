@@ -33,20 +33,20 @@ public class UserDashboardController {
     @FXML private Label sidebarRole;
     @FXML private VBox panneauProfil;
 
-    // ── Labels infos ──────────────────────────────────────────────────
+    // Labels infos
     @FXML private Label pNomPrenom, pEmail, pRole, pStatut;
 
-    // ── Champs profil ─────────────────────────────────────────────────
-    @FXML private TextArea pBio;        // ✅ TextArea (correspond au FXML)
+    // Champs profil
+    @FXML private TextArea pBio;        //  TextArea (correspond au FXML)
     @FXML private TextField pTel, pPseudo;
 
-    // ── Mot de passe ──────────────────────────────────────────────────
+    // Mot de passe
     @FXML private PasswordField pAncienMdp, pNouveauMdp, pConfirmMdp;
 
-    // ── Labels erreurs ────────────────────────────────────────────────
+    //Labels erreurs
     @FXML private Label pErrTel, pErrMdp, pMessageProfil;
 
-    // ── Photo ─────────────────────────────────────────────────────────
+    //Photo
     @FXML private ImageView photoProfile;
 
     private User utilisateur;
@@ -94,7 +94,7 @@ public class UserDashboardController {
                 if (pPseudo != null) pPseudo.setText(profil.getPseudo() != null ? profil.getPseudo() : "");
 
                 if (profil.getPhoto() != null && !profil.getPhoto().isEmpty()) {
-                    File file = new File(profil.getPhoto());
+                    File file = new File(System.getProperty("user.dir") + "/uploads/" + profil.getPhoto());
                     if (file.exists()) {
                         Image img = new Image(file.toURI().toString());
                         if (photoProfile != null) photoProfile.setImage(img);
@@ -161,13 +161,11 @@ public class UserDashboardController {
                 int dotIndex = fichier.getName().lastIndexOf(".");
                 if (dotIndex > 0) extension = fichier.getName().substring(dotIndex);
 
-                String nomFichier = "photo_" + utilisateur.getUserId()
-                        + "_" + System.currentTimeMillis() + extension;
+                String nomFichier = fichier.getName();
                 Path destination = uploadDir.resolve(nomFichier);
 
                 Files.copy(fichier.toPath(), destination, StandardCopyOption.REPLACE_EXISTING);
-                currentPhotoPath = destination.toAbsolutePath().toString();
-
+                currentPhotoPath = nomFichier;
                 Image img = new Image(fichier.toURI().toString());
                 if (photoProfile != null) photoProfile.setImage(img);
                 if (navPhoto != null) navPhoto.setImage(img);
@@ -297,7 +295,7 @@ public class UserDashboardController {
             e.printStackTrace();
         }
     }
-
+//logout
     @FXML
     public void seDeconnecter() {
         try {

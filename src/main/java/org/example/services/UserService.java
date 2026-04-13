@@ -15,7 +15,7 @@ public abstract class UserService implements ICrud<User> {
         this.connection = MyDataBase_Unimind.getInstance().getConnection();
     }
 
-    // ── CONNEXION GENERALE ────────────────────────────────────────────
+    // CONNEXION GENERALE
     public static User connexionGenerale(String email, String plainPassword,
                                          Connection connection,
                                          AdminService adminService,
@@ -40,7 +40,7 @@ public abstract class UserService implements ICrud<User> {
             return null;
         }
 
-        // ── equalsIgnoreCase pour gérer ADMIN/Admin/admin ─────────────
+        // equalsIgnoreCase pour gérer ADMIN/Admin/admin
         String roleStr = rs.getString("role");
         User user = null;
 
@@ -63,17 +63,17 @@ public abstract class UserService implements ICrud<User> {
         return user;
     }
 
-    // ── DECONNEXION ───────────────────────────────────────────────────
+    // DECONNEXION
     public void deconnexion(User user) {
         if (user != null) {
             System.out.println("✓ Déconnexion : " + user.getPrenom() + " " + user.getNom());
         }
     }
 
-    // ── INSCRIPTION (abstraite) ───────────────────────────────────────
+    // INSCRIPTION (abstraite)
     public abstract void inscrire(User user) throws SQLException;
 
-    // ── EMAIL UNIQUE ──────────────────────────────────────────────────
+    // EMAIL UNIQUE
     protected boolean emailExiste(String email) throws SQLException {
         String query = "SELECT COUNT(*) FROM user WHERE email = ?";
         PreparedStatement ps = connection.prepareStatement(query);
@@ -83,7 +83,7 @@ public abstract class UserService implements ICrud<User> {
         return rs.getInt(1) > 0;
     }
 
-    // ── MAPPER (abstrait) ─────────────────────────────────────────────
+    // MAPPER (abstrait)
     public abstract User mapUser(ResultSet rs) throws SQLException;
 
     @Override

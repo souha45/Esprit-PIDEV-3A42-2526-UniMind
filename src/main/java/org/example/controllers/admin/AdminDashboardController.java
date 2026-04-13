@@ -33,23 +33,23 @@ import java.util.Optional;
 
 public class AdminDashboardController {
 
-    // ── NAVBAR ────────────────────────────────────────────────────────
+    // NAVBAR
     @FXML private TextField navRechercheField;
     @FXML private Label navNomAdmin;
     @FXML private ImageView navPhotoAdmin;
 
-    // ── SIDEBAR ───────────────────────────────────────────────────────
+    // SIDEBAR
     @FXML private Button btnGestionUsers;
     @FXML private Button btnDemandes;
     @FXML private Button btnProfil;
     @FXML private Button btnDeconnexion;
 
-    // ── CONTENU PRINCIPAL ─────────────────────────────────────────────
+    //  CONTENU PRINCIPAL
     @FXML private VBox panneauGestion;
     @FXML private VBox panneauDemandes;
     @FXML private VBox panneauProfil;
 
-    // ── GESTION USERS : TABLE ─────────────────────────────────────────
+    // GESTION USERS : TABLE
     @FXML private TableView<User> tableUtilisateurs;
     @FXML private TableColumn<User, String> colNom;
     @FXML private TableColumn<User, String> colPrenom;
@@ -60,7 +60,7 @@ public class AdminDashboardController {
     @FXML private TableColumn<User, Void> colActions;
     @FXML private Label messageGestion;
 
-    // ── DEMANDES EN ATTENTE ───────────────────────────────────────────
+    // DEMANDES EN ATTENTE
     @FXML private TableView<User> tableDemandes;
     @FXML private TableColumn<User, String> dColNom;
     @FXML private TableColumn<User, String> dColPrenom;
@@ -68,7 +68,7 @@ public class AdminDashboardController {
     @FXML private TableColumn<User, String> dColRole;
     @FXML private Label messageDemandes;
 
-    // ── PROFIL ADMIN ──────────────────────────────────────────────────
+    // PROFIL ADMIN
     @FXML private Label pNomPrenom, pEmail, pRole, pStatut;
     @FXML private TextField pBio, pTel;
     @FXML private PasswordField pAncienMdp, pNouveauMdp, pConfirmMdp;
@@ -82,9 +82,7 @@ public class AdminDashboardController {
     private String currentPhotoPath = null;
 
 
-    // ══════════════════════════════════════════════════════════════════
     // INITIALISATION
-    // ══════════════════════════════════════════════════════════════════
 
     @FXML
     public void initialize() {
@@ -111,10 +109,7 @@ public class AdminDashboardController {
         chargerPhotoProfile(user);
     }
 
-    // ══════════════════════════════════════════════════════════════════
     // NAVIGATION SIDEBAR
-    // ══════════════════════════════════════════════════════════════════
-
     @FXML public void afficherGestion() {
         afficherPanneau("gestion");
         chargerUtilisateurs();
@@ -156,9 +151,7 @@ public class AdminDashboardController {
         return "-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 200; -fx-pref-height: 40; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 0;";
     }
 
-    // ══════════════════════════════════════════════════════════════════
     // TABLE UTILISATEURS
-    // ══════════════════════════════════════════════════════════════════
 
     private void configurerTable() {
         colNom.setCellValueFactory(new PropertyValueFactory<>("nom"));
@@ -235,11 +228,7 @@ public class AdminDashboardController {
                         u.getEmail().toLowerCase().contains(r)
         ));
     }
-
-    // ══════════════════════════════════════════════════════════════════
     // MODAL FORMULAIRE (Ajouter / Modifier)
-    // ══════════════════════════════════════════════════════════════════
-
     @FXML
     public void ouvrirModalAjout() {
         ouvrirModal(null);
@@ -372,9 +361,7 @@ public class AdminDashboardController {
         stage.showAndWait();
     }
 
-    // ══════════════════════════════════════════════════════════════════
     // ACTIONS CRUD (appelées depuis les boutons du tableau)
-    // ══════════════════════════════════════════════════════════════════
 
     private void supprimerUtilisateur(User user) {
         Alert c = new Alert(Alert.AlertType.CONFIRMATION,
@@ -433,9 +420,7 @@ public class AdminDashboardController {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════
     // DEMANDES EN ATTENTE
-    // ══════════════════════════════════════════════════════════════════
 
     private void configurerTableDemandes() {
         dColNom.setCellValueFactory(new PropertyValueFactory<>("nom"));
@@ -501,9 +486,7 @@ public class AdminDashboardController {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════
     // PROFIL ADMIN
-    // ══════════════════════════════════════════════════════════════════
 
     @FXML
     public void choisirPhoto() {
@@ -515,7 +498,7 @@ public class AdminDashboardController {
 
         if (fichier != null) {
             try {
-                // ── Copier dans le dossier uploads ────────────────────
+                // Copier dans le dossier uploads
                 String projectPath = System.getProperty("user.dir");
                 java.nio.file.Path uploadDir = java.nio.file.Paths.get(projectPath, "uploads");
 
@@ -527,17 +510,15 @@ public class AdminDashboardController {
                 int dotIndex = fichier.getName().lastIndexOf(".");
                 if (dotIndex > 0) extension = fichier.getName().substring(dotIndex);
 
-                String nomFichier = "photo_admin_" + adminConnecte.getUserId()
-                        + "_" + System.currentTimeMillis() + extension;
+                String nomFichier = fichier.getName();
 
                 java.nio.file.Path destination = uploadDir.resolve(nomFichier);
                 java.nio.file.Files.copy(fichier.toPath(), destination,
                         StandardCopyOption.REPLACE_EXISTING);
 
-                // ── Stocker le chemin absolu ──────────────────────────
-                currentPhotoPath = destination.toAbsolutePath().toString();
-
-                // ── Afficher l'aperçu ──────────────────────────────────
+                // Stocker le chemin absolu
+                currentPhotoPath = nomFichier;
+                // Afficher l'aperçu
                 Image img = new Image(fichier.toURI().toString());
                 photoProfile.setImage(img);
                 navPhotoAdmin.setImage(img);
@@ -567,7 +548,7 @@ public class AdminDashboardController {
         }
 
         try {
-            // ── Vérifier si le profil existe déjà ────────────────────
+            //Vérifier si le profil existe déjà
             var conn = org.example.utils.MyDataBase_Unimind.getInstance().getConnection();
             java.sql.PreparedStatement check = conn.prepareStatement(
                     "SELECT COUNT(*) FROM profil WHERE user_id = ?");
@@ -581,7 +562,7 @@ public class AdminDashboardController {
                 java.sql.PreparedStatement ps = conn.prepareStatement(sql);
                 ps.setString(1, bio);
                 ps.setString(2, tel);
-                ps.setString(3, currentPhotoPath); // ✅ photo incluse
+                ps.setString(3, currentPhotoPath); // photo incluse
                 ps.setInt(4, adminConnecte.getUserId());
                 ps.executeUpdate();
             } else {
@@ -590,7 +571,7 @@ public class AdminDashboardController {
                 ps.setInt(1, adminConnecte.getUserId());
                 ps.setString(2, bio);
                 ps.setString(3, tel);
-                ps.setString(4, currentPhotoPath); // ✅ photo incluse
+                ps.setString(4, currentPhotoPath); //  photo incluse
                 ps.executeUpdate();
             }
 
@@ -603,7 +584,7 @@ public class AdminDashboardController {
             e.printStackTrace();
         }
     }
-
+//changer mdp
     @FXML
     public void changerMotDePasse() {
         pErrMdp.setText(""); pMessageProfil.setText("");
@@ -634,9 +615,7 @@ public class AdminDashboardController {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════
     // DÉCONNEXION
-    // ══════════════════════════════════════════════════════════════════
 
     @FXML
     public void seDeconnecter() {
@@ -651,9 +630,8 @@ public class AdminDashboardController {
         } catch (Exception e) { e.printStackTrace(); }
     }
 
-    // ══════════════════════════════════════════════════════════════════
     // UTILITAIRES
-    // ══════════════════════════════════════════════════════════════════
+
 
     private void chargerPhotoProfile(User user) {
         try {
@@ -666,12 +644,13 @@ public class AdminDashboardController {
             if (rs.next()) {
                 String photoPath = rs.getString("photo");
                 if (photoPath != null && !photoPath.isEmpty()) {
-                    File f = new File(photoPath);
+                    String projectPath = System.getProperty("user.dir");
+                    File f = new File(projectPath + "/uploads/" + photoPath);
                     if (f.exists()) {
                         Image img = new Image(f.toURI().toString());
                         photoProfile.setImage(img);
                         navPhotoAdmin.setImage(img);
-                        currentPhotoPath = photoPath; // ✅ restaurer le chemin
+                        currentPhotoPath = photoPath; // restaurer le chemin
                         return;
                     }
                 }

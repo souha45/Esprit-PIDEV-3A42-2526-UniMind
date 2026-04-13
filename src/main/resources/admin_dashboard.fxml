@@ -10,26 +10,28 @@
             prefWidth="1200" prefHeight="700"
             style="-fx-background-color: #F3F0FF;">
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <!-- NAVBAR -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <top>
         <HBox alignment="CENTER_LEFT" spacing="15" prefHeight="60"
               style="-fx-background-color: white; -fx-padding: 0 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 2);">
 
             <!-- Logo -->
-            <Label text="🧠 UniMind" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #7C3AED;"/>
+            <ImageView fitWidth="36" fitHeight="36" preserveRatio="true">
+                <image><Image url="@/images/unimind.png"/></image>
+            </ImageView>
+            <Label text="UniMind" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #7C3AED;"/>
             <Label text="|" style="-fx-text-fill: #D1D5DB; -fx-font-size: 16;"/>
             <Label text="Administration" style="-fx-font-size: 13; -fx-text-fill: #6B7280;"/>
 
             <Region HBox.hgrow="ALWAYS"/>
 
             <!-- Barre de recherche -->
-            <HBox alignment="CENTER" spacing="5"
-                  style="-fx-background-color: #F3F0FF; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 6 15;">
-                <Label text="🔍" style="-fx-font-size: 13;"/>
-                <TextField fx:id="navRechercheField" promptText="Rechercher un utilisateur..."
-                           prefWidth="220" style="-fx-background-color: transparent; -fx-border-color: transparent;"/>
+            <HBox alignment="CENTER" spacing="4" prefHeight="32"
+                  style="-fx-background-color: #F3F0FF; -fx-background-radius: 16; -fx-padding: 4 10;">
+                <Label text="🔍" style="-fx-font-size: 12; -fx-text-fill: #9CA3AF;"/>
+                <TextField fx:id="navRechercheField" promptText="Rechercher..."
+                           prefWidth="160" prefHeight="26"
+                           style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12;"/>
             </HBox>
 
             <!-- Notification -->
@@ -37,17 +39,15 @@
 
             <!-- Avatar admin -->
             <HBox alignment="CENTER" spacing="8">
-                <ImageView fx:id="navPhotoAdmin" fitWidth="36" fitHeight="36">
-                    <clip><Circle centerX="18" centerY="18" radius="18"/></clip>
+                <ImageView fx:id="navPhotoAdmin" fitWidth="34" fitHeight="34">
+                    <clip><Circle centerX="17" centerY="17" radius="17"/></clip>
                 </ImageView>
                 <Label fx:id="navNomAdmin" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 13;"/>
             </HBox>
         </HBox>
     </top>
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <!-- SIDEBAR -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <left>
         <VBox prefWidth="250" spacing="5" style="-fx-background-color: #5B21B6; -fx-padding: 20 0;">
 
@@ -85,16 +85,13 @@
         </VBox>
     </left>
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <!-- CONTENU PRINCIPAL -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <center>
         <ScrollPane fitToWidth="true" style="-fx-background-color: #F3F0FF; -fx-background: #F3F0FF; -fx-padding: 0;">
             <VBox spacing="20" style="-fx-padding: 25;">
 
-                <!-- ─────────────────────────────────────────────────────── -->
+
                 <!-- PANNEAU GESTION UTILISATEURS -->
-                <!-- ─────────────────────────────────────────────────────── -->
                 <VBox fx:id="panneauGestion" spacing="15">
 
                     <Label text="Gestion des Utilisateurs"
@@ -128,9 +125,7 @@
                     </TableView>
                 </VBox>
 
-                <!-- ─────────────────────────────────────────────────────── -->
                 <!-- PANNEAU DEMANDES EN ATTENTE -->
-                <!-- ─────────────────────────────────────────────────────── -->
                 <VBox fx:id="panneauDemandes" spacing="15" visible="false" managed="false">
 
                     <Label text="Demandes d'inscription en attente"
@@ -159,9 +154,7 @@
                     </HBox>
                 </VBox>
 
-                <!-- ─────────────────────────────────────────────────────── -->
                 <!-- PANNEAU PROFIL ADMIN -->
-                <!-- ─────────────────────────────────────────────────────── -->
                 <VBox fx:id="panneauProfil" spacing="20" visible="false" managed="false">
 
                     <Label text="Mon Profil"
