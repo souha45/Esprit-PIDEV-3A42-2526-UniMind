@@ -6,41 +6,71 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.controllers.evenement.AdminDashboardController"
-            stylesheets="@../styles/dashboard-theme.css"
+            stylesheets="@../styles/admin.css"
             styleClass="dashboard-bg">
 
     <left>
         <VBox spacing="8" styleClass="sidebar">
             <children>
-                <Label text="UniMind" styleClass="sidebar-title" />
-                <VBox styleClass="sidebar-profile">
+                <VBox styleClass="sidebar-brand" alignment="CENTER">
                     <children>
-                        <StackPane styleClass="avatar-circle" />
-                        <Label fx:id="lblUserName" styleClass="sidebar-user-name" />
+                        <Label text="UniMind" styleClass="brand-name" />
                     </children>
                 </VBox>
 
-                <Separator styleClass="sidebar-divider" />
-                <Button text="🎪 Gestion Événements" onAction="#gestionEvenements" styleClass="nav-button" />
-                <Button text="🏢 Gestion Sponsors" onAction="#gestionSponsors" styleClass="nav-button" />
-                <Button text="✅ Gestion Participations" onAction="#gestionParticipations" styleClass="nav-button" />
-                <Region VBox.vgrow="ALWAYS" />
-                <Button text="🔙 Déconnexion" onAction="#logout" styleClass="sidebar-logout" />
+                <VBox styleClass="admin-info" alignment="CENTER">
+                    <children>
+                        <Label text="👤" styleClass="admin-avatar" />
+                        <Label text="Administrateur" styleClass="admin-role" />
+                        <Label fx:id="lblUserName" styleClass="admin-name" />
+                    </children>
+                </VBox>
+
+                <Separator styleClass="sidebar-separator" />
+
+                <VBox styleClass="nav-menu" VBox.vgrow="ALWAYS">
+                    <children>
+                        <Label text="NAVIGATION" styleClass="nav-section-label" />
+                        <Button text="🎪  Gestion Événements" onAction="#gestionEvenements" styleClass="nav-btn" maxWidth="Infinity" />
+                        <Button text="🏢  Gestion Sponsors" onAction="#gestionSponsors" styleClass="nav-btn" maxWidth="Infinity" />
+                        <Button text="✅  Gestion Participations" onAction="#gestionParticipations" styleClass="nav-btn" maxWidth="Infinity" />
+                    </children>
+                </VBox>
+
+                <VBox styleClass="sidebar-footer">
+                    <children>
+                        <Separator styleClass="sidebar-separator" />
+                        <Button text="�  Déconnexion" onAction="#logout" styleClass="nav-btn logout-btn" maxWidth="Infinity" />
+                    </children>
+                </VBox>
             </children>
         </VBox>
     </left>
 
     <center>
-        <VBox styleClass="padding-large">
-            <children>
-                <VBox styleClass="content-shell">
+        <BorderPane>
+            <top>
+                <HBox spacing="16" alignment="CENTER_LEFT" styleClass="page-header" BorderPane.alignment="CENTER">
                     <children>
-                        <ScrollPane fx:id="contentScrollPane" fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
-                        </ScrollPane>
+                        <Label text="ADMIN DASHBOARD" styleClass="page-title" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button text="🚪 Déconnexion" onAction="#logout" styleClass="btn-secondary" />
+                    </children>
+                </HBox>
+            </top>
+            <center>
+                <VBox styleClass="padding-large">
+                    <children>
+                        <VBox styleClass="content-shell">
+                            <children>
+                                <ScrollPane fx:id="contentScrollPane" fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
+                                </ScrollPane>
+                            </children>
+                        </VBox>
                     </children>
                 </VBox>
-            </children>
-        </VBox>
+            </center>
+        </BorderPane>
     </center>
 
 </BorderPane>

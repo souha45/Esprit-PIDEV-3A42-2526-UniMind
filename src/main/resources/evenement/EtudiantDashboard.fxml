@@ -4,43 +4,50 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="org.example.controllers.evenement.EtudiantDashboardController"
-            stylesheets="@../styles/dashboard-theme.css"
-            styleClass="dashboard-bg">
+<VBox xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.controllers.evenement.EtudiantDashboardController"
+      stylesheets="@../styles/etudiant.css"
+      styleClass="etudiant-root"
+      spacing="0">
 
-    <left>
-        <VBox spacing="8" styleClass="sidebar">
+    <children>
+        <HBox styleClass="etudiant-navbar" alignment="CENTER_LEFT" spacing="0">
             <children>
-                <Label text="UniMind" styleClass="sidebar-title" />
-                <VBox styleClass="sidebar-profile">
+                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="navbar-brand">
                     <children>
-                        <StackPane styleClass="avatar-circle" />
-                        <Label fx:id="lblUserName" styleClass="sidebar-user-name" />
+                        <Label text="UniMind" styleClass="navbar-brand-name" />
                     </children>
-                </VBox>
+                </HBox>
 
-                <Separator styleClass="sidebar-divider" />
-                <Button text="🎪 Événements" onAction="#voirEvenements" styleClass="nav-button" />
-                <Button text="✅ Mes Participations" onAction="#voirParticipations" styleClass="nav-button" />
-                <Button text="⭐ Mes Favoris" onAction="#voirFavoris" styleClass="nav-button" />
-                <Region VBox.vgrow="ALWAYS" />
-                <Button text="� Déconnexion" onAction="#logout" styleClass="sidebar-logout" />
-            </children>
-        </VBox>
-    </left>
+                <ScrollPane styleClass="navbar-scroll" HBox.hgrow="ALWAYS"
+                            fitToHeight="true" fitToWidth="false"
+                            hbarPolicy="NEVER" vbarPolicy="NEVER">
+                    <content>
+                        <HBox styleClass="navbar-menu" alignment="CENTER_LEFT" spacing="2">
+                            <children>
+                                <Button text="🎪 Événements" styleClass="navbar-btn, navbar-btn-active" onAction="#voirEvenements" />
+                                <Button text="✅ Mes Participations" styleClass="navbar-btn" onAction="#voirParticipations" />
+                                <Button text="⭐ Mes Favoris" styleClass="navbar-btn" onAction="#voirFavoris" />
+                            </children>
+                        </HBox>
+                    </content>
+                </ScrollPane>
 
-    <center>
-        <VBox styleClass="padding-large">
-            <children>
-                <VBox styleClass="content-shell">
+                <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="navbar-user">
                     <children>
-                        <ScrollPane fx:id="contentScrollPane" fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
-                        </ScrollPane>
+                        <Label fx:id="lblUserName" text="Étudiant" styleClass="navbar-username" />
+                        <Button text="🚪" styleClass="navbar-logout-btn" onAction="#logout">
+                            <tooltip>
+                                <Tooltip text="Déconnexion" />
+                            </tooltip>
+                        </Button>
                     </children>
-                </VBox>
+                </HBox>
             </children>
-        </VBox>
-    </center>
+        </HBox>
 
-</BorderPane>
+        <ScrollPane fx:id="contentScrollPane" VBox.vgrow="ALWAYS" fitToWidth="true" styleClass="etudiant-scroll">
+        </ScrollPane>
+    </children>
+
+</VBox>

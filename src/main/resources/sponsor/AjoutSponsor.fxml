@@ -5,7 +5,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.controllers.sponsor.AjoutSponsorController"
-            stylesheets="@../styles/dashboard-theme.css"
+            stylesheets="@../styles/admin.css"
             styleClass="dashboard-bg">
 
     <top>

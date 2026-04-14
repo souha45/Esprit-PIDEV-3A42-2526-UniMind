@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 
 <VBox spacing="16" xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
-      stylesheets="@../styles/dashboard-theme.css"
+      stylesheets="@../styles/admin.css"
       styleClass="dashboard-bg"
       fx:controller="org.example.controllers.sponsor.GestionAttributionSponsorController">
 
