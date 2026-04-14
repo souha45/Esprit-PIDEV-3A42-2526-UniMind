@@ -732,3 +732,38 @@
     -fx-background-radius: 6;
     -fx-padding: 6 10;
 }
+
+/* Style pour les lignes de séparation entre étudiants */
+.separator-row {
+    -fx-background-color: #e5e7eb;
+    -fx-padding: 4px;
+}
+
+.separator-row .table-cell {
+    -fx-background-color: #e5e7eb;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1 0 1 0;
+}
+
+/* Style pour la colonne étudiant avec texte centré */
+.etudiant-cell {
+    -fx-background-color: #f5f3ff;
+    -fx-alignment: CENTER;
+    -fx-text-alignment: center;
+}
+
+.etudiant-cell .vbox {
+    -fx-alignment: CENTER;
+}
+
+/* Style pour le nom de l'étudiant dans la cellule fusionnée */
+.etudiant-nom {
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-text-fill: #4f46e5;
+}
+
+.etudiant-count {
+    -fx-font-size: 11px;
+    -fx-text-fill: #6b7280;
+}
