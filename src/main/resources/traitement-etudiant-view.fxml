@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.TraitementEtudiantController" stylesheets="@/css/traitements-suivis.css">
+
+    <VBox styleClass="page-header">
+        <Label text="Mes Traitements" styleClass="page-title"/>
+        <Label text="Consultez vos traitements et suivez votre progression" styleClass="page-subtitle"/>
+    </VBox>
+
+    <HBox styleClass="filter-bar" spacing="15" alignment="CENTER_LEFT">
+        <HBox styleClass="search-box" HBox.hgrow="ALWAYS">
+            <Label text="🔍" styleClass="search-icon"/>
+            <TextField fx:id="txtRecherche" promptText="Rechercher un traitement..." styleClass="search-field"/>
+        </HBox>
+        <Region HBox.hgrow="ALWAYS"/>
+    </HBox>
+
+    <ScrollPane styleClass="etudiant-scroll" fitToWidth="true" VBox.vgrow="ALWAYS">
+        <content>
+            <VBox spacing="20" styleClass="cards-container">
+                <padding>
+                    <Insets top="20" right="24" bottom="20" left="24"/>
+                </padding>
+
+                <VBox fx:id="cardsContainer" spacing="20"/>
+
+                <Label fx:id="lblAucunResultat" text="Aucun traitement trouvé" styleClass="empty-label" visible="false" managed="false"/>
+            </VBox>
+        </content>
+    </ScrollPane>
+
+    <HBox styleClass="status-bar">
+        <Label fx:id="lblStatus" text="✓ Bienvenue sur votre espace personnel" styleClass="status-text"/>
+    </HBox>
+</VBox>

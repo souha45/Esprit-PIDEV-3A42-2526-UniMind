@@ -6,13 +6,11 @@
 
 <VBox spacing="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.TraitementController" stylesheets="@/css/traitements-suivis.css">
 
-    <!-- Page Header -->
     <VBox styleClass="page-header">
         <Label text="Gestion des Traitements" styleClass="page-title"/>
         <Label text="Gérez les traitements et suivez leur progression" styleClass="page-subtitle"/>
     </VBox>
 
-    <!-- Barre de recherche et filtrage -->
     <HBox styleClass="filter-bar" spacing="15" alignment="CENTER_LEFT">
         <HBox styleClass="search-box">
             <Label text="🔍" styleClass="search-icon"/>
@@ -28,7 +26,6 @@
         <Region HBox.hgrow="ALWAYS"/>
     </HBox>
 
-    <!-- Barre d'actions -->
     <HBox styleClass="action-bar" spacing="15" alignment="CENTER_LEFT">
         <Button fx:id="btnAjouter" text="+ Nouveau Traitement" onAction="#handleAjouter" styleClass="btn-primary"/>
         <Button text="⟳ Rafraîchir" onAction="#handleRafraichir" styleClass="btn-secondary"/>
@@ -37,7 +34,6 @@
         <Label fx:id="lblCount" styleClass="count-badge"/>
     </HBox>
 
-    <!-- Table principale -->
     <VBox VBox.vgrow="ALWAYS" styleClass="table-container">
         <TableView fx:id="tableViewTraitements" styleClass="custom-table" VBox.vgrow="ALWAYS">
             <columns>
@@ -55,7 +51,6 @@
         </TableView>
     </VBox>
 
-    <!-- Status bar -->
     <HBox styleClass="status-bar">
         <Label fx:id="lblStatus" text="✓ Prêt" styleClass="status-text"/>
     </HBox>
