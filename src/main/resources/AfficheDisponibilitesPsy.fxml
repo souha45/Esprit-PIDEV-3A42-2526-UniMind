@@ -1,62 +1,214 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<?import javafx.scene.control.Separator?>
 <BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="org.example.controllers.AffichageDisponibilitePsyController">
+            fx:controller="org.example.controllers.AffichageDisponibilitePsyController"
+            style="-fx-background-color: #f0f4ff;">
 
-    <!-- ========== SIDEBAR GAUCHE (INCLUSE) ========== -->
+    <!-- ========== SIDEBAR ========== -->
     <left>
         <fx:include fx:id="sidebarPsy" source="SidebarPsy.fxml" />
     </left>
 
     <!-- ========== CONTENU PRINCIPAL ========== -->
     <center>
-        <VBox spacing="15" style="-fx-background-color: #ecf0f1; -fx-padding: 20;">
+        <VBox spacing="0" style="-fx-background-color: #f0f4ff;">
 
-            <!-- En-tête -->
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"
-                       text="Mes disponibilités" />
-                <Region HBox.hgrow="ALWAYS" />
-                <Label fx:id="lblDate" style="-fx-text-fill: #7f8c8d; -fx-font-size: 14px;" />
-            </HBox>
+            <!-- ── PAGE HEADER ── -->
+            <VBox style="-fx-background-color: #ffffff; -fx-padding: 24 28 20 28;
+                         -fx-border-color: #e0e7ff; -fx-border-width: 0 0 2 0;
+                         -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.07), 8, 0, 0, 2);"
+                  spacing="3">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <VBox spacing="3" HBox.hgrow="ALWAYS">
+                        <Label text="Mes disponibilités"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 22px;
+                                      -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                        <Label text="Gérez vos créneaux de consultation"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                                      -fx-text-fill: #6b7280;" />
+                    </VBox>
+                    <Label fx:id="lblDate"
+                           style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                                  -fx-font-weight: bold; -fx-text-fill: #6366f1;" />
+                </HBox>
+            </VBox>
 
-            <Separator />
+            <!-- ── BODY ── -->
+            <VBox spacing="18" style="-fx-padding: 24 28 28 28;">
 
-            <!-- Barre de boutons -->
-            <HBox alignment="CENTER_RIGHT" spacing="10">
-                <Button fx:id="btnAjouter" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="+ Nouvelle disponibilité" />
-                <Button fx:id="btnRafraichir" style="-fx-background-color: #2196F3; -fx-text-fill: white;" text="🔄 Rafraîchir" />
-            </HBox>
+                <!-- ── STAT CARDS ── -->
+                <HBox spacing="14">
 
-            <!-- TableView pour afficher les disponibilités -->
-            <TableView fx:id="tableViewDisponibilites" prefHeight="500" style="-fx-background-radius: 10;">
-                <columns>
-                    <TableColumn fx:id="colId" prefWidth="50" text="ID" />
-                    <TableColumn fx:id="colDate" prefWidth="100" text="Date" />
-                    <TableColumn fx:id="colHeureDebut" prefWidth="100" text="Heure début" />
-                    <TableColumn fx:id="colHeureFin" prefWidth="100" text="Heure fin" />
-                    <TableColumn fx:id="colTypeConsult" prefWidth="120" text="Type" />
-                    <TableColumn fx:id="colLieu" prefWidth="150" text="Lieu" />
-                    <TableColumn fx:id="colStatut" prefWidth="100" text="Statut" />
-                    <TableColumn fx:id="colAction" prefWidth="150" text="Actions" />
-                </columns>
-            </TableView>
+                    <VBox spacing="5" HBox.hgrow="ALWAYS"
+                          style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                                 -fx-padding: 16 20; -fx-border-color: #a5b4fc; -fx-border-width: 1;
+                                 -fx-border-radius: 12;
+                                 -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.09), 8, 0, 0, 2);">
+                        <Label text="📅 TOTAL"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px;
+                                      -fx-text-fill: #a5b4fc; -fx-letter-spacing: 1px;" />
+                        <Label fx:id="lblStatTotal" text="—"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px;
+                                      -fx-font-weight: bold; -fx-text-fill: #6366f1;" />
+                        <Label text="créneaux créés"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
+                                      -fx-text-fill: #9ca3af;" />
+                    </VBox>
 
-            <!-- Label de statut -->
-            <Label fx:id="lblStatut" style="-fx-text-fill: gray;" />
+                    <VBox spacing="5" HBox.hgrow="ALWAYS"
+                          style="-fx-background-color: #ecfdf5; -fx-background-radius: 12;
+                                 -fx-padding: 16 20; -fx-border-color: #6ee7b7; -fx-border-width: 1;
+                                 -fx-border-radius: 12;
+                                 -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.09), 8, 0, 0, 2);">
+                        <Label text="✅ DISPONIBLES"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px;
+                                      -fx-text-fill: #34d399; -fx-letter-spacing: 1px;" />
+                        <Label fx:id="lblStatDispo" text="—"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px;
+                                      -fx-font-weight: bold; -fx-text-fill: #10b981;" />
+                        <Label text="créneaux libres"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
+                                      -fx-text-fill: #6ee7b7;" />
+                    </VBox>
 
+                    <VBox spacing="5" HBox.hgrow="ALWAYS"
+                          style="-fx-background-color: #fff7ed; -fx-background-radius: 12;
+                                 -fx-padding: 16 20; -fx-border-color: #fdba74; -fx-border-width: 1;
+                                 -fx-border-radius: 12;
+                                 -fx-effect: dropshadow(gaussian, rgba(249,115,22,0.09), 8, 0, 0, 2);">
+                        <Label text="🔒 RÉSERVÉS"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px;
+                                      -fx-text-fill: #fdba74; -fx-letter-spacing: 1px;" />
+                        <Label fx:id="lblStatReserve" text="—"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px;
+                                      -fx-font-weight: bold; -fx-text-fill: #f97316;" />
+                        <Label text="créneaux réservés"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
+                                      -fx-text-fill: #fdba74;" />
+                    </VBox>
+
+                    <VBox spacing="5" HBox.hgrow="ALWAYS"
+                          style="-fx-background-color: #fef2f2; -fx-background-radius: 12;
+                                 -fx-padding: 16 20; -fx-border-color: #fca5a5; -fx-border-width: 1;
+                                 -fx-border-radius: 12;
+                                 -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.09), 8, 0, 0, 2);">
+                        <Label text="❌ ANNULÉS"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px;
+                                      -fx-text-fill: #fca5a5; -fx-letter-spacing: 1px;" />
+                        <Label fx:id="lblStatAnnule" text="—"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px;
+                                      -fx-font-weight: bold; -fx-text-fill: #ef4444;" />
+                        <Label text="créneaux annulés"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
+                                      -fx-text-fill: #fca5a5;" />
+                    </VBox>
+
+                </HBox>
+
+                <!-- ── TOOLBAR ── -->
+                <HBox alignment="CENTER_LEFT" spacing="10">
+
+                    <!-- Recherche -->
+                    <HBox alignment="CENTER_LEFT" spacing="6"
+                          style="-fx-background-color: #ffffff; -fx-border-color: #c7d2fe;
+                                 -fx-border-radius: 10; -fx-background-radius: 10;
+                                 -fx-padding: 0 12; -fx-border-width: 1;
+                                 -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.06), 6, 0, 0, 2);"
+                          prefWidth="240">
+                        <Label text="🔍"
+                               style="-fx-font-size: 13px; -fx-text-fill: #a5b4fc;" />
+                        <TextField fx:id="fieldRecherche"
+                                   promptText="Rechercher par date ou lieu..."
+                                   style="-fx-background-color: transparent; -fx-border-width: 0;
+                                          -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                                          -fx-text-fill: #374151; -fx-prompt-text-fill: #c4b5fd;
+                                          -fx-padding: 10 0;"
+                                   prefWidth="200" />
+                    </HBox>
+
+                    <!-- Filtre statut -->
+                    <ComboBox fx:id="comboFiltreStatut"
+                              promptText="Tous les statuts"
+                              style="-fx-background-color: #ffffff; -fx-border-color: #c7d2fe;
+                                     -fx-border-radius: 8; -fx-background-radius: 8;
+                                     -fx-border-width: 1; -fx-font-family: 'Segoe UI';
+                                     -fx-font-size: 12px; -fx-text-fill: #374151;
+                                     -fx-padding: 4 8; -fx-pref-height: 38px; -fx-cursor: hand;" />
+
+                    <!-- Filtre type -->
+                    <ComboBox fx:id="comboFiltreType"
+                              promptText="Tous les types"
+                              style="-fx-background-color: #ffffff; -fx-border-color: #c7d2fe;
+                                     -fx-border-radius: 8; -fx-background-radius: 8;
+                                     -fx-border-width: 1; -fx-font-family: 'Segoe UI';
+                                     -fx-font-size: 12px; -fx-text-fill: #374151;
+                                     -fx-padding: 4 8; -fx-pref-height: 38px; -fx-cursor: hand;" />
+
+                    <Region HBox.hgrow="ALWAYS" />
+
+                    <!-- Rafraîchir -->
+                    <Button fx:id="btnRafraichir" text="🔄"
+                            style="-fx-background-color: #f3f4f6; -fx-text-fill: #6b7280;
+                                   -fx-font-size: 14px; -fx-padding: 9 14; -fx-background-radius: 10;
+                                   -fx-border-color: #e5e7eb; -fx-border-width: 1;
+                                   -fx-border-radius: 10; -fx-cursor: hand;" />
+
+                    <!-- Nouvelle dispo -->
+                    <Button fx:id="btnAjouter" text="＋  Nouvelle disponibilité"
+                            style="-fx-background-color: #6366f1; -fx-text-fill: #ffffff;
+                                   -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                                   -fx-font-weight: bold; -fx-padding: 10 20;
+                                   -fx-background-radius: 10; -fx-cursor: hand;
+                                   -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.35), 8, 0, 0, 2);" />
+
+                </HBox>
+
+                <!-- ── TABLE ── -->
+                <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 14;
+                             -fx-border-color: #e0e7ff; -fx-border-width: 1; -fx-border-radius: 14;
+                             -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 10, 0, 0, 3);">
+
+                    <TableView fx:id="tableViewDisponibilites"
+                               prefHeight="460"
+                               style="-fx-background-color: transparent; -fx-border-width: 0;
+                                      -fx-table-cell-border-color: #f3f4f6;">
+                        <columns>
+                            <!-- Date + Jour -->
+                            <TableColumn fx:id="colDate"     prefWidth="130" text="📅  Date" />
+                            <!-- Horaires -->
+                            <TableColumn fx:id="colHoraires" prefWidth="160" text="🕐  Horaires" />
+                            <!-- Type consultation -->
+                            <TableColumn fx:id="colTypeConsult" prefWidth="160" text="💬  Type" />
+                            <!-- Lieu -->
+                            <TableColumn fx:id="colLieu"     prefWidth="160" text="📍  Lieu" />
+                            <!-- Statut -->
+                            <TableColumn fx:id="colStatut"   prefWidth="130" text="📌  Statut" />
+                            <!-- Actions -->
+                            <TableColumn fx:id="colAction"   prefWidth="130" text="⚙  Actions" />
+                        </columns>
+                        <placeholder>
+                            <Label text="✨ Aucune disponibilité trouvée"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                                          -fx-text-fill: #c4b5fd;" />
+                        </placeholder>
+                    </TableView>
+
+                </VBox>
+
+                <!-- Label statut bas de page -->
+                <HBox alignment="CENTER_LEFT" spacing="6">
+                    <Label text="💡"  style="-fx-font-size: 12px;" />
+                    <Label fx:id="lblStatut"
+                           style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                                  -fx-text-fill: #9ca3af;" />
+                </HBox>
+
+            </VBox>
         </VBox>
     </center>
 

@@ -18,6 +18,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ConsultationsPsyController implements SidebarPsyController.PsyPageController {
 
@@ -31,7 +32,14 @@ public class ConsultationsPsyController implements SidebarPsyController.PsyPageC
     @FXML private TableColumn<ConsultationDetail, Void> colActions;
     @FXML private Button btnRafraichir;
     @FXML private Label lblDate;
-    @FXML private Label lblTotal;
+    @FXML private Label lblStatut;
+    @FXML private TextField fieldRecherche;
+
+    // Statistiques
+    @FXML private Label lblStatTotal;
+    @FXML private Label lblStatNotees;
+    @FXML private Label lblStatMoyenne;
+    @FXML private Label lblStatCeMois;
 
     // ========== SIDEBAR ==========
     @FXML private SidebarPsyController sidebarPsyController;
@@ -39,6 +47,7 @@ public class ConsultationsPsyController implements SidebarPsyController.PsyPageC
     // ========== SERVICES ==========
     private ConsultationService consultationService;
     private ObservableList<ConsultationDetail> consultationsList;
+    private ObservableList<ConsultationDetail> filteredList;
     private User utilisateur;
 
     @FXML
@@ -46,8 +55,10 @@ public class ConsultationsPsyController implements SidebarPsyController.PsyPageC
         lblDate.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         consultationService = new ConsultationService();
         consultationsList = FXCollections.observableArrayList();
+        filteredList = FXCollections.observableArrayList();
 
         configurerColonnes();
+        configurerFiltres();
         btnRafraichir.setOnAction(event -> chargerConsultations());
     }
 
@@ -63,8 +74,34 @@ public class ConsultationsPsyController implements SidebarPsyController.PsyPageC
         chargerConsultations();
     }
 
+    private void configurerFiltres() {
+        fieldRecherche.textProperty().addListener((obs, old, newVal) -> appliquerFiltres());
+    }
+
+    private void appliquerFiltres() {
+        if (consultationsList == null) return;
+
+        String recherche = fieldRecherche.getText().toLowerCase();
+
+        List<ConsultationDetail> filtered = consultationsList.stream()
+                .filter(c -> {
+                    if (recherche != null && !recherche.isEmpty()) {
+                        String patientInfo = (c.getEtudiantPrenom() + " " + c.getEtudiantNom() + " " + c.getEtudiantEmail()).toLowerCase();
+                        return patientInfo.contains(recherche);
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
+
+        filteredList.clear();
+        filteredList.addAll(filtered);
+        tableViewConsultations.setItems(filteredList);
+
+        lblStatut.setText(filteredList.size() + " consultation(s) affichée(s) sur " + consultationsList.size());
+    }
+
     private void configurerColonnes() {
-        // ✅ Colonne Patient (utilise les getters pour étudiant)
+        // Colonne Patient
         colPatient.setCellValueFactory(cellData ->
                 new SimpleStringProperty(
                         cellData.getValue().getEtudiantPrenom() + " " +
@@ -83,7 +120,7 @@ public class ConsultationsPsyController implements SidebarPsyController.PsyPageC
                                 cellData.getValue().getHeureFin()
                 ));
 
-        // Colonne Note
+        // Colonne Note (avec étoiles)
         colNote.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getNoteFormatted()));
 
@@ -100,20 +137,32 @@ public class ConsultationsPsyController implements SidebarPsyController.PsyPageC
                         String noteStr = item.replace("/5", "");
                         try {
                             int note = Integer.parseInt(noteStr);
+                            String etoiles = getEtoiles(note);
+                            setText(etoiles + " " + item);
                             if (note <= 2) {
-                                setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+                                setStyle("-fx-text-fill: #ef4444; -fx-font-weight: bold;");
                             } else if (note <= 4) {
-                                setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold;");
+                                setStyle("-fx-text-fill: #f59e0b; -fx-font-weight: bold;");
                             } else {
-                                setStyle("-fx-text-fill: #2ecc71; -fx-font-weight: bold;");
+                                setStyle("-fx-text-fill: #10b981; -fx-font-weight: bold;");
                             }
                         } catch (NumberFormatException e) {
+                            setText(item);
                             setStyle("");
                         }
                     } else {
-                        setStyle("-fx-text-fill: #95a5a6; -fx-font-style: italic;");
+                        setText("⭐ À noter");
+                        setStyle("-fx-text-fill: #9ca3af; -fx-font-style: italic;");
                     }
                 }
+            }
+
+            private String getEtoiles(int note) {
+                StringBuilder etoiles = new StringBuilder();
+                for (int i = 0; i < 5; i++) {
+                    etoiles.append(i < note ? "★" : "☆");
+                }
+                return etoiles.toString();
             }
         });
 
@@ -121,7 +170,25 @@ public class ConsultationsPsyController implements SidebarPsyController.PsyPageC
         colAvis.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getAvisFormatted()));
 
-        // Boutons d'action
+        // Colonne Avis avec style pour texte long
+        colAvis.setCellFactory(column -> new TableCell<ConsultationDetail, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    if (item.length() > 60) {
+                        setText(item.substring(0, 60) + "...");
+                    } else {
+                        setText(item);
+                    }
+                    setStyle("-fx-font-size: 12px; -fx-text-fill: #4b5563;");
+                }
+            }
+        });
+
         ajouterBoutonsAction();
     }
 
@@ -129,11 +196,11 @@ public class ConsultationsPsyController implements SidebarPsyController.PsyPageC
         colActions.setCellFactory(column -> new TableCell<ConsultationDetail, Void>() {
             private final Button btnModifier = new Button("✏️");
             private final Button btnDetails = new Button("🔍");
-            private final HBox buttons = new HBox(5, btnDetails, btnModifier);
+            private final HBox buttons = new HBox(8, btnDetails, btnModifier);
 
             {
-                btnDetails.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 11px; -fx-padding: 5 8; -fx-cursor: hand;");
-                btnModifier.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-size: 11px; -fx-padding: 5 8; -fx-cursor: hand;");
+                btnDetails.setStyle("-fx-background-color: #6366f1; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 5 10; -fx-background-radius: 6; -fx-cursor: hand;");
+                btnModifier.setStyle("-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 5 10; -fx-background-radius: 6; -fx-cursor: hand;");
 
                 btnDetails.setOnAction(event -> {
                     ConsultationDetail consultation = getTableView().getItems().get(getIndex());
@@ -165,47 +232,34 @@ public class ConsultationsPsyController implements SidebarPsyController.PsyPageC
                         "⏰ Horaire: " + consultation.getHeureDebut() + " - " + consultation.getHeureFin() + "\n" +
                         "⭐ Note: " + consultation.getNoteFormatted() + "\n" +
                         "📝 Avis: " + consultation.getAvisFormatted() + "\n" +
-                        "📅 Date consultation: " + consultation.getDateRedaction()
+                        "📅 Date rédaction: " + consultation.getDateRedaction()
         );
         alert.showAndWait();
     }
 
-    /**
-     * Ouvre le modal pour modifier l'avis et la note d'une consultation
-     */
-    /**
-     * Ouvre le modal pour modifier l'avis et la note d'une consultation
-     */
     private void modifierConsultation(ConsultationDetail consultation) {
         try {
-            // Charger le FXML du modal
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/ModifierConsultationModal.fxml"));
             Stage modalStage = new Stage();
             Scene scene = new Scene(loader.load());
 
-            // Configurer le modal
             modalStage.initModality(javafx.stage.Modality.WINDOW_MODAL);
             modalStage.initOwner(tableViewConsultations.getScene().getWindow());
             modalStage.setTitle("Modifier l'avis et la note");
             modalStage.setScene(scene);
             modalStage.setResizable(false);
 
-            // Récupérer le contrôleur
             ModifierConsultationModalController controller = loader.getController();
             controller.setConsultation(consultation);
-            controller.setUtilisateur(utilisateur);  // ✅ Passer l'utilisateur
+            controller.setUtilisateur(utilisateur);
             controller.setModalStage(modalStage);
 
-            // Afficher et attendre
             modalStage.showAndWait();
-
-            // Rafraîchir le tableau après modification
             chargerConsultations();
 
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Erreur",
-                    "Impossible d'ouvrir le formulaire de modification");
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le formulaire de modification");
         }
     }
 
@@ -216,19 +270,45 @@ public class ConsultationsPsyController implements SidebarPsyController.PsyPageC
         }
 
         try {
+            lblStatut.setText("Chargement en cours...");
             List<ConsultationDetail> consultations =
                     consultationService.getConsultationsDetailByPsy(utilisateur.getUserId());
 
             consultationsList.clear();
             consultationsList.addAll(consultations);
-            tableViewConsultations.setItems(consultationsList);
 
-            lblTotal.setText(consultationsList.size() + " consultation(s)");
+            // Mettre à jour les statistiques
+            majStatistiques(consultations);
+
+            appliquerFiltres();
 
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur de chargement: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void majStatistiques(List<ConsultationDetail> consultations) {
+        int total = consultations.size();
+        long notees = consultations.stream().filter(c -> c.getNoteSatisfaction() > 0).count();
+        double moyenne = consultations.stream()
+                .filter(c -> c.getNoteSatisfaction() > 0)
+                .mapToInt(ConsultationDetail::getNoteSatisfaction)
+                .average()
+                .orElse(0);
+
+        long ceMois = consultations.stream()
+                .filter(c -> {
+                    LocalDate dateRdv = c.getDateDispo().toLocalDate();
+                    LocalDate now = LocalDate.now();
+                    return dateRdv.getYear() == now.getYear() && dateRdv.getMonth() == now.getMonth();
+                })
+                .count();
+
+        lblStatTotal.setText(String.valueOf(total));
+        lblStatNotees.setText(String.valueOf(notees));
+        lblStatMoyenne.setText(String.format("%.1f", moyenne));
+        lblStatCeMois.setText(String.valueOf(ceMois));
     }
 
     private void showAlert(Alert.AlertType type, String titre, String message) {

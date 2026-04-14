@@ -98,7 +98,7 @@ public class MainProg {
             System.out.println(rdService.afficherRendezVousDetailsByEtudiant(3));
 
             //Test Affiche rdv spécifique
-            System.out.println(rdService.afficherRendezVousById(3, 14));
+           // System.out.println(rdService.afficherRendezVousById(3, 14));
 
 
             //Test l'annulation d'un rdv et Test création automatique de consultation

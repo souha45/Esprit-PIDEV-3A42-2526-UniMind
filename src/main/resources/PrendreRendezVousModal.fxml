@@ -4,56 +4,192 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="org.example.controllers.PrendreRendezVousModalController"
-            style="-fx-background-color: white; -fx-background-radius: 10;">
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.controllers.PrendreRendezVousModalController"
+      spacing="0"
+      prefWidth="780"
+      prefHeight="600"
+      maxHeight="600"
+      style="-fx-background-color: #f0f4ff;">
 
-    <!-- ========== PARTIE HAUTE : TITRE ========== -->
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 15 15 10 15; -fx-background-color: #f8f9fa; -fx-background-radius: 10 10 0 0;">
-            <Label text="📅 Prendre un rendez-vous" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
-            <Region HBox.hgrow="ALWAYS" />
-            <Button fx:id="btnFermer" text="✕" style="-fx-background-color: transparent; -fx-text-fill: #7f8c8d; -fx-font-size: 16px; -fx-cursor: hand;" />
+    <!-- ── HEADER ── (inchangé) -->
+    <VBox style="-fx-background-color: linear-gradient(to bottom right, #6366f1, #8b5cf6);
+                 -fx-padding: 20 24 18 24;" spacing="3">
+        <HBox alignment="CENTER_LEFT">
+            <VBox spacing="3" HBox.hgrow="ALWAYS">
+                <Label text="📅  Prendre un rendez-vous"
+                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 18px;
+                              -fx-font-weight: bold; -fx-text-fill: #ffffff;" />
+                <Label text="Choisissez un créneau disponible parmi les psychologues"
+                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                              -fx-text-fill: rgba(255,255,255,0.78);" />
+            </VBox>
+            <Button fx:id="btnFermer" text="✕"
+                    style="-fx-background-color: rgba(255,255,255,0.18); -fx-text-fill: #ffffff;
+                           -fx-font-size: 14px; -fx-padding: 5 10; -fx-background-radius: 8;
+                           -fx-cursor: hand; -fx-border-width: 0;" />
         </HBox>
-    </top>
+    </VBox>
 
-    <!-- ========== PARTIE CENTRALE : FORMULAIRE ========== -->
-    <center>
-        <VBox spacing="15" style="-fx-padding: 20;">
+    <!-- ── BODY avec hauteur limitée pour que le footer soit visible ── -->
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                style="-fx-background-color: #f0f4ff; -fx-background: #f0f4ff; -fx-border-width: 0;">
+        <VBox spacing="16" style="-fx-padding: 20 22 16 22;">
 
-            <!-- Message d'information -->
-            <Label text="Sélectionnez un créneau disponible :" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+            <!-- FILTRES (inchangé) -->
+            <VBox spacing="10"
+                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                         -fx-padding: 16 18; -fx-border-color: #e0e7ff; -fx-border-width: 1;
+                         -fx-border-radius: 12;
+                         -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.07), 8, 0, 0, 2);">
 
-            <!-- Tableau des disponibilités -->
-            <TableView fx:id="tableViewDisponibilites" prefHeight="300">
-                <columns>
-                    <TableColumn fx:id="colPsychologue" text="Psychologue" prefWidth="180" />
-                    <TableColumn fx:id="colDate" text="Date" prefWidth="100" />
-                    <TableColumn fx:id="colHeure" text="Heure" prefWidth="120" />
-                    <TableColumn fx:id="colType" text="Type" prefWidth="100" />
-                    <TableColumn fx:id="colLieu" text="Lieu" prefWidth="150" />
-                </columns>
-            </TableView>
+                <Label text="🔎  Filtrer les créneaux"
+                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                              -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
 
-            <!-- Label de sélection -->
-            <Label fx:id="lblSelection" style="-fx-text-fill: #3498db; -fx-font-size: 12px;" />
+                <HBox spacing="12" alignment="CENTER_LEFT">
 
-            <Separator />
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Psychologue"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
+                                      -fx-text-fill: #6366f1; -fx-font-weight: bold;" />
+                        <ComboBox fx:id="comboPsy"
+                                  promptText="Tous les psychologues"
+                                  maxWidth="Infinity"
+                                  style="-fx-background-color: #f5f3ff; -fx-border-color: #c7d2fe;
+                                         -fx-border-radius: 8; -fx-background-radius: 8;
+                                         -fx-border-width: 1; -fx-font-family: 'Segoe UI';
+                                         -fx-font-size: 12px; -fx-pref-height: 36px; -fx-cursor: hand;" />
+                    </VBox>
 
-            <!-- Motif (optionnel) -->
-            <Label text="Motif (optionnel) :" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
-            <TextArea fx:id="txtMotif" promptText="Décrivez brièvement le motif de votre consultation..." prefHeight="80" wrapText="true" />
+                    <VBox spacing="4" prefWidth="160">
+                        <Label text="Type de consultation"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
+                                      -fx-text-fill: #6366f1; -fx-font-weight: bold;" />
+                        <ComboBox fx:id="comboType"
+                                  promptText="Tous les types"
+                                  maxWidth="Infinity"
+                                  style="-fx-background-color: #f5f3ff; -fx-border-color: #c7d2fe;
+                                         -fx-border-radius: 8; -fx-background-radius: 8;
+                                         -fx-border-width: 1; -fx-font-family: 'Segoe UI';
+                                         -fx-font-size: 12px; -fx-pref-height: 36px; -fx-cursor: hand;" />
+                    </VBox>
+
+                    <VBox spacing="4" prefWidth="150">
+                        <Label text="À partir du"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
+                                      -fx-text-fill: #6366f1; -fx-font-weight: bold;" />
+                        <DatePicker fx:id="datePickerFiltre"
+                                    style="-fx-background-color: #f5f3ff; -fx-border-color: #c7d2fe;
+                                           -fx-border-radius: 8; -fx-background-radius: 8;
+                                           -fx-border-width: 1; -fx-font-family: 'Segoe UI';
+                                           -fx-font-size: 12px; -fx-pref-height: 36px; -fx-cursor: hand;"
+                                    maxWidth="Infinity" />
+                    </VBox>
+
+                </HBox>
+            </VBox>
+
+            <!-- BADGE résultat + nb créneaux (inchangé) -->
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <Label text="Créneaux disponibles"
+                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                              -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="lblNbCreneaux"
+                       style="-fx-background-color: #ede9fe; -fx-text-fill: #6366f1;
+                              -fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-font-weight: bold;
+                              -fx-padding: 3 12; -fx-background-radius: 20;" />
+            </HBox>
+
+            <!-- TABLE créneaux (hauteur réduite) -->
+            <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                         -fx-border-color: #e0e7ff; -fx-border-width: 1; -fx-border-radius: 12;
+                         -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 8, 0, 0, 2);">
+
+                <TableView fx:id="tableViewDisponibilites"
+                           prefHeight="220"
+                           style="-fx-background-color: transparent; -fx-border-width: 0;
+                                  -fx-table-cell-border-color: #f3f4f6;">
+                    <columns>
+                        <TableColumn fx:id="colPsychologue" prefWidth="170" text="👨‍⚕️  Psychologue" />
+                        <TableColumn fx:id="colDate"        prefWidth="110" text="📅  Date" />
+                        <TableColumn fx:id="colHeure"       prefWidth="130" text="🕐  Horaires" />
+                        <TableColumn fx:id="colType"        prefWidth="130" text="💬  Type" />
+                        <TableColumn fx:id="colLieu"        prefWidth="160" text="📍  Lieu" />
+                    </columns>
+                    <placeholder>
+                        <Label text="Aucun créneau disponible pour ces critères"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                                      -fx-text-fill: #c4b5fd;" />
+                    </placeholder>
+                </TableView>
+
+            </VBox>
+
+            <!-- CRÉNEAU SÉLECTIONNÉ (inchangé) -->
+            <HBox fx:id="boxSelection" alignment="CENTER_LEFT" spacing="10"
+                  visible="false" managed="false"
+                  style="-fx-background-color: #ecfdf5; -fx-background-radius: 10;
+                         -fx-border-color: #6ee7b7; -fx-border-width: 1; -fx-border-radius: 10;
+                         -fx-padding: 12 16;">
+                <Label text="✅" style="-fx-font-size: 18px;" />
+                <VBox spacing="2" HBox.hgrow="ALWAYS">
+                    <Label text="Créneau sélectionné"
+                           style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
+                                  -fx-text-fill: #6ee7b7; -fx-font-weight: bold;" />
+                    <Label fx:id="lblSelection"
+                           style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                                  -fx-font-weight: bold; -fx-text-fill: #065f46;" />
+                </VBox>
+                <Button fx:id="btnDeselectionner" text="✕ Désélectionner"
+                        style="-fx-background-color: transparent; -fx-text-fill: #6ee7b7;
+                               -fx-font-size: 11px; -fx-cursor: hand; -fx-border-width: 0;" />
+            </HBox>
+
+            <!-- MOTIF (inchangé) -->
+            <VBox spacing="6"
+                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                         -fx-padding: 16 18; -fx-border-color: #e0e7ff; -fx-border-width: 1;
+                         -fx-border-radius: 12;
+                         -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.07), 8, 0, 0, 2);">
+                <HBox alignment="CENTER_LEFT" spacing="6">
+                    <Label text="📝  Motif de consultation"
+                           style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                                  -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                    <Label text="(optionnel)"
+                           style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
+                                  -fx-text-fill: #9ca3af;" />
+                </HBox>
+                <TextArea fx:id="txtMotif"
+                          promptText="Décrivez brièvement la raison de votre consultation…"
+                          prefHeight="60" wrapText="true"
+                          style="-fx-background-color: #f5f3ff; -fx-border-color: #e0e7ff;
+                                 -fx-border-width: 1; -fx-border-radius: 10; -fx-background-radius: 10;
+                                 -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                                 -fx-text-fill: #374151; -fx-prompt-text-fill: #c4b5fd;
+                                 -fx-control-inner-background: #f5f3ff;" />
+            </VBox>
 
         </VBox>
-    </center>
+    </ScrollPane>
 
-    <!-- ========== PARTIE BASSE : BOUTONS ========== -->
-    <bottom>
-        <HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-padding: 15; -fx-background-color: #f8f9fa; -fx-background-radius: 0 0 10 10;">
-            <Button fx:id="btnAnnuler" text="Annuler" style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-padding: 8 20; -fx-cursor: hand;" />
-            <Button fx:id="btnConfirmer" text="Confirmer la réservation" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 8 20; -fx-font-weight: bold; -fx-cursor: hand;" />
-        </HBox>
-    </bottom>
+    <!-- ── FOOTER ACTIONS (toujours visible) ── -->
+    <HBox alignment="CENTER_RIGHT" spacing="10"
+          style="-fx-padding: 14 22; -fx-background-color: #ffffff;
+                 -fx-border-color: #e0e7ff; -fx-border-width: 1 0 0 0;">
+        <Button fx:id="btnAnnuler" text="Annuler"
+                style="-fx-background-color: #f3f4f6; -fx-text-fill: #6b7280;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                       -fx-padding: 10 22; -fx-background-radius: 10;
+                       -fx-border-color: #e5e7eb; -fx-border-width: 1; -fx-border-radius: 10;
+                       -fx-cursor: hand;" />
+        <Button fx:id="btnConfirmer" text="✓  Confirmer la réservation"
+                style="-fx-background-color: #6366f1; -fx-text-fill: #ffffff;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-font-weight: bold;
+                       -fx-padding: 10 22; -fx-background-radius: 10; -fx-cursor: hand;
+                       -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.35), 8, 0, 0, 2);" />
+    </HBox>
 
-</BorderPane>
+</VBox>

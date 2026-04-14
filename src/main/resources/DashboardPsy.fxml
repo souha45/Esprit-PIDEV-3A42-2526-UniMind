@@ -3,60 +3,201 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="org.example.controllers.DashboardPsyController">
+            fx:controller="org.example.controllers.DashboardPsyController"
+            style="-fx-background-color: #f0f4ff;">
 
-    <!-- ========== SIDEBAR GAUCHE (INCLUSE) ========== -->
+    <!-- ========== SIDEBAR ========== -->
     <left>
         <fx:include fx:id="sidebarPsy" source="SidebarPsy.fxml" />
     </left>
 
     <!-- ========== CONTENU PRINCIPAL ========== -->
     <center>
-        <VBox spacing="15" style="-fx-background-color: #ecf0f1; -fx-padding: 20;">
+        <ScrollPane fitToWidth="true" style="-fx-background-color: #f0f4ff; -fx-background: #f0f4ff; -fx-border-width: 0;">
+            <VBox spacing="0" style="-fx-background-color: #f0f4ff;">
 
-            <!-- En-tête -->
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"
-                       text="Tableau de bord - Psychologue" />
-                <Region HBox.hgrow="ALWAYS" />
-                <Label fx:id="lblDate" style="-fx-text-fill: #7f8c8d; -fx-font-size: 14px;" />
-            </HBox>
+                <!-- ── PAGE HEADER ── -->
+                <VBox style="-fx-background-color: #ffffff; -fx-padding: 24 28 20 28; -fx-border-color: #e0e7ff; -fx-border-width: 0 0 2 0; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.07), 8, 0, 0, 2);" spacing="3">
+                    <HBox alignment="CENTER_LEFT" spacing="12">
+                        <VBox spacing="3" HBox.hgrow="ALWAYS">
+                            <Label text="Tableau de bord"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                            <Label fx:id="lblSoustitre"
+                                   text="Bonjour, chargement..."
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-text-fill: #6b7280;" />
+                        </VBox>
+                        <VBox alignment="CENTER_RIGHT" spacing="2">
+                            <Label fx:id="lblDate"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #6366f1;" />
+                            <Label fx:id="lblHeure"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;" />
+                        </VBox>
+                    </HBox>
+                </VBox>
 
-            <Separator />
+                <!-- ── BODY ── -->
+                <VBox spacing="22" style="-fx-padding: 24 28 28 28;">
 
-            <!-- Contenu Dashboard (statistiques) -->
-            <VBox fx:id="contenuDashboard" spacing="15">
-                <!-- Cartes de statistiques -->
-                <HBox spacing="20" alignment="CENTER">
-                    <VBox style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15;">
-                        <Label text="📅 RDV AUJOURD'HUI" style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" />
-                        <Label fx:id="lblRdvAujourdhui" text="0" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #3498db;" />
-                    </VBox>
+                    <!-- ── STAT CARDS ROW ── -->
+                    <HBox spacing="16" fillHeight="true">
 
-                    <VBox style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15;">
-                        <Label text="👥 PATIENTS ACTIFS" style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" />
-                        <Label fx:id="lblPatientsActifs" text="0" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2ecc71;" />
-                    </VBox>
+                        <!-- RDV Aujourd'hui -->
+                        <VBox spacing="8" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: #ffffff; -fx-background-radius: 14; -fx-padding: 20 22; -fx-border-color: #a5b4fc; -fx-border-width: 1; -fx-border-radius: 14; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.10), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="📅" style="-fx-font-size: 22px;" />
+                                <Label text="RDV AUJOURD'HUI"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #a5b4fc; -fx-letter-spacing: 1px;" />
+                            </HBox>
+                            <Label fx:id="lblRdvAujourdhui" text="—"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 34px; -fx-font-weight: bold; -fx-text-fill: #6366f1;" />
+                            <Label fx:id="lblRdvAujDetaill" text="rendez-vous planifiés"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;" />
+                        </VBox>
 
-                    <VBox style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15;">
-                        <Label text="📆 RDV CETTE SEMAINE" style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" />
-                        <Label fx:id="lblRdvSemaine" text="0" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #e67e22;" />
-                    </VBox>
+                        <!-- Patients actifs -->
+                        <VBox spacing="8" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: #ecfdf5; -fx-background-radius: 14; -fx-padding: 20 22; -fx-border-color: #6ee7b7; -fx-border-width: 1; -fx-border-radius: 14; -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.10), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="👥" style="-fx-font-size: 22px;" />
+                                <Label text="PATIENTS ACTIFS"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #34d399; -fx-letter-spacing: 1px;" />
+                            </HBox>
+                            <Label fx:id="lblPatientsActifs" text="—"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 34px; -fx-font-weight: bold; -fx-text-fill: #10b981;" />
+                            <Label fx:id="lblPatientsDetail" text="étudiants suivis"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #6ee7b7;" />
+                        </VBox>
 
-                    <VBox style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15;">
-                        <Label text="📊 TAUX DE REMPLISSAGE" style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px;" />
-                        <Label fx:id="lblTauxRemplissage" text="0%" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #9b59b6;" />
-                    </VBox>
-                </HBox>
+                        <!-- RDV cette semaine -->
+                        <VBox spacing="8" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: #fff7ed; -fx-background-radius: 14; -fx-padding: 20 22; -fx-border-color: #fdba74; -fx-border-width: 1; -fx-border-radius: 14; -fx-effect: dropshadow(gaussian, rgba(249,115,22,0.10), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="📆" style="-fx-font-size: 22px;" />
+                                <Label text="CETTE SEMAINE"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #fdba74; -fx-letter-spacing: 1px;" />
+                            </HBox>
+                            <Label fx:id="lblRdvSemaine" text="—"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 34px; -fx-font-weight: bold; -fx-text-fill: #f97316;" />
+                            <Label fx:id="lblSemaineDetail" text="rendez-vous à venir"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #fdba74;" />
+                        </VBox>
+
+                        <!-- Taux de remplissage -->
+                        <VBox spacing="8" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: #fdf4ff; -fx-background-radius: 14; -fx-padding: 20 22; -fx-border-color: #e879f9; -fx-border-width: 1; -fx-border-radius: 14; -fx-effect: dropshadow(gaussian, rgba(192,38,211,0.10), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="📊" style="-fx-font-size: 22px;" />
+                                <Label text="TAUX DE REMPLISSAGE"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #e879f9; -fx-letter-spacing: 1px;" />
+                            </HBox>
+                            <Label fx:id="lblTauxRemplissage" text="—"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 34px; -fx-font-weight: bold; -fx-text-fill: #c026d3;" />
+                            <Label fx:id="lblTauxDetail" text="des créneaux réservés"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #e879f9;" />
+                        </VBox>
+
+                        <!-- Consultations totales -->
+                        <VBox spacing="8" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: #eef2ff; -fx-background-radius: 14; -fx-padding: 20 22; -fx-border-color: #a5b4fc; -fx-border-width: 1; -fx-border-radius: 14; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.10), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="📝" style="-fx-font-size: 22px;" />
+                                <Label text="CONSULTATIONS"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #a5b4fc; -fx-letter-spacing: 1px;" />
+                            </HBox>
+                            <Label fx:id="lblTotalConsultations" text="—"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 34px; -fx-font-weight: bold; -fx-text-fill: #6366f1;" />
+                            <Label fx:id="lblConsultDetail" text="séances effectuées"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #a5b4fc;" />
+                        </VBox>
+
+                    </HBox>
+
+                    <!-- ── SECOND ROW: RDV du jour + Répartition statuts ── -->
+                    <HBox spacing="16" fillHeight="true">
+
+                        <!-- Prochains RDV du jour -->
+                        <VBox spacing="12" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: #ffffff; -fx-background-radius: 14; -fx-padding: 20 22; -fx-border-color: #e0e7ff; -fx-border-width: 1; -fx-border-radius: 14; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT" spacing="8">
+                                <Label text="🕐 Prochains rendez-vous"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label fx:id="lblBadgeRdvAuj"
+                                       style="-fx-background-color: #ede9fe; -fx-text-fill: #6366f1; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 3 10; -fx-background-radius: 20;" />
+                            </HBox>
+                            <Label text="Aujourd'hui"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;" />
+                            <VBox fx:id="listeProchainRdv" spacing="8" />
+                            <Label fx:id="lblEmptyRdv" text="✨ Aucun rendez-vous prévu aujourd'hui"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-text-fill: #c4b5fd;" visible="false" managed="false" />
+                        </VBox>
+
+                        <!-- Répartition des statuts RDV -->
+                        <VBox spacing="12" prefWidth="300"
+                              style="-fx-background-color: #ffffff; -fx-background-radius: 14; -fx-padding: 20 22; -fx-border-color: #e0e7ff; -fx-border-width: 1; -fx-border-radius: 14; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 10, 0, 0, 3);">
+                            <Label text="📈 Statuts des rendez-vous"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                            <Label text="Total cumulé"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;" />
+
+                            <!-- Barres de statuts -->
+                            <VBox fx:id="boxStatutsRdv" spacing="10" />
+
+                        </VBox>
+
+                    </HBox>
+
+                    <!-- ── TROISIÈME ROW : Disponibilités + Note satisfaction ── -->
+                    <HBox spacing="16" fillHeight="true">
+
+                        <!-- Disponibilités à venir -->
+                        <VBox spacing="12" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: #ffffff; -fx-background-radius: 14; -fx-padding: 20 22; -fx-border-color: #e0e7ff; -fx-border-width: 1; -fx-border-radius: 14; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="📅 Mes disponibilités"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label fx:id="lblBadgeDispos"
+                                       style="-fx-background-color: #ecfdf5; -fx-text-fill: #10b981; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 3 10; -fx-background-radius: 20;" />
+                            </HBox>
+                            <Label text="Créneaux libres à venir (7 jours)"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;" />
+                            <VBox fx:id="listeDisposVBox" spacing="6" />
+                            <Label fx:id="lblEmptyDispos" text="📭 Aucun créneau libre à venir"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-text-fill: #c4b5fd;" visible="false" managed="false" />
+                        </VBox>
+
+                        <!-- Note de satisfaction moyenne -->
+                        <VBox spacing="12" prefWidth="280"
+                              style="-fx-background-color: #ffffff; -fx-background-radius: 14; -fx-padding: 20 22; -fx-border-color: #e0e7ff; -fx-border-width: 1; -fx-border-radius: 14; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 10, 0, 0, 3);">
+                            <Label text="⭐ Satisfaction patients"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                            <Label text="Note moyenne sur 5 étoiles"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;" />
+                            <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 8 0 0 0;">
+                                <Label fx:id="lblNoteMoyenne" text="—"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 40px; -fx-font-weight: bold; -fx-text-fill: #f59e0b;" />
+                                <VBox spacing="3">
+                                    <Label fx:id="lblEtoiles" text="★★★★★"
+                                           style="-fx-font-size: 20px; -fx-text-fill: #f59e0b;" />
+                                    <Label fx:id="lblNbEvaluations" text="0 évaluations"
+                                           style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;" />
+                                </VBox>
+                            </HBox>
+                            <!-- Barre visuelle -->
+                            <VBox fx:id="boxNotesDetail" spacing="6" style="-fx-padding: 8 0 0 0;" />
+                        </VBox>
+
+                    </HBox>
+
+                </VBox>
             </VBox>
-
-            <!-- Contenu dynamique pour les autres pages -->
-            <VBox fx:id="contenuPrincipal" spacing="10" visible="false" managed="false" />
-
-        </VBox>
+        </ScrollPane>
     </center>
 
 </BorderPane>

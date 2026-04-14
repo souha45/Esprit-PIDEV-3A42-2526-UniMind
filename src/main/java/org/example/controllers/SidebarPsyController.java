@@ -22,6 +22,62 @@ public class SidebarPsyController {
     @FXML private Button btnPatients;
     @FXML private Button btnDeconnexion;
 
+    // ── Design tokens ──────────────────────────────────────────────
+    private static final String STYLE_ACTIVE =
+            "-fx-background-color: #ede9fe; " +
+                    "-fx-text-fill: #6366f1; " +
+                    "-fx-font-family: 'Segoe UI'; " +
+                    "-fx-font-size: 13px; " +
+                    "-fx-font-weight: bold; " +
+                    "-fx-alignment: CENTER_LEFT; " +
+                    "-fx-padding: 11 16; " +
+                    "-fx-background-radius: 10; " +
+                    "-fx-border-color: #c4b5fd; " +
+                    "-fx-border-width: 0 0 0 3; " +
+                    "-fx-border-radius: 10; " +
+                    "-fx-cursor: hand;";
+
+    private static final String STYLE_IDLE =
+            "-fx-background-color: transparent; " +
+                    "-fx-text-fill: #6b7280; " +
+                    "-fx-font-family: 'Segoe UI'; " +
+                    "-fx-font-size: 13px; " +
+                    "-fx-alignment: CENTER_LEFT; " +
+                    "-fx-padding: 11 16; " +
+                    "-fx-background-radius: 10; " +
+                    "-fx-cursor: hand;";
+
+    private static final String STYLE_HOVER =
+            "-fx-background-color: #ede9fe; " +
+                    "-fx-text-fill: #6366f1; " +
+                    "-fx-font-family: 'Segoe UI'; " +
+                    "-fx-font-size: 13px; " +
+                    "-fx-alignment: CENTER_LEFT; " +
+                    "-fx-padding: 11 16; " +
+                    "-fx-background-radius: 10; " +
+                    "-fx-cursor: hand;";
+
+    private static final String STYLE_LOGOUT_IDLE =
+            "-fx-background-color: transparent; " +
+                    "-fx-text-fill: #ef4444; " +
+                    "-fx-font-family: 'Segoe UI'; " +
+                    "-fx-font-size: 13px; " +
+                    "-fx-alignment: CENTER_LEFT; " +
+                    "-fx-padding: 11 16; " +
+                    "-fx-background-radius: 10; " +
+                    "-fx-cursor: hand;";
+
+    private static final String STYLE_LOGOUT_HOVER =
+            "-fx-background-color: #fee2e2; " +
+                    "-fx-text-fill: #dc2626; " +
+                    "-fx-font-family: 'Segoe UI'; " +
+                    "-fx-font-size: 13px; " +
+                    "-fx-alignment: CENTER_LEFT; " +
+                    "-fx-padding: 11 16; " +
+                    "-fx-background-radius: 10; " +
+                    "-fx-cursor: hand;";
+    // ───────────────────────────────────────────────────────────────
+
     private User utilisateur;
     private Button activeButton;
 
@@ -38,16 +94,11 @@ public class SidebarPsyController {
         setActiveButton(btnDashboard);
     }
 
-    /**
-     * Navigation centralisée — tout passe par ici.
-     * La sidebar charge la scène et passe l'utilisateur au nouveau contrôleur.
-     */
     private void naviguer(String fxmlPath, String titre, Button boutonActif) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Scene scene = new Scene(loader.load(), 1200, 700);
 
-            // Récupérer le contrôleur de la nouvelle page et lui passer l'utilisateur
             Object controller = loader.getController();
             if (controller instanceof PsyPageController) {
                 ((PsyPageController) controller).setUtilisateur(utilisateur);
@@ -63,11 +114,6 @@ public class SidebarPsyController {
         }
     }
 
-    /**
-     * Chaque contrôleur de page implémente cette interface.
-     * Cela permet à la sidebar de passer l'utilisateur sans connaître
-     * le type exact du contrôleur.
-     */
     public interface PsyPageController {
         void setUtilisateur(User user);
     }
@@ -81,15 +127,15 @@ public class SidebarPsyController {
                 String.valueOf(user.getPrenom().charAt(0)).toUpperCase() +
                         String.valueOf(user.getNom().charAt(0)).toUpperCase()
         );
-        lblRole.setText("Psychologue");
+        lblRole.setText("PSYCHOLOGUE");
     }
 
     public void setActiveButtonByFxml(String fxmlPath) {
         switch (fxmlPath) {
             case "/DashboardPsy.fxml"              -> setActiveButton(btnDashboard);
-            case "/AfficheDisponibilitesPsy.fxml" -> setActiveButton(btnDisponibilites);
-            case "/RendezVousPsy.fxml"                -> setActiveButton(btnRendezVous);
-            case "/ConsultationsPsy.fxml"             -> setActiveButton(btnConsultations);
+            case "/AfficheDisponibilitesPsy.fxml"  -> setActiveButton(btnDisponibilites);
+            case "/RendezVousPsy.fxml"             -> setActiveButton(btnRendezVous);
+            case "/ConsultationsPsy.fxml"          -> setActiveButton(btnConsultations);
             case "/Patients.fxml"                  -> setActiveButton(btnPatients);
         }
     }
@@ -97,9 +143,9 @@ public class SidebarPsyController {
     private void setActiveButton(Button button) {
         Button[] boutons = {btnDashboard, btnDisponibilites, btnRendezVous, btnConsultations, btnPatients};
         for (Button btn : boutons) {
-            btn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: CENTER_LEFT; -fx-padding: 10 15;");
+            btn.setStyle(STYLE_IDLE);
         }
-        button.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-alignment: CENTER_LEFT; -fx-padding: 10 15; -fx-cursor: hand;");
+        button.setStyle(STYLE_ACTIVE);
         activeButton = button;
     }
 
@@ -107,14 +153,15 @@ public class SidebarPsyController {
         Button[] boutons = {btnDashboard, btnDisponibilites, btnRendezVous, btnConsultations, btnPatients};
         for (Button btn : boutons) {
             btn.setOnMouseEntered(e -> {
-                if (btn != activeButton)
-                    btn.setStyle("-fx-background-color: #34495e; -fx-text-fill: white; -fx-alignment: CENTER_LEFT; -fx-padding: 10 15; -fx-cursor: hand;");
+                if (btn != activeButton) btn.setStyle(STYLE_HOVER);
             });
             btn.setOnMouseExited(e -> {
-                if (btn != activeButton)
-                    btn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: CENTER_LEFT; -fx-padding: 10 15;");
+                if (btn != activeButton) btn.setStyle(STYLE_IDLE);
             });
         }
+        // Logout hover
+        btnDeconnexion.setOnMouseEntered(e -> btnDeconnexion.setStyle(STYLE_LOGOUT_HOVER));
+        btnDeconnexion.setOnMouseExited(e -> btnDeconnexion.setStyle(STYLE_LOGOUT_IDLE));
     }
 
     private void deconnecter() {

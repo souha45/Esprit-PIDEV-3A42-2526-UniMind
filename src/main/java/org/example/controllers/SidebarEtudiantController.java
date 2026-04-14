@@ -10,13 +10,8 @@ import org.example.models.User;
 
 import java.io.IOException;
 
-/**
- * Contrôleur pour la sidebar de l'étudiant
- * Navigation centralisée - toutes les pages passent par ici
- */
 public class SidebarEtudiantController {
 
-    // ========== COMPOSANTS FXML ==========
     @FXML private Label lblInitiales;
     @FXML private Label lblNomComplet;
     @FXML private Label lblRole;
@@ -29,13 +24,67 @@ public class SidebarEtudiantController {
     @FXML private Button btnMesReponses;
     @FXML private Button btnDeconnexion;
 
-    // ========== DONNÉES ==========
+    // ── Design tokens ──────────────────────────────────────────────
+    private static final String STYLE_ACTIVE =
+            "-fx-background-color: #ede9fe; " +
+                    "-fx-text-fill: #6366f1; " +
+                    "-fx-font-family: 'Segoe UI'; " +
+                    "-fx-font-size: 13px; " +
+                    "-fx-font-weight: bold; " +
+                    "-fx-alignment: CENTER_LEFT; " +
+                    "-fx-padding: 11 16; " +
+                    "-fx-background-radius: 10; " +
+                    "-fx-border-color: #c4b5fd; " +
+                    "-fx-border-width: 0 0 0 3; " +
+                    "-fx-border-radius: 10; " +
+                    "-fx-cursor: hand;";
+
+    private static final String STYLE_IDLE =
+            "-fx-background-color: transparent; " +
+                    "-fx-text-fill: #6b7280; " +
+                    "-fx-font-family: 'Segoe UI'; " +
+                    "-fx-font-size: 13px; " +
+                    "-fx-alignment: CENTER_LEFT; " +
+                    "-fx-padding: 11 16; " +
+                    "-fx-background-radius: 10; " +
+                    "-fx-cursor: hand;";
+
+    private static final String STYLE_HOVER =
+            "-fx-background-color: #ede9fe; " +
+                    "-fx-text-fill: #6366f1; " +
+                    "-fx-font-family: 'Segoe UI'; " +
+                    "-fx-font-size: 13px; " +
+                    "-fx-alignment: CENTER_LEFT; " +
+                    "-fx-padding: 11 16; " +
+                    "-fx-background-radius: 10; " +
+                    "-fx-cursor: hand;";
+
+    private static final String STYLE_LOGOUT_IDLE =
+            "-fx-background-color: transparent; " +
+                    "-fx-text-fill: #ef4444; " +
+                    "-fx-font-family: 'Segoe UI'; " +
+                    "-fx-font-size: 13px; " +
+                    "-fx-alignment: CENTER_LEFT; " +
+                    "-fx-padding: 11 16; " +
+                    "-fx-background-radius: 10; " +
+                    "-fx-cursor: hand;";
+
+    private static final String STYLE_LOGOUT_HOVER =
+            "-fx-background-color: #fee2e2; " +
+                    "-fx-text-fill: #dc2626; " +
+                    "-fx-font-family: 'Segoe UI'; " +
+                    "-fx-font-size: 13px; " +
+                    "-fx-alignment: CENTER_LEFT; " +
+                    "-fx-padding: 11 16; " +
+                    "-fx-background-radius: 10; " +
+                    "-fx-cursor: hand;";
+    // ───────────────────────────────────────────────────────────────
+
     private User utilisateur;
     private Button activeButton;
 
     @FXML
     public void initialize() {
-        // Configuration des actions de navigation
         btnDashboard.setOnAction(e -> naviguer("/DashboardEtudiant.fxml", "Dashboard", btnDashboard));
         btnMesRendezVous.setOnAction(e -> naviguer("/RendezVousEtudiant.fxml", "Mes Rendez-vous", btnMesRendezVous));
         btnConsultations.setOnAction(e -> naviguer("/ConsultationsEtudiant.fxml", "Consultations", btnConsultations));
@@ -49,20 +98,11 @@ public class SidebarEtudiantController {
         setActiveButton(btnDashboard);
     }
 
-    /**
-     * Navigation centralisée — tout passe par ici.
-     * La sidebar charge la scène et passe l'utilisateur au nouveau contrôleur.
-     *
-     * @param fxmlPath   Chemin du fichier FXML
-     * @param titre      Titre de la fenêtre
-     * @param boutonActif Bouton qui a été cliqué (pour le style)
-     */
     private void naviguer(String fxmlPath, String titre, Button boutonActif) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Scene scene = new Scene(loader.load(), 1200, 700);
 
-            // Récupérer le contrôleur de la nouvelle page et lui passer l'utilisateur
             Object controller = loader.getController();
             if (controller instanceof EtudiantPageController) {
                 ((EtudiantPageController) controller).setUtilisateur(utilisateur);
@@ -78,95 +118,70 @@ public class SidebarEtudiantController {
         }
     }
 
-    /**
-     * Interface que tous les contrôleurs de page doivent implémenter.
-     * Permet à la sidebar de passer l'utilisateur sans connaître le type exact.
-     */
     public interface EtudiantPageController {
         void setUtilisateur(User user);
     }
 
-    /**
-     * Définit l'utilisateur connecté et met à jour l'affichage
-     */
     public void setUtilisateur(User user) {
         this.utilisateur = user;
         if (user == null) return;
 
-        // Mettre à jour l'affichage
         String prenom = user.getPrenom();
         String nom = user.getNom();
         lblNomComplet.setText(prenom + " " + nom);
-
-        // Générer les initiales (première lettre du prénom + première lettre du nom)
-        String initiales = String.valueOf(prenom.charAt(0)).toUpperCase() +
-                String.valueOf(nom.charAt(0)).toUpperCase();
-        lblInitiales.setText(initiales);
-        lblRole.setText("Étudiant");
+        lblInitiales.setText(
+                String.valueOf(prenom.charAt(0)).toUpperCase() +
+                        String.valueOf(nom.charAt(0)).toUpperCase()
+        );
+        lblRole.setText("ÉTUDIANT");
     }
 
-    /**
-     * Définit le bouton actif selon le fichier FXML chargé
-     */
     public void setActiveButtonByFxml(String fxmlPath) {
         switch (fxmlPath) {
-            case "/DashboardEtudiant.fxml" -> setActiveButton(btnDashboard);
-            case "/RendezVousEtudiant.fxml" -> setActiveButton(btnMesRendezVous);
-            case "/ConsultationsEtudiant.fxml" -> setActiveButton(btnConsultations);
-            case "/TraitementsEtudiant.fxml" -> setActiveButton(btnTraitements);
-            case "/SuiviTraitementsEtudiant.fxml" -> setActiveButton(btnSuiviTraitements);
-            case "/QuestionnairesEtudiant.fxml" -> setActiveButton(btnQuestionnaires);
-            case "/MesReponsesEtudiant.fxml" -> setActiveButton(btnMesReponses);
+            case "/DashboardEtudiant.fxml"       -> setActiveButton(btnDashboard);
+            case "/RendezVousEtudiant.fxml"      -> setActiveButton(btnMesRendezVous);
+            case "/ConsultationsEtudiant.fxml"   -> setActiveButton(btnConsultations);
+            case "/TraitementsEtudiant.fxml"     -> setActiveButton(btnTraitements);
+            case "/SuiviTraitementsEtudiant.fxml"-> setActiveButton(btnSuiviTraitements);
+            case "/QuestionnairesEtudiant.fxml"  -> setActiveButton(btnQuestionnaires);
+            case "/MesReponsesEtudiant.fxml"     -> setActiveButton(btnMesReponses);
         }
     }
 
-    /**
-     * Met en surbrillance le bouton actif
-     */
     private void setActiveButton(Button button) {
         Button[] boutons = {btnDashboard, btnMesRendezVous, btnConsultations,
                 btnTraitements, btnSuiviTraitements, btnQuestionnaires, btnMesReponses};
         for (Button btn : boutons) {
-            btn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: CENTER_LEFT; -fx-padding: 10 15;");
+            btn.setStyle(STYLE_IDLE);
         }
-        button.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-alignment: CENTER_LEFT; -fx-padding: 10 15; -fx-cursor: hand;");
+        button.setStyle(STYLE_ACTIVE);
         activeButton = button;
     }
 
-    /**
-     * Stylise les boutons au survol
-     */
     private void styliserBoutons() {
         Button[] boutons = {btnDashboard, btnMesRendezVous, btnConsultations,
                 btnTraitements, btnSuiviTraitements, btnQuestionnaires, btnMesReponses};
-
         for (Button btn : boutons) {
             btn.setOnMouseEntered(e -> {
-                if (btn != activeButton) {
-                    btn.setStyle("-fx-background-color: #34495e; -fx-text-fill: white; -fx-alignment: CENTER_LEFT; -fx-padding: 10 15; -fx-cursor: hand;");
-                }
+                if (btn != activeButton) btn.setStyle(STYLE_HOVER);
             });
             btn.setOnMouseExited(e -> {
-                if (btn != activeButton) {
-                    btn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: CENTER_LEFT; -fx-padding: 10 15;");
-                }
+                if (btn != activeButton) btn.setStyle(STYLE_IDLE);
             });
         }
+        // Logout hover
+        btnDeconnexion.setOnMouseEntered(e -> btnDeconnexion.setStyle(STYLE_LOGOUT_HOVER));
+        btnDeconnexion.setOnMouseExited(e -> btnDeconnexion.setStyle(STYLE_LOGOUT_IDLE));
     }
 
-    /**
-     * Déconnexion : retour à l'écran de login
-     */
     private void deconnecter() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Login.fxml"));
             Scene scene = new Scene(loader.load(), 500, 400);
-
             Stage stage = (Stage) btnDeconnexion.getScene().getWindow();
             stage.setScene(scene);
             stage.setTitle("Unimind - Connexion");
             stage.show();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
