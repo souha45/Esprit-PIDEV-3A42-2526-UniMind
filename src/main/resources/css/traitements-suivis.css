@@ -382,3 +382,42 @@
 .scroll-bar:vertical .track {
     -fx-background-color: #f3f4f6;
 }
+
+/* =============================================
+   SPINNER STYLES
+   ============================================= */
+
+.form-spinner {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-font-size: 13px;
+}
+
+.form-spinner .text-field {
+    -fx-background-color: transparent;
+    -fx-padding: 8 0 8 12;
+    -fx-font-size: 13px;
+}
+
+.form-spinner .increment-arrow-button,
+.form-spinner .decrement-arrow-button {
+    -fx-background-color: #f9fafb;
+    -fx-cursor: hand;
+}
+
+.form-spinner .increment-arrow-button:hover,
+.form-spinner .decrement-arrow-button:hover {
+    -fx-background-color: #ede9fe;
+}
+
+.form-spinner .increment-arrow,
+.form-spinner .decrement-arrow {
+    -fx-background-color: #6366f1;
+}
+
+.form-spinner:focused {
+    -fx-border-color: #6366f1;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 4, 0, 0, 0);
+}

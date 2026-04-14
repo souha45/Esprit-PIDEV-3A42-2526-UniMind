@@ -2,6 +2,7 @@ package org.example.controllers;
 
 import java.net.URL;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -22,29 +23,48 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
 
 public class TraitementAjoutController implements Initializable {
 
+    // ==================== COMPOSANTS FXML ====================
 
     @FXML
     private TextField txtTitre;
     @FXML
-    private TextField txtType;
+    private ComboBox<String> cmbType;
     @FXML
-    private ComboBox<String> cmbCategorie;
+    private ComboBox<CategorieTraitement> cmbCategorie;
     @FXML
-    private ComboBox<String> cmbStatut;
+    private ToggleGroup statutGroup;
     @FXML
-    private ComboBox<String> cmbPriorite;
+    private RadioButton rbEnCours;
+    @FXML
+    private RadioButton rbTermine;
+    @FXML
+    private RadioButton rbSuspendu;
+    @FXML
+    private ToggleGroup prioriteGroup;
+    @FXML
+    private RadioButton rbPrioriteBasse;
+    @FXML
+    private RadioButton rbPrioriteMoyenne;
+    @FXML
+    private RadioButton rbPrioriteHaute;
     @FXML
     private DatePicker dpDateDebut;
     @FXML
     private DatePicker dpDateFin;
     @FXML
-    private TextField txtDosage;
+    private Spinner<Integer> spinnerDosage;
+    @FXML
+    private ComboBox<String> cmbUniteDosage;
     @FXML
     private TextField txtNomPsychologue;
     @FXML
@@ -56,45 +76,86 @@ public class TraitementAjoutController implements Initializable {
     @FXML
     private Label lblStatus;
 
-    //  SERVICES
+    // ==================== SERVICES ====================
 
     private TraitementService traitementService;
     private EtudiantService etudiantService;
     private ObservableList<Etudiant> etudiantsList;
 
-    // INITIALISATION
+    // ==================== INITIALISATION ====================
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Vérification des permissions
         SessionManager session = SessionManager.getInstance();
+
         if (!session.peutCreerTraitement()) {
             afficherErreur("Accès refusé", "Seul le psychologue peut créer des traitements.");
             fermerFenetre();
             return;
         }
 
+        // Configuration du Spinner pour le dosage
+        SpinnerValueFactory<Integer> valueFactory =
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100, 1);
+        spinnerDosage.setValueFactory(valueFactory);
+        spinnerDosage.setEditable(true);
+        spinnerDosage.getStyleClass().add("form-spinner");
+
+        // Configuration de la ComboBox des unités
+        cmbUniteDosage.setItems(FXCollections.observableArrayList(
+                "fois par jour",
+                "fois par semaine",
+                "fois par mois",
+                "comprimé(s) par jour",
+                "comprimé(s) par semaine",
+                "gélule(s) par jour",
+                "cuillère(s) par jour",
+                "séance(s) par semaine",
+                "séance(s) par mois"
+        ));
+        cmbUniteDosage.setValue("fois par semaine"); // Valeur par défaut
+
+        // Configuration des ToggleGroups
+        statutGroup = new ToggleGroup();
+        rbEnCours.setToggleGroup(statutGroup);
+        rbTermine.setToggleGroup(statutGroup);
+        rbSuspendu.setToggleGroup(statutGroup);
+        rbEnCours.setSelected(true);
+
+        prioriteGroup = new ToggleGroup();
+        rbPrioriteBasse.setToggleGroup(prioriteGroup);
+        rbPrioriteMoyenne.setToggleGroup(prioriteGroup);
+        rbPrioriteHaute.setToggleGroup(prioriteGroup);
+        rbPrioriteMoyenne.setSelected(true);
+
         // Initialisation des ComboBox
-        cmbCategorie.setItems(FXCollections.observableArrayList(
-                "RELAXATION", "COGNITIF", "EMOTIONNEL", "COMPORTEMENTAL"
+        cmbType.setItems(FXCollections.observableArrayList(
+                "Thérapie cognitive",
+                "Thérapie comportementale",
+                "Thérapie cognitivo-comportementale (TCC)",
+                "Thérapie émotionnelle",
+                "Coaching",
+                "Méditation pleine conscience",
+                "Relaxation",
+                "Thérapie familiale",
+                "Psychothérapie",
+                "Suivi psychologique",
+                "Bilan psychologique",
+                "Autre"
         ));
-        cmbStatut.setItems(FXCollections.observableArrayList(
-                "EN_COURS", "TERMINE", "SUSPENDU"
-        ));
-        cmbPriorite.setItems(FXCollections.observableArrayList(
-                "BASSE", "MOYENNE", "HAUTE"
-        ));
+
+        cmbCategorie.setItems(FXCollections.observableArrayList(CategorieTraitement.values()));
 
         try {
             traitementService = new TraitementService();
             etudiantService = new EtudiantService();
 
-            // Chargement des étudiants
+            // Charger les étudiants
             List<Etudiant> etudiants = etudiantService.afficher();
             etudiantsList = FXCollections.observableArrayList(etudiants);
             cmbEtudiant.setItems(etudiantsList);
 
-            // Configuration de l'affichage de la ComboBox Étudiant
+            // Configuration de l'affichage des étudiants
             cmbEtudiant.setCellFactory(param -> new javafx.scene.control.ListCell<Etudiant>() {
                 @Override
                 protected void updateItem(Etudiant etudiant, boolean empty) {
@@ -112,14 +173,17 @@ public class TraitementAjoutController implements Initializable {
                 protected void updateItem(Etudiant etudiant, boolean empty) {
                     super.updateItem(etudiant, empty);
                     if (empty || etudiant == null) {
-                        setText(null);
+                        setText("Sélectionner un étudiant");
                     } else {
                         setText(etudiant.getNom() + " " + etudiant.getPrenom());
                     }
                 }
             });
 
-            // Configuration du psychologue connecté
+            // Date par défaut = aujourd'hui
+            dpDateDebut.setValue(LocalDate.now());
+
+            // Psychologue connecté
             txtNomPsychologue.setText(session.getNomUtilisateur());
             txtNomPsychologue.setEditable(false);
 
@@ -131,11 +195,8 @@ public class TraitementAjoutController implements Initializable {
         }
     }
 
-    // ACTIONS DES BOUTONS
+    // ==================== ACTIONS DES BOUTONS ====================
 
-    /**
-     * Enregistre le nouveau traitement
-     */
     @FXML
     private void handleEnregistrer() {
         try {
@@ -144,6 +205,7 @@ public class TraitementAjoutController implements Initializable {
                 viderChamps();
                 lblStatus.setText("✓ Traitement ajouté avec succès !");
                 afficherSucces("Ajout réussi", "Le traitement a été ajouté avec succès.");
+                fermerFenetre();
             }
         } catch (Exception e) {
             lblStatus.setText("✗ Erreur lors de l'ajout: " + e.getMessage());
@@ -151,37 +213,46 @@ public class TraitementAjoutController implements Initializable {
         }
     }
 
-    /**
-     * Annule et ferme la fenêtre
-     */
     @FXML
     private void handleAnnuler() {
         fermerFenetre();
     }
 
-    /**
-     * Vide tous les champs du formulaire
-     */
     @FXML
     private void handleVider() {
         viderChamps();
         lblStatus.setText("✓ Formulaire vidé");
     }
 
-    // MÉTHODES MÉTIER
+    // ==================== MÉTHODES MÉTIER ====================
 
-    /**
-     * Ajoute le traitement dans la base de données
-     */
     private void ajouterTraitement() throws SQLException {
         Traitement traitement = new Traitement();
 
         // Champs obligatoires
         traitement.setTitre(txtTitre.getText().trim());
-        traitement.setType(txtType.getText().trim());
-        traitement.setCategorie(CategorieTraitement.valueOf(cmbCategorie.getValue()));
-        traitement.setStatut(StatutTraitement.valueOf(cmbStatut.getValue()));
-        traitement.setPriorite(PrioriteTraitement.valueOf(cmbPriorite.getValue()));
+        traitement.setType(cmbType.getValue());
+        traitement.setCategorie(cmbCategorie.getValue());
+
+        // Statut
+        RadioButton selectedStatut = (RadioButton) statutGroup.getSelectedToggle();
+        if (selectedStatut == rbEnCours) {
+            traitement.setStatut(StatutTraitement.EN_COURS);
+        } else if (selectedStatut == rbTermine) {
+            traitement.setStatut(StatutTraitement.TERMINE);
+        } else if (selectedStatut == rbSuspendu) {
+            traitement.setStatut(StatutTraitement.SUSPENDU);
+        }
+
+        // Priorité
+        RadioButton selectedPriorite = (RadioButton) prioriteGroup.getSelectedToggle();
+        if (selectedPriorite == rbPrioriteBasse) {
+            traitement.setPriorite(PrioriteTraitement.BASSE);
+        } else if (selectedPriorite == rbPrioriteMoyenne) {
+            traitement.setPriorite(PrioriteTraitement.MOYENNE);
+        } else if (selectedPriorite == rbPrioriteHaute) {
+            traitement.setPriorite(PrioriteTraitement.HAUTE);
+        }
 
         // Dates
         if (dpDateDebut.getValue() != null) {
@@ -190,6 +261,11 @@ public class TraitementAjoutController implements Initializable {
         if (dpDateFin.getValue() != null) {
             traitement.setDateFin(java.sql.Date.valueOf(dpDateFin.getValue()));
         }
+
+        // Dosage (Spinner + Unité)
+        int dosage = spinnerDosage.getValue();
+        String unite = cmbUniteDosage.getValue();
+        traitement.setDosage(dosage + " " + unite);
 
         // Clés étrangères
         SessionManager session = SessionManager.getInstance();
@@ -204,18 +280,13 @@ public class TraitementAjoutController implements Initializable {
         }
 
         // Autres champs
-        traitement.setDosage(txtDosage.getText());
         traitement.setObjectifTherapeutique(txtObjectifTherapeutique.getText());
         traitement.setDescription(txtDescription.getText());
 
         traitementService.ajouter(traitement);
-        System.out.println("Traitement ajouté: " + traitement.getTitre());
+        System.out.println("Traitement ajouté: " + traitement.getTitre() + " - Dosage: " + traitement.getDosage());
     }
 
-    /**
-     * Valide les données du formulaire
-     * @return true si les données sont valides
-     */
     private boolean validerFormulaire() {
         StringBuilder erreurs = new StringBuilder();
 
@@ -226,40 +297,39 @@ public class TraitementAjoutController implements Initializable {
             erreurs.append("• Le titre doit contenir au moins 3 caractères.\n");
         } else if (txtTitre.getText().trim().length() > 200) {
             erreurs.append("• Le titre ne doit pas dépasser 200 caractères.\n");
-        } else {
-            // Validation d'unicité du titre
-            try {
-                Etudiant etudiant = cmbEtudiant.getValue();
-                if (etudiant != null && traitementService.traitementExisteDeja(
-                        txtTitre.getText().trim(), etudiant.getUserId())) {
-                    erreurs.append("• Un traitement avec ce titre existe déjà pour cet étudiant.\n");
-                }
-            } catch (SQLException e) {
-                erreurs.append("• Erreur lors de la vérification de l'unicité.\n");
-            }
         }
 
         // Validation du type
-        if (txtType.getText() == null || txtType.getText().trim().isEmpty()) {
+        if (cmbType.getValue() == null || cmbType.getValue().isEmpty()) {
             erreurs.append("• Le type est obligatoire.\n");
-        } else if (txtType.getText().trim().length() < 2) {
-            erreurs.append("• Le type doit contenir au moins 2 caractères.\n");
-        } else if (txtType.getText().trim().length() > 100) {
-            erreurs.append("• Le type ne doit pas dépasser 100 caractères.\n");
         }
 
-        // Validation des ComboBox
+        // Validation de la catégorie
         if (cmbCategorie.getValue() == null) {
             erreurs.append("• La catégorie est obligatoire.\n");
         }
-        if (cmbStatut.getValue() == null) {
+
+        // Validation du statut
+        if (statutGroup.getSelectedToggle() == null) {
             erreurs.append("• Le statut est obligatoire.\n");
         }
-        if (cmbPriorite.getValue() == null) {
+
+        // Validation de la priorité
+        if (prioriteGroup.getSelectedToggle() == null) {
             erreurs.append("• La priorité est obligatoire.\n");
         }
+
+        // Validation de l'étudiant
         if (cmbEtudiant.getValue() == null) {
             erreurs.append("• L'étudiant est obligatoire.\n");
+        }
+
+        // Validation du dosage
+        if (spinnerDosage.getValue() == null || spinnerDosage.getValue() < 0) {
+            erreurs.append("• La valeur du dosage doit être un nombre positif.\n");
+        }
+        if (cmbUniteDosage.getValue() == null || cmbUniteDosage.getValue().isEmpty()) {
+            erreurs.append("• L'unité du dosage est obligatoire.\n");
         }
 
         // Validation des dates
@@ -269,76 +339,47 @@ public class TraitementAjoutController implements Initializable {
             }
         }
 
-        if (erreurs.length() > 0) {
-            afficherErreur("Erreur de validation", erreurs.toString());
-            return false;
-        }
-        // Validation de la longueur de la description
+        // Validation de la description
         if (txtDescription.getText() != null && txtDescription.getText().length() > 500) {
             erreurs.append("• La description ne doit pas dépasser 500 caractères.\n");
         }
 
-        //  Validation de la longueur de l'objectif thérapeutique
+        // Validation de l'objectif
         if (txtObjectifTherapeutique.getText() != null && txtObjectifTherapeutique.getText().length() > 255) {
             erreurs.append("• L'objectif thérapeutique ne doit pas dépasser 255 caractères.\n");
         }
 
-        //  Validation du dosage
-        if (txtDosage.getText() != null && !txtDosage.getText().trim().isEmpty()) {
-            if (!txtDosage.getText().matches("^[a-zA-Z0-9\\s\\-]+$")) {
-                erreurs.append("• Le dosage ne doit contenir que des lettres, chiffres, espaces ou tirets.\n");
-            }
-        }
-
-        //  Validation des dates
-        if (dpDateDebut.getValue() != null && dpDateFin.getValue() != null) {
-            if (dpDateFin.getValue().isBefore(dpDateDebut.getValue())) {
-                erreurs.append("• La date de fin ne peut pas être antérieure à la date de début.\n");
-            }
-        }
-
-        // AFFICHAGE DES ERREURS
         if (erreurs.length() > 0) {
             afficherErreur("Erreur de validation", erreurs.toString());
             return false;
         }
 
         return true;
-
     }
 
-    /**
-     * Vide tous les champs du formulaire
-     */
     private void viderChamps() {
         txtTitre.clear();
-        txtType.clear();
-        txtDosage.clear();
+        cmbType.setValue(null);
+        cmbCategorie.setValue(null);
+        rbEnCours.setSelected(true);
+        rbPrioriteMoyenne.setSelected(true);
         txtObjectifTherapeutique.clear();
         txtDescription.clear();
-        cmbCategorie.setValue(null);
-        cmbStatut.setValue(null);
-        cmbPriorite.setValue(null);
         cmbEtudiant.setValue(null);
-        dpDateDebut.setValue(null);
+        dpDateDebut.setValue(LocalDate.now());
         dpDateFin.setValue(null);
+        spinnerDosage.getValueFactory().setValue(1);
+        cmbUniteDosage.setValue("fois par semaine");
 
-        // Réinitialiser le nom du psychologue (reprendre la session)
         SessionManager session = SessionManager.getInstance();
         txtNomPsychologue.setText(session.getNomUtilisateur());
     }
 
-    /**
-     * Ferme la fenêtre actuelle
-     */
     private void fermerFenetre() {
         Stage stage = (Stage) txtTitre.getScene().getWindow();
         stage.close();
     }
 
-    /**
-     * Affiche une boîte de dialogue d'erreur
-     */
     private void afficherErreur(String titre, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(titre);
@@ -347,9 +388,6 @@ public class TraitementAjoutController implements Initializable {
         alert.showAndWait();
     }
 
-    /**
-     * Affiche une boîte de dialogue de succès
-     */
     private void afficherSucces(String titre, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(titre);
