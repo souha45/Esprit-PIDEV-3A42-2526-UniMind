@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.example.controllers.AdminLayoutController"
+            stylesheets="@/css/admin.css"
+            prefWidth="1200" prefHeight="750">
+
+    <!-- SIDEBAR -->
+    <left>
+        <VBox fx:id="sidebar" styleClass="sidebar" prefWidth="240">
+
+            <!-- Logo + Brand -->
+            <VBox styleClass="sidebar-brand" alignment="CENTER">
+                <HBox alignment="CENTER_LEFT" spacing="12" styleClass="brand-row">
+                    <ImageView fx:id="logoImage" fitWidth="40" fitHeight="40" preserveRatio="true">
+                        <image>
+                            <Image url="@/images/logo-unimind-699da8d841d01925479563.png"/>
+                        </image>
+                    </ImageView>
+                    <Label text="Unimind" styleClass="brand-name"/>
+                </HBox>
+            </VBox>
+
+            <!-- Admin Info -->
+            <VBox styleClass="admin-info" alignment="CENTER">
+                <Label text="👤" styleClass="admin-avatar"/>
+                <Label text="Administrateur" styleClass="admin-role"/>
+                <Label text="Admin" styleClass="admin-name"/>
+            </VBox>
+
+            <Separator styleClass="sidebar-separator"/>
+
+            <!-- Navigation Menu -->
+            <VBox styleClass="nav-menu" VBox.vgrow="ALWAYS">
+                <Label text="NAVIGATION" styleClass="nav-section-label"/>
+
+                <Button fx:id="btnStats" text="📊  Statistiques" styleClass="nav-btn"
+                        onAction="#showStats" maxWidth="Infinity"/>
+                <Button fx:id="btnUsers" text="👥  Gestion Utilisateurs" styleClass="nav-btn"
+                        onAction="#showUsers" maxWidth="Infinity"/>
+                <Button fx:id="btnSeances" text="❤  Séances Méditation" styleClass="nav-btn, nav-btn-active"
+                        onAction="#showSeances" maxWidth="Infinity"/>
+                <Button fx:id="btnEvenements" text="📅  Évènements" styleClass="nav-btn"
+                        onAction="#showEvenements" maxWidth="Infinity"/>
+                <Button fx:id="btnSponsors" text="🤝  Sponsors" styleClass="nav-btn"
+                        onAction="#showSponsors" maxWidth="Infinity"/>
+                <Button fx:id="btnQuestionnaires" text="📝  Questionnaires" styleClass="nav-btn"
+                        onAction="#showQuestionnaires" maxWidth="Infinity"/>
+            </VBox>
+
+            <!-- Logout -->
+            <VBox styleClass="sidebar-footer">
+                <Separator styleClass="sidebar-separator"/>
+                <Button text="🚪" styleClass="navbar-logout-btn" onAction="#onLogout">
+                    <tooltip>
+                        <Tooltip text="Déconnexion"/>
+                    </tooltip>
+                </Button>
+            </VBox>
+
+        </VBox>
+    </left>
+
+    <!-- MAIN CONTENT -->
+    <center>
+        <StackPane fx:id="contentArea" styleClass="content-area">
+            <!-- Content will be loaded dynamically -->
+        </StackPane>
+    </center>
+
+</BorderPane>
