@@ -10,11 +10,11 @@ import java.util.List;
 
 import org.example.entities.Traitement;
 import org.example.enums.PrioriteTraitement;
+import org.example.enums.StatutTraitement;
 import org.example.utils.MyDataBase_Unimind;
 
 public class TraitementService implements ICrud<Traitement> {
 
-    // Méthode pour vérifier l'unicité d'un traitement
     public boolean traitementExisteDeja(String titre, int etudiantId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM traitement WHERE titre = ? AND etudiant_id = ?";
         try (Connection cnx = MyDataBase_Unimind.getInstance().getConnection();
@@ -37,13 +37,16 @@ public class TraitementService implements ICrud<Traitement> {
             ps.setString(1, t.getTitre());
             ps.setString(2, t.getDescription());
             ps.setString(3, t.getType());
-            ps.setString(4, t.getCategorie().name());
+            // Categorie : convertir en minuscule pour Symfony
+            ps.setString(4, t.getCategorie().name().toLowerCase());
             ps.setInt(5, t.getDureeJours());
             ps.setString(6, t.getDosage());
             ps.setDate(7, t.getDateDebut());
             ps.setDate(8, t.getDateFin());
-            ps.setString(9, t.getStatut().name());
-            ps.setString(10, t.getPriorite().name());
+            // Statut : convertir en format Symfony ("en cours")
+            ps.setString(9, convertirStatutPourSymfony(t.getStatut()));
+            // Priorite : convertir en minuscule pour Symfony
+            ps.setString(10, t.getPriorite().name().toLowerCase());
             ps.setString(11, t.getObjectifTherapeutique());
             if (t.getPsychologueId() == null) ps.setNull(12, Types.INTEGER); else ps.setInt(12, t.getPsychologueId());
             ps.setInt(13, t.getEtudiantId());
@@ -59,13 +62,16 @@ public class TraitementService implements ICrud<Traitement> {
             ps.setString(1, t.getTitre());
             ps.setString(2, t.getDescription());
             ps.setString(3, t.getType());
-            ps.setString(4, t.getCategorie().name());
+            // Categorie : convertir en minuscule pour Symfony
+            ps.setString(4, t.getCategorie().name().toLowerCase());
             ps.setInt(5, t.getDureeJours());
             ps.setString(6, t.getDosage());
             ps.setDate(7, t.getDateDebut());
             ps.setDate(8, t.getDateFin());
-            ps.setString(9, t.getStatut().name());
-            ps.setString(10, t.getPriorite().name());
+            // Statut : convertir en format Symfony ("en cours")
+            ps.setString(9, convertirStatutPourSymfony(t.getStatut()));
+            // Priorite : convertir en minuscule pour Symfony
+            ps.setString(10, t.getPriorite().name().toLowerCase());
             ps.setString(11, t.getObjectifTherapeutique());
             if (t.getPsychologueId() == null) ps.setNull(12, Types.INTEGER); else ps.setInt(12, t.getPsychologueId());
             ps.setInt(13, t.getEtudiantId());
@@ -76,11 +82,43 @@ public class TraitementService implements ICrud<Traitement> {
 
     @Override
     public void supprimer(int id) throws SQLException {
-        String sql = "DELETE FROM traitement WHERE traitement_id=?";
-        try (Connection cnx = MyDataBase_Unimind.getInstance().getConnection();
-             PreparedStatement ps = cnx.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            ps.executeUpdate();
+        Connection cnx = null;
+        boolean autoCommit = false;
+
+        try {
+            cnx = MyDataBase_Unimind.getInstance().getConnection();
+            autoCommit = cnx.getAutoCommit();
+            cnx.setAutoCommit(false);
+
+            // 1. Supprimer les suivis liés
+            String deleteSuivisSql = "DELETE FROM suivi_traitement WHERE traitement_id = ?";
+            try (PreparedStatement ps = cnx.prepareStatement(deleteSuivisSql)) {
+                ps.setInt(1, id);
+                ps.executeUpdate();
+            }
+
+            // 2. Supprimer le traitement
+            String deleteTraitementSql = "DELETE FROM traitement WHERE traitement_id = ?";
+            try (PreparedStatement ps = cnx.prepareStatement(deleteTraitementSql)) {
+                ps.setInt(1, id);
+                ps.executeUpdate();
+            }
+
+            cnx.commit();
+
+        } catch (SQLException e) {
+            if (cnx != null) {
+                try {
+                    cnx.rollback();
+                } catch (SQLException ex) {
+                    System.err.println("Erreur rollback: " + ex.getMessage());
+                }
+            }
+            throw e;
+        } finally {
+            if (cnx != null) {
+                cnx.setAutoCommit(autoCommit);
+            }
         }
     }
 
@@ -98,13 +136,13 @@ public class TraitementService implements ICrud<Traitement> {
                 t.setDescription(rs.getString("description"));
                 t.setType(rs.getString("type"));
 
-                // Conversion sécurisée des énumérations
+                // Categorie : lire la valeur (minuscule) et convertir en majuscule pour JavaFX
                 String categorieStr = rs.getString("categorie");
                 if (categorieStr != null) {
                     try {
-                        t.setCategorie(org.example.enums.CategorieTraitement.valueOf(categorieStr));
+                        t.setCategorie(org.example.enums.CategorieTraitement.valueOf(categorieStr.toUpperCase()));
                     } catch (IllegalArgumentException e) {
-                        t.setCategorie(org.example.enums.CategorieTraitement.COGNITIF); // Valeur par défaut
+                        t.setCategorie(org.example.enums.CategorieTraitement.COGNITIF);
                     }
                 }
 
@@ -113,21 +151,21 @@ public class TraitementService implements ICrud<Traitement> {
                 t.setDateDebut(rs.getDate("date_debut"));
                 t.setDateFin(rs.getDate("date_fin"));
 
+                // Statut : lire la valeur Symfony et convertir en JavaFX
                 String statutStr = rs.getString("statut");
                 if (statutStr != null) {
-                    try {
-                        t.setStatut(org.example.enums.StatutTraitement.valueOf(statutStr));
-                    } catch (IllegalArgumentException e) {
-                        t.setStatut(org.example.enums.StatutTraitement.EN_COURS); // Valeur par défaut
-                    }
+                    t.setStatut(convertirStatutDeSymfony(statutStr));
+                } else {
+                    t.setStatut(StatutTraitement.EN_COURS);
                 }
 
+                // Priorite : lire la valeur (minuscule) et convertir en majuscule pour JavaFX
                 String prioriteStr = rs.getString("priorite");
                 if (prioriteStr != null) {
                     try {
-                        t.setPriorite(org.example.enums.PrioriteTraitement.valueOf(prioriteStr));
+                        t.setPriorite(PrioriteTraitement.valueOf(prioriteStr.toUpperCase()));
                     } catch (IllegalArgumentException e) {
-                        t.setPriorite(PrioriteTraitement.MOYENNE); // Valeur par défaut
+                        t.setPriorite(PrioriteTraitement.MOYENNE);
                     }
                 }
 
@@ -139,6 +177,46 @@ public class TraitementService implements ICrud<Traitement> {
                 result.add(t);
             }
             return result;
+        }
+    }
+
+    /**
+     * Convertit un StatutTraitement JavaFX vers le format Symfony
+     * EN_COURS → "en cours"
+     * TERMINE → "termine"
+     * SUSPENDU → "suspendu"
+     */
+    private String convertirStatutPourSymfony(StatutTraitement statut) {
+        switch (statut) {
+            case EN_COURS:
+                return "en cours";
+            case TERMINE:
+                return "termine";
+            case SUSPENDU:
+                return "suspendu";
+            default:
+                return "en cours";
+        }
+    }
+
+    /**
+     * Convertit une chaîne Symfony vers StatutTraitement JavaFX
+     * "en cours" → EN_COURS
+     * "termine" → TERMINE
+     * "suspendu" → SUSPENDU
+     */
+    private StatutTraitement convertirStatutDeSymfony(String valeur) {
+        if (valeur == null) return StatutTraitement.EN_COURS;
+
+        switch (valeur.toLowerCase()) {
+            case "en cours":
+                return StatutTraitement.EN_COURS;
+            case "termine":
+                return StatutTraitement.TERMINE;
+            case "suspendu":
+                return StatutTraitement.SUSPENDU;
+            default:
+                return StatutTraitement.EN_COURS;
         }
     }
 }

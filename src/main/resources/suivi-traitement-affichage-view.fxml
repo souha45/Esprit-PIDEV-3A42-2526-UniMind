@@ -12,50 +12,79 @@
         <Label text="Consultez les informations complètes du suivi" styleClass="page-subtitle"/>
     </VBox>
 
-    <!-- Contenu principal -->
-    <VBox styleClass="form-container" spacing="20">
-        <padding>
-            <Insets top="20" right="30" bottom="20" left="30"/>
-        </padding>
+    <!-- Zone scrollable -->
+    <ScrollPane styleClass="detail-scroll-pane" fitToWidth="true" VBox.vgrow="ALWAYS">
+        <content>
+            <VBox styleClass="form-container" spacing="20">
+                <padding>
+                    <Insets top="20" right="30" bottom="20" left="30"/>
+                </padding>
 
-        <!-- Grille d'affichage -->
-        <GridPane hgap="20" vgap="15" styleClass="form-grid">
+                <!-- Carte Informations du suivi -->
+                <VBox styleClass="detail-card">
+                    <Label text="Informations du suivi" styleClass="detail-section-title"/>
+                    <Separator styleClass="detail-separator"/>
 
-            <!-- Ligne 1 : Date Suivi et Traitement -->
-            <Label text="Date Suivi" styleClass="detail-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-            <Label fx:id="lblDateSuivi" styleClass="detail-value" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                    <GridPane hgap="20" vgap="15" styleClass="detail-grid">
 
-            <Label text="Traitement" styleClass="detail-label" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
-            <Label fx:id="lblTraitement" styleClass="detail-value" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+                        <Label text="Date du suivi" styleClass="detail-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <Label fx:id="lblDateSuivi" styleClass="detail-value" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-            <!-- Ligne 2 : Étudiant et Psychologue -->
-            <Label text="Étudiant" styleClass="detail-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-            <Label fx:id="lblEtudiant" styleClass="detail-value" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <Label text="Saisi par" styleClass="detail-label" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                        <Label fx:id="lblSaisiPar" styleClass="detail-value-badge" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
 
-            <Label text="Psychologue" styleClass="detail-label" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
-            <Label fx:id="lblPsychologue" styleClass="detail-value" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+                    </GridPane>
+                </VBox>
 
-            <!-- Ligne 3 : Saisi Par -->
-            <Label text="Saisi Par" styleClass="detail-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-            <Label fx:id="lblSaisiPar" styleClass="detail-value" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                <!-- Carte Traitement associé -->
+                <VBox styleClass="detail-card">
+                    <Label text="Traitement associé" styleClass="detail-section-title"/>
+                    <Separator styleClass="detail-separator"/>
 
-            <!-- Ligne 4 : Notes (pleine largeur) -->
-            <Label text="Notes / Observations" styleClass="detail-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-            <Label fx:id="lblNotes" styleClass="detail-value-full" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+                    <GridPane hgap="20" vgap="15" styleClass="detail-grid">
 
-        </GridPane>
+                        <Label text="Traitement" styleClass="detail-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <Label fx:id="lblTraitement" styleClass="detail-value-link" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
-        <!-- Séparateur -->
-        <Separator styleClass="form-separator"/>
+                    </GridPane>
+                </VBox>
 
-        <!-- Boutons d'action -->
-        <HBox spacing="15" alignment="CENTER" styleClass="form-buttons">
-            <Button text="Fermer" onAction="#handleFermer" styleClass="btn-primary"/>
-        </HBox>
+                <!-- Carte Intervenants -->
+                <VBox styleClass="detail-card">
+                    <Label text="Intervenants" styleClass="detail-section-title"/>
+                    <Separator styleClass="detail-separator"/>
 
-        <!-- Barre de statut -->
-        <HBox styleClass="status-bar">
-            <Label fx:id="lblStatus" text="✓ Détails du suivi chargés" styleClass="status-text"/>
-        </HBox>
-    </VBox>
+                    <GridPane hgap="20" vgap="15" styleClass="detail-grid">
+
+                        <Label text="Étudiant" styleClass="detail-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <Label fx:id="lblEtudiant" styleClass="detail-value" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                        <Label text="Psychologue" styleClass="detail-label" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                        <Label fx:id="lblPsychologue" styleClass="detail-value" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                    </GridPane>
+                </VBox>
+
+                <!-- Carte Notes -->
+                <VBox styleClass="detail-card">
+                    <Label text="Notes / Observations" styleClass="detail-section-title"/>
+                    <Separator styleClass="detail-separator"/>
+
+                    <VBox spacing="8">
+                        <Label fx:id="lblNotes" styleClass="detail-value-full" wrapText="true"/>
+                    </VBox>
+                </VBox>
+
+                <!-- Boutons d'action -->
+                <HBox spacing="15" alignment="CENTER" styleClass="form-buttons">
+                    <Button text="Fermer" onAction="#handleFermer" styleClass="btn-primary"/>
+                </HBox>
+            </VBox>
+        </content>
+    </ScrollPane>
+
+    <!-- Barre de statut -->
+    <HBox styleClass="status-bar">
+        <Label fx:id="lblStatus" text="✓ Détails du suivi chargés" styleClass="status-text"/>
+    </HBox>
 </VBox>

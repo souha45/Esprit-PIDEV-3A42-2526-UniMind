@@ -42,8 +42,13 @@ public class SuiviTraitementService implements ICrud<SuiviTraitement> {
             ps.setString(7, s.getObservations());
             ps.setString(8, s.getObservationsPsy());
             if (s.getEvaluation() == null) ps.setNull(9, Types.INTEGER); else ps.setInt(9, s.getEvaluation());
-            ps.setString(10, s.getRessenti() != null ? s.getRessenti().name() : null);
-            ps.setString(11, s.getSaisiPar() != null ? s.getSaisiPar().name() : null);
+
+            // CONVERSION AUTOMATIQUE : Majuscule → Minuscule pour la base
+            ps.setString(10, s.getRessenti() != null ? s.getRessenti().name().toLowerCase() : null);
+
+            // CONVERSION AUTOMATIQUE : Majuscule → Minuscule pour la base
+            ps.setString(11, s.getSaisiPar() != null ? s.getSaisiPar().name().toLowerCase() : null);
+
             ps.setBoolean(12, s.isValide());
             ps.executeUpdate();
         }
@@ -63,8 +68,13 @@ public class SuiviTraitementService implements ICrud<SuiviTraitement> {
             ps.setString(7, s.getObservations());
             ps.setString(8, s.getObservationsPsy());
             if (s.getEvaluation() == null) ps.setNull(9, Types.INTEGER); else ps.setInt(9, s.getEvaluation());
-            ps.setString(10, s.getRessenti() != null ? s.getRessenti().name() : null);
-            ps.setString(11, s.getSaisiPar() != null ? s.getSaisiPar().name() : null);
+
+            // CONVERSION AUTOMATIQUE : Majuscule → Minuscule pour la base
+            ps.setString(10, s.getRessenti() != null ? s.getRessenti().name().toLowerCase() : null);
+
+            // CONVERSION AUTOMATIQUE : Majuscule → Minuscule pour la base
+            ps.setString(11, s.getSaisiPar() != null ? s.getSaisiPar().name().toLowerCase() : null);
+
             ps.setBoolean(12, s.isValide());
             ps.setInt(13, s.getSuivitraitementId());
             ps.executeUpdate();
@@ -81,6 +91,19 @@ public class SuiviTraitementService implements ICrud<SuiviTraitement> {
         }
     }
 
+    /**
+     * Supprime tous les suivis d'un traitement (utilisé par la suppression cascade)
+     */
+    public void supprimerParTraitementId(int traitementId) throws SQLException {
+        String sql = "DELETE FROM suivi_traitement WHERE traitement_id=?";
+        try (Connection cnx = MyDataBase_Unimind.getInstance().getConnection();
+             PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, traitementId);
+            int deleted = ps.executeUpdate();
+            System.out.println("✅ " + deleted + " suivi(s) supprimé(s) pour le traitement ID: " + traitementId);
+        }
+    }
+
     @Override
     public List<SuiviTraitement> afficher() throws SQLException {
         String sql = "SELECT * FROM suivi_traitement";
@@ -89,47 +112,16 @@ public class SuiviTraitementService implements ICrud<SuiviTraitement> {
              ResultSet rs = ps.executeQuery()) {
             List<SuiviTraitement> result = new ArrayList<>();
             while (rs.next()) {
-                SuiviTraitement s = new SuiviTraitement();
-                s.setSuivitraitementId(rs.getInt("suivitraitement_id"));
-                s.setTraitementId(rs.getInt("traitement_id"));
-                s.setDateSuivi(rs.getDate("dateSuivi"));
-                s.setDateSaisie(rs.getTimestamp("dateSaisie"));
-                s.setEffectue(rs.getBoolean("effectue"));
-                s.setHeurePrevue(rs.getTime("heurePrevue"));
-                s.setHeureEffective(rs.getTime("heureEffective"));
-                s.setObservations(rs.getString("observations"));
-                s.setObservationsPsy(rs.getString("observationsPsy"));
-                s.setEvaluation(rs.getObject("evaluation") != null ? rs.getInt("evaluation") : null);
-
-                // Conversion sécurisée des énumérations
-                String ressentiStr = rs.getString("ressenti");
-                if (ressentiStr != null) {
-                    try {
-                        s.setRessenti(org.example.enums.RessentiSuivi.valueOf(ressentiStr));
-                    } catch (IllegalArgumentException e) {
-                        s.setRessenti(org.example.enums.RessentiSuivi.NEUTRE); // Valeur par défaut
-                    }
-                }
-
-                String saisiParStr = rs.getString("saisiPar");
-                if (saisiParStr != null) {
-                    try {
-                        s.setSaisiPar(org.example.enums.SaisiPar.valueOf(saisiParStr));
-                    } catch (IllegalArgumentException e) {
-                        s.setSaisiPar(org.example.enums.SaisiPar.PSYCHOLOGUE); // Valeur par défaut
-                    }
-                }
-
-                s.setValide(rs.getBoolean("valide"));
-                s.setCreatedAt(rs.getTimestamp("createdAt"));
-                s.setUpdatedAt(rs.getTimestamp("updatedAt"));
+                SuiviTraitement s = extractSuiviFromResultSet(rs);
                 result.add(s);
             }
             return result;
         }
     }
 
-    // Méthode utilitaire pour récupérer les suivis par traitement
+    /**
+     * Récupère les suivis par traitement
+     */
     public List<SuiviTraitement> getByTraitementId(int traitementId) throws SQLException {
         String sql = "SELECT * FROM suivi_traitement WHERE traitement_id=?";
         try (Connection cnx = MyDataBase_Unimind.getInstance().getConnection();
@@ -138,44 +130,57 @@ public class SuiviTraitementService implements ICrud<SuiviTraitement> {
             try (ResultSet rs = ps.executeQuery()) {
                 List<SuiviTraitement> result = new ArrayList<>();
                 while (rs.next()) {
-                    SuiviTraitement s = new SuiviTraitement();
-                    s.setSuivitraitementId(rs.getInt("suivitraitement_id"));
-                    s.setTraitementId(rs.getInt("traitement_id"));
-                    s.setDateSuivi(rs.getDate("dateSuivi"));
-                    s.setDateSaisie(rs.getTimestamp("dateSaisie"));
-                    s.setEffectue(rs.getBoolean("effectue"));
-                    s.setHeurePrevue(rs.getTime("heurePrevue"));
-                    s.setHeureEffective(rs.getTime("heureEffective"));
-                    s.setObservations(rs.getString("observations"));
-                    s.setObservationsPsy(rs.getString("observationsPsy"));
-                    s.setEvaluation(rs.getObject("evaluation") != null ? rs.getInt("evaluation") : null);
-
-                    // Conversion sécurisée des énumérations
-                    String ressentiStr = rs.getString("ressenti");
-                    if (ressentiStr != null) {
-                        try {
-                            s.setRessenti(org.example.enums.RessentiSuivi.valueOf(ressentiStr));
-                        } catch (IllegalArgumentException e) {
-                            s.setRessenti(org.example.enums.RessentiSuivi.NEUTRE); // Valeur par défaut
-                        }
-                    }
-
-                    String saisiParStr = rs.getString("saisiPar");
-                    if (saisiParStr != null) {
-                        try {
-                            s.setSaisiPar(org.example.enums.SaisiPar.valueOf(saisiParStr));
-                        } catch (IllegalArgumentException e) {
-                            s.setSaisiPar(org.example.enums.SaisiPar.PSYCHOLOGUE); // Valeur par défaut
-                        }
-                    }
-
-                    s.setValide(rs.getBoolean("valide"));
-                    s.setCreatedAt(rs.getTimestamp("createdAt"));
-                    s.setUpdatedAt(rs.getTimestamp("updatedAt"));
+                    SuiviTraitement s = extractSuiviFromResultSet(rs);
                     result.add(s);
                 }
                 return result;
             }
         }
+    }
+
+    /**
+     * Extrait un objet SuiviTraitement d'un ResultSet avec conversion automatique
+     */
+    private SuiviTraitement extractSuiviFromResultSet(ResultSet rs) throws SQLException {
+        SuiviTraitement s = new SuiviTraitement();
+        s.setSuivitraitementId(rs.getInt("suivitraitement_id"));
+        s.setTraitementId(rs.getInt("traitement_id"));
+        s.setDateSuivi(rs.getDate("dateSuivi"));
+        s.setDateSaisie(rs.getTimestamp("dateSaisie"));
+        s.setEffectue(rs.getBoolean("effectue"));
+        s.setHeurePrevue(rs.getTime("heurePrevue"));
+        s.setHeureEffective(rs.getTime("heureEffective"));
+        s.setObservations(rs.getString("observations"));
+        s.setObservationsPsy(rs.getString("observationsPsy"));
+        s.setEvaluation(rs.getObject("evaluation") != null ? rs.getInt("evaluation") : null);
+        s.setValide(rs.getBoolean("valide"));
+        s.setCreatedAt(rs.getTimestamp("createdAt"));
+        s.setUpdatedAt(rs.getTimestamp("updatedAt"));
+
+        // LECTURE AUTOMATIQUE : Minuscule de la base → Majuscule pour JavaFX
+        String ressentiStr = rs.getString("ressenti");
+        if (ressentiStr != null) {
+            try {
+                s.setRessenti(org.example.enums.RessentiSuivi.valueOf(ressentiStr.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                s.setRessenti(org.example.enums.RessentiSuivi.NEUTRE);
+            }
+        } else {
+            s.setRessenti(org.example.enums.RessentiSuivi.NEUTRE);
+        }
+
+        // LECTURE AUTOMATIQUE : Minuscule de la base → Majuscule pour JavaFX
+        String saisiParStr = rs.getString("saisiPar");
+        if (saisiParStr != null) {
+            try {
+                s.setSaisiPar(org.example.enums.SaisiPar.valueOf(saisiParStr.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                s.setSaisiPar(org.example.enums.SaisiPar.PSYCHOLOGUE);
+            }
+        } else {
+            s.setSaisiPar(org.example.enums.SaisiPar.PSYCHOLOGUE);
+        }
+
+        return s;
     }
 }

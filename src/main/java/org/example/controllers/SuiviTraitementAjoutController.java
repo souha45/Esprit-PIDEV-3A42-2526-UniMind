@@ -4,7 +4,6 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -23,33 +22,33 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class SuiviTraitementAjoutController implements Initializable {
 
-    @FXML
-    private TextField txtDateSuivi;
-    @FXML
-    private ComboBox<Traitement> cmbTraitement;
-    @FXML
-    private ComboBox<Etudiant> cmbEtudiant;
-    @FXML
-    private TextField txtPsychologue;
-    @FXML
-    private TextArea txtNotes;
-    @FXML
-    private Label lblStatus;
-    @FXML
-    private Label lblDate;
-    @FXML
-    private Label lblTraitement;
-    @FXML
-    private Label lblEtudiant;
-    @FXML
-    private Label lblPsychologue;
+    @FXML private DatePicker dpDateSuivi;
+    @FXML private ComboBox<Traitement> cmbTraitement;
+    @FXML private ComboBox<Etudiant> cmbEtudiant;
+    @FXML private TextField txtPsychologue;
+    @FXML private TextArea txtNotes;
+    @FXML private Label lblStatus;
+    @FXML private Label lblEtudiant;
+    @FXML private Label lblPsychologue;
+    @FXML private Label lblDate;
+    @FXML private Label lblTraitementLabel;
+    @FXML private VBox infoTraitementContainer;
+    @FXML private Label lblInfoTraitement;
+
+    // Labels d'erreur
+    @FXML private Label lblErreurDate;
+    @FXML private Label lblErreurTraitement;
+    @FXML private Label lblErreurEtudiant;
+    @FXML private Label lblErreurNotes;
 
     private SuiviTraitementService suiviTraitementService;
     private TraitementService traitementService;
@@ -57,8 +56,6 @@ public class SuiviTraitementAjoutController implements Initializable {
     private ObservableList<Traitement> traitementsList;
     private ObservableList<Etudiant> etudiantsList;
     private Traitement traitementPreSelectionne;
-
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -68,11 +65,6 @@ public class SuiviTraitementAjoutController implements Initializable {
             suiviTraitementService = new SuiviTraitementService();
             traitementService = new TraitementService();
             etudiantService = new EtudiantService();
-
-            // Date par défaut = aujourd'hui (pour tous les utilisateurs)
-            txtDateSuivi.setText(LocalDate.now().format(formatter));
-            // Le champ date est en lecture seule pour tout le monde
-            txtDateSuivi.setEditable(false);
 
             chargerTraitements();
             chargerEtudiants();
@@ -87,6 +79,8 @@ public class SuiviTraitementAjoutController implements Initializable {
             txtPsychologue.setText(session.getNomUtilisateur());
             txtPsychologue.setEditable(false);
 
+            ajouterListenersValidation();
+
             lblStatus.setText("✓ Prêt à ajouter un suivi");
 
         } catch (Exception e) {
@@ -95,142 +89,296 @@ public class SuiviTraitementAjoutController implements Initializable {
         }
     }
 
-    /**
-     * Pré-sélectionne un traitement pour l'étudiant
-     */
+    private void ajouterListenersValidation() {
+        if (dpDateSuivi != null && dpDateSuivi.isVisible()) {
+            dpDateSuivi.valueProperty().addListener((obs, old, val) -> validerDate());
+        }
+        if (cmbTraitement != null && cmbTraitement.isVisible()) {
+            cmbTraitement.valueProperty().addListener((obs, old, val) -> validerTraitement());
+        }
+        txtNotes.textProperty().addListener((obs, old, val) -> validerNotes());
+
+        if (cmbEtudiant != null && cmbEtudiant.isVisible()) {
+            cmbEtudiant.valueProperty().addListener((obs, old, val) -> validerEtudiant());
+        }
+    }
+
+    private void validerDate() {
+        if (dpDateSuivi.getValue() == null) {
+            afficherErreur(lblErreurDate, dpDateSuivi, "La date de suivi est obligatoire");
+        } else if (dpDateSuivi.getValue().isAfter(LocalDate.now())) {
+            afficherErreur(lblErreurDate, dpDateSuivi, "La date ne peut pas être dans le futur");
+        } else {
+            cacherErreur(lblErreurDate, dpDateSuivi);
+        }
+    }
+
+    private void validerTraitement() {
+        if (cmbTraitement.getValue() == null) {
+            afficherErreur(lblErreurTraitement, cmbTraitement, "Le traitement est obligatoire");
+        } else {
+            cacherErreur(lblErreurTraitement, cmbTraitement);
+        }
+    }
+
+    private void validerEtudiant() {
+        SessionManager session = SessionManager.getInstance();
+        if (session.estPsychologue() && cmbEtudiant.getValue() == null) {
+            afficherErreur(lblErreurEtudiant, cmbEtudiant, "L'étudiant est obligatoire");
+        } else {
+            cacherErreur(lblErreurEtudiant, cmbEtudiant);
+        }
+    }
+
+    private void validerNotes() {
+        String notes = txtNotes.getText();
+        if (notes == null || notes.trim().isEmpty()) {
+            afficherErreur(lblErreurNotes, txtNotes, "Les observations sont obligatoires");
+        } else if (notes.length() > 1000) {
+            afficherErreur(lblErreurNotes, txtNotes, "Les notes ne doivent pas dépasser 1000 caractères");
+        } else {
+            cacherErreur(lblErreurNotes, txtNotes);
+        }
+    }
+
+    private void afficherErreur(Label label, javafx.scene.Node champ, String message) {
+        label.setText(message);
+        label.setVisible(true);
+        label.setManaged(true);
+        if (champ != null) {
+            champ.getStyleClass().add("form-field-error");
+        }
+    }
+
+    private void cacherErreur(Label label, javafx.scene.Node champ) {
+        label.setVisible(false);
+        label.setManaged(false);
+        if (champ != null) {
+            champ.getStyleClass().remove("form-field-error");
+        }
+    }
+
+    private boolean isFormulaireValide() {
+        if (dpDateSuivi != null && dpDateSuivi.isVisible()) {
+            validerDate();
+        }
+        if (cmbTraitement != null && cmbTraitement.isVisible()) {
+            validerTraitement();
+        }
+        validerNotes();
+
+        if (cmbEtudiant != null && cmbEtudiant.isVisible()) {
+            validerEtudiant();
+        }
+
+        boolean dateOk = (dpDateSuivi == null || !dpDateSuivi.isVisible() || !lblErreurDate.isVisible());
+        boolean traitementOk = (cmbTraitement == null || !cmbTraitement.isVisible() || !lblErreurTraitement.isVisible());
+        boolean notesOk = !lblErreurNotes.isVisible();
+        boolean etudiantOk = (cmbEtudiant == null || !cmbEtudiant.isVisible() || !lblErreurEtudiant.isVisible());
+
+        return dateOk && traitementOk && notesOk && etudiantOk;
+    }
+
     public void setTraitementPreSelectionne(Traitement traitement) {
         this.traitementPreSelectionne = traitement;
         if (cmbTraitement != null) {
             cmbTraitement.setValue(traitement);
-            cmbTraitement.setDisable(true);
-            lblStatus.setText("✓ Traitement pré-sélectionné: " + traitement.getTitre());
         }
     }
 
     private void chargerTraitements() throws SQLException {
         List<Traitement> traitements = traitementService.afficher();
         traitementsList = FXCollections.observableArrayList(traitements);
-        cmbTraitement.setItems(traitementsList);
+        if (cmbTraitement != null) {
+            cmbTraitement.setItems(traitementsList);
+        }
     }
 
     private void chargerEtudiants() throws SQLException {
         List<Etudiant> etudiants = etudiantService.afficher();
         etudiantsList = FXCollections.observableArrayList(etudiants);
-        cmbEtudiant.setItems(etudiantsList);
+        if (cmbEtudiant != null) {
+            cmbEtudiant.setItems(etudiantsList);
+        }
     }
 
     private void configurerComboBoxes() {
-        cmbTraitement.setCellFactory(param -> new javafx.scene.control.ListCell<Traitement>() {
-            @Override
-            protected void updateItem(Traitement traitement, boolean empty) {
-                super.updateItem(traitement, empty);
-                setText((empty || traitement == null) ? null : traitement.getTitre());
-            }
-        });
+        if (cmbTraitement != null) {
+            cmbTraitement.setCellFactory(param -> new javafx.scene.control.ListCell<Traitement>() {
+                @Override
+                protected void updateItem(Traitement traitement, boolean empty) {
+                    super.updateItem(traitement, empty);
+                    setText((empty || traitement == null) ? null : traitement.getTitre());
+                }
+            });
 
-        cmbTraitement.setButtonCell(new javafx.scene.control.ListCell<Traitement>() {
-            @Override
-            protected void updateItem(Traitement traitement, boolean empty) {
-                super.updateItem(traitement, empty);
-                setText((empty || traitement == null) ? "Sélectionner un traitement" : traitement.getTitre());
-            }
-        });
+            cmbTraitement.setButtonCell(new javafx.scene.control.ListCell<Traitement>() {
+                @Override
+                protected void updateItem(Traitement traitement, boolean empty) {
+                    super.updateItem(traitement, empty);
+                    setText((empty || traitement == null) ? "Sélectionner un traitement" : traitement.getTitre());
+                }
+            });
+        }
 
-        cmbEtudiant.setCellFactory(param -> new javafx.scene.control.ListCell<Etudiant>() {
-            @Override
-            protected void updateItem(Etudiant etudiant, boolean empty) {
-                super.updateItem(etudiant, empty);
-                setText((empty || etudiant == null) ? null : etudiant.getNom() + " " + etudiant.getPrenom());
-            }
-        });
+        if (cmbEtudiant != null) {
+            cmbEtudiant.setCellFactory(param -> new javafx.scene.control.ListCell<Etudiant>() {
+                @Override
+                protected void updateItem(Etudiant etudiant, boolean empty) {
+                    super.updateItem(etudiant, empty);
+                    setText((empty || etudiant == null) ? null : etudiant.getNom() + " " + etudiant.getPrenom());
+                }
+            });
 
-        cmbEtudiant.setButtonCell(new javafx.scene.control.ListCell<Etudiant>() {
-            @Override
-            protected void updateItem(Etudiant etudiant, boolean empty) {
-                super.updateItem(etudiant, empty);
-                setText((empty || etudiant == null) ? "Sélectionner un étudiant" : etudiant.getNom() + " " + etudiant.getPrenom());
-            }
-        });
+            cmbEtudiant.setButtonCell(new javafx.scene.control.ListCell<Etudiant>() {
+                @Override
+                protected void updateItem(Etudiant etudiant, boolean empty) {
+                    super.updateItem(etudiant, empty);
+                    setText((empty || etudiant == null) ? "Sélectionner un étudiant" : etudiant.getNom() + " " + etudiant.getPrenom());
+                }
+            });
+        }
     }
 
     private void initialiserFormulairePsychologue() {
-        // La date est visible (mais non modifiable)
-        lblDate.setVisible(true);
-        lblDate.setManaged(true);
-        txtDateSuivi.setVisible(true);
-        txtDateSuivi.setManaged(true);
-
-        // Tout est visible
-        cmbTraitement.setVisible(true);
-        cmbTraitement.setManaged(true);
-        lblTraitement.setVisible(true);
-        lblTraitement.setManaged(true);
-
-        cmbEtudiant.setVisible(true);
-        cmbEtudiant.setManaged(true);
-        lblEtudiant.setVisible(true);
-        lblEtudiant.setManaged(true);
-        txtPsychologue.setVisible(true);
-        txtPsychologue.setManaged(true);
-        lblPsychologue.setVisible(true);
-        lblPsychologue.setManaged(true);
-
-        // Filtre des traitements par étudiant
-        cmbEtudiant.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                List<Traitement> traitementsFiltres = traitementsList.stream()
-                        .filter(t -> t.getEtudiantId() == newVal.getUserId())
-                        .collect(Collectors.toList());
-                cmbTraitement.setItems(FXCollections.observableArrayList(traitementsFiltres));
-                cmbTraitement.setValue(null);
-            } else {
-                cmbTraitement.setItems(traitementsList);
-            }
-        });
+        // Tout est visible pour le psychologue
+        if (lblDate != null) {
+            lblDate.setVisible(true);
+            lblDate.setManaged(true);
+        }
+        if (dpDateSuivi != null) {
+            dpDateSuivi.setVisible(true);
+            dpDateSuivi.setManaged(true);
+            dpDateSuivi.setValue(LocalDate.now());
+        }
+        if (lblTraitementLabel != null) {
+            lblTraitementLabel.setVisible(true);
+            lblTraitementLabel.setManaged(true);
+        }
+        if (cmbTraitement != null) {
+            cmbTraitement.setVisible(true);
+            cmbTraitement.setManaged(true);
+            cmbTraitement.setDisable(false);
+        }
+        if (cmbEtudiant != null) {
+            cmbEtudiant.setVisible(true);
+            cmbEtudiant.setManaged(true);
+        }
+        if (lblEtudiant != null) {
+            lblEtudiant.setVisible(true);
+            lblEtudiant.setManaged(true);
+        }
+        if (txtPsychologue != null) {
+            txtPsychologue.setVisible(true);
+            txtPsychologue.setManaged(true);
+        }
+        if (lblPsychologue != null) {
+            lblPsychologue.setVisible(true);
+            lblPsychologue.setManaged(true);
+        }
+        if (infoTraitementContainer != null) {
+            infoTraitementContainer.setVisible(false);
+            infoTraitementContainer.setManaged(false);
+        }
 
         txtNotes.setPromptText("Observations professionnelles sur le suivi...");
+
+        if (cmbEtudiant != null) {
+            cmbEtudiant.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null && cmbTraitement != null) {
+                    List<Traitement> traitementsFiltres = traitementsList.stream()
+                            .filter(t -> t.getEtudiantId() == newVal.getUserId())
+                            .collect(Collectors.toList());
+                    cmbTraitement.setItems(FXCollections.observableArrayList(traitementsFiltres));
+                    cmbTraitement.setValue(null);
+                } else if (cmbTraitement != null) {
+                    cmbTraitement.setItems(traitementsList);
+                }
+            });
+        }
     }
 
     private void initialiserFormulaireEtudiant() {
-        // Masquer la ligne date (déjà remplie automatiquement)
-        lblDate.setVisible(false);
-        lblDate.setManaged(false);
-        txtDateSuivi.setVisible(false);
-        txtDateSuivi.setManaged(false);
+        // Cacher la date (elle sera automatique)
+        if (lblDate != null) {
+            lblDate.setVisible(false);
+            lblDate.setManaged(false);
+        }
+        if (dpDateSuivi != null) {
+            dpDateSuivi.setVisible(false);
+            dpDateSuivi.setManaged(false);
+            dpDateSuivi.setValue(LocalDate.now());
+        }
 
-        // Masquer les champs étudiant et psychologue
-        cmbEtudiant.setVisible(false);
-        cmbEtudiant.setManaged(false);
-        lblEtudiant.setVisible(false);
-        lblEtudiant.setManaged(false);
-        txtPsychologue.setVisible(false);
-        txtPsychologue.setManaged(false);
-        lblPsychologue.setVisible(false);
-        lblPsychologue.setManaged(false);
+        // Cacher le label Traitement
+        if (lblTraitementLabel != null) {
+            lblTraitementLabel.setVisible(false);
+            lblTraitementLabel.setManaged(false);
+        }
 
-        // Masquer le libellé Traitement (car déjà pré-sélectionné)
-        lblTraitement.setVisible(false);
-        lblTraitement.setManaged(false);
+        // Cacher la ComboBox Traitement
+        if (cmbTraitement != null) {
+            cmbTraitement.setVisible(false);
+            cmbTraitement.setManaged(false);
+        }
 
-        // Le champ traitement est masqué aussi (déjà pré-sélectionné)
-        cmbTraitement.setVisible(false);
-        cmbTraitement.setManaged(false);
+        // Cacher les champs étudiant et psychologue
+        if (cmbEtudiant != null) {
+            cmbEtudiant.setVisible(false);
+            cmbEtudiant.setManaged(false);
+        }
+        if (lblEtudiant != null) {
+            lblEtudiant.setVisible(false);
+            lblEtudiant.setManaged(false);
+        }
+        if (txtPsychologue != null) {
+            txtPsychologue.setVisible(false);
+            txtPsychologue.setManaged(false);
+        }
+        if (lblPsychologue != null) {
+            lblPsychologue.setVisible(false);
+            lblPsychologue.setManaged(false);
+        }
 
-        txtNotes.setPromptText("Décrivez comment vous vous sentez et votre progression...");
+        // Afficher l'information du traitement sélectionné
+        if (infoTraitementContainer != null && traitementPreSelectionne != null) {
+            infoTraitementContainer.setVisible(true);
+            infoTraitementContainer.setManaged(true);
+            lblInfoTraitement.setText("Traitement: " + traitementPreSelectionne.getTitre());
+        }
+
+        txtNotes.setPromptText("Décrivez votre progression, vos ressentis, vos difficultés...");
+
+        SessionManager session = SessionManager.getInstance();
+        int etudiantId = session.getUtilisateurConnecteId();
+
+        List<Traitement> traitementsEtudiant = traitementsList.stream()
+                .filter(t -> t.getEtudiantId() == etudiantId)
+                .collect(Collectors.toList());
+
+        if (cmbTraitement != null) {
+            cmbTraitement.setItems(FXCollections.observableArrayList(traitementsEtudiant));
+            if (traitementPreSelectionne != null) {
+                cmbTraitement.setValue(traitementPreSelectionne);
+            }
+        }
     }
 
     @FXML
     private void handleEnregistrer() {
+        if (!isFormulaireValide()) {
+            lblStatus.setText("✗ Veuillez corriger les erreurs dans le formulaire");
+            return;
+        }
+
         try {
-            if (validerFormulaire()) {
-                ajouterSuivi();
-                lblStatus.setText("✓ Suivi ajouté avec succès !");
-                afficherSucces("Ajout réussi", "Le suivi a été ajouté avec succès.");
-                fermerFenetre();
-            }
+            ajouterSuivi();
+            lblStatus.setText("✓ Suivi ajouté avec succès !");
+            afficherSucces("Ajout réussi", "Votre suivi a été ajouté avec succès.");
+            fermerFenetre();
         } catch (Exception e) {
             lblStatus.setText("✗ Erreur lors de l'ajout: " + e.getMessage());
-            afficherErreur("Erreur lors de l'ajout", e.getMessage());
+            afficherErreur("Erreur", e.getMessage());
         }
     }
 
@@ -256,39 +404,26 @@ public class SuiviTraitementAjoutController implements Initializable {
         suivi.setRessenti(org.example.enums.RessentiSuivi.NEUTRE);
         suivi.setSaisiPar(session.getRoleSaisiPar());
 
-        // Date du suivi (aujourd'hui)
-        LocalDate dateSuivi = LocalDate.parse(txtDateSuivi.getText(), formatter);
-        suivi.setDateSuivi(java.sql.Date.valueOf(dateSuivi));
+        if (session.estEtudiant()) {
+            suivi.setDateSuivi(java.sql.Date.valueOf(LocalDate.now()));
+        } else if (dpDateSuivi != null && dpDateSuivi.getValue() != null) {
+            suivi.setDateSuivi(java.sql.Date.valueOf(dpDateSuivi.getValue()));
+        } else {
+            suivi.setDateSuivi(java.sql.Date.valueOf(LocalDate.now()));
+        }
 
-        // Traitement
         Traitement traitementSelectionne;
         if (session.estEtudiant()) {
             traitementSelectionne = traitementPreSelectionne;
+            if (traitementSelectionne == null && cmbTraitement != null) {
+                traitementSelectionne = cmbTraitement.getValue();
+            }
         } else {
-            traitementSelectionne = cmbTraitement.getValue();
+            traitementSelectionne = cmbTraitement != null ? cmbTraitement.getValue() : null;
         }
 
         if (traitementSelectionne == null) {
-            afficherErreur("Traitement manquant", "Veuillez sélectionner un traitement");
-            return;
-        }
-
-        // Vérification pour l'étudiant
-        if (session.estEtudiant()) {
-            if (traitementSelectionne.getEtudiantId() != session.getUtilisateurConnecteId()) {
-                afficherErreur("Accès refusé", "Ce traitement ne vous appartient pas.");
-                return;
-            }
-        } else {
-            Etudiant etudiantSelectionne = cmbEtudiant.getValue();
-            if (etudiantSelectionne == null) {
-                afficherErreur("Étudiant manquant", "Veuillez sélectionner un étudiant");
-                return;
-            }
-            if (traitementSelectionne.getEtudiantId() != etudiantSelectionne.getUserId()) {
-                afficherErreur("Incohérence", "Le traitement ne correspond pas à l'étudiant sélectionné.");
-                return;
-            }
+            throw new SQLException("Aucun traitement sélectionné");
         }
 
         suivi.setTraitementId(traitementSelectionne.getTraitementId());
@@ -298,36 +433,8 @@ public class SuiviTraitementAjoutController implements Initializable {
         System.out.println("Suivi ajouté pour le traitement: " + traitementSelectionne.getTitre());
     }
 
-    private boolean validerFormulaire() {
-        StringBuilder erreurs = new StringBuilder();
-        SessionManager session = SessionManager.getInstance();
-
-        if (session.estEtudiant()) {
-            if (traitementPreSelectionne == null) {
-                erreurs.append("• Aucun traitement sélectionné.\n");
-            }
-        } else {
-            if (cmbTraitement.getValue() == null) {
-                erreurs.append("• Le traitement est obligatoire.\n");
-            }
-            if (cmbEtudiant.getValue() == null) {
-                erreurs.append("• L'étudiant est obligatoire.\n");
-            }
-        }
-
-        if (txtNotes.getText() == null || txtNotes.getText().trim().isEmpty()) {
-            erreurs.append("• Les observations sont obligatoires.\n");
-        }
-
-        if (erreurs.length() > 0) {
-            afficherErreur("Erreur de validation", erreurs.toString());
-            return false;
-        }
-        return true;
-    }
-
     private void fermerFenetre() {
-        Stage stage = (Stage) txtDateSuivi.getScene().getWindow();
+        Stage stage = (Stage) txtNotes.getScene().getWindow();
         stage.close();
     }
 
