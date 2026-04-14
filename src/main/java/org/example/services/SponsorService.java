@@ -37,12 +37,12 @@ public class SponsorService implements ICrud<Sponsor> {
             ps.setTimestamp(11, s.getUpdatedAt());
 
             ps.executeUpdate();
-            System.out.println("Sponsor ajouté avec succès");
+            System.out.println("Sponsor ajoute avec succes");
 
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
                     s.setSponsorId(rs.getInt(1));
-                    System.out.println("ID généré pour le sponsor: " + s.getSponsorId());
+                    System.out.println("ID genere pour le sponsor: " + s.getSponsorId());
                 }
             }
         }
@@ -134,5 +134,65 @@ public class SponsorService implements ICrud<Sponsor> {
                 updatedAt,
                 logo
         );
+    }
+
+    /**
+     * Récupère les informations de sponsoring pour un sponsor (événement et date)
+     * @param sponsorId L'ID du sponsor
+     * @return Un tableau [evenementTitre, dateContribution, organisateurId] ou [null, null, -1] si pas de sponsoring
+     */
+    public Object[] getSponsoringInfos(int sponsorId) throws SQLException {
+        String sql = "SELECT e.titre, es.date_contribution, e.organisateur_id " +
+                     "FROM evenement_sponsor es " +
+                     "JOIN evenement e ON es.evenement_id = e.evenement_id " +
+                     "WHERE es.sponsor_id = ? " +
+                     "ORDER BY es.date_contribution DESC " +
+                     "LIMIT 1";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, sponsorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String evenementTitre = rs.getString("titre");
+                    java.sql.Timestamp dateContribution = rs.getTimestamp("date_contribution");
+                    int organisateurId = rs.getInt("organisateur_id");
+                    return new Object[]{evenementTitre, dateContribution != null ? dateContribution.toString() : null, organisateurId};
+                }
+            }
+        }
+        return new Object[]{null, null, -1};
+    }
+
+    /**
+     * Classe interne pour représenter un sponsor avec les informations de sponsoring
+     */
+    public static class SponsorAvecInfos {
+        private int sponsorId;
+        private String nomSponsor;
+        private TypeSponsor typeSponsor;
+        private String emailContact;
+        private String logo;
+        private StatutSponsor statut;
+        private java.sql.Timestamp dateContribution;
+        private String evenementTitre;
+        private int organisateurId;
+
+        public int getSponsorId() { return sponsorId; }
+        public void setSponsorId(int sponsorId) { this.sponsorId = sponsorId; }
+        public String getNomSponsor() { return nomSponsor; }
+        public void setNomSponsor(String nomSponsor) { this.nomSponsor = nomSponsor; }
+        public TypeSponsor getTypeSponsor() { return typeSponsor; }
+        public void setTypeSponsor(TypeSponsor typeSponsor) { this.typeSponsor = typeSponsor; }
+        public String getEmailContact() { return emailContact; }
+        public void setEmailContact(String emailContact) { this.emailContact = emailContact; }
+        public String getLogo() { return logo; }
+        public void setLogo(String logo) { this.logo = logo; }
+        public StatutSponsor getStatut() { return statut; }
+        public void setStatut(StatutSponsor statut) { this.statut = statut; }
+        public java.sql.Timestamp getDateContribution() { return dateContribution; }
+        public void setDateContribution(java.sql.Timestamp dateContribution) { this.dateContribution = dateContribution; }
+        public String getEvenementTitre() { return evenementTitre; }
+        public void setEvenementTitre(String evenementTitre) { this.evenementTitre = evenementTitre; }
+        public int getOrganisateurId() { return organisateurId; }
+        public void setOrganisateurId(int organisateurId) { this.organisateurId = organisateurId; }
     }
 }

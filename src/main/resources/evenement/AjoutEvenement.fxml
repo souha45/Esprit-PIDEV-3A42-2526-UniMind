@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.evenement.AjoutEvenementController"
+            stylesheets="@../styles/dashboard-theme.css"
+            styleClass="dashboard-bg">
+
+    <top>
+        <HBox spacing="16" alignment="CENTER_LEFT" styleClass="topbar" BorderPane.alignment="CENTER">
+            <children>
+                <Label text="AJOUT ÉVÉNEMENT" styleClass="label-subtitle" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button text="🔙 Retour" onAction="#retour" styleClass="button-secondary" />
+            </children>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+            <VBox spacing="16" alignment="TOP_CENTER" styleClass="padding-large">
+                <children>
+                    <!-- Titre -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Titre *" styleClass="label-caption" />
+                            <TextField fx:id="txtTitre" promptText="Titre de l'événement" prefWidth="400" styleClass="text-field" />
+                            <Label fx:id="lblErreurTitre" text="Le titre est obligatoire" styleClass="label-error" visible="false" />
+                            <Label fx:id="lblErreurUnicite" text="Un événement avec ce titre et cette date existe déjà" styleClass="label-error" visible="false" />
+                        </children>
+                    </VBox>
+
+                    <!-- Description -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Description" styleClass="label-caption" />
+                            <TextArea fx:id="txtDescription" promptText="Description de l'événement" 
+                                      prefRowCount="3" prefWidth="400" wrapText="true" styleClass="text-field" />
+                        </children>
+                    </VBox>
+
+                    <!-- Type et Statut -->
+                    <HBox spacing="20" alignment="CENTER">
+                        <children>
+                            <VBox spacing="8" prefWidth="200">
+                                <children>
+                                    <Label text="Type *" styleClass="label-caption" />
+                                    <ComboBox fx:id="comboType" promptText="Type" prefWidth="200" styleClass="combo-box" />
+                                </children>
+                            </VBox>
+                            <VBox spacing="8" prefWidth="200">
+                                <children>
+                                    <Label text="Statut *" styleClass="label-caption" />
+                                    <ComboBox fx:id="comboStatut" promptText="Statut" prefWidth="200" styleClass="combo-box" />
+                                </children>
+                            </VBox>
+                        </children>
+                    </HBox>
+
+                    <!-- Dates + Heures -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Date de début *" styleClass="label-caption" />
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <children>
+                                    <DatePicker fx:id="dateDebut" promptText="Date de début" prefWidth="250" styleClass="text-field" />
+                                    <TextField fx:id="txtHeureDebut" promptText="Heure (HH:mm)" prefWidth="140" styleClass="text-field" />
+                                </children>
+                            </HBox>
+                            <Label fx:id="lblErreurHeureDebut" text="Heure de début invalide (HH:mm)" styleClass="label-error" visible="false" />
+                        </children>
+                    </VBox>
+
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Date de fin *" styleClass="label-caption" />
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <children>
+                                    <DatePicker fx:id="dateFin" promptText="Date de fin" prefWidth="250" styleClass="text-field" />
+                                    <TextField fx:id="txtHeureFin" promptText="Heure (HH:mm)" prefWidth="140" styleClass="text-field" />
+                                </children>
+                            </HBox>
+                            <Label fx:id="lblErreurHeureFin" text="Heure de fin invalide (HH:mm)" styleClass="label-error" visible="false" />
+                            <Label fx:id="lblErreurDates" text="La date/heure de fin doit être après la date/heure de début" styleClass="label-error" visible="false" />
+                        </children>
+                    </VBox>
+
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Date limite d'inscription" styleClass="label-caption" />
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <children>
+                                    <DatePicker fx:id="dateLimiteInscription" promptText="Date limite (optionnel)" prefWidth="250" styleClass="text-field" />
+                                    <TextField fx:id="txtHeureLimite" promptText="Heure (HH:mm)" prefWidth="140" styleClass="text-field" />
+                                </children>
+                            </HBox>
+                            <Label fx:id="lblErreurHeureLimite" text="Heure limite invalide (HH:mm)" styleClass="label-error" visible="false" />
+                            <Label fx:id="lblErreurDateLimite" text="La date/heure limite doit être avant la date/heure de début" styleClass="label-error" visible="false" />
+                        </children>
+                    </VBox>
+
+                    <!-- Lieu -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Lieu *" styleClass="label-caption" />
+                            <TextField fx:id="txtLieu" promptText="Lieu de l'événement" prefWidth="400" styleClass="text-field" />
+                            <Label fx:id="lblErreurLieu" text="Le lieu est obligatoire" styleClass="label-error" visible="false" />
+                        </children>
+                    </VBox>
+
+                    <!-- Capacité -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Capacité maximale *" styleClass="label-caption" />
+                            <TextField fx:id="txtCapacite" promptText="Nombre maximum de participants" prefWidth="400" styleClass="text-field" />
+                            <Label fx:id="lblErreurCapacite" text="La capacité doit être supérieure à 0" styleClass="label-error" visible="false" />
+                        </children>
+                    </VBox>
+
+                    <!-- Organisateur -->
+                    <VBox fx:id="vboxOrganisateur" spacing="8">
+                        <children>
+                            <Label text="Organisateur *" styleClass="label-caption" />
+                            <ComboBox fx:id="comboOrganisateur" promptText="Sélectionner l'organisateur" prefWidth="400" styleClass="combo-box" />
+                            <Label fx:id="lblErreurOrganisateur" text="L'organisateur est obligatoire" styleClass="label-error" visible="false" />
+                        </children>
+                    </VBox>
+
+                    <!-- Image -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Image (optionnel)" styleClass="label-caption" />
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <children>
+                                    <TextField fx:id="txtImage" promptText="Nom du fichier image (ex: mon-image.jpg)" prefWidth="400" styleClass="text-field" HBox.hgrow="ALWAYS" />
+                                    <Button text="📁 Parcourir" onAction="#parcourirImage" prefWidth="120" styleClass="button-secondary" />
+                                </children>
+                            </HBox>
+                        </children>
+                    </VBox>
+
+                    <!-- Boutons -->
+                    <HBox spacing="15" alignment="CENTER" style="-fx-padding: 20 0 0 0;">
+                        <children>
+                            <Button text="✅ Enregistrer" onAction="#enregistrerEvenement"
+                                    prefWidth="150" prefHeight="40"
+                                    styleClass="button-success" />
+                            <Button text="🗑️ Réinitialiser" onAction="#reinitialiserFormulaire"
+                                    prefWidth="150" prefHeight="40"
+                                    styleClass="button-danger" />
+                        </children>
+                    </HBox>
+
+                    <!-- Message de succès -->
+                    <Label fx:id="lblSucces" text="Événement enregistré avec succès !" 
+                           styleClass="label-success" visible="false" />
+                </children>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

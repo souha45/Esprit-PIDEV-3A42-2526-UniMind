@@ -19,7 +19,7 @@ public class EvenementService implements ICrud<Evenement> {
 
     @Override
     public void ajouter(Evenement e) throws SQLException {
-        System.out.println("Ajout d'un nouvel événement: " + e.getTitre());
+        System.out.println("Ajout d'un nouvel evenement: " + e.getTitre());
         String sql = "INSERT INTO evenement (titre, description, type, date_debut, date_fin, lieu, capacite_max, nombre_inscrits, statut, date_creation, date_limite_inscription, organisateur_id, updated_at, image, latitude, longitude) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -50,12 +50,12 @@ public class EvenementService implements ICrud<Evenement> {
             }
 
             ps.executeUpdate();
-            System.out.println("Événement ajouté avec succès");
+            System.out.println("Evenement ajoute avec succes");
 
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
                     e.setEvenementId(rs.getInt(1));
-                    System.out.println("ID généré pour l'événement: " + e.getEvenementId());
+                    System.out.println("ID genere pour l'evenement: " + e.getEvenementId());
                 }
             }
         }
@@ -63,7 +63,7 @@ public class EvenementService implements ICrud<Evenement> {
 
     @Override
     public void modifier(Evenement e) throws SQLException {
-        System.out.println("Modification de l'événement ID: " + e.getEvenementId());
+        System.out.println("Modification de l'evenement ID: " + e.getEvenementId());
         String sql = "UPDATE evenement SET titre=?, description=?, type=?, date_debut=?, date_fin=?, lieu=?, capacite_max=?, nombre_inscrits=?, statut=?, date_limite_inscription=?, organisateur_id=?, updated_at=?, image=?, latitude=?, longitude=? " +
                 "WHERE evenement_id=?";
 
@@ -93,28 +93,28 @@ public class EvenementService implements ICrud<Evenement> {
             }
             ps.setInt(16, e.getEvenementId());
             ps.executeUpdate();
-            System.out.println("Événement ID " + e.getEvenementId() + " modifié avec succès");
+            System.out.println("Evenement ID " + e.getEvenementId() + " modifie avec succes");
         }
     }
 
     @Override
     public void supprimer(int id) throws SQLException {
-        System.out.println("Suppression de l'événement ID: " + id);
+        System.out.println("Suppression de l'evenement ID: " + id);
         String sql = "DELETE FROM evenement WHERE evenement_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, id);
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println("Événement ID " + id + " supprimé avec succès");
+                System.out.println("Evenement ID " + id + " supprime avec succes");
             } else {
-                System.out.println("Aucun événement trouvé avec l'ID: " + id);
+                System.out.println("Aucun evenement trouve avec l'ID: " + id);
             }
         }
     }
 
     @Override
     public List<Evenement> afficher() throws SQLException {
-        System.out.println("Récupération de tous les événements...");
+        System.out.println("Recuperation de tous les evenements...");
         String sql = "SELECT evenement_id, titre, description, type, date_debut, date_fin, lieu, capacite_max, nombre_inscrits, statut, date_creation, date_limite_inscription, organisateur_id, updated_at, image, latitude, longitude FROM evenement";
 
         List<Evenement> result = new ArrayList<>();
@@ -123,7 +123,7 @@ public class EvenementService implements ICrud<Evenement> {
                 result.add(mapRow(rs));
             }
         }
-        System.out.println(result.size() + " événement(s) trouvé(s)");
+        System.out.println(result.size() + " evenement(s) trouve(s)");
         return result;
     }
 
@@ -138,6 +138,159 @@ public class EvenementService implements ICrud<Evenement> {
             }
         }
         return null;
+    }
+
+    /**
+     * Vérifie si un événement avec le même titre et date de début existe déjà
+     * @param titre Le titre de l'événement
+     * @param dateDebut La date de début de l'événement
+     * @param excludeId L'ID de l'événement à exclure de la vérification (pour modification), ou null pour l'ajout
+     * @return true si un doublon existe, false sinon
+     */
+    public boolean verifierUnicite(String titre, Timestamp dateDebut, Integer excludeId) throws SQLException {
+        String sql;
+        if (excludeId != null) {
+            sql = "SELECT COUNT(*) FROM evenement WHERE titre = ? AND date_debut = ? AND evenement_id != ?";
+        } else {
+            sql = "SELECT COUNT(*) FROM evenement WHERE titre = ? AND date_debut = ?";
+        }
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, titre);
+            ps.setTimestamp(2, dateDebut);
+            if (excludeId != null) {
+                ps.setInt(3, excludeId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Récupère le nom de l'organisateur à partir de son ID
+     * @param organisateurId L'ID de l'organisateur
+     * @return Le nom complet de l'organisateur ou "Non assigné" si non trouvé
+     */
+    public String getNomOrganisateur(int organisateurId) throws SQLException {
+        String sql = "SELECT nom, prenom FROM user WHERE user_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, organisateurId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String nom = rs.getString("nom");
+                    String prenom = rs.getString("prenom");
+                    if (nom != null && prenom != null) {
+                        return prenom + " " + nom;
+                    } else if (nom != null) {
+                        return nom;
+                    } else if (prenom != null) {
+                        return prenom;
+                    }
+                }
+            }
+        }
+        return "Non assigné";
+    }
+
+    /**
+     * Compte le nombre total d'événements
+     */
+    public int countAll() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM evenement";
+        try (Statement st = connection.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Classe interne pour stocker un événement avec le nom de l'organisateur
+     */
+    public static class EvenementAvecOrganisateurNom {
+        private final Evenement evenement;
+        private final String organisateurNom;
+
+        public EvenementAvecOrganisateurNom(Evenement evenement, String organisateurNom) {
+            this.evenement = evenement;
+            this.organisateurNom = organisateurNom;
+        }
+
+        public Evenement getEvenement() {
+            return evenement;
+        }
+
+        public String getOrganisateurNom() {
+            return organisateurNom;
+        }
+
+        // Getters pour PropertyValueFactory
+        public String getTitre() {
+            return evenement.getTitre();
+        }
+
+        public String getLieu() {
+            return evenement.getLieu();
+        }
+    }
+
+    /**
+     * Met à jour automatiquement les images des événements en faisant correspondre
+     * les titres avec les noms de fichiers images
+     */
+    public void mettreAJourImagesAutomatiquement() throws SQLException {
+        // Récupérer tous les événements
+        List<Evenement> evenements = afficher();
+
+        // Liste des images disponibles dans le dossier XAMPP
+        java.io.File dossierImages = new java.io.File("D:\\xampp\\htdocs\\uploadsEvent\\evenements");
+        java.io.File[] fichiersImages = dossierImages.listFiles((dir, name) ->
+            name.toLowerCase().endsWith(".png") || name.toLowerCase().endsWith(".jpg") ||
+            name.toLowerCase().endsWith(".jpeg") || name.toLowerCase().endsWith(".gif"));
+
+        if (fichiersImages == null) {
+            System.out.println("Aucune image trouvee dans le dossier XAMPP");
+            return;
+        }
+
+        int misesAJour = 0;
+        for (Evenement e : evenements) {
+            String titreEvenement = e.getTitre().toLowerCase();
+            String nomImageTrouvee = null;
+
+            // Chercher une image qui correspond au titre de l'événement
+            for (java.io.File fichierImage : fichiersImages) {
+                String nomImage = fichierImage.getName().toLowerCase();
+
+                // Correspondance exacte du titre dans le nom du fichier
+                if (nomImage.contains(titreEvenement.replace(" ", "-")) ||
+                    nomImage.contains(titreEvenement.replace(" ", "_")) ||
+                    nomImage.contains(titreEvenement.replace(" ", " "))) {
+                    nomImageTrouvee = fichierImage.getName();
+                    break;
+                }
+            }
+
+            // Si une image correspondante est trouvée et que l'événement n'a pas d'image
+            if (nomImageTrouvee != null && (e.getImage() == null || e.getImage().trim().isEmpty())) {
+                String sql = "UPDATE evenement SET image = ? WHERE evenement_id = ?";
+                try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                    ps.setString(1, nomImageTrouvee);
+                    ps.setInt(2, e.getEvenementId());
+                    ps.executeUpdate();
+                    System.out.println("Image mise a jour pour : " + e.getTitre() + " -> " + nomImageTrouvee);
+                    misesAJour++;
+                }
+            }
+        }
+
+        System.out.println("Mise a jour terminee. " + misesAJour + " evenements mis a jour.");
     }
 
     private Evenement mapRow(ResultSet rs) throws SQLException {

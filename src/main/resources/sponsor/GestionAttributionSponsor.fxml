@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="16" xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+      stylesheets="@../styles/dashboard-theme.css"
+      styleClass="dashboard-bg"
+      fx:controller="org.example.controllers.sponsor.GestionAttributionSponsorController">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <HBox spacing="16" alignment="CENTER_LEFT">
+        <Label text="Gestion des Attributions de Sponsors" styleClass="label-subtitle"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="➕ Nouvelle Attribution" onAction="#ajouterAttribution" styleClass="button-primary"/>
+    </HBox>
+
+    <HBox spacing="16" alignment="CENTER_LEFT">
+        <Label text="Rechercher:" styleClass="label-caption"/>
+        <TextField fx:id="txtRecherche" prefWidth="250" promptText="Événement, sponsor..." styleClass="text-field"/>
+        <Button text="🔍 Rechercher" onAction="#rechercherAttributions" styleClass="button-primary"/>
+        <Button text="🔄 Réinitialiser" onAction="#reinitialiserRecherche" styleClass="button-secondary"/>
+
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <Label fx:id="lblTotal" text="Total : 0" styleClass="label-caption"/>
+    </HBox>
+
+    <TableView fx:id="tableAttributions" VBox.vgrow="ALWAYS" styleClass="table-view">
+        <columns>
+            <TableColumn fx:id="colEvenement" text="Événement" prefWidth="300"/>
+            <TableColumn fx:id="colSponsor" text="Sponsor" prefWidth="150"/>
+            <TableColumn fx:id="colMontant" text="Montant" prefWidth="100"/>
+            <TableColumn fx:id="colType" text="Type" prefWidth="120"/>
+            <TableColumn fx:id="colStatut" text="Statut" prefWidth="100"/>
+            <TableColumn fx:id="colDate" text="Date" prefWidth="150"/>
+            <TableColumn fx:id="colActions" text="Actions" prefWidth="150"/>
+        </columns>
+    </TableView>
+
+</VBox>

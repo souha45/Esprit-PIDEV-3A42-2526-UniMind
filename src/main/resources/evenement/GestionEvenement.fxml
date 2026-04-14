@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.evenement.GestionEvenementController"
+            stylesheets="@../styles/dashboard-theme.css"
+            styleClass="dashboard-bg">
+    
+    <top>
+        <VBox spacing="16" styleClass="padding-medium">
+            <children>
+                <HBox spacing="16" alignment="CENTER_LEFT">
+                    <children>
+                        <Label text="GESTION DES ÉVÉNEMENTS" styleClass="label-subtitle"/>
+
+                        <Region HBox.hgrow="ALWAYS"/>
+
+                        <Button fx:id="btnAjouter" text="➕ Ajouter" onAction="#ajouterEvenement" styleClass="button-success"/>
+
+                        <Button text="🔙 Retour" onAction="#retourAccueil" styleClass="button-secondary"/>
+                    </children>
+                </HBox>
+
+                <HBox spacing="16" alignment="CENTER_LEFT">
+                    <children>
+                        <Label text="Rechercher:" styleClass="label-caption"/>
+                        <TextField fx:id="txtRecherche" prefWidth="250" promptText="Titre, lieu..." styleClass="text-field"/>
+                        <Button text="🔍 Rechercher" onAction="#rechercherEvenements" styleClass="button-primary"/>
+                        <Button text="🔄 Réinitialiser" onAction="#reinitialiserRecherche" styleClass="button-secondary"/>
+
+                        <Region HBox.hgrow="ALWAYS"/>
+
+                        <Label text="Total:" styleClass="label-caption"/>
+                        <Label fx:id="lblTotal" text="0 événements" styleClass="label-caption"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+    
+    <center>
+        <TableView fx:id="tableEvenements" prefHeight="500" styleClass="table-view">
+            <columns>
+                <TableColumn fx:id="colImage" text="Image" prefWidth="80"/>
+                <TableColumn fx:id="colTitre" text="Titre" prefWidth="200"/>
+                <TableColumn fx:id="colType" text="Type" prefWidth="120"/>
+                <TableColumn fx:id="colDateDebut" text="Date Début" prefWidth="180"/>
+                <TableColumn fx:id="colLieu" text="Lieu" prefWidth="200"/>
+                <TableColumn fx:id="colOrganisateur" text="Organisateur" prefWidth="200"/>
+                <TableColumn fx:id="colStatut" text="Statut" prefWidth="120"/>
+                <TableColumn fx:id="colActions" text="Actions" prefWidth="200"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>

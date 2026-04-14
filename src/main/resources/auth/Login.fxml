@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.auth.LoginController">
+
+    <center>
+        <VBox spacing="20" alignment="CENTER" style="-fx-padding: 50; -fx-background-color: #ecf0f1; -fx-pref-width: 500; -fx-max-width: 500;">
+            <children>
+                <Label text="✨ UNIMIND" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+                <Label text="Gestion des Événements" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+
+                <VBox spacing="15" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 10; -fx-pref-width: 400;">
+                    <children>
+                        <Label text="Connexion" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #34495e;" />
+
+                        <VBox spacing="5">
+                            <children>
+                                <Label text="Email" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
+                                <TextField fx:id="txtEmail" promptText="Entrez votre email" prefWidth="300" />
+                            </children>
+                        </VBox>
+
+                        <VBox spacing="5">
+                            <children>
+                                <Label text="Mot de passe" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
+                                <PasswordField fx:id="txtPassword" promptText="Entrez votre mot de passe" prefWidth="300" />
+                            </children>
+                        </VBox>
+
+                        <Button text="Se connecter" onAction="#login" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-pref-width: 300; -fx-pref-height: 40;" />
+
+                        <Label fx:id="lblErreur" style="-fx-text-fill: #e74c3c; -fx-font-size: 12px;" visible="false" />
+                    </children>
+                </VBox>
+            </children>
+        </VBox>
+    </center>
+
+</BorderPane>

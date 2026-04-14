@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.evenement.AdminDashboardController"
+            stylesheets="@../styles/dashboard-theme.css"
+            styleClass="dashboard-bg">
+
+    <left>
+        <VBox spacing="8" styleClass="sidebar">
+            <children>
+                <Label text="UniMind" styleClass="sidebar-title" />
+                <VBox styleClass="sidebar-profile">
+                    <children>
+                        <StackPane styleClass="avatar-circle" />
+                        <Label fx:id="lblUserName" styleClass="sidebar-user-name" />
+                    </children>
+                </VBox>
+
+                <Separator styleClass="sidebar-divider" />
+                <Button text="🎪 Gestion Événements" onAction="#gestionEvenements" styleClass="nav-button" />
+                <Button text="🏢 Gestion Sponsors" onAction="#gestionSponsors" styleClass="nav-button" />
+                <Button text="✅ Gestion Participations" onAction="#gestionParticipations" styleClass="nav-button" />
+                <Region VBox.vgrow="ALWAYS" />
+                <Button text="🔙 Déconnexion" onAction="#logout" styleClass="sidebar-logout" />
+            </children>
+        </VBox>
+    </left>
+
+    <center>
+        <VBox styleClass="padding-large">
+            <children>
+                <VBox styleClass="content-shell">
+                    <children>
+                        <ScrollPane fx:id="contentScrollPane" fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
+                        </ScrollPane>
+                    </children>
+                </VBox>
+            </children>
+        </VBox>
+    </center>
+
+</BorderPane>

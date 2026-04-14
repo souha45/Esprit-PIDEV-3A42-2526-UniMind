@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.participation.GestionParticipationController"
+            stylesheets="@../styles/dashboard-theme.css"
+            styleClass="dashboard-bg">
+
+    <top>
+        <VBox spacing="16" styleClass="padding-medium">
+            <children>
+                <HBox spacing="16" alignment="CENTER_LEFT">
+                    <children>
+                        <Label text="GESTION DES PARTICIPATIONS" styleClass="label-subtitle"/>
+
+                        <Region HBox.hgrow="ALWAYS"/>
+
+                        <Button fx:id="btnAjouter" text="➕ Inscrire" onAction="#ajouterParticipation" styleClass="button-success"/>
+
+                        <Button text="🔙 Retour" onAction="#retourAccueil" styleClass="button-secondary"/>
+                    </children>
+                </HBox>
+
+                <HBox spacing="16" alignment="CENTER_LEFT">
+                    <children>
+                        <Label text="Rechercher:" styleClass="label-caption"/>
+                        <TextField fx:id="txtRecherche" prefWidth="250" promptText="Événement, étudiant..." styleClass="text-field"/>
+                        <Button text="🔍 Rechercher" onAction="#rechercherParticipations" styleClass="button-primary"/>
+                        <Button text="🔄 Réinitialiser" onAction="#reinitialiserRecherche" styleClass="button-secondary"/>
+
+                        <Region HBox.hgrow="ALWAYS"/>
+
+                        <Label text="Total:" styleClass="label-caption"/>
+                        <Label fx:id="lblTotal" text="0 participations" styleClass="label-caption"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="tableParticipations" prefHeight="500" styleClass="table-view">
+            <columns>
+                <TableColumn fx:id="colEvenement" text="Événement" prefWidth="200"/>
+                <TableColumn fx:id="colEtudiant" text="Étudiant" prefWidth="200"/>
+                <TableColumn fx:id="colDateInscription" text="Date inscription" prefWidth="180"/>
+                <TableColumn fx:id="colDateEvenement" text="Date" prefWidth="150"/>
+                <TableColumn fx:id="colLieu" text="Lieu" prefWidth="150"/>
+                <TableColumn fx:id="colOrganisateur" text="Organisateur" prefWidth="180"/>
+                <TableColumn fx:id="colStatut" text="Statut" prefWidth="120"/>
+                <TableColumn fx:id="colActions" text="Actions" prefWidth="200"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>

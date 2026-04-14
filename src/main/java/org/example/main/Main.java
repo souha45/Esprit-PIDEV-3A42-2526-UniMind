@@ -1,4 +1,4 @@
-package org.example;
+package org.example.main;
 
 import org.example.utils.MyDataBase_Unimind;
 import org.example.services.*;
@@ -212,4 +212,3 @@ public class Main {
         }
     }
 }
-

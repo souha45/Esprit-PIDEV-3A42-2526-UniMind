@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+      spacing="24" alignment="TOP_CENTER" styleClass="padding-large">
+    <children>
+        <Label text="Statistiques Module Événements" styleClass="label-title" />
+
+        <HBox spacing="20" alignment="CENTER">
+            <children>
+                <VBox spacing="10" styleClass="card card-success" style="-fx-pref-width: 220;">
+                    <children>
+                        <Label text="Total Événements" styleClass="card-title" />
+                        <Label fx:id="lblTotalEvenements" text="0" styleClass="card-value" />
+                    </children>
+                </VBox>
+
+                <VBox spacing="10" styleClass="card card-warning" style="-fx-pref-width: 220;">
+                    <children>
+                        <Label text="Total Sponsors" styleClass="card-title" />
+                        <Label fx:id="lblTotalSponsors" text="0" styleClass="card-value" />
+                    </children>
+                </VBox>
+
+                <VBox spacing="10" styleClass="card card-info" style="-fx-pref-width: 220;">
+                    <children>
+                        <Label text="Total Participations" styleClass="card-title" />
+                        <Label fx:id="lblTotalParticipations" text="0" styleClass="card-value" />
+                    </children>
+                </VBox>
+            </children>
+        </HBox>
+
+        <HBox spacing="20" alignment="CENTER">
+            <children>
+                <VBox spacing="10" styleClass="card card-primary" style="-fx-pref-width: 220;">
+                    <children>
+                        <Label text="Événements Actifs" styleClass="card-title" />
+                        <Label fx:id="lblEvenementsActifs" text="0" styleClass="card-value" />
+                    </children>
+                </VBox>
+
+                <VBox spacing="10" styleClass="card card-danger" style="-fx-pref-width: 220;">
+                    <children>
+                        <Label text="Événements Passés" styleClass="card-title" />
+                        <Label fx:id="lblEvenementsPasses" text="0" styleClass="card-value" />
+                    </children>
+                </VBox>
+            </children>
+        </HBox>
+    </children>
+</VBox>

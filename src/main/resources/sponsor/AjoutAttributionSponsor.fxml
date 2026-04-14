@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="15" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controllers.sponsor.AjoutAttributionSponsorController"
+      style="-fx-background-color: #f5f5f5;">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Nouvelle Attribution de Sponsor" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+
+    <VBox spacing="10">
+        <Label text="Événement *" style="-fx-font-weight: bold;"/>
+        <ComboBox fx:id="comboEvenement" promptText="Sélectionner un événement" style="-fx-background-color: white;"/>
+        <Label fx:id="lblErreurEvenement" text="Veuillez sélectionner un événement" style="-fx-text-fill: red; -fx-font-size: 11px;" visible="false"/>
+    </VBox>
+
+    <VBox spacing="10">
+        <Label text="Sponsor *" style="-fx-font-weight: bold;"/>
+        <ComboBox fx:id="comboSponsor" promptText="Sélectionner un sponsor" style="-fx-background-color: white;"/>
+        <Label fx:id="lblErreurSponsor" text="Veuillez sélectionner un sponsor" style="-fx-text-fill: red; -fx-font-size: 11px;" visible="false"/>
+    </VBox>
+
+    <VBox spacing="10">
+        <Label text="Montant de contribution (DT) *" style="-fx-font-weight: bold;"/>
+        <TextField fx:id="txtMontant" promptText="Ex: 5000" style="-fx-background-color: white;"/>
+        <Label fx:id="lblErreurMontant" text="Veuillez entrer un montant valide" style="-fx-text-fill: red; -fx-font-size: 11px;" visible="false"/>
+    </VBox>
+
+    <VBox spacing="10">
+        <Label text="Type de contribution" style="-fx-font-weight: bold;"/>
+        <ComboBox fx:id="comboType" style="-fx-background-color: white;"/>
+    </VBox>
+
+    <VBox spacing="10">
+        <Label text="Description" style="-fx-font-weight: bold;"/>
+        <TextArea fx:id="txtDescription" promptText="Description de la contribution (optionnel)" prefRowCount="3" style="-fx-background-color: white;"/>
+    </VBox>
+
+    <VBox spacing="10">
+        <Label text="Date de contribution" style="-fx-font-weight: bold;"/>
+        <DatePicker fx:id="dateContribution" style="-fx-background-color: white;"/>
+    </VBox>
+
+    <VBox spacing="10">
+        <Label text="Statut" style="-fx-font-weight: bold;"/>
+        <ComboBox fx:id="comboStatut" style="-fx-background-color: white;"/>
+    </VBox>
+
+    <Label fx:id="lblSucces" text="Attribution enregistrée avec succès !" style="-fx-text-fill: green; -fx-font-weight: bold;" visible="false"/>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Annuler" onAction="#annuler" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-padding: 8 20;"/>
+        <Button text="Enregistrer" onAction="#enregistrerAttribution" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20;"/>
+    </HBox>
+
+</VBox>

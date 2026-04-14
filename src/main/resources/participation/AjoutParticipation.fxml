@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.participation.AjoutParticipationController"
+            stylesheets="@../styles/dashboard-theme.css"
+            styleClass="dashboard-bg">
+
+    <top>
+        <HBox spacing="16" alignment="CENTER_LEFT" styleClass="topbar" BorderPane.alignment="CENTER">
+            <children>
+                <Label text="INSCRIRE UN ÉTUDIANT" styleClass="label-subtitle" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button text="🔙 Retour" onAction="#retour" styleClass="button-secondary" />
+            </children>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+            <VBox spacing="16" alignment="TOP_CENTER" styleClass="padding-large">
+                <children>
+                    <HBox spacing="20" alignment="CENTER">
+                        <children>
+                            <!-- Événement -->
+                            <VBox spacing="8" prefWidth="250">
+                                <children>
+                                    <Label text="Événement *" styleClass="label-caption" />
+                                    <ComboBox fx:id="comboEvenement" promptText="Sélectionner l'événement" prefWidth="250" styleClass="combo-box" />
+                                    <Label fx:id="lblErreurEvenementId" text="Obligatoire" styleClass="label-error" visible="false" />
+                                </children>
+                            </VBox>
+
+                            <!-- Étudiant -->
+                            <VBox spacing="5" prefWidth="250">
+                                <children>
+                                    <Label text="Étudiant *" style="-fx-font-weight: bold;" />
+                                    <ComboBox fx:id="comboEtudiant" promptText="Sélectionner l'étudiant" prefWidth="250" />
+                                    <Label fx:id="lblErreurEtudiantId" text="Obligatoire"
+                                           style="-fx-text-fill: #e74c3c; -fx-font-size: 11px;" visible="false" />
+                                    <Label fx:id="lblErreurUnicite" text="Cette participation existe déjà"
+                                           style="-fx-text-fill: #e74c3c; -fx-font-size: 11px;" visible="false" />
+                                </children>
+                            </VBox>
+                        </children>
+                    </HBox>
+
+                    <HBox spacing="20" alignment="CENTER">
+                        <children>
+                            <!-- Date d'inscription -->
+                            <VBox spacing="5" prefWidth="250">
+                                <children>
+                                    <Label text="Date d'inscription" style="-fx-font-weight: bold;" />
+                                    <DatePicker fx:id="dateInscription" prefWidth="250" showWeekNumbers="true" />
+                                </children>
+                            </VBox>
+
+                            <!-- Statut -->
+                            <VBox spacing="5" prefWidth="250">
+                                <children>
+                                    <Label text="Statut *" style="-fx-font-weight: bold;" />
+                                    <ComboBox fx:id="comboStatut" prefWidth="250" />
+                                </children>
+                            </VBox>
+                        </children>
+                    </HBox>
+
+                    <HBox spacing="10" alignment="CENTER" style="-fx-padding: 20;">
+                        <children>
+                            <Button text="💾 Enregistrer" onAction="#enregistrerParticipation"
+                                    style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 150;" />
+                            <Button text="❌ Annuler" onAction="#retour"
+                                    style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-pref-width: 150;" />
+                        </children>
+                    </HBox>
+
+                    <Label fx:id="lblSucces" text="Participation ajoutée avec succès !"
+                           style="-fx-text-fill: #27ae60; -fx-font-size: 14px; -fx-font-weight: bold;" visible="false" />
+                </children>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>
