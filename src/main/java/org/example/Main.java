@@ -30,35 +30,36 @@ public class Main {
             System.out.println("\n** l'ajout **");
             //qes.ajouter(new Questionnaire("Q1", "Stress", "stress fait mal", TypeQuestionnaire.STRESS));
             //qes.ajouter(new Questionnaire("Q2", "depression", "deeepreesssiooonn", TypeQuestionnaire.DEPRESSION));
-           // qes.ajouter(new Questionnaire("Q3", "sommeil", "noummmm", TypeQuestionnaire.SOMMEIL));
+            // qes.ajouter(new Questionnaire("Q3", "sommeil", "noummmm", TypeQuestionnaire.SOMMEIL));
+            //*qes.ajouter(new Questionnaire("Q4", "energieee", "power", TypeQuestionnaire.SOMMEIL));
             System.out.println("\n** l'affiche **");
 
             System.out.println(qes.afficher());
-              //suppression
+            //suppression
             System.out.println("\n** supprimer **");
-            qes.supprimer(47);
+            qes.supprimer(45);
             // affichage 2 ba3d supp
             System.out.println("\n ** apres suppression ** ");
             System.out.println(qes.afficher());
 
             //modification
 
-           // Questionnaire q = new Questionnaire("Q20555", "Stress modifié", "new description", TypeQuestionnaire.STRESS);
-           // Questionnaire q= new Questionnaire("Q33", "ok", "nermine", TypeQuestionnaire.SOMMEIL);
-           // q.setQuestionnaireId(47);
+            // Questionnaire q = new Questionnaire("Q20555", "Stress modifié", "new description", TypeQuestionnaire.STRESS);
+            // Questionnaire q= new Questionnaire("Q33", "ok", "nermine", TypeQuestionnaire.SOMMEIL);
+            // q.setQuestionnaireId(47);
             //q.setQuestionnaireId(45);
 
 
             //qes.modifier(q);
 
-            System.out.println("\n** apres modification **");
-            System.out.println(qes.afficher());
+            //System.out.println("\n** apres modification **");
+            //System.out.println(qes.afficher());
 
-            // partie question
+            //***** partie question
 
-            System.out.println("\n** QUESTION **");
+            // System.out.println("\n** QUESTION **");
 
-            QuestionServices qs = new QuestionServices();
+            //QuestionServices qs = new QuestionServices();
 
 // ajout
             //qs.ajouter(new Question("Comment vous sentez-vous ?",45,"A,B,C","1,2,3"));
@@ -66,25 +67,25 @@ public class Main {
             //qs.ajouter(new Question("cc cv ?",45,"oui,non","1,0"));
 
 // affichage
-           // System.out.println("\n-- LISTE QUESTIONS --");
-           // System.out.println(qs.afficher());
+            // System.out.println("\n-- LISTE QUESTIONS --");
+            // System.out.println(qs.afficher());
 
 // modification
 
             //Question question = new Question("oooo llalallal", 45, "Pas du tout,Un peu", "0,2");
 
-           // question.setQuestionId(87);
+            // question.setQuestionId(87);
 
-           // qs.modifier(question);
+            // qs.modifier(question);
 // affichage
             //System.out.println("\n-- APRES MODIFICATION --");
             //System.out.println(qs.afficher());
             //suppression
-            System.out.println("\n** supprimer **");
-            qs.supprimer(86);
+            //System.out.println("\n** supprimer **");
+            //qs.supprimer(86);
             // affichage 2 ba3d supp
-            System.out.println("\n ** apres suppression ** ");
-            System.out.println(qs.afficher());
+            // System.out.println("\n ** apres suppression ** ");
+            //System.out.println(qs.afficher());
 
 
         } catch (SQLException e) {

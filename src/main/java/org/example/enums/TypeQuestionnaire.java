@@ -5,5 +5,5 @@ public enum TypeQuestionnaire {
     ANXIETE,
     DEPRESSION,
     SOMMEIL,
-    BIENETRE
+    BIEN_ETRE
 }

@@ -16,22 +16,42 @@ public class QuestionnaireServices implements ICrud<Questionnaire> {
         con = MyDataBase_Unimind.getInstance().getConnection();
     }
 
-    //ajouter
+    // ─────────────────────────────────────────
+    //  AJOUTER
+    // ─────────────────────────────────────────
     @Override
     public void ajouter(Questionnaire questionnaire) throws SQLException {
 
-        String sql = "INSERT INTO questionnaire (code, nom, description, type, created_at, seuil_leger, seuil_modere, seuil_severe, nbre_questions) VALUES ('"
-                + questionnaire.getCode() + "','"
-                + questionnaire.getNom() + "','"
-                + questionnaire.getDescription() + "','"
-                + questionnaire.getType().name() + "', NOW(), 0, 0, 0, 0)";
+        String checkSql = "SELECT COUNT(*) FROM questionnaire WHERE code = ?";
+        PreparedStatement checkPst = con.prepareStatement(checkSql);
+        checkPst.setString(1, questionnaire.getCode());
+        ResultSet rs = checkPst.executeQuery();
+        if (rs.next() && rs.getInt(1) > 0) {
+            throw new SQLException("Un questionnaire avec le code '" + questionnaire.getCode() + "' existe déjà !");
+        }
 
-        Statement statement = con.createStatement();
-        statement.executeUpdate(sql);
+        // APRÈS — valeurs depuis l'objet
+        String sql = "INSERT INTO questionnaire (code, nom, description, type, created_at, " +
+                "seuil_leger, seuil_modere, seuil_severe, nbre_questions) " +
+                "VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)";
 
+        PreparedStatement pst = con.prepareStatement(sql);
+        pst.setString(1, questionnaire.getCode());
+        pst.setString(2, questionnaire.getNom());
+        pst.setString(3, questionnaire.getDescription());
+        pst.setString(4, questionnaire.getType().name());
+        pst.setInt(5, questionnaire.getSeuilLegere());
+        pst.setInt(6, questionnaire.getSeuilModere());
+        pst.setInt(7, questionnaire.getSeuilSevere());
+        pst.setInt(8, questionnaire.getNbreQuestions());
+
+        pst.executeUpdate();
         System.out.println("Questionnaire ajouté avec succès !");
     }
-    //affichage
+
+    // ─────────────────────────────────────────
+    //  AFFICHER
+    // ─────────────────────────────────────────
     @Override
     public List<Questionnaire> afficher() throws SQLException {
 
@@ -48,22 +68,49 @@ public class QuestionnaireServices implements ICrud<Questionnaire> {
             q.setCode(rs.getString("code"));
             q.setNom(rs.getString("nom"));
             q.setDescription(rs.getString("description"));
+            q.setCreatedAt(rs.getTimestamp("created_at"));
+            q.setUpdatedAt(rs.getTimestamp("updated_at"));
+            q.setSeuilLegere(rs.getInt("seuil_leger"));
+            q.setSeuilModere(rs.getInt("seuil_modere"));
+            q.setSeuilSevere(rs.getInt("seuil_severe"));
+            q.setNbreQuestions(rs.getInt("nbre_questions"));
+            q.setInterpretatLegere(rs.getString("interpretat_legere"));
+            q.setInterpretatModere(rs.getString("interpretat_modere"));
+            q.setInterpretatSevere(rs.getString("interpretat_severe"));
 
-            // fix enum
-            q.setType(TypeQuestionnaire.valueOf(rs.getString("type").toUpperCase()));
+            // erreur
+            String typeStr = rs.getString("type");
+            try {
+                q.setType(TypeQuestionnaire.valueOf(typeStr.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                System.out.println(" Type inconnu en DB : '" + typeStr + "' → ignoré");
+                q.setType(null);
+            }
+
+            // adminId peut être NULL
+            int adminId = rs.getInt("admin_id");
+            q.setAdminId(rs.wasNull() ? null : adminId);
 
             questionnaires.add(q);
         }
 
         return questionnaires;
     }
+
+    // ─────────────────────────────────────────
+    //  MODIFIER
+    // ─────────────────────────────────────────
     @Override
     public void modifier(Questionnaire questionnaire) throws SQLException {
+
+        // bich intesti type null wala lee 9bal modification
+        if (questionnaire.getType() == null) {
+            throw new SQLException("Le type du questionnaire ne peut pas être null !");
+        }
 
         String sql = "UPDATE questionnaire SET code=?, nom=?, description=?, type=? WHERE questionnaire_id=?";
 
         PreparedStatement pst = con.prepareStatement(sql);
-
         pst.setString(1, questionnaire.getCode());
         pst.setString(2, questionnaire.getNom());
         pst.setString(3, questionnaire.getDescription());
@@ -71,21 +118,26 @@ public class QuestionnaireServices implements ICrud<Questionnaire> {
         pst.setInt(5, questionnaire.getQuestionnaireId());
 
         pst.executeUpdate();
-
         System.out.println("Questionnaire modifié avec succès !");
     }
-    //supprissionnn
+
+    // ─────────────────────────────────────────
+    //  SUPPRIMER
+    // ─────────────────────────────────────────
     @Override
     public void supprimer(int id) throws SQLException {
+
         String sql = "DELETE FROM questionnaire WHERE questionnaire_id=?";
 
         PreparedStatement pst = con.prepareStatement(sql);
         pst.setInt(1, id);
 
-        pst.executeUpdate();
+        int rows = pst.executeUpdate();
 
-        System.out.println("Questionnaire supprimé avec succès !");
+        if (rows == 0) {
+            throw new SQLException("Aucun questionnaire trouvé avec l'ID=" + id);
+        }
 
-
+        System.out.println("Questionnaire supprimé avec succès ! ID=" + id);
     }
 }

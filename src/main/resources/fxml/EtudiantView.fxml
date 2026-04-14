@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.example.controllers.EtudiantController"
+            style="-fx-background-color: #f5f3ff;">
+
+    <top>
+        <VBox style="-fx-background-color: #ffffff; -fx-border-color: #ddd6fe; -fx-border-width: 0 0 1 0; -fx-effect: dropshadow(gaussian, rgba(124,58,237,0.1), 8, 0, 0, 2);">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="0">
+                <VBox HBox.hgrow="ALWAYS">
+                    <Label text="🎓 UniMind — Etudiant"
+                           style="-fx-text-fill: #7c3aed; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+                    <Label text="Répondez aux questionnaires et consultez vos résultats"
+                           style="-fx-text-fill: #a78bfa; -fx-font-size: 12px;"/>
+                </VBox>
+                <Button text="⬅️  Vue Admin" onAction="#goToAdmin"
+                        style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 10; -fx-cursor: hand;"/>
+            </HBox>
+
+            <HBox spacing="10">
+                <padding><Insets top="12" bottom="4"/></padding>
+                <Button fx:id="btnQuestionnaires" text="📋  Questionnaires" onAction="#showQuestionnaires"
+                        style="-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                <Button fx:id="btnMesReponses" text="📊  Mes Réponses" onAction="#showMesReponses"
+                        style="-fx-background-color: #ede9fe; -fx-text-fill: #7c3aed; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <StackPane fx:id="contentArea" style="-fx-background-color: #f5f3ff; -fx-padding: 20;"/>
+    </center>
+
+</BorderPane>

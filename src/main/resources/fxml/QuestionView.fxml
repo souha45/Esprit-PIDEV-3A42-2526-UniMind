@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<HBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controllers.QuestionController"
+      spacing="20" style="-fx-background-color: #f1f5f9;" prefHeight="620">
+
+    <VBox spacing="8" prefWidth="360"
+          style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+
+        <Label text="❓ Nouvelle Question"
+               style="-fx-text-fill: #3b82f6; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+
+        <Label text="Texte *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+        <TextArea fx:id="taTexte" promptText="Texte de la question" prefRowCount="3"
+                  style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px;"/>
+
+        <Label text="Questionnaire associé *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+        <ComboBox fx:id="cbQuestionnaire" promptText="Choisir un questionnaire" maxWidth="Infinity"
+                  style="-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px;"/>
+
+        <Label text="Options (séparées par virgule)" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+        <TextField fx:id="tfOptions" promptText="Ex: Jamais,Parfois,Souvent,Toujours"
+                   style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+
+        <Label text="Scores (séparés par virgule)" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+        <TextField fx:id="tfScores" promptText="Ex: 0,1,2,3"
+                   style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+
+        <Label text="Type Question" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+        <TextField fx:id="tfTypeQuestion" promptText="Ex: QCM, TEXTE (optionnel)"
+                   style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+
+        <HBox spacing="8"><padding><Insets top="8"/></padding>
+            <Button text="➕ Ajouter"   onAction="#handleAjouter"
+                    style="-fx-background-color: #22c55e; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 7 14; -fx-background-radius: 7; -fx-cursor: hand;"/>
+            <Button text="✏️ Modifier"  onAction="#handleModifier"
+                    style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 7 14; -fx-background-radius: 7; -fx-cursor: hand;"/>
+            <Button text="🗑 Supprimer" onAction="#handleSupprimer"
+                    style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 7 14; -fx-background-radius: 7; -fx-cursor: hand;"/>
+            <Button text="🔄 Reset"     onAction="#handleReset"
+                    style="-fx-background-color: #94a3b8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 7 14; -fx-background-radius: 7; -fx-cursor: hand;"/>
+        </HBox>
+        <Label fx:id="lblStatus" text="" wrapText="true" style="-fx-font-size: 12px;"/>
+    </VBox>
+
+    <VBox spacing="8" HBox.hgrow="ALWAYS"
+          style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+        <Label text="Liste des Questions"
+               style="-fx-text-fill: #64748b; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+        <TableView fx:id="tableQuestion" VBox.vgrow="ALWAYS"
+                   style="-fx-background-color: #ffffff; -fx-font-size: 13px;">
+            <columns>
+                <TableColumn fx:id="colId"      text="ID"               prefWidth="50"/>
+                <TableColumn fx:id="colTexte"   text="Texte"            prefWidth="200"/>
+                <TableColumn fx:id="colQId"     text="Questionnaire ID" prefWidth="130"/>
+                <TableColumn fx:id="colOptions" text="Options"          prefWidth="150"/>
+                <TableColumn fx:id="colScores"  text="Scores"           prefWidth="100"/>
+                <TableColumn fx:id="colType"    text="Type"             prefWidth="80"/>
+            </columns>
+        </TableView>
+    </VBox>
+</HBox>

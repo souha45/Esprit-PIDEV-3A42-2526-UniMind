@@ -71,6 +71,12 @@ public class Questionnaire {
         this.description = description;
         this.type = type;
     }
+    //constructeur de 3 parametres lil test
+    public Questionnaire(String code, String nom, String description) {
+        this.code = code;
+        this.nom = nom;
+        this.description = description;
+    }
     // Getters et Setters
     public int getQuestionnaireId() {
         return questionnaireId;
