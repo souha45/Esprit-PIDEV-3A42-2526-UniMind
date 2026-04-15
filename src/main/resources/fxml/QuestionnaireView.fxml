@@ -9,7 +9,7 @@
       fx:controller="org.example.controllers.QuestionnaireController"
       spacing="20" style="-fx-background-color: #f1f5f9;" prefHeight="620">
 
-    <VBox spacing="8" prefWidth="370"
+    <VBox spacing="4" prefWidth="370"
           style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
 
         <Label text="📋 Nouveau Questionnaire"
@@ -18,10 +18,12 @@
         <Label text="Code *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
         <TextField fx:id="tfCode" promptText="Ex: Q001"
                    style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+        <Label fx:id="errCode" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
 
         <Label text="Nom *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
         <TextField fx:id="tfNom" promptText="Nom du questionnaire"
                    style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+        <Label fx:id="errNom" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
 
         <Label text="Description" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
         <TextArea fx:id="taDescription" promptText="Description (optionnel)" prefRowCount="2"
@@ -30,28 +32,33 @@
         <Label text="Type *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
         <ComboBox fx:id="cbType" promptText="Choisir le type" maxWidth="Infinity"
                   style="-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px;"/>
+        <Label fx:id="errType" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
 
         <HBox spacing="8">
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <VBox spacing="2" HBox.hgrow="ALWAYS">
                 <Label text="Seuil Légère *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
                 <TextField fx:id="tfSeuilLeger" promptText="Ex: 10"
                            style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+                <Label fx:id="errSeuilLeger" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 10px;"/>
             </VBox>
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <VBox spacing="2" HBox.hgrow="ALWAYS">
                 <Label text="Seuil Modéré *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
                 <TextField fx:id="tfSeuilModere" promptText="Ex: 20"
                            style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+                <Label fx:id="errSeuilModere" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 10px;"/>
             </VBox>
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <VBox spacing="2" HBox.hgrow="ALWAYS">
                 <Label text="Seuil Sévère *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
                 <TextField fx:id="tfSeuilSevere" promptText="Ex: 30"
                            style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+                <Label fx:id="errSeuilSevere" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 10px;"/>
             </VBox>
         </HBox>
 
         <Label text="Nombre de Questions *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
         <TextField fx:id="tfNbreQuestions" promptText="Ex: 10"
                    style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+        <Label fx:id="errNbreQuestions" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
 
         <HBox spacing="8"><padding><Insets top="8"/></padding>
             <Button text="➕ Ajouter"   onAction="#handleAjouter"

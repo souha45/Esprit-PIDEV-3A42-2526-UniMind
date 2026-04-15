@@ -18,11 +18,16 @@ import java.util.ResourceBundle;
 
 public class QuestionController implements Initializable {
 
+    // ─── LABELS ERREUR ───
+    @FXML private Label errTexte, errQuestionnaire, errOptions, errScores, errTypeQuestion;
+
+    // ─── FORM ───
     @FXML private TextArea taTexte;
     @FXML private TextField tfOptions, tfScores, tfTypeQuestion;
     @FXML private ComboBox<String> cbQuestionnaire;
     @FXML private Label lblStatus;
 
+    // ─── TABLE ───
     @FXML private TableView<Question> tableQuestion;
     @FXML private TableColumn<Question, Integer> colId, colQId;
     @FXML private TableColumn<Question, String>  colTexte, colOptions, colScores, colType;
@@ -51,6 +56,10 @@ public class QuestionController implements Initializable {
         loadData();
     }
 
+    // ══════════════════════════════════════════
+    //  HANDLERS
+    // ══════════════════════════════════════════
+
     @FXML
     public void handleAjouter() {
         if (!valider()) return;
@@ -66,7 +75,10 @@ public class QuestionController implements Initializable {
 
     @FXML
     public void handleModifier() {
-        if (selectedId == -1) { setStatus("⚠️ Sélectionnez une question dans le tableau", false); return; }
+        if (selectedId == -1) {
+            setStatus("⚠️ Sélectionnez une question dans le tableau", false);
+            return;
+        }
         if (!valider()) return;
         try {
             Question q = buildFromForm();
@@ -82,7 +94,10 @@ public class QuestionController implements Initializable {
 
     @FXML
     public void handleSupprimer() {
-        if (selectedId == -1) { setStatus("⚠️ Sélectionnez une question dans le tableau", false); return; }
+        if (selectedId == -1) {
+            setStatus("⚠️ Sélectionnez une question dans le tableau", false);
+            return;
+        }
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                 "Voulez-vous vraiment supprimer cette question ?", ButtonType.YES, ButtonType.NO);
         confirm.setHeaderText("Confirmation");
@@ -103,48 +118,96 @@ public class QuestionController implements Initializable {
     @FXML
     public void handleReset() {
         selectedId = -1;
-        taTexte.clear(); tfOptions.clear(); tfScores.clear(); tfTypeQuestion.clear();
+        taTexte.clear();
+        tfOptions.clear();
+        tfScores.clear();
+        tfTypeQuestion.clear();
         cbQuestionnaire.setValue(null);
         lblStatus.setText("");
+        errTexte.setText("");
+        errQuestionnaire.setText("");
+        errOptions.setText("");
+        errScores.setText("");
+        errTypeQuestion.setText("");
     }
 
     // ══════════════════════════════════════════
     //  VALIDATION
     // ══════════════════════════════════════════
+
     private boolean valider() {
-        StringBuilder err = new StringBuilder();
+        errTexte.setText("");
+        errQuestionnaire.setText("");
+        errOptions.setText("");
+        errScores.setText("");
+        errTypeQuestion.setText("");
+        lblStatus.setText("");
 
-        if (taTexte.getText().trim().isEmpty())
-            err.append("• Le texte est obligatoire\n");
-        else if (taTexte.getText().trim().length() < 5)
-            err.append("• Le texte doit contenir au moins 5 caractères\n");
+        boolean ok = true;
 
-        if (cbQuestionnaire.getValue() == null)
-            err.append("• Veuillez sélectionner un questionnaire\n");
+        // Validation texte
+        if (taTexte.getText().trim().isEmpty()) {
+            errTexte.setText("⚠ Le texte est obligatoire");
+            ok = false;
+        } else if (taTexte.getText().trim().length() < 5) {
+            errTexte.setText("⚠ Minimum 5 caractères");
+            ok = false;
+        }
 
-        // Vérif cohérence options/scores
+        // Validation questionnaire
+        if (cbQuestionnaire.getValue() == null) {
+            errQuestionnaire.setText("⚠ Veuillez sélectionner un questionnaire");
+            ok = false;
+        }
+
+        // Validation options / scores
         String opts   = tfOptions.getText().trim();
         String scores = tfScores.getText().trim();
+
         if (!opts.isEmpty() && !scores.isEmpty()) {
             String[] optArr   = opts.split(",");
             String[] scoreArr = scores.split(",");
-            if (optArr.length != scoreArr.length)
-                err.append("• Le nombre d'options et de scores doit être identique\n");
-            for (String s : scoreArr) {
-                try { Double.parseDouble(s.trim()); }
-                catch (NumberFormatException ex) {
-                    err.append("• Les scores doivent être des nombres\n"); break;
+            if (optArr.length != scoreArr.length) {
+                errOptions.setText("⚠ Nombre d'options et scores différent");
+                ok = false;
+            } else {
+                for (String s : scoreArr) {
+                    try {
+                        Double.parseDouble(s.trim());
+                    } catch (NumberFormatException ex) {
+                        errScores.setText("⚠ Les scores doivent être des nombres");
+                        ok = false;
+                        break;
+                    }
                 }
+            }
+        } else if (!opts.isEmpty() && scores.isEmpty()) {
+            errScores.setText("⚠ Veuillez saisir les scores correspondants");
+            ok = false;
+        } else if (opts.isEmpty() && !scores.isEmpty()) {
+            errOptions.setText("⚠ Veuillez saisir les options correspondantes");
+            ok = false;
+        }
+
+        // Validation type question
+        if (tfTypeQuestion.getText().trim().isEmpty()) {
+            errTypeQuestion.setText("⚠ Le type de question est obligatoire");
+            ok = false;
+        } else {
+            String type = tfTypeQuestion.getText().trim().toUpperCase();
+            if (!type.equals("QCM") && !type.equals("TEXTE")) {
+                errTypeQuestion.setText("⚠ Type invalide : utilisez QCM ou TEXTE");
+                ok = false;
             }
         }
 
-        if (err.length() > 0) { setStatus(err.toString(), false); return false; }
-        return true;
+        return ok;
     }
 
     // ══════════════════════════════════════════
     //  HELPERS
     // ══════════════════════════════════════════
+
     private Question buildFromForm() {
         Question q = new Question();
         q.setTexte(taTexte.getText().trim());
@@ -164,15 +227,19 @@ public class QuestionController implements Initializable {
         tfTypeQuestion.setText(q.getTypeQuestion() != null ? q.getTypeQuestion() : "");
         for (String item : cbQuestionnaire.getItems()) {
             if (item.startsWith(q.getQuestionnaireId() + " - ")) {
-                cbQuestionnaire.setValue(item); break;
+                cbQuestionnaire.setValue(item);
+                break;
             }
         }
         setStatus("📌 Question #" + selectedId + " sélectionnée", true);
     }
 
     private void loadData() {
-        try { data.setAll(service.afficher()); }
-        catch (SQLException e) { setStatus("❌ Erreur chargement : " + e.getMessage(), false); }
+        try {
+            data.setAll(service.afficher());
+        } catch (SQLException e) {
+            setStatus("❌ Erreur chargement : " + e.getMessage(), false);
+        }
     }
 
     private void loadQuestionnaires() {
@@ -188,6 +255,7 @@ public class QuestionController implements Initializable {
 
     private void setStatus(String msg, boolean success) {
         lblStatus.setText(msg);
-        lblStatus.setStyle("-fx-font-size: 12px; -fx-text-fill: " + (success ? "#22c55e" : "#ef4444") + ";");
+        lblStatus.setStyle("-fx-font-size: 12px; -fx-text-fill: "
+                + (success ? "#22c55e" : "#ef4444") + ";");
     }
 }

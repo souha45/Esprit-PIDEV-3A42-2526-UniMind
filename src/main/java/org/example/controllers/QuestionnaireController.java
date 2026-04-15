@@ -17,6 +17,9 @@ import java.util.ResourceBundle;
 
 public class QuestionnaireController implements Initializable {
 
+    @FXML private Label errCode, errNom, errType;
+    @FXML private Label errSeuilLeger, errSeuilModere, errSeuilSevere, errNbreQuestions;
+
     // ─── FORM ───
     @FXML private TextField tfCode, tfNom, tfSeuilLeger, tfSeuilModere, tfSeuilSevere, tfNbreQuestions;
     @FXML private TextArea taDescription;
@@ -34,10 +37,8 @@ public class QuestionnaireController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Remplir le ComboBox
         cbType.setItems(FXCollections.observableArrayList(TypeQuestionnaire.values()));
 
-        // Lier les colonnes
         colId.setCellValueFactory(new PropertyValueFactory<>("questionnaireId"));
         colCode.setCellValueFactory(new PropertyValueFactory<>("code"));
         colNom.setCellValueFactory(new PropertyValueFactory<>("nom"));
@@ -49,7 +50,6 @@ public class QuestionnaireController implements Initializable {
 
         tableQuestionnaire.setItems(data);
 
-        // Clic sur tableau → remplir formulaire
         tableQuestionnaire.setOnMouseClicked(e -> {
             Questionnaire selected = tableQuestionnaire.getSelectionModel().getSelectedItem();
             if (selected != null) fillForm(selected);
@@ -61,6 +61,7 @@ public class QuestionnaireController implements Initializable {
     // ══════════════════════════════════════════
     //  HANDLERS
     // ══════════════════════════════════════════
+
     @FXML
     public void handleAjouter() {
         if (!valider()) return;
@@ -76,7 +77,10 @@ public class QuestionnaireController implements Initializable {
 
     @FXML
     public void handleModifier() {
-        if (selectedId == -1) { setStatus("⚠️ Sélectionnez un questionnaire dans le tableau", false); return; }
+        if (selectedId == -1) {
+            setStatus("⚠️ Sélectionnez un questionnaire dans le tableau", false);
+            return;
+        }
         if (!valider()) return;
         try {
             Questionnaire q = buildFromForm();
@@ -92,7 +96,10 @@ public class QuestionnaireController implements Initializable {
 
     @FXML
     public void handleSupprimer() {
-        if (selectedId == -1) { setStatus("⚠️ Sélectionnez un questionnaire dans le tableau", false); return; }
+        if (selectedId == -1) {
+            setStatus("⚠️ Sélectionnez un questionnaire dans le tableau", false);
+            return;
+        }
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                 "Voulez-vous vraiment supprimer ce questionnaire ?", ButtonType.YES, ButtonType.NO);
         confirm.setHeaderText("Confirmation");
@@ -118,46 +125,74 @@ public class QuestionnaireController implements Initializable {
         tfNbreQuestions.clear();
         cbType.setValue(null);
         lblStatus.setText("");
+        // Vider les messages d'erreur
+        errCode.setText(""); errNom.setText(""); errType.setText("");
+        errSeuilLeger.setText(""); errSeuilModere.setText("");
+        errSeuilSevere.setText(""); errNbreQuestions.setText("");
     }
 
     // ══════════════════════════════════════════
     //  VALIDATION
     // ══════════════════════════════════════════
+
     private boolean valider() {
-        StringBuilder err = new StringBuilder();
+        // Réinitialiser tous les messages d'erreur
+        errCode.setText(""); errNom.setText(""); errType.setText("");
+        errSeuilLeger.setText(""); errSeuilModere.setText("");
+        errSeuilSevere.setText(""); errNbreQuestions.setText("");
+        lblStatus.setText("");
 
-        if (tfCode.getText().trim().isEmpty())
-            err.append("• Le code est obligatoire\n");
-        else if (tfCode.getText().trim().length() > 20)
-            err.append("• Le code ne doit pas dépasser 20 caractères\n");
+        boolean ok = true;
 
-        if (tfNom.getText().trim().isEmpty())
-            err.append("• Le nom est obligatoire\n");
+        if (tfCode.getText().trim().isEmpty()) {
+            errCode.setText("⚠ Le code est obligatoire");
+            ok = false;
+        } else if (tfCode.getText().trim().length() > 20) {
+            errCode.setText("⚠ Maximum 20 caractères");
+            ok = false;
+        }
 
-        if (cbType.getValue() == null)
-            err.append("• Le type est obligatoire\n");
+        if (tfNom.getText().trim().isEmpty()) {
+            errNom.setText("⚠ Le nom est obligatoire");
+            ok = false;
+        }
 
-        if (!isPositiveInt(tfSeuilLeger.getText()))
-            err.append("• Seuil légère doit être un entier positif\n");
-        if (!isPositiveInt(tfSeuilModere.getText()))
-            err.append("• Seuil modéré doit être un entier positif\n");
-        if (!isPositiveInt(tfSeuilSevere.getText()))
-            err.append("• Seuil sévère doit être un entier positif\n");
-        if (!isPositiveInt(tfNbreQuestions.getText()))
-            err.append("• Nombre de questions doit être un entier positif\n");
+        if (cbType.getValue() == null) {
+            errType.setText("⚠ Le type est obligatoire");
+            ok = false;
+        }
+
+        if (!isPositiveInt(tfSeuilLeger.getText())) {
+            errSeuilLeger.setText("⚠ Entier positif requis");
+            ok = false;
+        }
+        if (!isPositiveInt(tfSeuilModere.getText())) {
+            errSeuilModere.setText("⚠ Entier positif requis");
+            ok = false;
+        }
+        if (!isPositiveInt(tfSeuilSevere.getText())) {
+            errSeuilSevere.setText("⚠ Entier positif requis");
+            ok = false;
+        }
+        if (!isPositiveInt(tfNbreQuestions.getText())) {
+            errNbreQuestions.setText("⚠ Entier positif requis");
+            ok = false;
+        }
 
         // Vérifier seuils croissants
-        if (isPositiveInt(tfSeuilLeger.getText()) && isPositiveInt(tfSeuilModere.getText())
+        if (ok && isPositiveInt(tfSeuilLeger.getText())
+                && isPositiveInt(tfSeuilModere.getText())
                 && isPositiveInt(tfSeuilSevere.getText())) {
             int sl = Integer.parseInt(tfSeuilLeger.getText().trim());
             int sm = Integer.parseInt(tfSeuilModere.getText().trim());
             int ss = Integer.parseInt(tfSeuilSevere.getText().trim());
-            if (!(sl < sm && sm < ss))
-                err.append("• Les seuils doivent être croissants : légère < modéré < sévère\n");
+            if (!(sl < sm && sm < ss)) {
+                errSeuilLeger.setText("⚠ Légère < Modéré < Sévère");
+                ok = false;
+            }
         }
 
-        if (err.length() > 0) { setStatus(err.toString(), false); return false; }
-        return true;
+        return ok;
     }
 
     private boolean isPositiveInt(String s) {
@@ -168,6 +203,7 @@ public class QuestionnaireController implements Initializable {
     // ══════════════════════════════════════════
     //  HELPERS
     // ══════════════════════════════════════════
+
     private Questionnaire buildFromForm() {
         Questionnaire q = new Questionnaire();
         q.setCode(tfCode.getText().trim());
@@ -205,6 +241,7 @@ public class QuestionnaireController implements Initializable {
 
     private void setStatus(String msg, boolean success) {
         lblStatus.setText(msg);
-        lblStatus.setStyle("-fx-font-size: 12px; -fx-text-fill: " + (success ? "#22c55e" : "#ef4444") + ";");
+        lblStatus.setStyle("-fx-font-size: 12px; -fx-text-fill: "
+                + (success ? "#22c55e" : "#ef4444") + ";");
     }
 }
