@@ -19,6 +19,8 @@ import org.example.utils.SessionManager;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 
@@ -222,6 +224,12 @@ public class VoirEvenementController {
                 return;
             }
 
+            // Vérifier la capacité maximale de l'événement
+            if (!verifierCapaciteEvenement(evenementCourant.getEvenementId())) {
+                afficherAlerte("Erreur", "Cet événement a atteint sa capacité maximale");
+                return;
+            }
+
             ParticipationService participationService = new ParticipationService();
             Participation participation = new Participation();
             participation.setEvenementId(evenementCourant.getEvenementId());
@@ -234,6 +242,45 @@ public class VoirEvenementController {
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible de participer à l'événement: " + e.getMessage());
         }
+    }
+
+    /**
+     * Vérifie si l'événement a encore de la place disponible
+     * @param evenementId L'ID de l'événement
+     * @return true si l'événement a encore de la place, false sinon
+     */
+    private boolean verifierCapaciteEvenement(int evenementId) throws SQLException {
+        // Récupérer la capacité maximale de l'événement
+        String sqlCapacite = "SELECT capacite_max FROM evenement WHERE evenement_id = ?";
+        int capaciteMax = 0;
+        try (PreparedStatement ps = org.example.utils.MyDataBase_Unimind.getInstance().getConnection().prepareStatement(sqlCapacite)) {
+            ps.setInt(1, evenementId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    capaciteMax = rs.getInt("capacite_max");
+                }
+            }
+        }
+
+        // Si capacite_max est 0 ou null, pas de limite
+        if (capaciteMax <= 0) {
+            return true;
+        }
+
+        // Compter le nombre actuel de participations pour cet événement
+        String sqlCount = "SELECT COUNT(*) as nombre_participations FROM participation WHERE evenement_id = ?";
+        int nombreParticipations = 0;
+        try (PreparedStatement ps = org.example.utils.MyDataBase_Unimind.getInstance().getConnection().prepareStatement(sqlCount)) {
+            ps.setInt(1, evenementId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    nombreParticipations = rs.getInt("nombre_participations");
+                }
+            }
+        }
+
+        // Vérifier si le nombre de participations est inférieur à la capacité maximale
+        return nombreParticipations < capaciteMax;
     }
 
     @FXML

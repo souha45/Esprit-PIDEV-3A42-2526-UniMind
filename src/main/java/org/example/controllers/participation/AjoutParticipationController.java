@@ -49,6 +49,8 @@ public class AjoutParticipationController {
     @FXML
     private Label lblErreurUnicite;
     @FXML
+    private Label lblErreurCapacite;
+    @FXML
     private Label lblSucces;
 
     private final ParticipationService participationService = new ParticipationService();
@@ -144,8 +146,14 @@ public class AjoutParticipationController {
                     lblErreurUnicite.setVisible(true);
                     erreurs.add("Unicité : cette participation existe déjà");
                 }
+
+                // Vérifier la capacité maximale de l'événement
+                if (!verifierCapaciteEvenement(evenementId)) {
+                    lblErreurCapacite.setVisible(true);
+                    erreurs.add("Capacité : l'événement a atteint sa capacité maximale");
+                }
             } catch (SQLException e) {
-                erreurs.add("Erreur lors de la vérification d'unicité : " + e.getMessage());
+                erreurs.add("Erreur lors de la vérification : " + e.getMessage());
             }
         }
 
@@ -179,6 +187,46 @@ public class AjoutParticipationController {
         lblErreurEvenementId.setVisible(false);
         lblErreurEtudiantId.setVisible(false);
         lblErreurUnicite.setVisible(false);
+        lblErreurCapacite.setVisible(false);
+    }
+
+    /**
+     * Vérifie si l'événement a encore de la place disponible
+     * @param evenementId L'ID de l'événement
+     * @return true si l'événement a encore de la place, false sinon
+     */
+    private boolean verifierCapaciteEvenement(int evenementId) throws SQLException {
+        // Récupérer la capacité maximale de l'événement
+        String sqlCapacite = "SELECT capacite_max FROM evenement WHERE evenement_id = ?";
+        int capaciteMax = 0;
+        try (PreparedStatement ps = MyDataBase_Unimind.getInstance().getConnection().prepareStatement(sqlCapacite)) {
+            ps.setInt(1, evenementId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    capaciteMax = rs.getInt("capacite_max");
+                }
+            }
+        }
+
+        // Si capacite_max est 0 ou null, pas de limite
+        if (capaciteMax <= 0) {
+            return true;
+        }
+
+        // Compter le nombre actuel de participations pour cet événement
+        String sqlCount = "SELECT COUNT(*) as nombre_participations FROM participation WHERE evenement_id = ?";
+        int nombreParticipations = 0;
+        try (PreparedStatement ps = MyDataBase_Unimind.getInstance().getConnection().prepareStatement(sqlCount)) {
+            ps.setInt(1, evenementId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    nombreParticipations = rs.getInt("nombre_participations");
+                }
+            }
+        }
+
+        // Vérifier si le nombre de participations est inférieur à la capacité maximale
+        return nombreParticipations < capaciteMax;
     }
 
     private void chargerEvenements() {
