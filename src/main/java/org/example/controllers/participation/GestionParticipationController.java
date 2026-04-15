@@ -5,13 +5,10 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
-import javafx.stage.Stage;
 import org.example.entities.Participation;
 import org.example.enums.Role;
 import org.example.services.ParticipationService;
@@ -41,6 +38,8 @@ public class GestionParticipationController {
     private TableColumn<ParticipationService.ParticipationAvecNoms, String> colOrganisateur;
     @FXML
     private TableColumn<ParticipationService.ParticipationAvecNoms, String> colStatut;
+    @FXML
+    private TableColumn<ParticipationService.ParticipationAvecNoms, String> colPlacesLibres;
     @FXML
     private TableColumn<ParticipationService.ParticipationAvecNoms, Void> colActions;
 
@@ -73,6 +72,7 @@ public class GestionParticipationController {
             colActions.setVisible(false);
             colEtudiant.setVisible(false);
             colDateInscription.setVisible(false);
+            colPlacesLibres.setVisible(false);
         } else {
             // Pour les admins/responsables, cacher la colonne Date de l'événement
             colDateEvenement.setVisible(false);
@@ -90,13 +90,22 @@ public class GestionParticipationController {
                         cellData.getValue().getDateInscription().toLocalDateTime().format(dateFormatter)));
         colDateEvenement.setCellValueFactory(cellData ->
                 new javafx.beans.property.SimpleStringProperty(
-                        cellData.getValue().getEvenementDateDebut() != null 
+                        cellData.getValue().getEvenementDateDebut() != null
                             ? cellData.getValue().getEvenementDateDebut().toLocalDateTime().format(dateFormatter)
                             : "-"));
         colLieu.setCellValueFactory(new PropertyValueFactory<>("evenementLieu"));
         colOrganisateur.setCellValueFactory(new PropertyValueFactory<>("organisateurNom"));
         colStatut.setCellValueFactory(cellData ->
                 new javafx.beans.property.SimpleStringProperty(cellData.getValue().getStatut().toString()));
+        colPlacesLibres.setCellValueFactory(cellData -> {
+            int placesLibres = cellData.getValue().getPlacesLibres();
+            int capaciteMax = cellData.getValue().getCapaciteMax();
+            if (placesLibres == -1) {
+                return new javafx.beans.property.SimpleStringProperty("Illimité");
+            } else {
+                return new javafx.beans.property.SimpleStringProperty(placesLibres + " / " + capaciteMax);
+            }
+        });
 
         colActions.setCellFactory(param -> new TableCell<>() {
             @Override
@@ -237,7 +246,6 @@ public class GestionParticipationController {
     private void retourAccueil(ActionEvent event) throws IOException {
         // Rediriger vers le dashboard selon le rôle de l'utilisateur connecté
         String fxmlPath;
-        String titre;
 
         org.example.enums.Role role = org.example.utils.SessionManager.getInstance().getCurrentUserRole()
                 .orElse(org.example.enums.Role.ETUDIANT);
@@ -245,37 +253,20 @@ public class GestionParticipationController {
         switch (role) {
             case ADMIN:
                 fxmlPath = "/evenement/AdminDashboard.fxml";
-                titre = "Dashboard Admin";
                 break;
             case RESPONSABLE_ETUDIANT:
                 fxmlPath = "/evenement/ResponsableDashboard.fxml";
-                titre = "Dashboard Responsable";
                 break;
             case ETUDIANT:
                 fxmlPath = "/evenement/EtudiantDashboard.fxml";
-                titre = "Dashboard Étudiant";
                 break;
             default:
                 fxmlPath = "/evenement/AccueilEvenement.fxml";
-                titre = "Accueil - Gestion des Événements";
                 break;
         }
 
         // Recharger le dashboard (qui affichera les statistiques par défaut)
         NavigationContext.loadContentInCenter(fxmlPath);
-    }
-
-    private void naviguerVersEcran(ActionEvent event, String fxmlPath, String titre) throws IOException {
-        var resource = getClass().getResource(fxmlPath);
-        if (resource == null) {
-            throw new IOException("Fichier FXML non trouvé: " + fxmlPath);
-        }
-        Parent root = FXMLLoader.load(resource);
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        Scene scene = new Scene(root, 1200, 800);
-        stage.setScene(scene);
-        stage.setTitle(titre);
-        stage.show();
     }
 
     private void afficherAlerte(String type, String message) {

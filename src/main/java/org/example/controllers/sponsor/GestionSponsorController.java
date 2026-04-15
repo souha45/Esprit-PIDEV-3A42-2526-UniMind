@@ -5,13 +5,10 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
-import javafx.stage.Stage;
 import org.example.entities.Sponsor;
 import org.example.enums.Role;
 import org.example.services.SponsorService;
@@ -136,8 +133,6 @@ public class GestionSponsorController {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    SponsorService.SponsorAvecInfos sponsor = getTableView().getItems().get(getIndex());
-
                     // Créer le bouton Voir
                     Button btnVoir = new Button("voir");
                     btnVoir.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-min-width: 60px;");
@@ -288,19 +283,6 @@ public class GestionSponsorController {
     private void retourAccueil(ActionEvent event) throws IOException {
         // Recharger le dashboard Admin (qui affichera les statistiques par défaut)
         NavigationContext.loadContentInCenter("/evenement/AdminDashboard.fxml");
-    }
-
-    private void naviguerVersEcran(ActionEvent event, String fxmlPath, String titre) throws IOException {
-        var resource = getClass().getResource(fxmlPath);
-        if (resource == null) {
-            throw new IOException("Fichier FXML non trouvé: " + fxmlPath);
-        }
-        Parent root = FXMLLoader.load(resource);
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        Scene scene = new Scene(root, 1200, 800);
-        stage.setScene(scene);
-        stage.setTitle(titre);
-        stage.show();
     }
 
     private void afficherAlerte(String type, String message) {

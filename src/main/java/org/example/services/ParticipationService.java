@@ -158,7 +158,8 @@ public class ParticipationService implements ICrud<Participation> {
         String sql = "SELECT p.participation_id, p.date_inscription, p.statut, p.created_at, p.updated_at, " +
                      "p.evenement_id, p.etudiant_id, p.note_satisfaction, p.feedback_commentaire, p.feedback_at, " +
                      "p.qr_token, p.scanned_at, p.present, " +
-                     "e.titre as evenement_titre, e.lieu as evenement_lieu, e.date_debut as evenement_date_debut, e.organisateur_id, " +
+                     "e.titre as evenement_titre, e.lieu as evenement_lieu, e.date_debut as evenement_date_debut, e.organisateur_id, e.capacite_max, " +
+                     "(SELECT COUNT(*) FROM participation p2 WHERE p2.evenement_id = e.evenement_id) as nombre_inscrits, " +
                      "u.prenom as etudiant_prenom, u.nom as etudiant_nom, " +
                      "org.prenom as organisateur_prenom, org.nom as organisateur_nom " +
                      "FROM participation p " +
@@ -208,6 +209,13 @@ public class ParticipationService implements ICrud<Participation> {
                 String organisateurNomComplet = (organisateurPrenom != null ? organisateurPrenom + " " : "") + (organisateurNom != null ? organisateurNom : "");
                 part.setOrganisateurNom(organisateurNomComplet.trim());
 
+                // Capacité maximale et places libres
+                int capaciteMax = rs.getInt("capacite_max");
+                int nombreInscrits = rs.getInt("nombre_inscrits");
+                part.setCapaciteMax(capaciteMax);
+                int placesLibres = capaciteMax > 0 ? capaciteMax - nombreInscrits : -1; // -1 signifie illimité
+                part.setPlacesLibres(placesLibres);
+
                 result.add(part);
             }
         }
@@ -237,6 +245,8 @@ public class ParticipationService implements ICrud<Participation> {
         private String organisateurNom;
         private String evenementLieu;
         private Timestamp evenementDateDebut;
+        private int capaciteMax;
+        private int placesLibres;
 
         public int getParticipationId() { return participationId; }
         public void setParticipationId(int participationId) { this.participationId = participationId; }
@@ -277,6 +287,10 @@ public class ParticipationService implements ICrud<Participation> {
         public void setEvenementLieu(String evenementLieu) { this.evenementLieu = evenementLieu; }
         public Timestamp getEvenementDateDebut() { return evenementDateDebut; }
         public void setEvenementDateDebut(Timestamp evenementDateDebut) { this.evenementDateDebut = evenementDateDebut; }
+        public int getCapaciteMax() { return capaciteMax; }
+        public void setCapaciteMax(int capaciteMax) { this.capaciteMax = capaciteMax; }
+        public int getPlacesLibres() { return placesLibres; }
+        public void setPlacesLibres(int placesLibres) { this.placesLibres = placesLibres; }
     }
 
     private Participation mapRow(ResultSet rs) throws SQLException {

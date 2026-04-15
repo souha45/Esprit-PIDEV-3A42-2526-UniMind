@@ -50,8 +50,8 @@ public class EtudiantDashboardController {
 
     @FXML
     private void voirEvenements(ActionEvent event) throws IOException {
-        // Charger les événements dans le ScrollPane
-        chargerContenuDansCentre("/evenement/GestionEvenement.fxml");
+        // Charger les événements dans le ScrollPane avec la nouvelle interface étudiante
+        chargerContenuDansCentre("/evenement/EvenementsEtudiant.fxml");
     }
 
     @FXML

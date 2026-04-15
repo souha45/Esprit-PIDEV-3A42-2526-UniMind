@@ -548,3 +548,49 @@
     -fx-font-size: 12px;
     -fx-cursor: hand;
 }
+
+/* =============================================
+   EVENEMENTS (SYMFONY-LIKE)
+   ============================================= */
+.card-surface {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 16;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 10, 0, 0, 3);
+}
+
+.card-header {
+    -fx-padding: 2 4 8 4;
+}
+
+.filter-grid {
+    -fx-padding: 6;
+}
+
+.total-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6b7280;
+    -fx-font-weight: bold;
+}
+
+.event-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-color: transparent;
+}
+
+.event-scroll .viewport {
+    -fx-background-color: transparent;
+}
+
+.event-tile-pane {
+    -fx-background-color: transparent;
+    -fx-hgap: 30;
+    -fx-vgap: 30;
+    -fx-pref-tile-width: 340;
+    -fx-pref-tile-height: 440;
+    -fx-alignment: TOP_LEFT;
+}

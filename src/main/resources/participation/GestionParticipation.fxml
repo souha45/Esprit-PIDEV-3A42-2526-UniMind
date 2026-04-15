@@ -53,6 +53,7 @@
                 <TableColumn fx:id="colLieu" text="Lieu" prefWidth="150"/>
                 <TableColumn fx:id="colOrganisateur" text="Organisateur" prefWidth="180"/>
                 <TableColumn fx:id="colStatut" text="Statut" prefWidth="120"/>
+                <TableColumn fx:id="colPlacesLibres" text="Places libres" prefWidth="120"/>
                 <TableColumn fx:id="colActions" text="Actions" prefWidth="200"/>
             </columns>
         </TableView>

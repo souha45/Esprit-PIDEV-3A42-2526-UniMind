@@ -173,7 +173,12 @@ public class VoirEvenementController {
 
     @FXML
     private void retour(ActionEvent event) throws IOException {
-        NavigationContext.loadContentInCenter("/evenement/GestionEvenement.fxml");
+        Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ETUDIANT);
+        if (role == Role.ETUDIANT) {
+            NavigationContext.loadContentInCenter("/evenement/EvenementsEtudiant.fxml");
+        } else {
+            NavigationContext.loadContentInCenter("/evenement/GestionEvenement.fxml");
+        }
     }
 
     @FXML

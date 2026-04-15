@@ -242,10 +242,12 @@ public class EvenementService implements ICrud<Evenement> {
     public static class EvenementAvecOrganisateurNom {
         private final Evenement evenement;
         private final String organisateurNom;
+        private int placesLibres;
 
         public EvenementAvecOrganisateurNom(Evenement evenement, String organisateurNom) {
             this.evenement = evenement;
             this.organisateurNom = organisateurNom;
+            this.placesLibres = -1; // -1 signifie illimité ou non calculé
         }
 
         public Evenement getEvenement() {
@@ -254,6 +256,14 @@ public class EvenementService implements ICrud<Evenement> {
 
         public String getOrganisateurNom() {
             return organisateurNom;
+        }
+
+        public int getPlacesLibres() {
+            return placesLibres;
+        }
+
+        public void setPlacesLibres(int placesLibres) {
+            this.placesLibres = placesLibres;
         }
 
         // Getters pour PropertyValueFactory

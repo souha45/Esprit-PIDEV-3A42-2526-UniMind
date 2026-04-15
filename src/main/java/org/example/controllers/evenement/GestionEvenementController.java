@@ -5,21 +5,19 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
-import javafx.stage.Stage;
 import org.example.entities.Evenement;
 import org.example.enums.Role;
-import org.example.enums.StatutEvenement;
 import org.example.services.EvenementService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
 import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 
@@ -48,6 +46,9 @@ public class GestionEvenementController {
 
     @FXML
     private TableColumn<EvenementService.EvenementAvecOrganisateurNom, String> colStatut;
+
+    @FXML
+    private TableColumn<EvenementService.EvenementAvecOrganisateurNom, String> colPlacesLibres;
 
     @FXML
     private TableColumn<EvenementService.EvenementAvecOrganisateurNom, Void> colActions;
@@ -138,6 +139,15 @@ public class GestionEvenementController {
         colOrganisateur.setCellValueFactory(new PropertyValueFactory<>("organisateurNom"));
         colStatut.setCellValueFactory(cellData ->
             new javafx.beans.property.SimpleStringProperty(cellData.getValue().getEvenement().getStatut().toString()));
+        colPlacesLibres.setCellValueFactory(cellData -> {
+            int placesLibres = cellData.getValue().getPlacesLibres();
+            int capaciteMax = cellData.getValue().getEvenement().getCapaciteMax();
+            if (placesLibres == -1) {
+                return new javafx.beans.property.SimpleStringProperty("Illimité");
+            } else {
+                return new javafx.beans.property.SimpleStringProperty(placesLibres + " / " + capaciteMax);
+            }
+        });
 
         // Configurer la colonne Actions avec boutons Voir/Modifier/Supprimer
         colActions.setCellFactory(param -> new TableCell<>() {
@@ -190,13 +200,39 @@ public class GestionEvenementController {
             // Charger les événements avec les noms des organisateurs
             for (Evenement e : evenementService.afficher()) {
                 String nomOrganisateur = evenementService.getNomOrganisateur(e.getOrganisateurId());
-                listeEvenements.add(new EvenementService.EvenementAvecOrganisateurNom(e, nomOrganisateur));
+                EvenementService.EvenementAvecOrganisateurNom evenementAvecNom = new EvenementService.EvenementAvecOrganisateurNom(e, nomOrganisateur);
+
+                // Calculer les places libres
+                int capaciteMax = e.getCapaciteMax();
+                int nombreInscrits = compterParticipations(e.getEvenementId());
+                int placesLibres = capaciteMax > 0 ? capaciteMax - nombreInscrits : -1; // -1 signifie illimité
+                evenementAvecNom.setPlacesLibres(placesLibres);
+
+                listeEvenements.add(evenementAvecNom);
             }
             tableEvenements.setItems(listeEvenements);
             lblTotal.setText(listeEvenements.size() + " événements");
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible de charger les événements: " + e.getMessage());
         }
+    }
+
+    /**
+     * Compte le nombre de participations pour un événement
+     * @param evenementId L'ID de l'événement
+     * @return Le nombre de participations
+     */
+    private int compterParticipations(int evenementId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM participation WHERE evenement_id = ?";
+        try (PreparedStatement ps = org.example.utils.MyDataBase_Unimind.getInstance().getConnection().prepareStatement(sql)) {
+            ps.setInt(1, evenementId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
     }
 
     @FXML
@@ -287,7 +323,6 @@ public class GestionEvenementController {
     private void retourAccueil(ActionEvent event) throws IOException {
         // Rediriger vers le dashboard selon le rôle de l'utilisateur connecté
         String fxmlPath;
-        String titre;
 
         org.example.enums.Role role = org.example.utils.SessionManager.getInstance().getCurrentUserRole()
                 .orElse(org.example.enums.Role.ETUDIANT);
@@ -295,37 +330,20 @@ public class GestionEvenementController {
         switch (role) {
             case ADMIN:
                 fxmlPath = "/evenement/AdminDashboard.fxml";
-                titre = "Dashboard Admin";
                 break;
             case RESPONSABLE_ETUDIANT:
                 fxmlPath = "/evenement/ResponsableDashboard.fxml";
-                titre = "Dashboard Responsable";
                 break;
             case ETUDIANT:
                 fxmlPath = "/evenement/EtudiantDashboard.fxml";
-                titre = "Dashboard Étudiant";
                 break;
             default:
                 fxmlPath = "/evenement/AccueilEvenement.fxml";
-                titre = "Accueil - Gestion des Événements";
                 break;
         }
 
         // Recharger le dashboard (qui affichera les statistiques par défaut)
         NavigationContext.loadContentInCenter(fxmlPath);
-    }
-
-    private void naviguerVersEcran(ActionEvent event, String fxmlPath, String titre) throws IOException {
-        var resource = getClass().getResource(fxmlPath);
-        if (resource == null) {
-            throw new IOException("Fichier FXML non trouvé: " + fxmlPath);
-        }
-        Parent root = FXMLLoader.load(resource);
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        Scene scene = new Scene(root, 1200, 800);
-        stage.setScene(scene);
-        stage.setTitle(titre);
-        stage.show();
     }
 
     private void afficherAlerte(String type, String message) {
