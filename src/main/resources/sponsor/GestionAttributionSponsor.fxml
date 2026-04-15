@@ -16,18 +16,20 @@
     <HBox spacing="16" alignment="CENTER_LEFT">
         <Label text="Gestion des Attributions de Sponsors" styleClass="label-subtitle"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="➕ Nouvelle Attribution" onAction="#ajouterAttribution" styleClass="button-primary"/>
+        <Button text="➕ Nouvelle Attribution" onAction="#ajouterAttribution" styleClass="btn-primary"/>
     </HBox>
 
     <HBox spacing="16" alignment="CENTER_LEFT">
-        <Label text="Rechercher:" styleClass="label-caption"/>
-        <TextField fx:id="txtRecherche" prefWidth="250" promptText="Événement, sponsor..." styleClass="text-field"/>
-        <Button text="🔍 Rechercher" onAction="#rechercherAttributions" styleClass="button-primary"/>
-        <Button text="🔄 Réinitialiser" onAction="#reinitialiserRecherche" styleClass="button-secondary"/>
+        <HBox styleClass="search-box" alignment="CENTER_LEFT" spacing="8">
+            <Label text="🔍" styleClass="search-icon"/>
+            <TextField fx:id="txtRecherche" prefWidth="250" promptText="Événement, sponsor..." styleClass="search-field" HBox.hgrow="ALWAYS"/>
+        </HBox>
+        <Button text="🔍 Rechercher" onAction="#rechercherAttributions" styleClass="btn-primary"/>
+        <Button text="🔄 Réinitialiser" onAction="#reinitialiserRecherche" styleClass="btn-secondary"/>
 
         <Region HBox.hgrow="ALWAYS"/>
 
-        <Label fx:id="lblTotal" text="Total : 0" styleClass="label-caption"/>
+        <Label fx:id="lblTotal" text="Total : 0" styleClass="form-label"/>
     </HBox>
 
     <TableView fx:id="tableAttributions" VBox.vgrow="ALWAYS" styleClass="table-view">

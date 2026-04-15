@@ -7,57 +7,58 @@
 <VBox spacing="15" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="org.example.controllers.sponsor.ModificationAttributionSponsorController"
-      style="-fx-background-color: #f5f5f5;">
+      stylesheets="@../styles/admin.css"
+      styleClass="dashboard-bg">
 
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
 
-    <Label text="Modifier l'Attribution de Sponsor" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+    <Label text="Modifier l'Attribution de Sponsor" styleClass="label-subtitle"/>
 
-    <VBox spacing="10">
-        <Label text="Événement *" style="-fx-font-weight: bold;"/>
-        <ComboBox fx:id="comboEvenement" promptText="Sélectionner un événement" style="-fx-background-color: white;"/>
-        <Label fx:id="lblErreurEvenement" text="Veuillez sélectionner un événement" style="-fx-text-fill: red; -fx-font-size: 11px;" visible="false"/>
+    <VBox spacing="8">
+        <Label text="Événement *" styleClass="form-label"/>
+        <ComboBox fx:id="comboEvenement" promptText="Sélectionner un événement" styleClass="form-input"/>
+        <Label fx:id="lblErreurEvenement" text="Veuillez sélectionner un événement" styleClass="error-label" visible="false"/>
     </VBox>
 
-    <VBox spacing="10">
-        <Label text="Sponsor *" style="-fx-font-weight: bold;"/>
-        <ComboBox fx:id="comboSponsor" promptText="Sélectionner un sponsor" style="-fx-background-color: white;"/>
-        <Label fx:id="lblErreurSponsor" text="Veuillez sélectionner un sponsor" style="-fx-text-fill: red; -fx-font-size: 11px;" visible="false"/>
+    <VBox spacing="8">
+        <Label text="Sponsor *" styleClass="form-label"/>
+        <ComboBox fx:id="comboSponsor" promptText="Sélectionner un sponsor" styleClass="form-input"/>
+        <Label fx:id="lblErreurSponsor" text="Veuillez sélectionner un sponsor" styleClass="error-label" visible="false"/>
     </VBox>
 
-    <VBox spacing="10">
-        <Label text="Montant de contribution (DT) *" style="-fx-font-weight: bold;"/>
-        <TextField fx:id="txtMontant" promptText="Ex: 5000" style="-fx-background-color: white;"/>
-        <Label fx:id="lblErreurMontant" text="Veuillez entrer un montant valide" style="-fx-text-fill: red; -fx-font-size: 11px;" visible="false"/>
+    <VBox spacing="8">
+        <Label text="Montant de contribution (DT) *" styleClass="form-label"/>
+        <TextField fx:id="txtMontant" promptText="Ex: 5000" styleClass="form-input"/>
+        <Label fx:id="lblErreurMontant" text="Veuillez entrer un montant valide" styleClass="error-label" visible="false"/>
     </VBox>
 
-    <VBox spacing="10">
-        <Label text="Type de contribution" style="-fx-font-weight: bold;"/>
-        <ComboBox fx:id="comboType" style="-fx-background-color: white;"/>
+    <VBox spacing="8">
+        <Label text="Type de contribution" styleClass="form-label"/>
+        <ComboBox fx:id="comboType" styleClass="form-input"/>
     </VBox>
 
-    <VBox spacing="10">
-        <Label text="Description" style="-fx-font-weight: bold;"/>
-        <TextArea fx:id="txtDescription" promptText="Description de la contribution (optionnel)" prefRowCount="3" style="-fx-background-color: white;"/>
+    <VBox spacing="8">
+        <Label text="Description" styleClass="form-label"/>
+        <TextArea fx:id="txtDescription" promptText="Description de la contribution (optionnel)" prefRowCount="3" styleClass="form-textarea"/>
     </VBox>
 
-    <VBox spacing="10">
-        <Label text="Date de contribution" style="-fx-font-weight: bold;"/>
-        <DatePicker fx:id="dateContribution" style="-fx-background-color: white;"/>
+    <VBox spacing="8">
+        <Label text="Date de contribution" styleClass="form-label"/>
+        <DatePicker fx:id="dateContribution" styleClass="form-input"/>
     </VBox>
 
-    <VBox spacing="10">
-        <Label text="Statut" style="-fx-font-weight: bold;"/>
-        <ComboBox fx:id="comboStatut" style="-fx-background-color: white;"/>
+    <VBox spacing="8">
+        <Label text="Statut" styleClass="form-label"/>
+        <ComboBox fx:id="comboStatut" styleClass="form-input"/>
     </VBox>
 
     <Label fx:id="lblSucces" text="Attribution modifiée avec succès !" style="-fx-text-fill: green; -fx-font-weight: bold;" visible="false"/>
 
     <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button text="Annuler" onAction="#annuler" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-padding: 8 20;"/>
-        <Button text="Enregistrer" onAction="#enregistrerModification" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20;"/>
+        <Button text="Annuler" onAction="#annuler" styleClass="btn-secondary"/>
+        <Button text="Enregistrer" onAction="#enregistrerModification" styleClass="btn-primary"/>
     </HBox>
 
 </VBox>

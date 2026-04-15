@@ -18,23 +18,25 @@
 
                         <Region HBox.hgrow="ALWAYS"/>
 
-                        <Button fx:id="btnAjouter" text="➕ Ajouter" onAction="#ajouterEvenement" styleClass="button-success"/>
+                        <Button fx:id="btnAjouter" text="➕ Ajouter" onAction="#ajouterEvenement" styleClass="btn-primary"/>
 
-                        <Button text="🔙 Retour" onAction="#retourAccueil" styleClass="button-secondary"/>
+                        <Button text="🔙 Retour" onAction="#retourAccueil" styleClass="btn-secondary"/>
                     </children>
                 </HBox>
 
                 <HBox spacing="16" alignment="CENTER_LEFT">
                     <children>
-                        <Label text="Rechercher:" styleClass="label-caption"/>
-                        <TextField fx:id="txtRecherche" prefWidth="250" promptText="Titre, lieu..." styleClass="text-field"/>
-                        <Button text="🔍 Rechercher" onAction="#rechercherEvenements" styleClass="button-primary"/>
-                        <Button text="🔄 Réinitialiser" onAction="#reinitialiserRecherche" styleClass="button-secondary"/>
+                        <HBox styleClass="search-box" alignment="CENTER_LEFT" spacing="8">
+                            <Label text="🔍" styleClass="search-icon"/>
+                            <TextField fx:id="txtRecherche" prefWidth="250" promptText="Titre, lieu..." styleClass="search-field" HBox.hgrow="ALWAYS"/>
+                        </HBox>
+                        <Button text="🔍 Rechercher" onAction="#rechercherEvenements" styleClass="btn-primary"/>
+                        <Button text="🔄 Réinitialiser" onAction="#reinitialiserRecherche" styleClass="btn-secondary"/>
 
                         <Region HBox.hgrow="ALWAYS"/>
 
-                        <Label text="Total:" styleClass="label-caption"/>
-                        <Label fx:id="lblTotal" text="0 événements" styleClass="label-caption"/>
+                        <Label text="Total:" styleClass="form-label"/>
+                        <Label fx:id="lblTotal" text="0 événements" styleClass="form-label"/>
                     </children>
                 </HBox>
             </children>
