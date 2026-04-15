@@ -200,7 +200,7 @@ public class ModificationSponsorController {
         if (telephone != null && !telephone.trim().isEmpty()) {
             if (!validerTelephone(telephone.trim())) {
                 lblErreurTelephone.setVisible(true);
-                erreurs.add("Telephone : doit contenir uniquement des chiffres");
+                erreurs.add("Telephone : doit contenir exactement 8 chiffres");
             }
         }
 
@@ -214,7 +214,7 @@ public class ModificationSponsorController {
         }
 
         if (!erreurs.isEmpty()) {
-            afficherErreur("Veuillez corriger les erreurs suivantes :\n- " + String.join("\n- ", erreurs));
+            afficherErreur("Le formulaire contient des erreurs. Vérifiez les champs marqués en rouge.");
             return false;
         }
 
@@ -222,14 +222,15 @@ public class ModificationSponsorController {
     }
 
     private boolean validerEmail(String email) {
-        Pattern pattern = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
+        // Validation plus robuste de l'email
+        Pattern pattern = Pattern.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
         return pattern.matcher(email).matches();
     }
 
     private boolean validerTelephone(String telephone) {
-        // Accepte uniquement des chiffres (avec ou sans espaces)
+        // Accepte uniquement des chiffres (avec ou sans espaces) et doit avoir exactement 8 chiffres
         String telephoneSansEspaces = telephone.replaceAll("\\s", "");
-        Pattern pattern = Pattern.compile("^[0-9]+$");
+        Pattern pattern = Pattern.compile("^[0-9]{8}$");
         return pattern.matcher(telephoneSansEspaces).matches();
     }
 

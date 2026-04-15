@@ -53,8 +53,8 @@
                     <VBox spacing="8">
                         <children>
                             <Label text="Téléphone" styleClass="form-label" />
-                            <TextField fx:id="txtTelephone" promptText="Numéro de téléphone (chiffres uniquement)" prefWidth="400" styleClass="form-input" />
-                            <Label fx:id="lblErreurTelephone" text="Le téléphone doit contenir uniquement des chiffres"
+                            <TextField fx:id="txtTelephone" promptText="Numéro de téléphone (8 chiffres)" prefWidth="400" styleClass="form-input" />
+                            <Label fx:id="lblErreurTelephone" text="Le téléphone doit contenir exactement 8 chiffres"
                                    styleClass="error-label" visible="false" />
                         </children>
                     </VBox>

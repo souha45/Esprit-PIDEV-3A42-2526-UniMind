@@ -78,7 +78,15 @@ public class AjoutEvenementController {
     @FXML
     private Label lblErreurUnicite;
     @FXML
+    private Label lblErreurDateDebut;
+    @FXML
+    private Label lblErreurDateDebutPasse;
+    @FXML
+    private Label lblErreurDateFin;
+    @FXML
     private Label lblErreurDates;
+    @FXML
+    private Label lblErreurDateLimiteIncoherence;
     @FXML
     private Label lblErreurDateLimite;
     @FXML
@@ -207,12 +215,15 @@ public class AjoutEvenementController {
             // Afficher le message de succès
             lblSucces.setVisible(true);
 
-            // Réinitialiser le formulaire après un court délai
+            // Rediriger vers la page de gestion des événements après un court délai
             Timeline timeline = new Timeline(new KeyFrame(
-                    Duration.seconds(2),
+                    Duration.seconds(1),
                     ae -> {
-                        lblSucces.setVisible(false);
-                        reinitialiserFormulaire();
+                        try {
+                            NavigationContext.loadContentInCenter("/evenement/GestionEvenement.fxml");
+                        } catch (IOException e) {
+                            System.err.println("Erreur lors de la navigation : " + e.getMessage());
+                        }
                     }
             ));
             timeline.play();
@@ -311,9 +322,11 @@ public class AjoutEvenementController {
         LocalDate dateFinValue = dateFin.getValue();
 
         if (dateDebutValue == null) {
+            lblErreurDateDebut.setVisible(true);
             erreurs.add("Date de début : obligatoire");
         }
         if (dateFinValue == null) {
+            lblErreurDateFin.setVisible(true);
             erreurs.add("Date de fin : obligatoire");
         }
 
@@ -323,6 +336,17 @@ public class AjoutEvenementController {
                 lblErreurHeureDebut.setVisible(true);
             }
             erreurs.add("Heure de début : format HH:mm");
+        }
+
+        // Vérifier que la date de début n'est pas dans le passé
+        if (dateDebutValue != null && heureDebut != null) {
+            LocalDateTime debut = LocalDateTime.of(dateDebutValue, heureDebut);
+            if (debut.isBefore(LocalDateTime.now())) {
+                if (lblErreurDateDebutPasse != null) {
+                    lblErreurDateDebutPasse.setVisible(true);
+                }
+                erreurs.add("Date de début : ne peut pas être dans le passé");
+            }
         }
 
         LocalTime heureFin = parseHeure(txtHeureFin != null ? txtHeureFin.getText() : null);
@@ -363,6 +387,9 @@ public class AjoutEvenementController {
 
         if (limiteDateRenseignee ^ limiteHeureRenseignee) {
             // xor => un seul des deux est renseigné
+            if (lblErreurDateLimiteIncoherence != null) {
+                lblErreurDateLimiteIncoherence.setVisible(true);
+            }
             erreurs.add("Date limite : renseigne la date ET l'heure, ou laisse les deux vides");
         }
 
@@ -376,7 +403,7 @@ public class AjoutEvenementController {
         }
 
         if (!erreurs.isEmpty()) {
-            afficherErreur("Veuillez corriger les erreurs suivantes :\n- " + String.join("\n- ", erreurs));
+            afficherErreur("Le formulaire contient des erreurs. Vérifiez les champs marqués en rouge.");
             return false;
         }
 
@@ -490,7 +517,15 @@ public class AjoutEvenementController {
     private void cacherErreurs() {
         lblErreurTitre.setVisible(false);
         lblErreurUnicite.setVisible(false);
+        lblErreurDateDebut.setVisible(false);
+        if (lblErreurDateDebutPasse != null) {
+            lblErreurDateDebutPasse.setVisible(false);
+        }
+        lblErreurDateFin.setVisible(false);
         lblErreurDates.setVisible(false);
+        if (lblErreurDateLimiteIncoherence != null) {
+            lblErreurDateLimiteIncoherence.setVisible(false);
+        }
         lblErreurDateLimite.setVisible(false);
         if (lblErreurHeureDebut != null) {
             lblErreurHeureDebut.setVisible(false);

@@ -164,7 +164,7 @@ public class ModificationParticipationController {
         }
 
         if (!erreurs.isEmpty()) {
-            afficherErreur("Veuillez corriger les erreurs suivantes :\n- " + String.join("\n- ", erreurs));
+            afficherErreur("Le formulaire contient des erreurs. Vérifiez les champs marqués en rouge.");
             return false;
         }
 

@@ -57,6 +57,8 @@ public class VoirEvenementController {
     @FXML
     private Button btnParticiper;
     @FXML
+    private Label lblDejaInscrit;
+    @FXML
     private Button btnFavori;
 
     public void setEvenement(Evenement evenement) {
@@ -123,7 +125,15 @@ public class VoirEvenementController {
 
         // Pour les étudiants : afficher les boutons Participer et Favori
         if (estEtudiant) {
-            btnParticiper.setVisible(true);
+            // Vérifier si l'étudiant est déjà inscrit
+            boolean dejaInscrit = estDejaInscrit(currentUserId);
+            if (dejaInscrit) {
+                btnParticiper.setVisible(false);
+                lblDejaInscrit.setVisible(true);
+            } else {
+                btnParticiper.setVisible(true);
+                lblDejaInscrit.setVisible(false);
+            }
             btnFavori.setVisible(true);
             btnModifier.setVisible(false);
             btnSupprimer.setVisible(false);
@@ -133,6 +143,7 @@ public class VoirEvenementController {
         // Pour les responsables : vérifier si l'événement leur appartient
         if (role == Role.RESPONSABLE_ETUDIANT) {
             btnParticiper.setVisible(false);
+            lblDejaInscrit.setVisible(false);
             btnFavori.setVisible(false);
             btnModifier.setVisible(estOrganisateur);
             btnSupprimer.setVisible(estOrganisateur);
@@ -142,9 +153,19 @@ public class VoirEvenementController {
         // Si admin, toujours afficher les boutons Modifier et Supprimer
         if (isAdmin) {
             btnParticiper.setVisible(false);
+            lblDejaInscrit.setVisible(false);
             btnFavori.setVisible(false);
             btnModifier.setVisible(true);
             btnSupprimer.setVisible(true);
+        }
+    }
+
+    private boolean estDejaInscrit(int etudiantId) {
+        try {
+            ParticipationService participationService = new ParticipationService();
+            return participationService.verifierUnicite(evenementCourant.getEvenementId(), etudiantId);
+        } catch (SQLException e) {
+            return false;
         }
     }
 
@@ -225,6 +246,13 @@ public class VoirEvenementController {
             }
 
             FavoriService favoriService = new FavoriService();
+
+            // Vérifier si l'événement est déjà dans les favoris
+            if (favoriService.verifierUnicite(evenementCourant.getEvenementId(), currentUserId)) {
+                afficherAlerte("Information", "Cet événement est déjà dans vos favoris");
+                return;
+            }
+
             org.example.entities.Favori favori = new org.example.entities.Favori();
             favori.setEvenementId(evenementCourant.getEvenementId());
             favori.setEtudiantId(currentUserId);

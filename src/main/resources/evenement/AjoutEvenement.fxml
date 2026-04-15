@@ -69,6 +69,8 @@
                                     <TextField fx:id="txtHeureDebut" promptText="Heure (HH:mm)" prefWidth="140" styleClass="form-input" />
                                 </children>
                             </HBox>
+                            <Label fx:id="lblErreurDateDebut" text="La date de début est obligatoire" styleClass="error-label" visible="false" />
+                            <Label fx:id="lblErreurDateDebutPasse" text="La date de début ne peut pas être dans le passé" styleClass="error-label" visible="false" />
                             <Label fx:id="lblErreurHeureDebut" text="Heure de début invalide (HH:mm)" styleClass="error-label" visible="false" />
                         </children>
                     </VBox>
@@ -82,6 +84,7 @@
                                     <TextField fx:id="txtHeureFin" promptText="Heure (HH:mm)" prefWidth="140" styleClass="form-input" />
                                 </children>
                             </HBox>
+                            <Label fx:id="lblErreurDateFin" text="La date de fin est obligatoire" styleClass="error-label" visible="false" />
                             <Label fx:id="lblErreurHeureFin" text="Heure de fin invalide (HH:mm)" styleClass="error-label" visible="false" />
                             <Label fx:id="lblErreurDates" text="La date/heure de fin doit être après la date/heure de début" styleClass="error-label" visible="false" />
                         </children>
@@ -97,6 +100,7 @@
                                 </children>
                             </HBox>
                             <Label fx:id="lblErreurHeureLimite" text="Heure limite invalide (HH:mm)" styleClass="error-label" visible="false" />
+                            <Label fx:id="lblErreurDateLimiteIncoherence" text="Renseignez la date ET l'heure, ou laissez les deux vides" styleClass="error-label" visible="false" />
                             <Label fx:id="lblErreurDateLimite" text="La date/heure limite doit être avant la date/heure de début" styleClass="error-label" visible="false" />
                         </children>
                     </VBox>

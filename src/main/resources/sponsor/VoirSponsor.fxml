@@ -34,7 +34,7 @@
                     <VBox spacing="5" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                         <children>
                             <Label text="Nom du sponsor" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                            <Label fx:id="lblNom" text="-" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+                            <Label fx:id="lblNom" text="-" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #000000;" />
                         </children>
                     </VBox>
 
@@ -44,7 +44,7 @@
                             <VBox spacing="5" prefWidth="200" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                                 <children>
                                     <Label text="Type" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                                    <Label fx:id="lblType" text="-" style="-fx-font-size: 14px;" />
+                                    <Label fx:id="lblType" text="-" style="-fx-font-size: 14px; -fx-text-fill: #000000;" />
                                 </children>
                             </VBox>
 
@@ -52,7 +52,7 @@
                             <VBox spacing="5" prefWidth="200" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                                 <children>
                                     <Label text="Statut" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                                    <Label fx:id="lblStatut" text="-" style="-fx-font-size: 14px;" />
+                                    <Label fx:id="lblStatut" text="-" style="-fx-font-size: 14px; -fx-text-fill: #000000;" />
                                 </children>
                             </VBox>
                         </children>
@@ -64,7 +64,7 @@
                             <VBox spacing="5" prefWidth="250" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                                 <children>
                                     <Label text="Téléphone" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                                    <Label fx:id="lblTelephone" text="-" style="-fx-font-size: 14px;" />
+                                    <Label fx:id="lblTelephone" text="-" style="-fx-font-size: 14px; -fx-text-fill: #000000;" />
                                 </children>
                             </VBox>
 
@@ -72,7 +72,7 @@
                             <VBox spacing="5" prefWidth="250" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                                 <children>
                                     <Label text="Email" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                                    <Label fx:id="lblEmail" text="-" style="-fx-font-size: 14px;" />
+                                    <Label fx:id="lblEmail" text="-" style="-fx-font-size: 14px; -fx-text-fill: #000000;" />
                                 </children>
                             </VBox>
                         </children>
@@ -82,7 +82,7 @@
                     <VBox spacing="5" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                         <children>
                             <Label text="Site web" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                            <Label fx:id="lblSiteWeb" text="-" style="-fx-font-size: 14px;" />
+                            <Label fx:id="lblSiteWeb" text="-" style="-fx-font-size: 14px; -fx-text-fill: #000000;" />
                         </children>
                     </VBox>
 
@@ -90,7 +90,7 @@
                     <VBox spacing="5" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                         <children>
                             <Label text="Domaine d'activité" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                            <Label fx:id="lblDomaine" text="-" style="-fx-font-size: 14px;" />
+                            <Label fx:id="lblDomaine" text="-" style="-fx-font-size: 14px; -fx-text-fill: #000000;" />
                         </children>
                     </VBox>
 
@@ -98,7 +98,7 @@
                     <VBox spacing="5" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                         <children>
                             <Label text="Adresse" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                            <TextArea fx:id="txtAdresse" prefRowCount="3" prefWidth="700" wrapText="true" editable="false" style="-fx-background-color: transparent; -fx-border-color: transparent;" />
+                            <TextArea fx:id="txtAdresse" prefRowCount="3" prefWidth="700" wrapText="true" editable="false" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-text-fill: #000000;" />
                         </children>
                     </VBox>
 

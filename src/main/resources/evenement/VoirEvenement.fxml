@@ -34,7 +34,7 @@
                     <VBox spacing="5" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                         <children>
                             <Label text="Titre" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                            <Label fx:id="lblTitre" text="-" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+                            <Label fx:id="lblTitre" text="-" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #000000;" />
                         </children>
                     </VBox>
 
@@ -44,7 +44,7 @@
                             <VBox spacing="5" prefWidth="200" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                                 <children>
                                     <Label text="Type" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                                    <Label fx:id="lblType" text="-" style="-fx-font-size: 14px;" />
+                                    <Label fx:id="lblType" text="-" style="-fx-font-size: 14px; -fx-text-fill: #000000;" />
                                 </children>
                             </VBox>
 
@@ -52,7 +52,7 @@
                             <VBox spacing="5" prefWidth="200" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                                 <children>
                                     <Label text="Statut" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                                    <Label fx:id="lblStatut" text="-" style="-fx-font-size: 14px;" />
+                                    <Label fx:id="lblStatut" text="-" style="-fx-font-size: 14px; -fx-text-fill: #000000;" />
                                 </children>
                             </VBox>
 
@@ -60,7 +60,7 @@
                             <VBox spacing="5" prefWidth="200" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                                 <children>
                                     <Label text="Capacité" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                                    <Label fx:id="lblCapacite" text="-" style="-fx-font-size: 14px;" />
+                                    <Label fx:id="lblCapacite" text="-" style="-fx-font-size: 14px; -fx-text-fill: #000000;" />
                                 </children>
                             </VBox>
                         </children>
@@ -72,7 +72,7 @@
                             <VBox spacing="5" prefWidth="250" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                                 <children>
                                     <Label text="Date de début" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                                    <Label fx:id="lblDateDebut" text="-" style="-fx-font-size: 14px;" />
+                                    <Label fx:id="lblDateDebut" text="-" style="-fx-font-size: 14px; -fx-text-fill: #000000;" />
                                 </children>
                             </VBox>
 
@@ -80,7 +80,7 @@
                             <VBox spacing="5" prefWidth="250" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                                 <children>
                                     <Label text="Date de fin" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                                    <Label fx:id="lblDateFin" text="-" style="-fx-font-size: 14px;" />
+                                    <Label fx:id="lblDateFin" text="-" style="-fx-font-size: 14px; -fx-text-fill: #000000;" />
                                 </children>
                             </VBox>
                         </children>
@@ -90,7 +90,7 @@
                     <VBox spacing="5" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                         <children>
                             <Label text="Lieu" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                            <Label fx:id="lblLieu" text="-" style="-fx-font-size: 14px;" />
+                            <Label fx:id="lblLieu" text="-" style="-fx-font-size: 14px; -fx-text-fill: #000000;" />
                         </children>
                     </VBox>
 
@@ -98,7 +98,7 @@
                     <VBox spacing="5" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                         <children>
                             <Label text="Description" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                            <TextArea fx:id="txtDescription" prefRowCount="4" prefWidth="700" wrapText="true" editable="false" style="-fx-background-color: transparent; -fx-border-color: transparent;" />
+                            <TextArea fx:id="txtDescription" prefRowCount="4" prefWidth="700" wrapText="true" editable="false" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-text-fill: #000000;" />
                         </children>
                     </VBox>
 
@@ -106,7 +106,7 @@
                     <VBox spacing="5" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
                         <children>
                             <Label text="Organisateur" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
-                            <Label fx:id="lblOrganisateur" text="-" style="-fx-font-size: 14px;" />
+                            <Label fx:id="lblOrganisateur" text="-" style="-fx-font-size: 14px; -fx-text-fill: #000000;" />
                         </children>
                     </VBox>
 
@@ -114,6 +114,7 @@
                     <HBox spacing="10" alignment="CENTER" style="-fx-padding: 20;">
                         <children>
                             <Button fx:id="btnParticiper" text="🎯 Participer" onAction="#participer" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 150;" visible="false" />
+                            <Label fx:id="lblDejaInscrit" text="✅ Vous êtes déjà inscrit" style="-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px;" visible="false" />
                             <Button fx:id="btnFavori" text="⭐ Ajouter aux favoris" onAction="#ajouterFavori" style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 180;" visible="false" />
                             <Button fx:id="btnModifier" text="✏️ Modifier" onAction="#modifier" style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 150;" />
                             <Button fx:id="btnSupprimer" text="❌ Supprimer" onAction="#supprimer" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 150;" />
