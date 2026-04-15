@@ -48,6 +48,8 @@ public class AjoutAttributionSponsorController {
     @FXML
     private Label lblErreurMontant;
     @FXML
+    private Label lblErreurDateContribution;
+    @FXML
     private Label lblSucces;
 
     private final EvenementSponsorService attributionService = new EvenementSponsorService();
@@ -167,10 +169,7 @@ public class AjoutAttributionSponsorController {
             valide = false;
         }
 
-        if (txtMontant.getText() == null || txtMontant.getText().trim().isEmpty()) {
-            lblErreurMontant.setVisible(true);
-            valide = false;
-        } else {
+        if (txtMontant.getText() != null && !txtMontant.getText().trim().isEmpty()) {
             try {
                 new BigDecimal(txtMontant.getText().trim());
             } catch (NumberFormatException e) {
@@ -179,13 +178,23 @@ public class AjoutAttributionSponsorController {
             }
         }
 
+        // Vérifier que la date de contribution n'est pas dans le passé
+        LocalDate dateContributionValue = dateContribution.getValue();
+        if (dateContributionValue != null && dateContributionValue.isBefore(LocalDate.now())) {
+            lblErreurDateContribution.setVisible(true);
+            valide = false;
+        }
+
         return valide;
     }
 
     private org.example.entities.EvenementSponsor creerAttribution() {
         EvenementInfo evenement = comboEvenement.getValue();
         SponsorInfo sponsor = comboSponsor.getValue();
-        BigDecimal montant = new BigDecimal(txtMontant.getText().trim());
+        BigDecimal montant = null;
+        if (txtMontant.getText() != null && !txtMontant.getText().trim().isEmpty()) {
+            montant = new BigDecimal(txtMontant.getText().trim());
+        }
         TypeContribution type = comboType.getValue();
         String description = txtDescription.getText() != null ? txtDescription.getText().trim() : null;
         LocalDate date = dateContribution.getValue();
@@ -208,6 +217,7 @@ public class AjoutAttributionSponsorController {
         lblErreurEvenement.setVisible(false);
         lblErreurSponsor.setVisible(false);
         lblErreurMontant.setVisible(false);
+        lblErreurDateContribution.setVisible(false);
     }
 
     private void afficherErreur(String message) {

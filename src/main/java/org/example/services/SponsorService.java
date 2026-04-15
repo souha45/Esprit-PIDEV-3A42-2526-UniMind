@@ -72,10 +72,26 @@ public class SponsorService implements ICrud<Sponsor> {
 
     @Override
     public void supprimer(int id) throws SQLException {
-        String sql = "DELETE FROM sponsor WHERE sponsor_id=?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        System.out.println("Suppression du sponsor ID: " + id + " avec cascade delete");
+
+        // Supprimer d'abord les attributions sponsors liées au sponsor
+        String sqlAttributions = "DELETE FROM evenement_sponsor WHERE sponsor_id=?";
+        try (PreparedStatement ps = connection.prepareStatement(sqlAttributions)) {
             ps.setInt(1, id);
             ps.executeUpdate();
+            System.out.println("Attributions liees au sponsor ID " + id + " supprimees");
+        }
+
+        // Supprimer le sponsor lui-même
+        String sqlSponsor = "DELETE FROM sponsor WHERE sponsor_id=?";
+        try (PreparedStatement ps = connection.prepareStatement(sqlSponsor)) {
+            ps.setInt(1, id);
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("Sponsor ID " + id + " supprime avec succes (cascade delete effectue)");
+            } else {
+                System.out.println("Aucun sponsor trouve avec l'ID: " + id);
+            }
         }
     }
 

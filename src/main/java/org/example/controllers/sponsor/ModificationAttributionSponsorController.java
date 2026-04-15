@@ -49,6 +49,8 @@ public class ModificationAttributionSponsorController {
     @FXML
     private Label lblErreurMontant;
     @FXML
+    private Label lblErreurDateContribution;
+    @FXML
     private Label lblSucces;
 
     private final EvenementSponsorService attributionService = new EvenementSponsorService();
@@ -92,6 +94,8 @@ public class ModificationAttributionSponsorController {
             // Remplir les autres champs
             if (attribution.getMontantContribution() != null) {
                 txtMontant.setText(attribution.getMontantContribution().toString());
+            } else {
+                txtMontant.setText("");
             }
             comboType.setValue(attribution.getTypeContribution());
             txtDescription.setText(attribution.getDescriptionContribution());
@@ -153,7 +157,10 @@ public class ModificationAttributionSponsorController {
             // Mettre à jour l'attribution existante
             EvenementInfo evenement = comboEvenement.getValue();
             SponsorInfo sponsor = comboSponsor.getValue();
-            BigDecimal montant = new BigDecimal(txtMontant.getText().trim());
+            BigDecimal montant = null;
+            if (txtMontant.getText() != null && !txtMontant.getText().trim().isEmpty()) {
+                montant = new BigDecimal(txtMontant.getText().trim());
+            }
             TypeContribution type = comboType.getValue();
             String description = txtDescription.getText() != null ? txtDescription.getText().trim() : null;
             LocalDate date = dateContribution.getValue();
@@ -205,16 +212,20 @@ public class ModificationAttributionSponsorController {
             valide = false;
         }
 
-        if (txtMontant.getText() == null || txtMontant.getText().trim().isEmpty()) {
-            lblErreurMontant.setVisible(true);
-            valide = false;
-        } else {
+        if (txtMontant.getText() != null && !txtMontant.getText().trim().isEmpty()) {
             try {
                 new BigDecimal(txtMontant.getText().trim());
             } catch (NumberFormatException e) {
                 lblErreurMontant.setVisible(true);
                 valide = false;
             }
+        }
+
+        // Vérifier que la date de contribution n'est pas dans le passé
+        LocalDate dateContributionValue = dateContribution.getValue();
+        if (dateContributionValue != null && dateContributionValue.isBefore(LocalDate.now())) {
+            lblErreurDateContribution.setVisible(true);
+            valide = false;
         }
 
         return valide;
@@ -224,6 +235,7 @@ public class ModificationAttributionSponsorController {
         lblErreurEvenement.setVisible(false);
         lblErreurSponsor.setVisible(false);
         lblErreurMontant.setVisible(false);
+        lblErreurDateContribution.setVisible(false);
     }
 
     private void afficherErreur(String message) {

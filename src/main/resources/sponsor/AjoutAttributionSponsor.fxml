@@ -29,7 +29,7 @@
     </VBox>
 
     <VBox spacing="8">
-        <Label text="Montant de contribution (DT) *" styleClass="form-label"/>
+        <Label text="Montant de contribution (DT)" styleClass="form-label"/>
         <TextField fx:id="txtMontant" promptText="Ex: 5000" styleClass="form-input"/>
         <Label fx:id="lblErreurMontant" text="Veuillez entrer un montant valide" styleClass="error-label" visible="false"/>
     </VBox>
@@ -47,6 +47,7 @@
     <VBox spacing="8">
         <Label text="Date de contribution" styleClass="form-label"/>
         <DatePicker fx:id="dateContribution" styleClass="form-input"/>
+        <Label fx:id="lblErreurDateContribution" text="La date de contribution ne peut pas être dans le passé" styleClass="error-label" visible="false"/>
     </VBox>
 
     <VBox spacing="8">

@@ -99,13 +99,39 @@ public class EvenementService implements ICrud<Evenement> {
 
     @Override
     public void supprimer(int id) throws SQLException {
-        System.out.println("Suppression de l'evenement ID: " + id);
-        String sql = "DELETE FROM evenement WHERE evenement_id=?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        System.out.println("Suppression de l'evenement ID: " + id + " avec cascade delete");
+
+        // Supprimer d'abord les participations liées à l'événement
+        String sqlParticipations = "DELETE FROM participation WHERE evenement_id=?";
+        try (PreparedStatement ps = connection.prepareStatement(sqlParticipations)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+            System.out.println("Participations liees a l'evenement ID " + id + " supprimees");
+        }
+
+        // Supprimer les favoris liés à l'événement
+        String sqlFavoris = "DELETE FROM favori WHERE evenement_id=?";
+        try (PreparedStatement ps = connection.prepareStatement(sqlFavoris)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+            System.out.println("Favoris lies a l'evenement ID " + id + " supprimes");
+        }
+
+        // Supprimer les attributions sponsors liées à l'événement
+        String sqlAttributions = "DELETE FROM evenement_sponsor WHERE evenement_id=?";
+        try (PreparedStatement ps = connection.prepareStatement(sqlAttributions)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+            System.out.println("Attributions sponsors liees a l'evenement ID " + id + " supprimees");
+        }
+
+        // Supprimer l'événement lui-même
+        String sqlEvenement = "DELETE FROM evenement WHERE evenement_id=?";
+        try (PreparedStatement ps = connection.prepareStatement(sqlEvenement)) {
             ps.setInt(1, id);
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println("Evenement ID " + id + " supprime avec succes");
+                System.out.println("Evenement ID " + id + " supprime avec succes (cascade delete effectue)");
             } else {
                 System.out.println("Aucun evenement trouve avec l'ID: " + id);
             }
