@@ -235,8 +235,9 @@ public class ModificationSponsorController {
     }
 
     private boolean validerUrl(String url) {
-        // Validation basique d'URL
-        Pattern pattern = Pattern.compile("^(http|https)://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/.*)?$");
+        // Validation plus robuste d'URL
+        // Accepte: http://example.com, https://example.com, http://www.example.com, https://sub.example.com/path
+        Pattern pattern = Pattern.compile("^(http|https)://(?:www\\.)?[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(?::\\d+)?(?:/.*)?$");
         return pattern.matcher(url).matches();
     }
 

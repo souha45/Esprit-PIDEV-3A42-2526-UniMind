@@ -65,7 +65,7 @@
                         <children>
                             <Label text="Site web" styleClass="form-label" />
                             <TextField fx:id="txtSiteWeb" promptText="https://..." prefWidth="400" styleClass="form-input" />
-                            <Label fx:id="lblErreurSiteWeb" text="Le site web doit être une URL valide"
+                            <Label fx:id="lblErreurSiteWeb" text="Format attendu: https://www.exemple.com"
                                    styleClass="error-label" visible="false" />
                         </children>
                     </VBox>
