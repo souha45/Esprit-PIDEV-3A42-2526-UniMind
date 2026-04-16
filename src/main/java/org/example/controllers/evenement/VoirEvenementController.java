@@ -82,6 +82,24 @@ public class VoirEvenementController {
     @FXML
     private Label lblAucunAvis;
 
+    @FXML
+    private void initialize() {
+        lierManagedAuVisible(btnParticiper);
+        lierManagedAuVisible(lblDejaInscrit);
+        lierManagedAuVisible(btnFavori);
+        lierManagedAuVisible(btnLaisserAvis);
+        lierManagedAuVisible(lblAvisDonne);
+        lierManagedAuVisible(btnModifier);
+        lierManagedAuVisible(btnSupprimer);
+    }
+
+    private void lierManagedAuVisible(javafx.scene.Node node) {
+        if (node == null) {
+            return;
+        }
+        node.managedProperty().bind(node.visibleProperty());
+    }
+
     public void setEvenement(Evenement evenement) {
         // Recharger l'événement depuis la base de données pour s'assurer que toutes les données sont complètes
         try {

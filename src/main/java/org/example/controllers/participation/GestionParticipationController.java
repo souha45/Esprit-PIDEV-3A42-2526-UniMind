@@ -17,7 +17,13 @@ import org.example.utils.SessionManager;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.enums.StatutParticipation;
+import org.example.services.EvenementService;
 
 public class GestionParticipationController {
 
@@ -52,15 +58,46 @@ public class GestionParticipationController {
     @FXML
     private Button btnAjouter;
 
+    // Filtres avancés
+    @FXML
+    private ComboBox<StatutParticipation> comboStatut;
+
+    @FXML
+    private ComboBox<String> comboEvenement;
+
+
+    @FXML
+    private DatePicker dateDu;
+
+    @FXML
+    private DatePicker dateAu;
+
+    // Statistiques
+    @FXML
+    private Label lblStatutConfirme;
+
+    @FXML
+    private Label lblStatutEnAttente;
+
+    @FXML
+    private Label lblStatutAnnule;
+
+    @FXML
+    private Label lblTotalParticipations;
+
     private ParticipationService participationService;
+    private EvenementService evenementService;
     private ObservableList<ParticipationService.ParticipationAvecNoms> listeParticipations;
+    private ObservableList<ParticipationService.ParticipationAvecNoms> listeFiltree;
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @FXML
     public void initialize() {
         participationService = new ParticipationService();
+        evenementService = new EvenementService();
         listeParticipations = FXCollections.observableArrayList();
+        listeFiltree = FXCollections.observableArrayList();
 
         // Vérifier si l'utilisateur est un étudiant
         Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ETUDIANT);
@@ -78,8 +115,51 @@ public class GestionParticipationController {
             colDateEvenement.setVisible(false);
         }
 
+        // Initialiser les filtres
+        initialiserFiltres();
+        
         configurerColonnes();
+        configurerColorationLignes();
         chargerParticipations();
+    }
+
+    private void configurerColorationLignes() {
+        tableParticipations.setRowFactory(tv -> new javafx.scene.control.TableRow<>() {
+            @Override
+            protected void updateItem(ParticipationService.ParticipationAvecNoms participation, boolean empty) {
+                super.updateItem(participation, empty);
+                if (empty || participation == null) {
+                    setStyle("");
+                } else {
+                    switch (participation.getStatut()) {
+                        case EN_ATTENTE:
+                        case ANNULE:
+                            setStyle("-fx-background-color: #ffebee;");
+                            break;
+                        default:
+                            setStyle("");
+                    }
+                }
+            }
+        });
+    }
+
+    private void initialiserFiltres() {
+        // Initialiser le combo des statuts
+        comboStatut.getItems().addAll(null, StatutParticipation.EN_ATTENTE, StatutParticipation.CONFIRME, StatutParticipation.ANNULE);
+        comboStatut.setValue(null);
+
+        // Initialiser le combo des événements
+        try {
+            comboEvenement.getItems().clear();
+            comboEvenement.getItems().add("Tous les événements");
+            for (var evenement : evenementService.afficher()) {
+                comboEvenement.getItems().add(evenement.getTitre());
+            }
+            comboEvenement.setValue("Tous les événements");
+        } catch (SQLException e) {
+            System.err.println("Erreur lors du chargement des événements: " + e.getMessage());
+        }
     }
 
     private void configurerColonnes() {
@@ -163,11 +243,39 @@ public class GestionParticipationController {
                 listeParticipations.addAll(participationService.afficherAvecNoms());
             }
 
-            tableParticipations.setItems(listeParticipations);
-            lblTotal.setText(listeParticipations.size() + " participations");
+            listeFiltree.clear();
+            listeFiltree.addAll(listeParticipations);
+            tableParticipations.setItems(listeFiltree);
+            calculerStatistiques();
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible de charger les participations: " + e.getMessage());
         }
+    }
+
+    private void calculerStatistiques() {
+        int confirmes = 0;
+        int enAttente = 0;
+        int annulees = 0;
+
+        for (ParticipationService.ParticipationAvecNoms participation : listeFiltree) {
+            switch (participation.getStatut()) {
+                case CONFIRME:
+                    confirmes++;
+                    break;
+                case EN_ATTENTE:
+                    enAttente++;
+                    break;
+                case ANNULE:
+                    annulees++;
+                    break;
+            }
+        }
+
+        lblStatutConfirme.setText(confirmes + " confirmées");
+        lblStatutEnAttente.setText(enAttente + " en attente");
+        lblStatutAnnule.setText(annulees + " annulées");
+        lblTotalParticipations.setText(listeFiltree.size() + " participations");
+        lblTotal.setText(listeFiltree.size() + " participations");
     }
 
     @FXML
@@ -188,15 +296,61 @@ public class GestionParticipationController {
 
         for (ParticipationService.ParticipationAvecNoms participation : listeParticipations) {
             if (participation.getEvenementTitre().toLowerCase().contains(recherche) ||
-                participation.getEtudiantNom().toLowerCase().contains(recherche) ||
-                participation.getOrganisateurNom().toLowerCase().contains(recherche) ||
-                participation.getStatut().toString().toLowerCase().contains(recherche)) {
+                participation.getEtudiantNom().toLowerCase().contains(recherche)) {
                 resultats.add(participation);
             }
         }
 
-        tableParticipations.setItems(resultats);
-        lblTotal.setText(resultats.size() + " participations (filtrées)");
+        listeFiltree.clear();
+        listeFiltree.addAll(resultats);
+        tableParticipations.setItems(listeFiltree);
+        calculerStatistiques();
+    }
+
+    @FXML
+    private void appliquerFiltres(ActionEvent event) {
+        List<ParticipationService.ParticipationAvecNoms> resultats = new ArrayList<>(listeParticipations);
+
+        // Filtrer par statut
+        StatutParticipation statut = comboStatut.getValue();
+        if (statut != null) {
+            resultats.removeIf(p -> p.getStatut() != statut);
+        }
+
+        // Filtrer par événement
+        String evenement = comboEvenement.getValue();
+        if (evenement != null && !evenement.equals("Tous les événements")) {
+            resultats.removeIf(p -> !p.getEvenementTitre().equals(evenement));
+        }
+
+
+        // Filtrer par dates
+        LocalDate du = dateDu.getValue();
+        LocalDate au = dateAu.getValue();
+        if (du != null || au != null) {
+            resultats.removeIf(p -> {
+                LocalDate dateInscription = p.getDateInscription().toLocalDateTime().toLocalDate();
+                if (du != null && dateInscription.isBefore(du)) return true;
+                if (au != null && dateInscription.isAfter(au)) return true;
+                return false;
+            });
+        }
+
+        listeFiltree.clear();
+        listeFiltree.addAll(resultats);
+        tableParticipations.setItems(listeFiltree);
+        calculerStatistiques();
+    }
+
+    @FXML
+    private void reinitialiserFiltres(ActionEvent event) {
+        comboStatut.setValue(null);
+        comboEvenement.setValue("Tous les événements");
+        txtEtudiant.clear();
+        dateDu.setValue(null);
+        dateAu.setValue(null);
+        txtRecherche.clear();
+        chargerParticipations();
     }
 
     @FXML
