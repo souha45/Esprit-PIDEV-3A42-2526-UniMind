@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.controllers.favori.FavorisEtudiantController"
+      stylesheets="@../styles/etudiant.css"
+      spacing="16" styleClass="etudiant-content" maxWidth="Infinity">
+
+    <children>
+        <VBox spacing="12" styleClass="etudiant-page" maxWidth="Infinity">
+            <children>
+                <VBox spacing="6" styleClass="page-header">
+                    <children>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <children>
+                                <Label text="Mes Favoris" styleClass="page-title" />
+                                <Label text="UniMind" styleClass="page-title-accent" />
+                            </children>
+                        </HBox>
+                        <Label text="Événements favoris" styleClass="page-subtitle" />
+                    </children>
+                </VBox>
+
+                <VBox spacing="12" styleClass="card-surface" maxWidth="Infinity">
+                    <children>
+                        <HBox alignment="CENTER_LEFT" styleClass="card-header">
+                            <children>
+                                <Label text="Événements favoris" styleClass="section-title" />
+                            </children>
+                        </HBox>
+
+                        <ScrollPane fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS" styleClass="event-scroll">
+                            <content>
+                                <VBox spacing="0" maxWidth="Infinity" fillWidth="true">
+                                    <padding>
+                                        <Insets topRightBottomLeft="20"/>
+                                    </padding>
+                                    <children>
+                                        <StackPane maxWidth="Infinity">
+                                            <children>
+                                                <TilePane fx:id="tileFavoris" hgap="30" vgap="30" styleClass="event-tile-pane" prefTileWidth="340" prefTileHeight="440" maxWidth="Infinity" />
+                                            </children>
+                                        </StackPane>
+                                    </children>
+                                </VBox>
+                            </content>
+                        </ScrollPane>
+
+                        <HBox spacing="16" alignment="CENTER">
+                            <children>
+                                <Label fx:id="lblTotal" text="0 favoris" styleClass="total-label"/>
+                            </children>
+                        </HBox>
+                    </children>
+                </VBox>
+            </children>
+        </VBox>
+    </children>
+
+</VBox>

@@ -30,11 +30,6 @@
                         prefWidth="200" prefHeight="50"
                         style="-fx-font-size: 14px; -fx-background-color: #f39c12; -fx-text-fill: white;"
                         onAction="#gererSponsors"/>
-                
-                <Button text="❤️ Gérer les Favoris" 
-                        prefWidth="200" prefHeight="50"
-                        style="-fx-font-size: 14px; -fx-background-color: #9b59b6; -fx-text-fill: white;"
-                        onAction="#gererFavoris"/>
             </children>
         </HBox>
         

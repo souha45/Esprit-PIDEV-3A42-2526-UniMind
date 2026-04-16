@@ -28,11 +28,6 @@ public class AccueilEvenementController {
     }
 
     @FXML
-    private void gererFavoris(ActionEvent event) throws IOException {
-        naviguerVersEcran(event, "/favori/GestionFavori.fxml", "Gestion des Favoris");
-    }
-
-    @FXML
     private void quitter(ActionEvent event) {
         // Fermer l'application
         Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();

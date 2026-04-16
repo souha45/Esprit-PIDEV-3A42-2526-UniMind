@@ -74,7 +74,7 @@ public class AjoutFavoriController {
     @FXML
     private void retour(ActionEvent event) {
         try {
-            NavigationContext.loadContentInCenter("/favori/GestionFavori.fxml");
+            NavigationContext.loadContentInCenter("/favori/FavorisEtudiant.fxml");
         } catch (IOException e) {
             afficherErreur("Erreur lors de la navigation : " + e.getMessage());
         }

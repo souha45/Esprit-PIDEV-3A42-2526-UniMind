@@ -61,7 +61,7 @@ public class EtudiantDashboardController {
 
     @FXML
     private void voirFavoris(ActionEvent event) throws IOException {
-        chargerContenuDansCentre("/favori/GestionFavori.fxml");
+        chargerContenuDansCentre("/favori/FavorisEtudiant.fxml");
     }
 
     @FXML
