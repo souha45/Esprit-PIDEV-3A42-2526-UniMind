@@ -246,6 +246,7 @@ public class GestionEvenementController {
             Parent root = loader.load();
             VoirEvenementController controller = loader.getController();
             controller.setEvenement(evenementAvecNom.getEvenement());
+            controller.setPagePrecedente("/evenement/GestionEvenement.fxml"); // Retour vers la gestion des événements
             
             NavigationContext.loadContentInCenter((javafx.scene.Parent) root);
         } catch (IOException e) {

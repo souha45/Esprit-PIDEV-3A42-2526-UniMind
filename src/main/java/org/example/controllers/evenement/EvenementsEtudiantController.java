@@ -441,6 +441,7 @@ public class EvenementsEtudiantController {
             Parent root = loader.load();
             VoirEvenementController controller = loader.getController();
             controller.setEvenement(evenement);
+            controller.setPagePrecedente("/evenement/EvenementsEtudiant.fxml"); // Retour vers les événements
 
             NavigationContext.loadContentInCenter(root);
         } catch (IOException e) {

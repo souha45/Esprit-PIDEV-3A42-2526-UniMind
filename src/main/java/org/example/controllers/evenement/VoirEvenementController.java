@@ -30,6 +30,7 @@ import java.util.List;
 public class VoirEvenementController {
 
     private Evenement evenementCourant;
+    private String pagePrecedente; // Pour savoir où retourner
     private final EvenementService evenementService = new EvenementService();
     private final ParticipationService participationService = new ParticipationService();
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -69,6 +70,8 @@ public class VoirEvenementController {
     @FXML
     private Button btnLaisserAvis;
     @FXML
+    private Label lblAvisDonne;
+    @FXML
     private VBox vboxAvis;
     @FXML
     private Label lblNoteMoyenne;
@@ -80,6 +83,10 @@ public class VoirEvenementController {
     public void setEvenement(Evenement evenement) {
         this.evenementCourant = evenement;
         afficherDetails();
+    }
+
+    public void setPagePrecedente(String pagePrecedente) {
+        this.pagePrecedente = pagePrecedente;
     }
 
     private void afficherDetails() {
@@ -146,14 +153,46 @@ public class VoirEvenementController {
         if (estEtudiant) {
             // Vérifier si l'étudiant est déjà inscrit
             boolean dejaInscrit = estDejaInscrit(currentUserId);
+            
+            // Vérifier si l'événement est terminé
+            boolean evenementTermine = evenementCourant.getDateFin() != null 
+                    && evenementCourant.getDateFin().toLocalDateTime().isBefore(java.time.LocalDateTime.now());
+            
             if (dejaInscrit) {
                 btnParticiper.setVisible(false);
                 lblDejaInscrit.setVisible(true);
-                btnLaisserAvis.setVisible(true); // Afficher le bouton laisser avis si inscrit
+                
+                // Vérifier si l'étudiant a déjà laissé un avis
+                Participation participationEtudiant = null;
+                try {
+                    for (Participation p : participationService.afficher()) {
+                        if (p.getEvenementId() == evenementCourant.getEvenementId() && p.getEtudiantId() == currentUserId) {
+                            participationEtudiant = p;
+                            break;
+                        }
+                    }
+                } catch (SQLException e) {
+                    System.err.println("Erreur lors de la récupération de la participation: " + e.getMessage());
+                }
+                
+                // Afficher le bouton laisser avis ou le label avis donné
+                if (evenementTermine) {
+                    if (participationEtudiant != null && participationEtudiant.hasFeedback()) {
+                        btnLaisserAvis.setVisible(false);
+                        lblAvisDonne.setVisible(true);
+                    } else {
+                        btnLaisserAvis.setVisible(true);
+                        lblAvisDonne.setVisible(false);
+                    }
+                } else {
+                    btnLaisserAvis.setVisible(false);
+                    lblAvisDonne.setVisible(false);
+                }
             } else {
                 btnParticiper.setVisible(true);
                 lblDejaInscrit.setVisible(false);
                 btnLaisserAvis.setVisible(false);
+                lblAvisDonne.setVisible(false);
             }
             btnFavori.setVisible(true);
             btnModifier.setVisible(false);
@@ -166,6 +205,8 @@ public class VoirEvenementController {
             btnParticiper.setVisible(false);
             lblDejaInscrit.setVisible(false);
             btnFavori.setVisible(false);
+            btnLaisserAvis.setVisible(false);
+            lblAvisDonne.setVisible(false);
             btnModifier.setVisible(estOrganisateur);
             btnSupprimer.setVisible(estOrganisateur);
             return;
@@ -176,6 +217,8 @@ public class VoirEvenementController {
             btnParticiper.setVisible(false);
             lblDejaInscrit.setVisible(false);
             btnFavori.setVisible(false);
+            btnLaisserAvis.setVisible(false);
+            lblAvisDonne.setVisible(false);
             btnModifier.setVisible(true);
             btnSupprimer.setVisible(true);
         }
@@ -193,8 +236,16 @@ public class VoirEvenementController {
     @FXML
     private void retour(ActionEvent event) throws IOException {
         Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ETUDIANT);
+        
+        // Si une page précédente est définie, y retourner
+        if (pagePrecedente != null && !pagePrecedente.isEmpty()) {
+            NavigationContext.loadContentInCenter(pagePrecedente);
+            return;
+        }
+        
+        // Sinon, utiliser le comportement par défaut
         if (role == Role.ETUDIANT) {
-            NavigationContext.loadContentInCenter("/evenement/EvenementsEtudiant.fxml");
+            NavigationContext.loadContentInCenter("/participation/ParticipationsEtudiant.fxml");
         } else {
             NavigationContext.loadContentInCenter("/evenement/GestionEvenement.fxml");
         }
@@ -263,6 +314,13 @@ public class VoirEvenementController {
 
             participationService.ajouter(participation);
             afficherAlerte("Succès", "Vous êtes inscrit à l'événement \"" + evenementCourant.getTitre() + "\"");
+            
+            // Rediriger vers la page des événements
+            try {
+                NavigationContext.loadContentInCenter("/evenement/EvenementsEtudiant.fxml");
+            } catch (IOException ioE) {
+                afficherAlerte("Erreur", "Erreur lors de la navigation: " + ioE.getMessage());
+            }
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible de participer à l'événement: " + e.getMessage());
         }
@@ -350,15 +408,6 @@ public class VoirEvenementController {
                 return;
             }
 
-            // Récupérer la participation de l'étudiant pour cet événement
-            Participation participationEtudiant = null;
-            for (Participation p : participationService.afficher()) {
-                if (p.getEvenementId() == evenementCourant.getEvenementId() && p.getEtudiantId() == currentUserId) {
-                    participationEtudiant = p;
-                    break;
-                }
-            }
-
             // Charger tous les avis pour cet événement
             List<Participation> toutesParticipations = new ArrayList<>();
             for (Participation p : participationService.afficher()) {
@@ -390,11 +439,6 @@ public class VoirEvenementController {
                 double moyenne = toutesParticipations.size() > 0 ? somme / toutesParticipations.size() : 0.0;
                 lblNoteMoyenne.setText(String.format("⭐ %.1f/5", moyenne));
                 lblNbAvis.setText("(" + toutesParticipations.size() + " avis)");
-            }
-
-            // Si l'étudiant a déjà laissé un avis, changer le texte du bouton
-            if (participationEtudiant != null && participationEtudiant.hasFeedback()) {
-                btnLaisserAvis.setText("✏️ Modifier mon avis");
             }
 
         } catch (SQLException e) {
@@ -437,6 +481,13 @@ public class VoirEvenementController {
                 return;
             }
 
+            // Vérifier si l'événement est terminé
+            if (evenementCourant.getDateFin() != null 
+                    && evenementCourant.getDateFin().toLocalDateTime().isAfter(java.time.LocalDateTime.now())) {
+                afficherAlerte("Erreur", "Vous ne pouvez laisser un avis que lorsque l'événement est terminé");
+                return;
+            }
+
             // Récupérer la participation de l'étudiant
             final Participation[] participation = new Participation[1];
             for (Participation p : participationService.afficher()) {
@@ -448,6 +499,12 @@ public class VoirEvenementController {
 
             if (participation[0] == null) {
                 afficherAlerte("Erreur", "Vous devez être inscrit à cet événement pour laisser un avis");
+                return;
+            }
+
+            // Vérifier si l'étudiant a déjà laissé un avis
+            if (participation[0].hasFeedback()) {
+                afficherAlerte("Erreur", "Vous avez déjà laissé un avis pour cet événement");
                 return;
             }
 
@@ -466,14 +523,13 @@ public class VoirEvenementController {
             for (int i = 1; i <= 5; i++) {
                 comboNote.getItems().add(i);
             }
-            comboNote.setValue(participation[0].hasFeedback() ? (int) participation[0].getNoteSatisfaction() : 5);
+            comboNote.setValue(5);
             
             // Commentaire
             Label lblCommentaire = new Label("Commentaire:");
             TextArea txtCommentaire = new TextArea();
             txtCommentaire.setPrefRowCount(4);
             txtCommentaire.setPrefWidth(400);
-            txtCommentaire.setText(participation[0].getFeedbackCommentaire() != null ? participation[0].getFeedbackCommentaire() : "");
             
             content.getChildren().addAll(lblNote, comboNote, lblCommentaire, txtCommentaire);
             dialogPane.setContent(content);

@@ -111,12 +111,13 @@
                     </VBox>
 
                     <!-- Boutons d'action -->
-                    <HBox spacing="10" alignment="CENTER" style="-fx-padding: 20;">
+                    <HBox spacing="10" alignment="CENTER" style="-fx-padding: 20;" fillHeight="true">
                         <children>
                             <Button fx:id="btnParticiper" text="🎯 Participer" onAction="#participer" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 150;" visible="false" />
-                            <Label fx:id="lblDejaInscrit" text="✅ Vous êtes déjà inscrit" style="-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px;" visible="false" />
+                            <Label fx:id="lblDejaInscrit" text="✅ Vous êtes déjà inscrit" style="-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px; -fx-min-width: 220;" visible="false" />
                             <Button fx:id="btnFavori" text="⭐ Ajouter aux favoris" onAction="#ajouterFavori" style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 180;" visible="false" />
                             <Button fx:id="btnLaisserAvis" text="💬 Laisser un avis" onAction="#laisserAvis" style="-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 180;" visible="false" />
+                            <Label fx:id="lblAvisDonne" text="✓ Avis déjà donné" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 8 16; -fx-background-radius: 10; -fx-font-size: 14px; -fx-font-weight: bold; -fx-min-width: 220; -fx-alignment: CENTER;" visible="false" />
                             <Button fx:id="btnModifier" text="✏️ Modifier" onAction="#modifier" style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 150;" />
                             <Button fx:id="btnSupprimer" text="❌ Supprimer" onAction="#supprimer" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 150;" />
                         </children>

@@ -159,6 +159,17 @@ public class ParticipationsEtudiantController {
             lblStatutParticipation.setText(participation.getStatut().toString());
             lblStatutParticipation.setStyle("-fx-background-color: " + getCouleurStatutParticipation(participation.getStatut().toString()) + "; -fx-text-fill: white; -fx-padding: 5 10; -fx-background-radius: 10; -fx-font-size: 11px;");
 
+            // Vérifier si l'événement est terminé
+            boolean evenementTermine = evenement.getDateFin() != null 
+                    && evenement.getDateFin().toLocalDateTime().isBefore(java.time.LocalDateTime.now());
+
+            // Badge événement terminé
+            Label lblEvenementTermine = null;
+            if (evenementTermine) {
+                lblEvenementTermine = new Label("✓ Événement terminé");
+                lblEvenementTermine.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 5 10; -fx-background-radius: 10; -fx-font-size: 11px;");
+            }
+
             // Titre de l'événement
             Label lblTitre = new Label(evenement.getTitre());
             lblTitre.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-wrap-text: true;");
@@ -182,11 +193,39 @@ public class ParticipationsEtudiantController {
             btnVoir.setStyle("-fx-background-color: transparent; -fx-text-fill: #6366f1; -fx-border-color: #6366f1; -fx-border-width: 1; -fx-background-radius: 10; -fx-border-radius: 10; -fx-padding: 8 16; -fx-cursor: hand; -fx-font-weight: bold;");
             btnVoir.setOnAction(event -> voirEvenement(evenement));
 
+            // Bouton laisser avis ou badge avis donné si l'événement est terminé
+            Button btnLaisserAvis = null;
+            Label lblAvisDonne = null;
+            if (evenementTermine) {
+                if (!participation.hasFeedback()) {
+                    btnLaisserAvis = new Button("💬 Laisser un avis");
+                    btnLaisserAvis.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 8 16; -fx-cursor: hand; -fx-font-weight: bold;");
+                    btnLaisserAvis.setOnAction(event -> voirEvenement(evenement)); // Redirige vers le détail où le bouton laisser avis est disponible
+                } else {
+                    lblAvisDonne = new Label("✓ Avis donné");
+                    lblAvisDonne.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 8 16; -fx-background-radius: 10; -fx-font-size: 12px; -fx-font-weight: bold;");
+                }
+            }
+
             // Contenu de la carte
             VBox contenu = new VBox(8);
             contenu.setPadding(new Insets(15));
+            
+            javafx.scene.layout.HBox badges = new javafx.scene.layout.HBox(5);
+            badges.getChildren().addAll(lblStatutParticipation);
+            if (lblEvenementTermine != null) {
+                badges.getChildren().add(lblEvenementTermine);
+            }
+            
             javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(10, btnVoir);
-            contenu.getChildren().addAll(lblStatutParticipation, lblTitre, lblDate, lblLieu, lblDateInscription, actions);
+            if (btnLaisserAvis != null) {
+                actions.getChildren().add(btnLaisserAvis);
+            }
+            if (lblAvisDonne != null) {
+                actions.getChildren().add(lblAvisDonne);
+            }
+            
+            contenu.getChildren().addAll(badges, lblTitre, lblDate, lblLieu, lblDateInscription, actions);
 
             carte.getChildren().addAll(imageContainer, contenu);
 
@@ -245,6 +284,7 @@ public class ParticipationsEtudiantController {
             Parent root = loader.load();
             org.example.controllers.evenement.VoirEvenementController controller = loader.getController();
             controller.setEvenement(evenement);
+            controller.setPagePrecedente("/participation/ParticipationsEtudiant.fxml"); // Retour vers les participations
 
             NavigationContext.loadContentInCenter(root);
         } catch (IOException e) {

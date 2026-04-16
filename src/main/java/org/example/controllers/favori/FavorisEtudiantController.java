@@ -300,6 +300,7 @@ public class FavorisEtudiantController {
             Parent root = loader.load();
             org.example.controllers.evenement.VoirEvenementController controller = loader.getController();
             controller.setEvenement(evenement);
+            controller.setPagePrecedente("/favori/FavorisEtudiant.fxml"); // Retour vers les favoris
 
             NavigationContext.loadContentInCenter(root);
         } catch (IOException e) {
