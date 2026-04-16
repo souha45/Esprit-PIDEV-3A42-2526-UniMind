@@ -18,7 +18,9 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class GestionAttributionSponsorController {
 
@@ -44,15 +46,95 @@ public class GestionAttributionSponsorController {
     private Label lblTotal;
 
     @FXML
+    private Label lblTotalAttributions;
+
+    @FXML
+    private Label lblMontantTotal;
+
+    @FXML
+    private Label lblStatutConfirme;
+
+    @FXML
+    private Label lblStatutEnAttente;
+
+    @FXML
+    private Label lblStatutRefuse;
+
+    @FXML
+    private Label lblStatutAnnule;
+
+    @FXML
+    private Label lblTopSponsor;
+
+    @FXML
     private TextField txtRecherche;
+
+    // Filtres avancés
+    @FXML
+    private ComboBox<StatutSponsor> comboStatut;
+
+    @FXML
+    private ComboBox<TypeContribution> comboType;
+
+    @FXML
+    private DatePicker dateDebut;
+
+    @FXML
+    private DatePicker dateFin;
 
     private final EvenementSponsorService attributionService = new EvenementSponsorService();
     private ObservableList<EvenementSponsorService.AttributionAvecInfos> listeAttributions;
+    private ObservableList<EvenementSponsorService.AttributionAvecInfos> listeFiltree;
 
     @FXML
     public void initialize() {
+        initialiserFiltres();
         configurerColonnes();
+        configurerColorationLignes();
         chargerAttributions();
+    }
+
+    private void initialiserFiltres() {
+        // Initialiser le combo des statuts
+        comboStatut.getItems().clear();
+        comboStatut.getItems().add(null);
+        comboStatut.getItems().addAll(StatutSponsor.values());
+        comboStatut.setValue(null);
+
+        // Initialiser le combo des types de contribution
+        comboType.getItems().clear();
+        comboType.getItems().add(null);
+        comboType.getItems().addAll(TypeContribution.values());
+        comboType.setValue(null);
+    }
+
+    private void configurerColorationLignes() {
+        tableAttributions.setRowFactory(tv -> new javafx.scene.control.TableRow<>() {
+            @Override
+            protected void updateItem(EvenementSponsorService.AttributionAvecInfos attribution, boolean empty) {
+                super.updateItem(attribution, empty);
+                if (empty || attribution == null) {
+                    setStyle("");
+                } else {
+                    switch (attribution.getStatut()) {
+                        case EN_ATTENTE:
+                            setStyle("-fx-background-color: #fff3e0;");
+                            break;
+                        case CONFIRME:
+                            setStyle("-fx-background-color: #e8f5e9;");
+                            break;
+                        case REFUSE:
+                            setStyle("-fx-background-color: #ffebee;");
+                            break;
+                        case ANNULE:
+                            setStyle("-fx-background-color: #f5f5f5;");
+                            break;
+                        default:
+                            setStyle("");
+                    }
+                }
+            }
+        });
     }
 
     private void configurerColonnes() {
@@ -177,10 +259,48 @@ public class GestionAttributionSponsorController {
                 );
             }
 
-            tableAttributions.setItems(listeAttributions);
-            lblTotal.setText("Total : " + listeAttributions.size());
+            listeFiltree = FXCollections.observableArrayList(listeAttributions);
+            tableAttributions.setItems(listeFiltree);
+            lblTotal.setText("Total : " + listeFiltree.size());
+            calculerStatistiques();
         } catch (SQLException e) {
             afficherErreur("Erreur lors du chargement des attributions : " + e.getMessage());
+        }
+    }
+
+    private void calculerStatistiques() {
+        lblTotalAttributions.setText(listeFiltree.size() + " attributions");
+        lblTotal.setText("Total : " + listeFiltree.size());
+
+        // Montant total
+        BigDecimal montantTotal = listeFiltree.stream()
+            .map(EvenementSponsorService.AttributionAvecInfos::getMontantContribution)
+            .filter(Objects::nonNull)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        lblMontantTotal.setText(montantTotal.toString() + " DT");
+
+        // Répartition par statut
+        long confirmes = listeFiltree.stream().filter(a -> a.getStatut() == StatutSponsor.CONFIRME).count();
+        long enAttente = listeFiltree.stream().filter(a -> a.getStatut() == StatutSponsor.EN_ATTENTE).count();
+        long refuses = listeFiltree.stream().filter(a -> a.getStatut() == StatutSponsor.REFUSE).count();
+        long annules = listeFiltree.stream().filter(a -> a.getStatut() == StatutSponsor.ANNULE).count();
+
+        lblStatutConfirme.setText(confirmes + " confirmées");
+        lblStatutEnAttente.setText(enAttente + " en attente");
+        lblStatutRefuse.setText(refuses + " refusées");
+        lblStatutAnnule.setText(annules + " annulées");
+
+        // Top sponsor (celui avec le plus de contributions)
+        Map<String, Long> countBySponsor = listeFiltree.stream()
+            .collect(Collectors.groupingBy(EvenementSponsorService.AttributionAvecInfos::getSponsorNom, Collectors.counting()));
+        
+        Optional<Map.Entry<String, Long>> topSponsor = countBySponsor.entrySet().stream()
+            .max(Map.Entry.comparingByValue());
+        
+        if (topSponsor.isPresent()) {
+            lblTopSponsor.setText(topSponsor.get().getKey() + " (" + topSponsor.get().getValue() + ")");
+        } else {
+            lblTopSponsor.setText("-");
         }
     }
 
@@ -206,15 +326,61 @@ public class GestionAttributionSponsorController {
 
         for (EvenementSponsorService.AttributionAvecInfos attribution : listeAttributions) {
             if (attribution.getEvenementTitre().toLowerCase().contains(recherche) ||
-                attribution.getSponsorNom().toLowerCase().contains(recherche) ||
-                attribution.getTypeContribution().toString().toLowerCase().contains(recherche) ||
-                attribution.getStatut().toString().toLowerCase().contains(recherche)) {
+                attribution.getSponsorNom().toLowerCase().contains(recherche)) {
                 resultats.add(attribution);
             }
         }
 
-        tableAttributions.setItems(resultats);
+        listeFiltree.clear();
+        listeFiltree.addAll(resultats);
+        tableAttributions.setItems(listeFiltree);
         lblTotal.setText("Total : " + resultats.size() + " (filtrés)");
+        calculerStatistiques();
+    }
+
+    @FXML
+    private void appliquerFiltres() {
+        listeFiltree.clear();
+        listeFiltree.addAll(listeAttributions);
+
+        // Filtrer par statut
+        StatutSponsor statut = comboStatut.getValue();
+        if (statut != null) {
+            listeFiltree.removeIf(a -> a.getStatut() != statut);
+        }
+
+        // Filtrer par type de contribution
+        TypeContribution type = comboType.getValue();
+        if (type != null) {
+            listeFiltree.removeIf(a -> a.getTypeContribution() != type);
+        }
+
+        // Filtrer par période
+        LocalDate debut = dateDebut.getValue();
+        LocalDate fin = dateFin.getValue();
+        if (debut != null || fin != null) {
+            listeFiltree.removeIf(a -> {
+                if (a.getDateContribution() == null) return true;
+                LocalDate dateContribution = a.getDateContribution().toLocalDateTime().toLocalDate();
+                if (debut != null && dateContribution.isBefore(debut)) return true;
+                if (fin != null && dateContribution.isAfter(fin)) return true;
+                return false;
+            });
+        }
+
+        tableAttributions.setItems(listeFiltree);
+        lblTotal.setText("Total : " + listeFiltree.size() + " (filtrés)");
+        calculerStatistiques();
+    }
+
+    @FXML
+    private void reinitialiserFiltres() {
+        comboStatut.setValue(null);
+        comboType.setValue(null);
+        dateDebut.setValue(null);
+        dateFin.setValue(null);
+        txtRecherche.clear();
+        chargerAttributions();
     }
 
     @FXML
@@ -224,11 +390,12 @@ public class GestionAttributionSponsorController {
     }
 
     @FXML
-    private void retour(ActionEvent event) {
-        try {
-            NavigationContext.loadContentInCenter("/sponsor/GestionAttributionSponsor.fxml");
-        } catch (IOException e) {
-            afficherErreur("Erreur lors de la navigation : " + e.getMessage());
+    private void retour(ActionEvent event) throws IOException {
+        Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ADMIN);
+        if (role == Role.ADMIN) {
+            NavigationContext.loadContentInCenter("/evenement/AdminDashboard.fxml");
+        } else {
+            NavigationContext.loadContentInCenter("/evenement/ResponsableDashboard.fxml");
         }
     }
 
