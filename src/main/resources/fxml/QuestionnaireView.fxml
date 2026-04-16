@@ -36,21 +36,45 @@
 
         <HBox spacing="8">
             <VBox spacing="2" HBox.hgrow="ALWAYS">
-                <Label text="Seuil Légère *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+                <Label text="Seuil Légère *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;">
+                    <tooltip>
+                        <Tooltip text="Score maximum pour le niveau LÉGÈRE.&#10;En dessous de ce score → niveau légère.&#10;Ex: si seuil = 10, score ≤ 10 = légère"/>
+                    </tooltip>
+                </Label>
                 <TextField fx:id="tfSeuilLeger" promptText="Ex: 10"
-                           style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+                           style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;">
+                    <tooltip>
+                        <Tooltip text="Score maximum pour le niveau LÉGÈRE.&#10;En dessous de ce score → niveau légère.&#10;Ex: si seuil = 10, score ≤ 10 = légère"/>
+                    </tooltip>
+                </TextField>
                 <Label fx:id="errSeuilLeger" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 10px;"/>
             </VBox>
             <VBox spacing="2" HBox.hgrow="ALWAYS">
-                <Label text="Seuil Modéré *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+                <Label text="Seuil Modéré *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;">
+                    <tooltip>
+                        <Tooltip text="Score maximum pour le niveau MODÉRÉ.&#10;Entre seuil légère et ce score → niveau modéré.&#10;Ex: si seuil = 20, score entre 11-20 = modéré"/>
+                    </tooltip>
+                </Label>
                 <TextField fx:id="tfSeuilModere" promptText="Ex: 20"
-                           style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+                           style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;">
+                    <tooltip>
+                        <Tooltip text="Score maximum pour le niveau MODÉRÉ.&#10;Entre seuil légère et ce score → niveau modéré.&#10;Ex: si seuil = 20, score entre 11-20 = modéré"/>
+                    </tooltip>
+                </TextField>
                 <Label fx:id="errSeuilModere" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 10px;"/>
             </VBox>
             <VBox spacing="2" HBox.hgrow="ALWAYS">
-                <Label text="Seuil Sévère *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+                <Label text="Seuil Sévère *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;">
+                    <tooltip>
+                        <Tooltip text="Score maximum pour le niveau SÉVÈRE.&#10;Au dessus de seuil modéré → niveau sévère.&#10;Ex: si seuil = 30, score > 20 = sévère"/>
+                    </tooltip>
+                </Label>
                 <TextField fx:id="tfSeuilSevere" promptText="Ex: 30"
-                           style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+                           style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;">
+                    <tooltip>
+                        <Tooltip text="Score maximum pour le niveau SÉVÈRE.&#10;Au dessus de seuil modéré → niveau sévère.&#10;Ex: si seuil = 30, score > 20 = sévère"/>
+                    </tooltip>
+                </TextField>
                 <Label fx:id="errSeuilSevere" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 10px;"/>
             </VBox>
         </HBox>
