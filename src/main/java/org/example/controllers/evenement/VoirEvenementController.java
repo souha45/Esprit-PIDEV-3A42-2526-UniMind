@@ -83,7 +83,18 @@ public class VoirEvenementController {
     private Label lblAucunAvis;
 
     public void setEvenement(Evenement evenement) {
-        this.evenementCourant = evenement;
+        // Recharger l'événement depuis la base de données pour s'assurer que toutes les données sont complètes
+        try {
+            Evenement evenementReloaded = evenementService.findById(evenement.getEvenementId());
+            if (evenementReloaded != null) {
+                this.evenementCourant = evenementReloaded;
+            } else {
+                this.evenementCourant = evenement;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors du rechargement de l'événement: " + e.getMessage());
+            this.evenementCourant = evenement;
+        }
         afficherDetails();
     }
 
@@ -118,7 +129,6 @@ public class VoirEvenementController {
             int currentUserId = SessionManager.getInstance().getCurrentUserId().orElse(-1);
             if (currentUserId > 0) {
                 estFavori = favoriService.verifierUnicite(evenementCourant.getEvenementId(), currentUserId);
-                mettreAJourStyleBoutonFavori();
             }
         } catch (SQLException e) {
             System.err.println("Erreur lors de la vérification des favoris: " + e.getMessage());
@@ -397,7 +407,6 @@ public class VoirEvenementController {
                 favori.setEtudiantId(currentUserId);
                 favoriService.ajouter(favori);
                 estFavori = true;
-                mettreAJourStyleBoutonFavori();
                 afficherAlerte("Succès", "Événement ajouté aux favoris");
             }
         } catch (SQLException e) {
@@ -423,18 +432,7 @@ public class VoirEvenementController {
         if (favoriId > 0) {
             favoriService.supprimer(favoriId);
             estFavori = false;
-            mettreAJourStyleBoutonFavori();
             afficherAlerte("Succès", "Événement retiré des favoris");
-        }
-    }
-
-    private void mettreAJourStyleBoutonFavori() {
-        if (estFavori) {
-            btnFavori.setText("⭐ Retirer des favoris");
-            btnFavori.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 180;");
-        } else {
-            btnFavori.setText("⭐ Ajouter aux favoris");
-            btnFavori.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 180;");
         }
     }
 
