@@ -132,38 +132,21 @@
 
                     <Region HBox.hgrow="ALWAYS" />
 
-                    <!-- Rafraîchir -->
-                    <Button fx:id="btnRafraichir" text="🔄"
-                            style="-fx-background-color: #f3f4f6; -fx-text-fill: #6b7280;
-                                   -fx-font-size: 14px; -fx-padding: 9 14; -fx-background-radius: 10;
-                                   -fx-border-color: #e5e7eb; -fx-border-width: 1;
-                                   -fx-border-radius: 10; -fx-cursor: hand;" />
-
                 </HBox>
 
                 <!-- ── TABLE ── -->
                 <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 14;
                              -fx-border-color: #e0e7ff; -fx-border-width: 1; -fx-border-radius: 14;
                              -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 10, 0, 0, 3);">
-
-                    <TableView fx:id="tableViewConsultations"
-                               prefHeight="450"
-                               style="-fx-background-color: transparent; -fx-border-width: 0;
-                                      -fx-table-cell-border-color: #f3f4f6;">
-                        <columns>
-                            <TableColumn fx:id="colPatient"   prefWidth="220" text="👤  Patient" />
-                            <TableColumn fx:id="colDateRdv"    prefWidth="110" text="📅  Date RDV" />
-                            <TableColumn fx:id="colHeureRdv"   prefWidth="130" text="🕐  Horaire" />
-                            <TableColumn fx:id="colNote"       prefWidth="140" text="⭐  Note" />
-                            <TableColumn fx:id="colAvis"       prefWidth="280" text="💬  Avis du psychologue" />
-                            <TableColumn fx:id="colActions"    prefWidth="100" text="⚙  Actions" />
-                        </columns>
+                    <ListView fx:id="listViewConsultations"
+                              prefHeight="450"
+                              style="-fx-background-color: transparent; -fx-border-width: 0;">
                         <placeholder>
                             <Label text="✨ Aucune consultation trouvée"
                                    style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
                                           -fx-text-fill: #c4b5fd;" />
                         </placeholder>
-                    </TableView>
+                    </ListView>
 
                 </VBox>
 
