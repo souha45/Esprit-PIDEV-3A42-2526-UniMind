@@ -2,10 +2,15 @@ package org.example.controllers;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import org.example.entities.Question;
 import org.example.entities.Questionnaire;
 import org.example.services.QuestionServices;
@@ -22,38 +27,188 @@ public class QuestionController implements Initializable {
     @FXML private Label errTexte, errQuestionnaire, errOptions, errScores, errTypeQuestion;
 
     // ─── FORM ───
-    @FXML private TextArea taTexte;
+    @FXML private TextArea  taTexte;
     @FXML private TextField tfOptions, tfScores, tfTypeQuestion;
     @FXML private ComboBox<String> cbQuestionnaire;
     @FXML private Label lblStatus;
 
-    // ─── TABLE ───
-    @FXML private TableView<Question> tableQuestion;
-    @FXML private TableColumn<Question, Integer> colId, colQId;
-    @FXML private TableColumn<Question, String>  colTexte, colOptions, colScores, colType;
+    // ─── SEARCH ───
+    @FXML private TextField tfSearch;
 
-    private final QuestionServices service       = new QuestionServices();
+    // ─── LIST ───
+    @FXML private ListView<Question> listQuestion;
+
+    private final QuestionServices      service  = new QuestionServices();
     private final QuestionnaireServices qService = new QuestionnaireServices();
     private final ObservableList<Question> data  = FXCollections.observableArrayList();
+    private FilteredList<Question> filtered;
     private int selectedId = -1;
+
+    // ══════════════════════════════════════════
+    //  INITIALIZE
+    // ══════════════════════════════════════════
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        colId.setCellValueFactory(new PropertyValueFactory<>("questionId"));
-        colTexte.setCellValueFactory(new PropertyValueFactory<>("texte"));
-        colQId.setCellValueFactory(new PropertyValueFactory<>("questionnaireId"));
-        colOptions.setCellValueFactory(new PropertyValueFactory<>("optionsQuest"));
-        colScores.setCellValueFactory(new PropertyValueFactory<>("scoreOptions"));
-        colType.setCellValueFactory(new PropertyValueFactory<>("typeQuestion"));
+        filtered = new FilteredList<>(data, p -> true);
+        listQuestion.setItems(filtered);
+        listQuestion.setCellFactory(lv -> new QuestionCard());
 
-        tableQuestion.setItems(data);
-        tableQuestion.setOnMouseClicked(e -> {
-            Question selected = tableQuestion.getSelectionModel().getSelectedItem();
+        // Recherche dynamique
+        if (tfSearch != null) {
+            tfSearch.textProperty().addListener((obs, old, val) -> {
+                String lower = val == null ? "" : val.toLowerCase().trim();
+                filtered.setPredicate(q ->
+                        lower.isEmpty()
+                                || q.getTexte().toLowerCase().contains(lower)
+                                || (q.getTypeQuestion() != null && q.getTypeQuestion().toLowerCase().contains(lower))
+                                || String.valueOf(q.getQuestionnaireId()).contains(lower)
+                );
+            });
+        }
+
+        listQuestion.setOnMouseClicked(e -> {
+            Question selected = listQuestion.getSelectionModel().getSelectedItem();
             if (selected != null) fillForm(selected);
         });
 
         loadQuestionnaires();
         loadData();
+    }
+
+    // ══════════════════════════════════════════
+    //  INNER CLASS — CARTE PERSONNALISÉE
+    // ══════════════════════════════════════════
+
+    private static class QuestionCard extends ListCell<Question> {
+
+        private final HBox    root      = new HBox(12);
+        private final StackPane avatar  = new StackPane();
+        private final Label   avLetter  = new Label();
+        private final VBox    info      = new VBox(5);
+        private final Label   texteLbl  = new Label();
+        private final HBox    botRow    = new HBox(6);
+        private final Label   typeBadge = new Label();
+        private final Label   qidLbl    = new Label();
+        private final Label   optLbl    = new Label();
+        private final Region  spacer    = new Region();
+        private final VBox    rightBox  = new VBox(4);
+        private final Label   nbOpts    = new Label();
+        private final Label   scoreLbl  = new Label();
+
+        QuestionCard() {
+            // Avatar
+            Circle circle = new Circle(19);
+            avatar.getChildren().addAll(circle, avLetter);
+            avatar.setMinSize(38, 38);
+            avatar.setMaxSize(38, 38);
+            avLetter.setStyle("-fx-font-size: 13px; -fx-font-weight: bold;");
+
+            // Texte de la question
+            texteLbl.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
+            texteLbl.setMaxWidth(300);
+            texteLbl.setWrapText(false);
+            texteLbl.setEllipsisString("…");
+
+            // Type badge
+            typeBadge.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 2 8 2 8; -fx-background-radius: 20;");
+
+            // Questionnaire ID
+            qidLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8;");
+
+            // Options preview
+            optLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-font-style: italic;");
+            optLbl.setMaxWidth(250);
+            optLbl.setEllipsisString("…");
+
+            // Séparateur
+            Label dot = new Label("·");
+            dot.setStyle("-fx-text-fill: #cbd5e1; -fx-font-size: 11px;");
+            Label dot2 = new Label("·");
+            dot2.setStyle("-fx-text-fill: #cbd5e1; -fx-font-size: 11px;");
+
+            botRow.getChildren().addAll(typeBadge, dot, qidLbl, dot2, optLbl);
+            botRow.setAlignment(Pos.CENTER_LEFT);
+
+            info.getChildren().addAll(texteLbl, botRow);
+            HBox.setHgrow(info, Priority.ALWAYS);
+
+            // Right side — nb options + score
+            nbOpts.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-alignment: center-right;");
+            scoreLbl.setStyle("-fx-font-size: 10px; -fx-text-fill: #94a3b8; -fx-font-family: monospace; -fx-alignment: center-right;");
+            rightBox.getChildren().addAll(nbOpts, scoreLbl);
+            rightBox.setAlignment(Pos.CENTER_RIGHT);
+            rightBox.setMinWidth(80);
+
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+            root.getChildren().addAll(avatar, info, spacer, rightBox);
+            root.setAlignment(Pos.CENTER_LEFT);
+            root.setPadding(new Insets(10, 14, 10, 14));
+            root.setStyle("-fx-background-color: white; -fx-background-radius: 10; "
+                    + "-fx-border-color: #e2e8f0; -fx-border-radius: 10; -fx-border-width: 1;");
+
+            setStyle("-fx-background-color: transparent; -fx-padding: 3 0 3 0;");
+        }
+
+        @Override
+        protected void updateItem(Question q, boolean empty) {
+            super.updateItem(q, empty);
+            if (empty || q == null) { setGraphic(null); return; }
+
+            // Texte
+            texteLbl.setText(q.getTexte());
+
+            // Type
+            String type = q.getTypeQuestion() != null ? q.getTypeQuestion().toUpperCase() : "?";
+            String[] colors = typeColors(type);
+            avLetter.setText(type.substring(0, 1));
+            avLetter.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: " + colors[1] + ";");
+            avatar.getChildren().stream()
+                    .filter(n -> n instanceof Circle)
+                    .forEach(n -> ((Circle) n).setFill(Color.web(colors[0])));
+
+            typeBadge.setText(type);
+            typeBadge.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 2 8 2 8; "
+                    + "-fx-background-color: " + colors[2] + "; -fx-text-fill: " + colors[3] + "; -fx-background-radius: 20;");
+
+            // Questionnaire
+            qidLbl.setText("Questionnaire #" + q.getQuestionnaireId());
+
+            // Options
+            String opts = q.getOptionsQuest();
+            if (opts != null && !opts.isBlank()) {
+                String[] arr = opts.split(",");
+                optLbl.setText(arr.length + " option" + (arr.length > 1 ? "s" : ""));
+                nbOpts.setText(arr.length + " opt.");
+            } else {
+                optLbl.setText("Aucune option");
+                nbOpts.setText("–");
+            }
+
+            // Scores
+            String sc = q.getScoreOptions();
+            scoreLbl.setText(sc != null && !sc.isBlank() ? sc : "");
+
+            // Highlight sélection
+            if (isSelected()) {
+                root.setStyle("-fx-background-color: #eff6ff; -fx-background-radius: 10; "
+                        + "-fx-border-color: #3b82f6; -fx-border-radius: 10; -fx-border-width: 1.5;");
+            } else {
+                root.setStyle("-fx-background-color: white; -fx-background-radius: 10; "
+                        + "-fx-border-color: #e2e8f0; -fx-border-radius: 10; -fx-border-width: 1;");
+            }
+
+            setGraphic(root);
+        }
+
+        /** Couleurs [avBg, avFg, badgeBg, badgeFg] selon le type */
+        private String[] typeColors(String type) {
+            return switch (type) {
+                case "QCM"   -> new String[]{"#eff6ff","#2563eb","#dbeafe","#1d4ed8"};
+                case "TEXTE" -> new String[]{"#f0fdf4","#16a34a","#dcfce7","#15803d"};
+                default      -> new String[]{"#f8fafc","#475569","#f1f5f9","#334155"};
+            };
+        }
     }
 
     // ══════════════════════════════════════════
@@ -66,38 +221,26 @@ public class QuestionController implements Initializable {
         try {
             service.ajouter(buildFromForm());
             setStatus("✅ Question ajoutée avec succès !", true);
-            handleReset();
-            loadData();
-        } catch (SQLException e) {
-            setStatus("❌ Erreur : " + e.getMessage(), false);
-        }
+            handleReset(); loadData();
+        } catch (SQLException e) { setStatus("❌ Erreur : " + e.getMessage(), false); }
     }
 
     @FXML
     public void handleModifier() {
-        if (selectedId == -1) {
-            setStatus("⚠️ Sélectionnez une question dans le tableau", false);
-            return;
-        }
+        if (selectedId == -1) { setStatus("⚠️ Sélectionnez une question", false); return; }
         if (!valider()) return;
         try {
             Question q = buildFromForm();
             q.setQuestionId(selectedId);
             service.modifier(q);
             setStatus("✅ Question modifiée avec succès !", true);
-            handleReset();
-            loadData();
-        } catch (SQLException e) {
-            setStatus("❌ Erreur : " + e.getMessage(), false);
-        }
+            handleReset(); loadData();
+        } catch (SQLException e) { setStatus("❌ Erreur : " + e.getMessage(), false); }
     }
 
     @FXML
     public void handleSupprimer() {
-        if (selectedId == -1) {
-            setStatus("⚠️ Sélectionnez une question dans le tableau", false);
-            return;
-        }
+        if (selectedId == -1) { setStatus("⚠️ Sélectionnez une question", false); return; }
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                 "Voulez-vous vraiment supprimer cette question ?", ButtonType.YES, ButtonType.NO);
         confirm.setHeaderText("Confirmation");
@@ -106,11 +249,8 @@ public class QuestionController implements Initializable {
                 try {
                     service.supprimer(selectedId);
                     setStatus("✅ Question supprimée !", true);
-                    handleReset();
-                    loadData();
-                } catch (SQLException e) {
-                    setStatus("❌ Erreur : " + e.getMessage(), false);
-                }
+                    handleReset(); loadData();
+                } catch (SQLException e) { setStatus("❌ Erreur : " + e.getMessage(), false); }
             }
         });
     }
@@ -118,17 +258,12 @@ public class QuestionController implements Initializable {
     @FXML
     public void handleReset() {
         selectedId = -1;
-        taTexte.clear();
-        tfOptions.clear();
-        tfScores.clear();
-        tfTypeQuestion.clear();
-        cbQuestionnaire.setValue(null);
+        taTexte.clear(); tfOptions.clear(); tfScores.clear();
+        tfTypeQuestion.clear(); cbQuestionnaire.setValue(null);
         lblStatus.setText("");
-        errTexte.setText("");
-        errQuestionnaire.setText("");
-        errOptions.setText("");
-        errScores.setText("");
-        errTypeQuestion.setText("");
+        errTexte.setText(""); errQuestionnaire.setText("");
+        errOptions.setText(""); errScores.setText(""); errTypeQuestion.setText("");
+        if (tfSearch != null) tfSearch.clear();
     }
 
     // ══════════════════════════════════════════
@@ -136,71 +271,40 @@ public class QuestionController implements Initializable {
     // ══════════════════════════════════════════
 
     private boolean valider() {
-        errTexte.setText("");
-        errQuestionnaire.setText("");
-        errOptions.setText("");
-        errScores.setText("");
-        errTypeQuestion.setText("");
+        errTexte.setText(""); errQuestionnaire.setText("");
+        errOptions.setText(""); errScores.setText(""); errTypeQuestion.setText("");
         lblStatus.setText("");
-
         boolean ok = true;
 
-        // Validation texte
-        if (taTexte.getText().trim().isEmpty()) {
-            errTexte.setText("⚠ Le texte est obligatoire");
-            ok = false;
-        } else if (taTexte.getText().trim().length() < 5) {
-            errTexte.setText("⚠ Minimum 5 caractères");
-            ok = false;
-        }
+        if (taTexte.getText().trim().isEmpty())          { errTexte.setText("⚠ Obligatoire"); ok = false; }
+        else if (taTexte.getText().trim().length() < 5)  { errTexte.setText("⚠ Minimum 5 caractères"); ok = false; }
 
-        // Validation questionnaire
-        if (cbQuestionnaire.getValue() == null) {
-            errQuestionnaire.setText("⚠ Veuillez sélectionner un questionnaire");
-            ok = false;
-        }
+        if (cbQuestionnaire.getValue() == null)          { errQuestionnaire.setText("⚠ Sélectionnez un questionnaire"); ok = false; }
 
-        // Validation options / scores
         String opts   = tfOptions.getText().trim();
         String scores = tfScores.getText().trim();
-
         if (!opts.isEmpty() && !scores.isEmpty()) {
             String[] optArr   = opts.split(",");
             String[] scoreArr = scores.split(",");
             if (optArr.length != scoreArr.length) {
-                errOptions.setText("⚠ Nombre d'options et scores différent");
-                ok = false;
+                errOptions.setText("⚠ Nombre d'options et scores différent"); ok = false;
             } else {
                 for (String s : scoreArr) {
-                    try {
-                        Double.parseDouble(s.trim());
-                    } catch (NumberFormatException ex) {
-                        errScores.setText("⚠ Les scores doivent être des nombres");
-                        ok = false;
-                        break;
-                    }
+                    try { Double.parseDouble(s.trim()); }
+                    catch (NumberFormatException ex) { errScores.setText("⚠ Les scores doivent être des nombres"); ok = false; break; }
                 }
             }
-        } else if (!opts.isEmpty() && scores.isEmpty()) {
-            errScores.setText("⚠ Veuillez saisir les scores correspondants");
-            ok = false;
-        } else if (opts.isEmpty() && !scores.isEmpty()) {
-            errOptions.setText("⚠ Veuillez saisir les options correspondantes");
-            ok = false;
-        }
+        } else if (!opts.isEmpty())   { errScores.setText("⚠ Saisir les scores correspondants"); ok = false; }
+        else if (!scores.isEmpty()) { errOptions.setText("⚠ Saisir les options correspondantes"); ok = false; }
 
-        // Validation type question
         if (tfTypeQuestion.getText().trim().isEmpty()) {
-            errTypeQuestion.setText("⚠ Le type de question est obligatoire");
-            ok = false;
+            errTypeQuestion.setText("⚠ Obligatoire"); ok = false;
         } else {
             String type = tfTypeQuestion.getText().trim().toUpperCase();
             if (!type.equals("QCM") && !type.equals("TEXTE")) {
-                errTypeQuestion.setText("⚠ Type invalide : utilisez QCM ou TEXTE");
-                ok = false;
+                errTypeQuestion.setText("⚠ Type invalide : QCM ou TEXTE"); ok = false;
             }
         }
-
         return ok;
     }
 
@@ -227,19 +331,16 @@ public class QuestionController implements Initializable {
         tfTypeQuestion.setText(q.getTypeQuestion() != null ? q.getTypeQuestion() : "");
         for (String item : cbQuestionnaire.getItems()) {
             if (item.startsWith(q.getQuestionnaireId() + " - ")) {
-                cbQuestionnaire.setValue(item);
-                break;
+                cbQuestionnaire.setValue(item); break;
             }
         }
         setStatus("📌 Question #" + selectedId + " sélectionnée", true);
+        listQuestion.refresh();
     }
 
     private void loadData() {
-        try {
-            data.setAll(service.afficher());
-        } catch (SQLException e) {
-            setStatus("❌ Erreur chargement : " + e.getMessage(), false);
-        }
+        try { data.setAll(service.afficher()); }
+        catch (SQLException e) { setStatus("❌ Erreur chargement : " + e.getMessage(), false); }
     }
 
     private void loadQuestionnaires() {
@@ -248,14 +349,11 @@ public class QuestionController implements Initializable {
             ObservableList<String> items = FXCollections.observableArrayList();
             for (Questionnaire q : list) items.add(q.getQuestionnaireId() + " - " + q.getNom());
             cbQuestionnaire.setItems(items);
-        } catch (SQLException e) {
-            setStatus("❌ Erreur chargement questionnaires", false);
-        }
+        } catch (SQLException e) { setStatus("❌ Erreur chargement questionnaires", false); }
     }
 
     private void setStatus(String msg, boolean success) {
         lblStatus.setText(msg);
-        lblStatus.setStyle("-fx-font-size: 12px; -fx-text-fill: "
-                + (success ? "#22c55e" : "#ef4444") + ";");
+        lblStatus.setStyle("-fx-font-size: 12px; -fx-text-fill: " + (success ? "#22c55e" : "#ef4444") + ";");
     }
 }
