@@ -552,3 +552,69 @@
     -fx-font-size: 11px;
     -fx-text-fill: #374151;
 }
+
+/* =============================================
+   FILTER GRID
+   ============================================= */
+.filter-grid {
+    -fx-padding: 8 0 8 0;
+}
+
+/* =============================================
+   STATS BAR
+   ============================================= */
+.stats-bar {
+    -fx-background-color: #f8f7ff;
+    -fx-background-radius: 10;
+    -fx-padding: 12 16 12 16;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+
+.stats-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6366f1;
+}
+
+.stat-badge {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 20;
+    -fx-padding: 6 14 6 14;
+    -fx-border-width: 1;
+    -fx-border-radius: 20;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-cursor: default;
+}
+
+.stat-avenir {
+    -fx-background-color: #e8f5e9;
+    -fx-border-color: #a5d6a7;
+    -fx-text-fill: #2e7d32;
+}
+
+.stat-encours {
+    -fx-background-color: #fff9c4;
+    -fx-border-color: #fff59d;
+    -fx-text-fill: #f57f17;
+}
+
+.stat-termine {
+    -fx-background-color: #f5f5f5;
+    -fx-border-color: #e0e0e0;
+    -fx-text-fill: #616161;
+}
+
+.stat-annule {
+    -fx-background-color: #ffebee;
+    -fx-border-color: #ef9a9a;
+    -fx-text-fill: #c62828;
+}
+
+.stat-plein {
+    -fx-background-color: #fce4ec;
+    -fx-border-color: #f48fb1;
+    -fx-text-fill: #ad1457;
+}

@@ -31,12 +31,70 @@
                             <TextField fx:id="txtRecherche" prefWidth="250" promptText="Titre, lieu..." styleClass="search-field" HBox.hgrow="ALWAYS"/>
                         </HBox>
                         <Button text="🔍 Rechercher" onAction="#rechercherEvenements" styleClass="btn-primary"/>
-                        <Button text="🔄 Réinitialiser" onAction="#reinitialiserRecherche" styleClass="btn-secondary"/>
+                        <Button text="🔄" onAction="#reinitialiserRecherche" styleClass="btn-secondary"/>
 
                         <Region HBox.hgrow="ALWAYS"/>
 
                         <Label text="Total:" styleClass="form-label"/>
                         <Label fx:id="lblTotal" text="0 événements" styleClass="form-label"/>
+                    </children>
+                </HBox>
+
+                <GridPane hgap="12" vgap="10" styleClass="filter-grid">
+                    <children>
+                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                            <children>
+                                <Label text="Type" styleClass="form-label" />
+                                <ComboBox fx:id="comboType" promptText="Tous" styleClass="filter-combo" />
+                            </children>
+                        </VBox>
+
+                        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                            <children>
+                                <Label text="Statut" styleClass="form-label" />
+                                <ComboBox fx:id="comboStatut" promptText="Tous" styleClass="filter-combo" />
+                            </children>
+                        </VBox>
+
+                        <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                            <children>
+                                <Label text="Organisateur" styleClass="form-label" />
+                                <ComboBox fx:id="comboOrganisateur" promptText="Tous" styleClass="filter-combo" />
+                            </children>
+                        </VBox>
+
+                        <VBox spacing="6" GridPane.columnIndex="3" GridPane.rowIndex="0">
+                            <children>
+                                <Label text="Du" styleClass="form-label" />
+                                <DatePicker fx:id="dateDu" styleClass="form-input" />
+                            </children>
+                        </VBox>
+
+                        <VBox spacing="6" GridPane.columnIndex="4" GridPane.rowIndex="0">
+                            <children>
+                                <Label text="Au" styleClass="form-label" />
+                                <DatePicker fx:id="dateAu" styleClass="form-input" />
+                            </children>
+                        </VBox>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="5">
+                            <children>
+                                <Button text="Filtrer" onAction="#appliquerFiltres" styleClass="btn-primary" />
+                                <Button text="Réinitialiser" onAction="#reinitialiserFiltres" styleClass="btn-secondary" />
+                            </children>
+                        </HBox>
+                    </children>
+                </GridPane>
+
+                <HBox spacing="16" alignment="CENTER_LEFT" styleClass="stats-bar">
+                    <children>
+                        <Label text="Statistiques :" styleClass="stats-label"/>
+                        <Label fx:id="lblStatutAVenir" text="0 à venir" styleClass="stat-badge stat-avenir"/>
+                        <Label fx:id="lblStatutEnCours" text="0 en cours" styleClass="stat-badge stat-encours"/>
+                        <Label fx:id="lblStatutTermine" text="0 terminés" styleClass="stat-badge stat-termine"/>
+                        <Label fx:id="lblStatutAnnule" text="0 annulés" styleClass="stat-badge stat-annule"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="lblPleins" text="0 événements pleins" styleClass="stat-badge stat-plein"/>
                     </children>
                 </HBox>
             </children>
@@ -46,15 +104,15 @@
     <center>
         <TableView fx:id="tableEvenements" prefHeight="500" styleClass="table-view">
             <columns>
-                <TableColumn fx:id="colImage" text="Image" prefWidth="80"/>
-                <TableColumn fx:id="colTitre" text="Titre" prefWidth="200"/>
-                <TableColumn fx:id="colType" text="Type" prefWidth="120"/>
-                <TableColumn fx:id="colDateDebut" text="Date Début" prefWidth="180"/>
-                <TableColumn fx:id="colLieu" text="Lieu" prefWidth="200"/>
-                <TableColumn fx:id="colOrganisateur" text="Organisateur" prefWidth="200"/>
-                <TableColumn fx:id="colStatut" text="Statut" prefWidth="120"/>
-                <TableColumn fx:id="colPlacesLibres" text="Places libres" prefWidth="120"/>
-                <TableColumn fx:id="colActions" text="Actions" prefWidth="200"/>
+                <TableColumn fx:id="colImage" text="Image" prefWidth="80" sortable="false"/>
+                <TableColumn fx:id="colTitre" text="Titre" prefWidth="200" sortable="true"/>
+                <TableColumn fx:id="colType" text="Type" prefWidth="120" sortable="true"/>
+                <TableColumn fx:id="colDateDebut" text="Date Début" prefWidth="180" sortable="true"/>
+                <TableColumn fx:id="colLieu" text="Lieu" prefWidth="200" sortable="true"/>
+                <TableColumn fx:id="colOrganisateur" text="Organisateur" prefWidth="200" sortable="true"/>
+                <TableColumn fx:id="colStatut" text="Statut" prefWidth="120" sortable="true"/>
+                <TableColumn fx:id="colPlacesLibres" text="Places libres" prefWidth="120" sortable="true"/>
+                <TableColumn fx:id="colActions" text="Actions" prefWidth="200" sortable="false"/>
             </columns>
         </TableView>
     </center>

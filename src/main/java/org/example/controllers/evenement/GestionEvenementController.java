@@ -11,6 +11,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import org.example.entities.Evenement;
 import org.example.enums.Role;
+import org.example.enums.TypeEvenement;
+import org.example.enums.StatutEvenement;
 import org.example.services.EvenementService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
@@ -62,6 +64,36 @@ public class GestionEvenementController {
     @FXML
     private Button btnAjouter;
 
+    @FXML
+    private ComboBox<TypeEvenement> comboType;
+
+    @FXML
+    private ComboBox<StatutEvenement> comboStatut;
+
+    @FXML
+    private ComboBox<String> comboOrganisateur;
+
+    @FXML
+    private DatePicker dateDu;
+
+    @FXML
+    private DatePicker dateAu;
+
+    @FXML
+    private Label lblStatutAVenir;
+
+    @FXML
+    private Label lblStatutEnCours;
+
+    @FXML
+    private Label lblStatutTermine;
+
+    @FXML
+    private Label lblStatutAnnule;
+
+    @FXML
+    private Label lblPleins;
+
     private EvenementService evenementService;
     private ObservableList<EvenementService.EvenementAvecOrganisateurNom> listeEvenements;
 
@@ -86,11 +118,64 @@ public class GestionEvenementController {
             btnAjouter.setVisible(false);
         }
 
+        // Initialiser les filtres
+        initialiserFiltres();
+
         // Configurer les colonnes
         configurerColonnes();
 
         // Charger les données
         chargerEvenements();
+    }
+
+    private void initialiserFiltres() {
+        comboType.getItems().setAll(TypeEvenement.values());
+        comboStatut.getItems().setAll(StatutEvenement.values());
+
+        // Charger la liste des organisateurs
+        try {
+            java.util.Set<String> organisateurs = new java.util.HashSet<>();
+            for (Evenement e : evenementService.afficher()) {
+                String nomOrganisateur = evenementService.getNomOrganisateur(e.getOrganisateurId());
+                if (nomOrganisateur != null && !nomOrganisateur.trim().isEmpty()) {
+                    organisateurs.add(nomOrganisateur);
+                }
+            }
+            comboOrganisateur.getItems().setAll(organisateurs);
+        } catch (SQLException e) {
+            System.err.println("Erreur lors du chargement des organisateurs: " + e.getMessage());
+        }
+
+        // Configurer les cell factories pour afficher les noms lisibles
+        comboType.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(TypeEvenement item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.name());
+            }
+        });
+        comboType.setButtonCell(new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(TypeEvenement item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "Tous" : item.name());
+            }
+        });
+
+        comboStatut.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(StatutEvenement item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.name());
+            }
+        });
+        comboStatut.setButtonCell(new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(StatutEvenement item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "Tous" : item.name());
+            }
+        });
     }
 
     private void configurerColonnes() {
@@ -192,6 +277,41 @@ public class GestionEvenementController {
                 }
             }
         });
+
+        // Coloration des lignes selon le statut
+        tableEvenements.setRowFactory(tv -> new TableRow<>() {
+            @Override
+            protected void updateItem(EvenementService.EvenementAvecOrganisateurNom item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setStyle("");
+                } else {
+                    Evenement e = item.getEvenement();
+                    String style = "";
+                    switch (e.getStatut()) {
+                        case A_VENIR:
+                            style = "-fx-background-color: #e8f5e9;"; // Vert pastel
+                            break;
+                        case EN_COURS:
+                            style = "-fx-background-color: #fff9c4;"; // Jaune pastel
+                            break;
+                        case TERMINE:
+                            style = "-fx-background-color: #f5f5f5;"; // Gris pastel
+                            break;
+                        case ANNULE:
+                            style = "-fx-background-color: #ffebee;"; // Rouge pastel
+                            break;
+                    }
+
+                    // Mettre en évidence les événements pleins
+                    if (item.getPlacesLibres() == 0) {
+                        style += " -fx-border-color: #e74c3c; -fx-border-width: 2px;";
+                    }
+
+                    setStyle(style);
+                }
+            }
+        });
     }
 
     private void chargerEvenements() {
@@ -212,9 +332,47 @@ public class GestionEvenementController {
             }
             tableEvenements.setItems(listeEvenements);
             lblTotal.setText(listeEvenements.size() + " événements");
+
+            // Calculer et afficher les statistiques
+            calculerStatistiques();
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible de charger les événements: " + e.getMessage());
         }
+    }
+
+    private void calculerStatistiques() {
+        int aVenir = 0, enCours = 0, termine = 0, annule = 0, pleins = 0;
+
+        for (EvenementService.EvenementAvecOrganisateurNom item : listeEvenements) {
+            Evenement e = item.getEvenement();
+
+            // Compter par statut
+            switch (e.getStatut()) {
+                case A_VENIR:
+                    aVenir++;
+                    break;
+                case EN_COURS:
+                    enCours++;
+                    break;
+                case TERMINE:
+                    termine++;
+                    break;
+                case ANNULE:
+                    annule++;
+                    break;
+            }
+
+            // Compter les événements pleins
+            if (item.getPlacesLibres() == 0) {
+                pleins++;
+            }
+        }
+
+        lblStatutAVenir.setText(aVenir + " à venir");
+        lblStatutEnCours.setText(enCours + " en cours");
+        lblStatutTermine.setText(termine + " terminés");
+        lblStatutAnnule.setText(annule + " annulés");
+        lblPleins.setText(pleins + " événements pleins");
     }
 
     /**
@@ -283,6 +441,67 @@ public class GestionEvenementController {
 
     @FXML
     private void reinitialiserRecherche(ActionEvent actionEvent) {
+        txtRecherche.clear();
+        chargerEvenements();
+    }
+
+    @FXML
+    public void appliquerFiltres(ActionEvent event) {
+        if (listeEvenements == null || listeEvenements.isEmpty()) {
+            return;
+        }
+
+        TypeEvenement type = comboType.getValue();
+        StatutEvenement statut = comboStatut.getValue();
+        String organisateur = comboOrganisateur.getValue();
+        var du = dateDu.getValue();
+        var au = dateAu.getValue();
+
+        ObservableList<EvenementService.EvenementAvecOrganisateurNom> resultats = FXCollections.observableArrayList();
+
+        for (EvenementService.EvenementAvecOrganisateurNom item : listeEvenements) {
+            Evenement e = item.getEvenement();
+
+            // Filtre par type
+            if (type != null && e.getType() != type) {
+                continue;
+            }
+
+            // Filtre par statut
+            if (statut != null && e.getStatut() != statut) {
+                continue;
+            }
+
+            // Filtre par organisateur
+            if (organisateur != null && !organisateur.trim().isEmpty() && !organisateur.equals(item.getOrganisateurNom())) {
+                continue;
+            }
+
+            // Filtre par date
+            if (e.getDateDebut() != null) {
+                var d = e.getDateDebut().toLocalDateTime().toLocalDate();
+                if (du != null && d.isBefore(du)) {
+                    continue;
+                }
+                if (au != null && d.isAfter(au)) {
+                    continue;
+                }
+            }
+
+            resultats.add(item);
+        }
+
+        tableEvenements.setItems(resultats);
+        lblTotal.setText(resultats.size() + " événements (filtrés)");
+    }
+
+    @FXML
+    public void reinitialiserFiltres(ActionEvent event) {
+        comboType.setValue(null);
+        comboStatut.setValue(null);
+        comboOrganisateur.setValue(null);
+        dateDu.setValue(null);
+        dateAu.setValue(null);
         txtRecherche.clear();
         chargerEvenements();
     }
