@@ -1,5 +1,7 @@
 package org.example.controllers.participation;
 
+import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -12,6 +14,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import org.example.entities.Evenement;
 import org.example.entities.Participation;
+import org.example.enums.StatutParticipation;
+import org.example.enums.TypeEvenement;
 import org.example.services.ParticipationService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
@@ -32,8 +36,21 @@ public class ParticipationsEtudiantController {
     @FXML
     private Label lblTotal;
 
+    @FXML
+    private TextField txtRecherche;
+
+    @FXML
+    private ComboBox<StatutParticipation> comboStatutParticipation;
+
+    @FXML
+    private ComboBox<TypeEvenement> comboType;
+
+    @FXML
+    private ComboBox<String> comboTri;
+
     private ParticipationService participationService;
     private List<Participation> listeParticipations;
+    private List<Evenement> listeEvenements;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @FXML
@@ -41,7 +58,50 @@ public class ParticipationsEtudiantController {
         System.out.println("Initialisation de ParticipationsEtudiantController");
         try {
             participationService = new ParticipationService();
-            
+
+            // Initialiser le ComboBox de tri
+            comboTri.setItems(FXCollections.observableArrayList(
+                "Date (plus proche)",
+                "Date (plus lointain)"
+            ));
+            comboTri.setValue("Date (plus proche)");
+
+            // Initialiser le ComboBox de statut participation
+            comboStatutParticipation.setItems(FXCollections.observableArrayList(StatutParticipation.values()));
+            comboStatutParticipation.setValue(null);
+            comboStatutParticipation.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+                @Override
+                protected void updateItem(StatutParticipation item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.name());
+                }
+            });
+            comboStatutParticipation.setButtonCell(new javafx.scene.control.ListCell<>() {
+                @Override
+                protected void updateItem(StatutParticipation item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.name());
+                }
+            });
+
+            // Initialiser le ComboBox de type
+            comboType.setItems(FXCollections.observableArrayList(TypeEvenement.values()));
+            comboType.setValue(null);
+            comboType.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+                @Override
+                protected void updateItem(TypeEvenement item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.name());
+                }
+            });
+            comboType.setButtonCell(new javafx.scene.control.ListCell<>() {
+                @Override
+                protected void updateItem(TypeEvenement item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.name());
+                }
+            });
+
             chargerParticipationsEtudiant();
         } catch (Exception e) {
             System.err.println("Erreur lors de l'initialisation: " + e.getMessage());
@@ -65,7 +125,16 @@ public class ParticipationsEtudiantController {
                     listeParticipations.add(p);
                 }
             }
-            
+
+            // Charger les événements associés
+            listeEvenements = new ArrayList<>();
+            for (Participation p : listeParticipations) {
+                Evenement e = chargerEvenementParId(p.getEvenementId());
+                if (e != null) {
+                    listeEvenements.add(e);
+                }
+            }
+
             System.out.println("Nombre de participations chargées: " + listeParticipations.size());
 
             if (listeParticipations.isEmpty()) {
@@ -91,6 +160,70 @@ public class ParticipationsEtudiantController {
         Label lblMessage = new Label("✅ Aucune participation");
         lblMessage.setStyle("-fx-font-size: 20px; -fx-text-fill: #7f8c8d; -fx-font-weight: bold;");
         tileParticipations.getChildren().add(lblMessage);
+    }
+
+    @FXML
+    private void appliquerFiltres() {
+        List<Participation> filtres = new ArrayList<>(listeParticipations);
+
+        // Filtrer par recherche (titre de l'événement)
+        String recherche = txtRecherche.getText();
+        if (recherche != null && !recherche.trim().isEmpty()) {
+            String rechercheLower = recherche.toLowerCase();
+            filtres.removeIf(p -> {
+                Evenement e = chargerEvenementParId(p.getEvenementId());
+                return e == null || !e.getTitre().toLowerCase().contains(rechercheLower);
+            });
+        }
+
+        // Filtrer par statut participation
+        StatutParticipation statutParticipation = comboStatutParticipation.getValue();
+        if (statutParticipation != null) {
+            filtres.removeIf(p -> p.getStatut() != statutParticipation);
+        }
+
+        // Filtrer par type événement
+        TypeEvenement type = comboType.getValue();
+        if (type != null) {
+            filtres.removeIf(p -> {
+                Evenement e = chargerEvenementParId(p.getEvenementId());
+                return e == null || e.getType() != type;
+            });
+        }
+
+        // Trier par date de l'événement
+        String tri = comboTri.getValue();
+        if (tri != null) {
+            filtres.sort((p1, p2) -> {
+                Evenement e1 = chargerEvenementParId(p1.getEvenementId());
+                Evenement e2 = chargerEvenementParId(p2.getEvenementId());
+                if (e1 == null || e2 == null) return 0;
+                if (tri.equals("Date (plus proche)")) {
+                    return e1.getDateDebut().toLocalDateTime().compareTo(e2.getDateDebut().toLocalDateTime());
+                } else if (tri.equals("Date (plus lointain)")) {
+                    return e2.getDateDebut().toLocalDateTime().compareTo(e1.getDateDebut().toLocalDateTime());
+                }
+                return 0;
+            });
+        }
+
+        // Afficher les résultats
+        if (filtres.isEmpty()) {
+            afficherMessageAucuneParticipation();
+            lblTotal.setText("0 participations");
+        } else {
+            afficherCartesParticipations(filtres);
+            lblTotal.setText(filtres.size() + " participations");
+        }
+    }
+
+    @FXML
+    private void reinitialiserFiltres(ActionEvent event) {
+        txtRecherche.clear();
+        comboStatutParticipation.setValue(null);
+        comboType.setValue(null);
+        comboTri.setValue("Date (plus proche)");
+        appliquerFiltres();
     }
 
     private void afficherCartesParticipations(List<Participation> participations) {
