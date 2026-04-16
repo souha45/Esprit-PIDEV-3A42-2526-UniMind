@@ -428,9 +428,7 @@ public class GestionEvenementController {
         for (EvenementService.EvenementAvecOrganisateurNom item : listeEvenements) {
             Evenement e = item.getEvenement();
             if (e.getTitre().toLowerCase().contains(recherche) ||
-                e.getLieu().toLowerCase().contains(recherche) ||
-                e.getType().toString().toLowerCase().contains(recherche) ||
-                item.getOrganisateurNom().toLowerCase().contains(recherche)) {
+                e.getLieu().toLowerCase().contains(recherche)) {
                 resultat.add(item);
             }
         }

@@ -89,12 +89,26 @@
                 <HBox spacing="16" alignment="CENTER_LEFT" styleClass="stats-bar">
                     <children>
                         <Label text="Statistiques :" styleClass="stats-label"/>
-                        <Label fx:id="lblStatutAVenir" text="0 à venir" styleClass="stat-badge stat-avenir"/>
-                        <Label fx:id="lblStatutEnCours" text="0 en cours" styleClass="stat-badge stat-encours"/>
-                        <Label fx:id="lblStatutTermine" text="0 terminés" styleClass="stat-badge stat-termine"/>
-                        <Label fx:id="lblStatutAnnule" text="0 annulés" styleClass="stat-badge stat-annule"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Label fx:id="lblPleins" text="0 événements pleins" styleClass="stat-badge stat-plein"/>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Region styleClass="legend-color" style="-fx-background-color: #e8f5e9;"/>
+                            <Label fx:id="lblStatutAVenir" text="0 à venir" styleClass="stat-badge stat-avenir"/>
+                        </HBox>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Region styleClass="legend-color" style="-fx-background-color: #fff9c4;"/>
+                            <Label fx:id="lblStatutEnCours" text="0 en cours" styleClass="stat-badge stat-encours"/>
+                        </HBox>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Region styleClass="legend-color" style="-fx-background-color: #f5f5f5;"/>
+                            <Label fx:id="lblStatutTermine" text="0 terminés" styleClass="stat-badge stat-termine"/>
+                        </HBox>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Region styleClass="legend-color" style="-fx-background-color: #ffebee;"/>
+                            <Label fx:id="lblStatutAnnule" text="0 annulés" styleClass="stat-badge stat-annule"/>
+                        </HBox>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Region styleClass="legend-color" style="-fx-background-color: white; -fx-border-color: #e74c3c; -fx-border-width: 2px;"/>
+                            <Label fx:id="lblPleins" text="0 événements pleins" styleClass="stat-badge stat-plein"/>
+                        </HBox>
                     </children>
                 </HBox>
             </children>

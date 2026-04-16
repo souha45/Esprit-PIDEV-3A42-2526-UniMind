@@ -28,15 +28,78 @@
                     <children>
                         <HBox styleClass="search-box" alignment="CENTER_LEFT" spacing="8">
                             <Label text="🔍" styleClass="search-icon"/>
-                            <TextField fx:id="txtRecherche" prefWidth="250" promptText="Nom, email, type..." styleClass="search-field" HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="txtRecherche" prefWidth="250" promptText="Nom, email, événement..." styleClass="search-field" HBox.hgrow="ALWAYS"/>
                         </HBox>
                         <Button text="🔍 Rechercher" onAction="#rechercherSponsors" styleClass="btn-primary"/>
-                        <Button text="🔄 Réinitialiser" onAction="#reinitialiserRecherche" styleClass="btn-secondary"/>
+                        <Button text="🔄" onAction="#reinitialiserRecherche" styleClass="btn-secondary"/>
 
                         <Region HBox.hgrow="ALWAYS"/>
 
                         <Label text="Total:" styleClass="form-label"/>
                         <Label fx:id="lblTotal" text="0 sponsors" styleClass="form-label"/>
+                    </children>
+                </HBox>
+
+                <GridPane hgap="12" vgap="10" styleClass="filter-grid">
+                    <children>
+                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                            <children>
+                                <Label text="Type" styleClass="form-label" />
+                                <ComboBox fx:id="comboType" promptText="Tous" styleClass="filter-combo" />
+                            </children>
+                        </VBox>
+
+                        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                            <children>
+                                <Label text="Statut" styleClass="form-label" />
+                                <ComboBox fx:id="comboStatut" promptText="Tous" styleClass="filter-combo" />
+                            </children>
+                        </VBox>
+
+                        <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                            <children>
+                                <Label text="Du" styleClass="form-label" />
+                                <DatePicker fx:id="dateDu" styleClass="form-input" />
+                            </children>
+                        </VBox>
+
+                        <VBox spacing="6" GridPane.columnIndex="3" GridPane.rowIndex="0">
+                            <children>
+                                <Label text="Au" styleClass="form-label" />
+                                <DatePicker fx:id="dateAu" styleClass="form-input" />
+                            </children>
+                        </VBox>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="4">
+                            <children>
+                                <Button text="Filtrer" onAction="#appliquerFiltres" styleClass="btn-primary" />
+                                <Button text="🔄" onAction="#reinitialiserFiltres" styleClass="btn-secondary" />
+                            </children>
+                        </HBox>
+                    </children>
+                </GridPane>
+
+                <HBox spacing="16" alignment="CENTER_LEFT" styleClass="stats-bar">
+                    <children>
+                        <Label text="Statistiques :" styleClass="stats-label"/>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Region styleClass="legend-color" style="-fx-background-color: #e8f5e9;"/>
+                            <Label fx:id="lblStatutActif" text="0 confirmés" styleClass="stat-badge stat-actif"/>
+                        </HBox>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Region styleClass="legend-color" style="-fx-background-color: #fff3e0;"/>
+                            <Label fx:id="lblStatutInactif" text="0 en attente" styleClass="stat-badge stat-inactif"/>
+                        </HBox>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Region styleClass="legend-color" style="-fx-background-color: #ffebee;"/>
+                            <Label fx:id="lblStatutRefuse" text="0 refusés" styleClass="stat-badge stat-refuse"/>
+                        </HBox>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Region styleClass="legend-color" style="-fx-background-color: #f5f5f5;"/>
+                            <Label fx:id="lblStatutAnnule" text="0 annulés" styleClass="stat-badge stat-annule"/>
+                        </HBox>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="lblTotalSponsors" text="0 sponsors" styleClass="stat-badge stat-total"/>
                     </children>
                 </HBox>
             </children>
@@ -46,14 +109,14 @@
     <center>
         <TableView fx:id="tableSponsors" prefHeight="500" styleClass="table-view">
             <columns>
-                <TableColumn fx:id="colEvenement" text="Événement" prefWidth="200"/>
-                <TableColumn fx:id="colLogo" text="Logo" prefWidth="80"/>
-                <TableColumn fx:id="colNom" text="Sponsor" prefWidth="180"/>
-                <TableColumn fx:id="colType" text="Type" prefWidth="120"/>
-                <TableColumn fx:id="colEmail" text="Email" prefWidth="180"/>
-                <TableColumn fx:id="colStatut" text="Statut" prefWidth="100"/>
-                <TableColumn fx:id="colDate" text="Date" prefWidth="150"/>
-                <TableColumn fx:id="colActions" text="Actions" prefWidth="200"/>
+                <TableColumn fx:id="colEvenement" text="Événement" prefWidth="200" sortable="true"/>
+                <TableColumn fx:id="colLogo" text="Logo" prefWidth="80" sortable="false"/>
+                <TableColumn fx:id="colNom" text="Sponsor" prefWidth="180" sortable="true"/>
+                <TableColumn fx:id="colType" text="Type" prefWidth="120" sortable="true"/>
+                <TableColumn fx:id="colEmail" text="Email" prefWidth="180" sortable="true"/>
+                <TableColumn fx:id="colStatut" text="Statut" prefWidth="100" sortable="true"/>
+                <TableColumn fx:id="colDate" text="Date" prefWidth="150" sortable="true"/>
+                <TableColumn fx:id="colActions" text="Actions" prefWidth="200" sortable="false"/>
             </columns>
         </TableView>
     </center>

@@ -11,6 +11,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import org.example.entities.Sponsor;
 import org.example.enums.Role;
+import org.example.enums.TypeSponsor;
+import org.example.enums.StatutSponsor;
 import org.example.services.SponsorService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
@@ -46,6 +48,33 @@ public class GestionSponsorController {
     @FXML
     private TextField txtRecherche;
 
+    @FXML
+    private ComboBox<TypeSponsor> comboType;
+
+    @FXML
+    private ComboBox<StatutSponsor> comboStatut;
+
+    @FXML
+    private DatePicker dateDu;
+
+    @FXML
+    private DatePicker dateAu;
+
+    @FXML
+    private Label lblStatutActif;
+
+    @FXML
+    private Label lblStatutInactif;
+
+    @FXML
+    private Label lblStatutRefuse;
+
+    @FXML
+    private Label lblStatutAnnule;
+
+    @FXML
+    private Label lblTotalSponsors;
+
     private SponsorService sponsorService;
     private ObservableList<SponsorService.SponsorAvecInfos> listeSponsors;
 
@@ -65,8 +94,48 @@ public class GestionSponsorController {
         sponsorService = new SponsorService();
         listeSponsors = FXCollections.observableArrayList();
 
+        // Initialiser les filtres
+        initialiserFiltres();
+
         configurerColonnes();
+        configurerColorationLignes();
         chargerSponsors();
+    }
+
+    private void initialiserFiltres() {
+        comboType.getItems().setAll(TypeSponsor.values());
+        comboStatut.getItems().setAll(StatutSponsor.values());
+
+        // Configurer les cell factories pour afficher les noms lisibles
+        comboType.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(TypeSponsor item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.name());
+            }
+        });
+        comboType.setButtonCell(new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(TypeSponsor item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "Tous" : item.name());
+            }
+        });
+
+        comboStatut.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(StatutSponsor item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.name());
+            }
+        });
+        comboStatut.setButtonCell(new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(StatutSponsor item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "Tous" : item.name());
+            }
+        });
     }
 
     private void naviguerVersRetour() {
@@ -153,6 +222,35 @@ public class GestionSponsorController {
         });
     }
 
+    private void configurerColorationLignes() {
+        tableSponsors.setRowFactory(tv -> new javafx.scene.control.TableRow<>() {
+            @Override
+            protected void updateItem(SponsorService.SponsorAvecInfos sponsor, boolean empty) {
+                super.updateItem(sponsor, empty);
+                if (empty || sponsor == null) {
+                    setStyle("");
+                } else {
+                    switch (sponsor.getStatut()) {
+                        case EN_ATTENTE:
+                            setStyle("-fx-background-color: #fff3e0;");
+                            break;
+                        case CONFIRME:
+                            setStyle("-fx-background-color: #e8f5e9;");
+                            break;
+                        case REFUSE:
+                            setStyle("-fx-background-color: #ffebee;");
+                            break;
+                        case ANNULE:
+                            setStyle("-fx-background-color: #f5f5f5;");
+                            break;
+                        default:
+                            setStyle("");
+                    }
+                }
+            }
+        });
+    }
+
     private void chargerSponsors() {
         try {
             listeSponsors.clear();
@@ -182,9 +280,39 @@ public class GestionSponsorController {
 
             tableSponsors.setItems(listeSponsors);
             lblTotal.setText(listeSponsors.size() + " sponsors");
+
+            // Calculer et afficher les statistiques
+            calculerStatistiques();
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible de charger les sponsors: " + e.getMessage());
         }
+    }
+
+    private void calculerStatistiques() {
+        int enAttente = 0, confirmes = 0, refuses = 0, annules = 0;
+
+        for (SponsorService.SponsorAvecInfos sponsor : listeSponsors) {
+            switch (sponsor.getStatut()) {
+                case EN_ATTENTE:
+                    enAttente++;
+                    break;
+                case CONFIRME:
+                    confirmes++;
+                    break;
+                case REFUSE:
+                    refuses++;
+                    break;
+                case ANNULE:
+                    annules++;
+                    break;
+            }
+        }
+
+        lblStatutActif.setText(confirmes + " confirmés");
+        lblStatutInactif.setText(enAttente + " en attente");
+        lblStatutRefuse.setText(refuses + " refusés");
+        lblStatutAnnule.setText(annules + " annulés");
+        lblTotalSponsors.setText(listeSponsors.size() + " sponsors");
     }
 
     @FXML
@@ -206,7 +334,6 @@ public class GestionSponsorController {
         for (SponsorService.SponsorAvecInfos sponsor : listeSponsors) {
             if (sponsor.getNomSponsor().toLowerCase().contains(recherche) ||
                 sponsor.getEmailContact().toLowerCase().contains(recherche) ||
-                sponsor.getTypeSponsor().toString().toLowerCase().contains(recherche) ||
                 (sponsor.getEvenementTitre() != null && sponsor.getEvenementTitre().toLowerCase().contains(recherche))) {
                 resultats.add(sponsor);
             }
@@ -218,6 +345,58 @@ public class GestionSponsorController {
 
     @FXML
     private void reinitialiserRecherche(ActionEvent event) {
+        txtRecherche.clear();
+        chargerSponsors();
+    }
+
+    @FXML
+    public void appliquerFiltres(ActionEvent event) {
+        if (listeSponsors == null || listeSponsors.isEmpty()) {
+            return;
+        }
+
+        TypeSponsor type = comboType.getValue();
+        StatutSponsor statut = comboStatut.getValue();
+        var du = dateDu.getValue();
+        var au = dateAu.getValue();
+
+        ObservableList<SponsorService.SponsorAvecInfos> resultats = FXCollections.observableArrayList();
+
+        for (SponsorService.SponsorAvecInfos sponsor : listeSponsors) {
+            // Filtre par type
+            if (type != null && sponsor.getTypeSponsor() != type) {
+                continue;
+            }
+
+            // Filtre par statut
+            if (statut != null && sponsor.getStatut() != statut) {
+                continue;
+            }
+
+            // Filtre par date
+            if (sponsor.getDateContribution() != null) {
+                var d = sponsor.getDateContribution().toLocalDateTime().toLocalDate();
+                if (du != null && d.isBefore(du)) {
+                    continue;
+                }
+                if (au != null && d.isAfter(au)) {
+                    continue;
+                }
+            }
+
+            resultats.add(sponsor);
+        }
+
+        tableSponsors.setItems(resultats);
+        lblTotal.setText(resultats.size() + " sponsors (filtrés)");
+    }
+
+    @FXML
+    public void reinitialiserFiltres(ActionEvent event) {
+        comboType.setValue(null);
+        comboStatut.setValue(null);
+        dateDu.setValue(null);
+        dateAu.setValue(null);
         txtRecherche.clear();
         chargerSponsors();
     }

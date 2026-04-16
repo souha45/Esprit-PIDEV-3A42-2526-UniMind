@@ -618,3 +618,55 @@
     -fx-border-color: #f48fb1;
     -fx-text-fill: #ad1457;
 }
+
+/* =============================================
+   SPONSOR STATISTICS
+   ============================================= */
+.stat-actif {
+    -fx-background-color: #e8f5e9;
+    -fx-border-color: #a5d6a7;
+    -fx-text-fill: #2e7d32;
+}
+
+.stat-inactif {
+    -fx-background-color: #fff3e0;
+    -fx-border-color: #ffcc80;
+    -fx-text-fill: #ef6c00;
+}
+
+.stat-refuse {
+    -fx-background-color: #ffebee;
+    -fx-border-color: #ef9a9a;
+    -fx-text-fill: #c62828;
+}
+
+.stat-total {
+    -fx-background-color: #e3f2fd;
+    -fx-border-color: #90caf9;
+    -fx-text-fill: #1565c0;
+}
+
+/* =============================================
+   LEGEND BAR
+   ============================================= */
+.legend-bar {
+    -fx-padding: 8px 16px;
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #dee2e6;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.legend-color {
+    -fx-min-width: 16px;
+    -fx-min-height: 16px;
+    -fx-pref-width: 16px;
+    -fx-pref-height: 16px;
+    -fx-border-radius: 3px;
+    -fx-border-color: #dee2e6;
+    -fx-border-width: 1px;
+}
+
+.legend-text {
+    -fx-font-size: 12px;
+    -fx-text-fill: #495057;
+}
