@@ -40,7 +40,6 @@ public class SuiviTraitementModificationController implements Initializable {
     @FXML private Label lblEtudiant;
     @FXML private Label lblPsychologue;
 
-    // Labels d'erreur
     @FXML private Label lblErreurDate;
     @FXML private Label lblErreurTraitement;
     @FXML private Label lblErreurEtudiant;
@@ -74,7 +73,6 @@ public class SuiviTraitementModificationController implements Initializable {
             txtPsychologue.setText(session.getNomUtilisateur());
             txtPsychologue.setEditable(false);
 
-            // Ajout des listeners pour validation en temps réel
             ajouterListenersValidation();
 
             lblStatus.setText("✓ Prêt à modifier le suivi");
@@ -163,9 +161,6 @@ public class SuiviTraitementModificationController implements Initializable {
                 !lblErreurNotes.isVisible() && (cmbEtudiant == null || !cmbEtudiant.isVisible() || !lblErreurEtudiant.isVisible());
     }
 
-    /**
-     * Initialise le formulaire avec le suivi à modifier
-     */
     public void setSuiviTraitement(SuiviTraitement suivi) {
         this.suiviSelectionne = suivi;
 
@@ -174,18 +169,24 @@ public class SuiviTraitementModificationController implements Initializable {
             return;
         }
 
-        // Date
+        // Vérifier les permissions avant de permettre la modification
+        SessionManager session = SessionManager.getInstance();
+        if (session.estEtudiant() && suivi.getSaisiPar() != SaisiPar.ETUDIANT) {
+            lblStatus.setText("✗ Vous ne pouvez pas modifier le suivi du psychologue");
+            dpDateSuivi.setDisable(true);
+            cmbTraitement.setDisable(true);
+            txtNotes.setDisable(true);
+            return;
+        }
+
         if (suivi.getDateSuivi() != null) {
             dpDateSuivi.setValue(suivi.getDateSuivi().toLocalDate());
         }
 
-        // Traitement
         for (Traitement traitement : traitementsList) {
             if (traitement.getTraitementId() == suivi.getTraitementId()) {
                 cmbTraitement.setValue(traitement);
 
-                // Sélectionner automatiquement l'étudiant associé pour le psychologue
-                SessionManager session = SessionManager.getInstance();
                 if (session.estPsychologue()) {
                     for (Etudiant etudiant : etudiantsList) {
                         if (etudiant.getUserId() == traitement.getEtudiantId()) {
@@ -198,12 +199,10 @@ public class SuiviTraitementModificationController implements Initializable {
             }
         }
 
-        // Notes
         txtNotes.setText(suivi.getObservations() != null ? suivi.getObservations() : "");
 
         lblStatus.setText("✓ Modification du suivi du " + (suivi.getDateSuivi() != null ? suivi.getDateSuivi().toString() : "date inconnue"));
 
-        // Valider immédiatement pour afficher les erreurs existantes
         validerDate();
         validerTraitement();
         validerNotes();
@@ -265,7 +264,6 @@ public class SuiviTraitementModificationController implements Initializable {
         lblPsychologue.setVisible(true);
         lblPsychologue.setManaged(true);
 
-        // Filtre des traitements par étudiant
         cmbEtudiant.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 List<Traitement> traitementsFiltres = traitementsList.stream()
@@ -291,7 +289,6 @@ public class SuiviTraitementModificationController implements Initializable {
         lblPsychologue.setVisible(false);
         lblPsychologue.setManaged(false);
 
-        // Filtrer les traitements pour l'étudiant connecté
         SessionManager session = SessionManager.getInstance();
         int etudiantId = session.getUtilisateurConnecteId();
 
@@ -301,11 +298,18 @@ public class SuiviTraitementModificationController implements Initializable {
 
         cmbTraitement.setItems(FXCollections.observableArrayList(traitementsEtudiant));
 
-        txtNotes.setPromptText("Décrivez comment vous vous sentez et votre progression...");
+        txtNotes.setPromptText("Décrivez votre progression, vos ressentis, vos difficultés...");
     }
 
     @FXML
     private void handleEnregistrer() {
+        // Vérifier à nouveau les permissions avant d'enregistrer
+        SessionManager session = SessionManager.getInstance();
+        if (session.estEtudiant() && suiviSelectionne != null && suiviSelectionne.getSaisiPar() != SaisiPar.ETUDIANT) {
+            afficherErreur("Accès refusé", "Vous ne pouvez pas modifier le suivi du psychologue.");
+            return;
+        }
+
         if (!isFormulaireValide()) {
             lblStatus.setText("✗ Veuillez corriger les erreurs dans le formulaire");
             return;
@@ -342,13 +346,11 @@ public class SuiviTraitementModificationController implements Initializable {
 
         SessionManager session = SessionManager.getInstance();
 
-        // Récupérer le traitement sélectionné
         Traitement traitementSelectionne = cmbTraitement.getValue();
         if (traitementSelectionne == null) {
             throw new SQLException("Veuillez sélectionner un traitement");
         }
 
-        // Vérification de cohérence pour le psychologue
         if (session.estPsychologue()) {
             Etudiant etudiantSelectionne = cmbEtudiant.getValue();
             if (etudiantSelectionne == null) {
@@ -358,14 +360,8 @@ public class SuiviTraitementModificationController implements Initializable {
             if (traitementSelectionne.getEtudiantId() != etudiantSelectionne.getUserId()) {
                 throw new SQLException("Le traitement ne correspond pas à l'étudiant sélectionné");
             }
-        } else {
-            // Vérifier que l'étudiant modifie bien son propre suivi
-            if (suiviSelectionne.getSaisiPar() == SaisiPar.PSYCHOLOGUE) {
-                throw new SQLException("Vous ne pouvez pas modifier un suivi du psychologue");
-            }
         }
 
-        // Mise à jour
         suiviSelectionne.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
         suiviSelectionne.setSaisiPar(session.getRoleSaisiPar());
 
