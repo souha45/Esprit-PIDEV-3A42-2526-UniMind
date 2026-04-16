@@ -163,7 +163,6 @@ public class SuiviTraitementController implements Initializable {
                 if (session.estPsychologue()) {
                     peutVoir = true;
                 } else if (session.estEtudiant()) {
-                    // L'étudiant voit ses propres suivis et ceux du psychologue pour ses traitements
                     peutVoir = (etudiantId == session.getUtilisateurConnecteId());
                 } else {
                     peutVoir = true;
@@ -345,9 +344,7 @@ public class SuiviTraitementController implements Initializable {
                     LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
                     SuiviTraitement suivi = ligne.getPremierSuivi();
                     if (suivi != null && !ligne.estEntete()) {
-                        // Vérifier si l'étudiant peut modifier CE suivi
                         if (session.estEtudiant()) {
-                            // L'étudiant ne peut modifier que ses propres suivis
                             if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
                                 ouvrirPageModification(suivi);
                             } else {
@@ -363,9 +360,7 @@ public class SuiviTraitementController implements Initializable {
                     LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
                     SuiviTraitement suivi = ligne.getPremierSuivi();
                     if (suivi != null && !ligne.estEntete()) {
-                        // Vérifier si l'étudiant peut supprimer CE suivi
                         if (session.estEtudiant()) {
-                            // L'étudiant ne peut supprimer que ses propres suivis
                             if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
                                 supprimerSuivi(suivi);
                             } else {
@@ -389,13 +384,19 @@ public class SuiviTraitementController implements Initializable {
 
                     if (suivi != null) {
                         if (session.estEtudiant()) {
-                            // Pour l'étudiant : afficher les boutons mais la vérification se fait dans l'action
-                            setGraphic(container);
+                            // L'étudiant voit les boutons Modifier/Supprimer uniquement pour ses propres suivis
+                            if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
+                                setGraphic(container);
+                            } else {
+                                // Pour les suivis du psychologue, seulement le bouton Afficher
+                                setGraphic(btnView);
+                            }
                         } else {
+                            // Psychologue : tous les boutons
                             setGraphic(container);
                         }
                     } else {
-                        setGraphic(container);
+                        setGraphic(null);
                     }
                 }
             }
@@ -552,7 +553,7 @@ public class SuiviTraitementController implements Initializable {
 
     private void ouvrirPageAjout() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-ajout-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-ajout-view.fxml"));
             Parent root = loader.load();
             Stage stage = new Stage();
             stage.setTitle("Ajouter un Suivi");
@@ -567,7 +568,7 @@ public class SuiviTraitementController implements Initializable {
 
     private void ouvrirPageAffichage(SuiviTraitement suivi) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-affichage-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-affichage-view.fxml"));
             Parent root = loader.load();
             SuiviTraitementAffichageController controller = loader.getController();
             controller.setSuiviTraitement(suivi);
@@ -582,7 +583,7 @@ public class SuiviTraitementController implements Initializable {
 
     private void ouvrirPageModification(SuiviTraitement suivi) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-modification-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-modification-view.fxml"));
             Parent root = loader.load();
             SuiviTraitementModificationController controller = loader.getController();
             controller.setSuiviTraitement(suivi);
