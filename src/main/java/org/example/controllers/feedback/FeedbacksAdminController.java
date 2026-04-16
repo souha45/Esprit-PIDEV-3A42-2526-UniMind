@@ -1,18 +1,23 @@
 package org.example.controllers.feedback;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 import org.example.entities.Evenement;
 import org.example.entities.Participation;
+import org.example.enums.TypeEvenement;
+import org.example.services.EvenementService;
 import org.example.services.ParticipationService;
+import org.example.utils.NavigationContext;
 
+import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class FeedbacksAdminController {
 
@@ -22,7 +27,29 @@ public class FeedbacksAdminController {
     @FXML
     private Label lblTotal;
 
+    @FXML
+    private Label lblNoteMoyenne;
+
+    @FXML
+    private Label lblTopEvenement;
+
+    // Filtres
+    @FXML
+    private ComboBox<TypeEvenement> comboTypeEvenement;
+
+    @FXML
+    private DatePicker dateDebut;
+
+    @FXML
+    private DatePicker dateFin;
+
+    @FXML
+    private ComboBox<String> comboTri;
+
     private ParticipationService participationService;
+    private EvenementService evenementService;
+    private List<Participation> listeFeedbacks;
+    private List<Participation> listeFiltree;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @FXML
@@ -30,6 +57,11 @@ public class FeedbacksAdminController {
         System.out.println("Initialisation de FeedbacksAdminController");
         try {
             participationService = new ParticipationService();
+            evenementService = new EvenementService();
+            listeFeedbacks = new ArrayList<>();
+            listeFiltree = new ArrayList<>();
+            
+            initialiserFiltres();
             chargerFeedbacks();
         } catch (Exception e) {
             System.err.println("Erreur lors de l'initialisation: " + e.getMessage());
@@ -37,30 +69,180 @@ public class FeedbacksAdminController {
         }
     }
 
+    private void initialiserFiltres() {
+        // Initialiser le combo des types d'événement
+        comboTypeEvenement.getItems().clear();
+        comboTypeEvenement.getItems().add(null);
+        comboTypeEvenement.getItems().addAll(TypeEvenement.values());
+        comboTypeEvenement.setValue(null);
+
+        // Initialiser le combo de tri
+        comboTri.getItems().addAll("Pertinence", "Date récente", "Date ancienne", "Note élevée", "Note faible", "Alphabétique");
+        comboTri.setValue("Pertinence");
+    }
+
     private void chargerFeedbacks() {
         System.out.println("Chargement des feedbacks...");
         try {
             // Récupérer toutes les participations avec feedback
-            List<Participation> feedbacks = new ArrayList<>();
+            listeFeedbacks.clear();
             for (Participation p : participationService.afficher()) {
                 if (p.hasFeedback()) {
-                    feedbacks.add(p);
+                    listeFeedbacks.add(p);
                 }
             }
 
-            System.out.println("Nombre de feedbacks chargés: " + feedbacks.size());
+            listeFiltree.clear();
+            listeFiltree.addAll(listeFeedbacks);
+            
+            System.out.println("Nombre de feedbacks chargés: " + listeFiltree.size());
 
-            if (feedbacks.isEmpty()) {
+            if (listeFiltree.isEmpty()) {
                 afficherAucunFeedback();
                 lblTotal.setText("0 avis");
+                lblNoteMoyenne.setText("⭐ 0.0/5");
+                lblTopEvenement.setText("-");
             } else {
-                afficherCartesFeedbacks(feedbacks);
-                lblTotal.setText(feedbacks.size() + " avis");
+                appliquerTri();
+                afficherCartesFeedbacks(listeFiltree);
+                calculerStatistiques();
             }
         } catch (SQLException e) {
             System.err.println("Erreur SQL lors du chargement des feedbacks: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void appliquerTri() {
+        String tri = comboTri.getValue();
+        if (tri == null) tri = "Pertinence";
+
+        switch (tri) {
+            case "Date récente":
+                listeFiltree.sort((p1, p2) -> {
+                    if (p1.getFeedbackAt() == null || p2.getFeedbackAt() == null) return 0;
+                    return p2.getFeedbackAt().compareTo(p1.getFeedbackAt());
+                });
+                break;
+            case "Date ancienne":
+                listeFiltree.sort((p1, p2) -> {
+                    if (p1.getFeedbackAt() == null || p2.getFeedbackAt() == null) return 0;
+                    return p1.getFeedbackAt().compareTo(p2.getFeedbackAt());
+                });
+                break;
+            case "Note élevée":
+                listeFiltree.sort((p1, p2) -> Integer.compare(p2.getNoteSatisfaction(), p1.getNoteSatisfaction()));
+                break;
+            case "Note faible":
+                listeFiltree.sort((p1, p2) -> Integer.compare(p1.getNoteSatisfaction(), p2.getNoteSatisfaction()));
+                break;
+            case "Alphabétique":
+                listeFiltree.sort((p1, p2) -> {
+                    String titre1 = chargerEvenementParId(p1.getEvenementId()) != null ? chargerEvenementParId(p1.getEvenementId()).getTitre() : "";
+                    String titre2 = chargerEvenementParId(p2.getEvenementId()) != null ? chargerEvenementParId(p2.getEvenementId()).getTitre() : "";
+                    return titre1.compareToIgnoreCase(titre2);
+                });
+                break;
+            default: // Pertinence
+                // Par défaut : événements à venir d'abord, puis par date de feedback
+                listeFiltree.sort((p1, p2) -> {
+                    Evenement e1 = chargerEvenementParId(p1.getEvenementId());
+                    Evenement e2 = chargerEvenementParId(p2.getEvenementId());
+                    if (e1 != null && e2 != null) {
+                        boolean e1AVenir = e1.getDateDebut() != null && e1.getDateDebut().toLocalDateTime().isAfter(java.time.LocalDateTime.now());
+                        boolean e2AVenir = e2.getDateDebut() != null && e2.getDateDebut().toLocalDateTime().isAfter(java.time.LocalDateTime.now());
+                        if (e1AVenir && !e2AVenir) return -1;
+                        if (!e1AVenir && e2AVenir) return 1;
+                    }
+                    if (p1.getFeedbackAt() == null || p2.getFeedbackAt() == null) return 0;
+                    return p2.getFeedbackAt().compareTo(p1.getFeedbackAt());
+                });
+                break;
+        }
+    }
+
+    private void calculerStatistiques() {
+        lblTotal.setText(listeFiltree.size() + " avis");
+
+        // Note moyenne
+        if (!listeFiltree.isEmpty()) {
+            double somme = listeFiltree.stream().mapToInt(Participation::getNoteSatisfaction).sum();
+            double moyenne = somme / listeFiltree.size();
+            lblNoteMoyenne.setText(String.format("⭐ %.1f/5", moyenne));
+        } else {
+            lblNoteMoyenne.setText("⭐ 0.0/5");
+        }
+
+        // Top événement (celui avec le plus de feedbacks)
+        Map<String, Long> countByEvenement = listeFiltree.stream()
+            .collect(Collectors.groupingBy(p -> {
+                Evenement e = chargerEvenementParId(p.getEvenementId());
+                return e != null ? e.getTitre() : "Inconnu";
+            }, Collectors.counting()));
+        
+        Optional<Map.Entry<String, Long>> topEvenement = countByEvenement.entrySet().stream()
+            .max(Map.Entry.comparingByValue());
+        
+        if (topEvenement.isPresent()) {
+            lblTopEvenement.setText(topEvenement.get().getKey() + " (" + topEvenement.get().getValue() + ")");
+        } else {
+            lblTopEvenement.setText("-");
+        }
+    }
+
+    @FXML
+    private void appliquerFiltres() {
+        listeFiltree.clear();
+        listeFiltree.addAll(listeFeedbacks);
+
+        // Filtrer par type d'événement
+        TypeEvenement type = comboTypeEvenement.getValue();
+        if (type != null) {
+            listeFiltree.removeIf(p -> {
+                Evenement e = chargerEvenementParId(p.getEvenementId());
+                return e == null || e.getType() != type;
+            });
+        }
+
+
+        // Filtrer par période (date de l'événement)
+        LocalDate debut = dateDebut.getValue();
+        LocalDate fin = dateFin.getValue();
+        if (debut != null || fin != null) {
+            listeFiltree.removeIf(p -> {
+                Evenement e = chargerEvenementParId(p.getEvenementId());
+                if (e == null || e.getDateDebut() == null) return true;
+                LocalDate dateEvenement = e.getDateDebut().toLocalDateTime().toLocalDate();
+                if (debut != null && dateEvenement.isBefore(debut)) return true;
+                if (fin != null && dateEvenement.isAfter(fin)) return true;
+                return false;
+            });
+        }
+
+        if (listeFiltree.isEmpty()) {
+            afficherAucunFeedback();
+            lblTotal.setText("0 avis");
+            lblNoteMoyenne.setText("⭐ 0.0/5");
+            lblTopEvenement.setText("-");
+        } else {
+            appliquerTri();
+            afficherCartesFeedbacks(listeFiltree);
+            calculerStatistiques();
+        }
+    }
+
+    @FXML
+    private void reinitialiserFiltres() {
+        comboTypeEvenement.setValue(null);
+        dateDebut.setValue(null);
+        dateFin.setValue(null);
+        comboTri.setValue("Pertinence");
+        chargerFeedbacks();
+    }
+
+    @FXML
+    private void retour() throws IOException {
+        NavigationContext.loadContentInCenter("/evenement/AdminDashboard.fxml");
     }
 
     private void afficherAucunFeedback() {
