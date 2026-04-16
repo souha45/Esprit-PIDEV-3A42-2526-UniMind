@@ -395,34 +395,135 @@ public class AffichageDisponibilitePsyController
     }
 
     private void supprimerDisponibilite(DisponibilitePsy dispo) {
+        afficherAlerteConfirmation(dispo);
+    }
+
+    private void afficherAlerteConfirmation(DisponibilitePsy dispo) {
         Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmation.setTitle("Confirmation");
+        confirmation.setTitle("Unimind - Confirmation");
         confirmation.setHeaderText("Supprimer la disponibilité");
-        confirmation.setContentText("Voulez-vous vraiment supprimer le créneau du "
-                + dispo.getDateDispo()
-                + " (" + dispo.getHeureDebut().toString().substring(0,5)
-                + " – " + dispo.getHeureFin().toString().substring(0,5) + ") ?");
+        confirmation.setContentText(buildContenuConfirmation(dispo));
+
+        // Personnaliser les boutons
+        ButtonType btnOui = new ButtonType("Oui, supprimer", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnNon = new ButtonType("Non, annuler", ButtonBar.ButtonData.CANCEL_CLOSE);
+        confirmation.getButtonTypes().setAll(btnNon, btnOui);
+
+        // Appliquer le style personnalisé
+        DialogPane dialogPane = confirmation.getDialogPane();
+        dialogPane.setStyle(getStyleAlerteConfirmation());
 
         confirmation.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
+            if (response == btnOui) {
                 try {
                     disponibiliteService.supprimer(dispo.getDispoId());
-                    showAlert(Alert.AlertType.INFORMATION, "Succès", "Créneau supprimé avec succès !");
+                    afficherAlerteSuccesSuppression(dispo);
                     chargerDisponibilites();
                 } catch (SQLException e) {
-                    showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de supprimer ce créneau.");
+                    afficherAlerteErreur("Erreur SQL", "Une erreur est survenue lors de la suppression du créneau.", e.getMessage());
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    afficherAlerteErreur("Erreur système", "Une erreur inattendue est survenue.", e.getMessage());
                     e.printStackTrace();
                 }
             }
         });
     }
 
-    // ── Utilitaire ──────────────────────────────────────────────────
+    // ---- Utilitaire ----──────────────────────────────────────────────────
     private void showAlert(Alert.AlertType type, String titre, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(titre);
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private String buildContenuConfirmation(DisponibilitePsy dispo) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Êtes-vous sûr de vouloir supprimer ce créneau ?\n\n");
+        sb.append("Date : ").append(dispo.getDateDispo()).append("\n");
+        sb.append("Horaire : ").append(dispo.getHeureDebut().toString().substring(0, 5))
+          .append(" - ").append(dispo.getHeureFin().toString().substring(0, 5)).append("\n");
+        sb.append("Type : ").append(dispo.getTypeConsult().toString());
+        
+        if (dispo.getLieu() != null && !dispo.getLieu().trim().isEmpty()) {
+            sb.append("\nLieu : ").append(dispo.getLieu());
+        }
+        
+        sb.append("\n\nCette action est irréversible.");
+        return sb.toString();
+    }
+
+    private void afficherAlerteSuccesSuppression(DisponibilitePsy dispo) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Unimind - Succès");
+        alert.setHeaderText("Créneau supprimé avec succès !");
+
+        String contenu = "Le créneau suivant a été supprimé :\n\n" +
+                "Date : " + dispo.getDateDispo() + "\n" +
+                "Horaire : " + dispo.getHeureDebut().toString().substring(0, 5) +
+                " - " + dispo.getHeureFin().toString().substring(0, 5);
+        alert.setContentText(contenu);
+
+        // Personnaliser les boutons
+        ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        alert.getButtonTypes().setAll(okButton);
+
+        // Appliquer le style personnalisé
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.setStyle(getStyleAlerteSucces());
+
+        alert.showAndWait();
+    }
+
+    private void afficherAlerteErreur(String titre, String header, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Unimind - " + titre);
+        alert.setHeaderText(header);
+        alert.setContentText(message);
+
+        // Personnaliser les boutons
+        ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        alert.getButtonTypes().setAll(okButton);
+
+        // Appliquer le style personnalisé
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.setStyle(getStyleAlerteErreur());
+
+        alert.showAndWait();
+    }
+
+    private String getStyleAlerteConfirmation() {
+        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; " +
+                "-fx-font-size: 14px; " +
+                "-fx-background-color: #fffbeb; " +
+                "-fx-border-color: #fcd34d; " +
+                "-fx-border-width: 2px; " +
+                "-fx-border-radius: 12px; " +
+                "-fx-background-radius: 12px; " +
+                "-fx-padding: 20px;";
+    }
+
+    private String getStyleAlerteSucces() {
+        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; " +
+                "-fx-font-size: 14px; " +
+                "-fx-background-color: #f0fdf4; " +
+                "-fx-border-color: #86efac; " +
+                "-fx-border-width: 2px; " +
+                "-fx-border-radius: 12px; " +
+                "-fx-background-radius: 12px; " +
+                "-fx-padding: 20px;";
+    }
+
+    private String getStyleAlerteErreur() {
+        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; " +
+                "-fx-font-size: 14px; " +
+                "-fx-background-color: #fef2f2; " +
+                "-fx-border-color: #fca5a5; " +
+                "-fx-border-width: 2px; " +
+                "-fx-border-radius: 12px; " +
+                "-fx-background-radius: 12px; " +
+                "-fx-padding: 20px;";
     }
 }
