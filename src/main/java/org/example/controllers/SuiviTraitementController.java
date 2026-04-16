@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.example.entities.Etudiant;
 import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
+import org.example.enums.SaisiPar;
 import org.example.services.EtudiantService;
 import org.example.services.SuiviTraitementService;
 import org.example.services.TraitementService;
@@ -35,7 +36,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 
 public class SuiviTraitementController implements Initializable {
@@ -157,23 +157,16 @@ public class SuiviTraitementController implements Initializable {
                 if (traitementAssocie == null) continue;
 
                 int etudiantId = traitementAssocie.getEtudiantId();
-                int psychologueId = traitementAssocie.getPsychologueId();
 
                 boolean peutVoir = false;
 
                 if (session.estPsychologue()) {
-                    // Psychologue : voit tous les suivis (pas de filtre supplémentaire)
                     peutVoir = true;
+                } else if (session.estEtudiant()) {
+                    // L'étudiant voit ses propres suivis et ceux du psychologue pour ses traitements
+                    peutVoir = (etudiantId == session.getUtilisateurConnecteId());
                 } else {
-                    // Étudiant : ne voit que ses propres suivis
-                    // Un étudiant peut voir :
-                    // 1. Ses propres suivis (saisis par lui-même)
-                    // 2. Les suivis du psychologue concernant ses traitements
-                    if (suivi.getSaisiPar() == org.example.enums.SaisiPar.ETUDIANT) {
-                        peutVoir = (etudiantId == session.getUtilisateurConnecteId());
-                    } else {
-                        peutVoir = (etudiantId == session.getUtilisateurConnecteId());
-                    }
+                    peutVoir = true;
                 }
 
                 if (peutVoir) {
@@ -200,7 +193,6 @@ public class SuiviTraitementController implements Initializable {
     private List<LigneSuiviGroupée> creerLignesSuivisGroupées(List<SuiviTraitement> suivis, Map<Integer, Traitement> traitementsMap) {
         List<LigneSuiviGroupée> lignes = new ArrayList<>();
 
-        // Regroupement des suivis par étudiant
         Map<Integer, List<SuiviTraitement>> suivisParEtudiant = new HashMap<>();
 
         for (SuiviTraitement suivi : suivis) {
@@ -216,7 +208,6 @@ public class SuiviTraitementController implements Initializable {
 
             String nomEtudiant = getNomEtudiant(etudiantId);
 
-            // Regroupement des suivis par traitement
             Map<Integer, List<SuiviTraitement>> suivisParTraitement = new HashMap<>();
             Map<Integer, String> nomsTraitements = new HashMap<>();
 
@@ -354,7 +345,17 @@ public class SuiviTraitementController implements Initializable {
                     LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
                     SuiviTraitement suivi = ligne.getPremierSuivi();
                     if (suivi != null && !ligne.estEntete()) {
-                        ouvrirPageModification(suivi);
+                        // Vérifier si l'étudiant peut modifier CE suivi
+                        if (session.estEtudiant()) {
+                            // L'étudiant ne peut modifier que ses propres suivis
+                            if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
+                                ouvrirPageModification(suivi);
+                            } else {
+                                afficherErreur("Accès refusé", "Vous ne pouvez pas modifier le suivi du psychologue.");
+                            }
+                        } else {
+                            ouvrirPageModification(suivi);
+                        }
                     }
                 });
 
@@ -362,7 +363,17 @@ public class SuiviTraitementController implements Initializable {
                     LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
                     SuiviTraitement suivi = ligne.getPremierSuivi();
                     if (suivi != null && !ligne.estEntete()) {
-                        supprimerSuivi(suivi);
+                        // Vérifier si l'étudiant peut supprimer CE suivi
+                        if (session.estEtudiant()) {
+                            // L'étudiant ne peut supprimer que ses propres suivis
+                            if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
+                                supprimerSuivi(suivi);
+                            } else {
+                                afficherErreur("Accès refusé", "Vous ne pouvez pas supprimer le suivi du psychologue.");
+                            }
+                        } else {
+                            supprimerSuivi(suivi);
+                        }
                     }
                 });
             }
@@ -373,8 +384,16 @@ public class SuiviTraitementController implements Initializable {
                 if (empty || getTableRow() == null || getTableRow().getItem() == null || getTableRow().getItem().estEntete()) {
                     setGraphic(null);
                 } else {
-                    if (session.estEtudiant()) {
-                        setGraphic(btnView);
+                    LigneSuiviGroupée ligne = getTableRow().getItem();
+                    SuiviTraitement suivi = ligne.getPremierSuivi();
+
+                    if (suivi != null) {
+                        if (session.estEtudiant()) {
+                            // Pour l'étudiant : afficher les boutons mais la vérification se fait dans l'action
+                            setGraphic(container);
+                        } else {
+                            setGraphic(container);
+                        }
                     } else {
                         setGraphic(container);
                     }
@@ -419,7 +438,6 @@ public class SuiviTraitementController implements Initializable {
             SessionManager session = SessionManager.getInstance();
             List<SuiviTraitement> suivisFiltres = new ArrayList<>();
 
-            // Filtrage par rôle
             for (SuiviTraitement suivi : tousLesSuivis) {
                 Traitement traitementAssocie = traitementsMap.get(suivi.getTraitementId());
                 if (traitementAssocie == null) continue;
@@ -429,9 +447,10 @@ public class SuiviTraitementController implements Initializable {
                 boolean peutVoir = false;
                 if (session.estPsychologue()) {
                     peutVoir = true;
-                } else {
-                    // Étudiant : ne voit que ses propres suivis
+                } else if (session.estEtudiant()) {
                     peutVoir = (etudiantId == session.getUtilisateurConnecteId());
+                } else {
+                    peutVoir = true;
                 }
 
                 if (peutVoir) {
@@ -439,7 +458,6 @@ public class SuiviTraitementController implements Initializable {
                 }
             }
 
-            // Application des filtres supplémentaires (recherche, période)
             suivisFiltres = filtrerSuivis(suivisFiltres, traitementsMap);
 
             List<LigneSuiviGroupée> lignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
@@ -460,7 +478,6 @@ public class SuiviTraitementController implements Initializable {
 
         return suivis.stream()
                 .filter(s -> {
-                    // Filtre de recherche
                     if (!recherche.isEmpty()) {
                         Traitement traitement = traitementsMap.get(s.getTraitementId());
                         if (traitement != null) {
@@ -479,7 +496,6 @@ public class SuiviTraitementController implements Initializable {
                         }
                     }
 
-                    // Filtre de période
                     if (!"Toutes les périodes".equals(periodeFiltre)) {
                         if (s.getDateSuivi() == null) return false;
                         if (!estDansPeriode(s.getDateSuivi().toLocalDate(), periodeFiltre)) return false;
@@ -526,7 +542,9 @@ public class SuiviTraitementController implements Initializable {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-view.fxml"));
             Parent root = loader.load();
             Scene currentScene = tableViewSuiviTraitements.getScene();
-            currentScene.setRoot(root);
+            if (currentScene != null) {
+                currentScene.setRoot(root);
+            }
         } catch (Exception e) {
             afficherErreur("Erreur de navigation", "Impossible d'accéder à la page des traitements: " + e.getMessage());
         }
@@ -534,7 +552,7 @@ public class SuiviTraitementController implements Initializable {
 
     private void ouvrirPageAjout() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-ajout-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-ajout-view.fxml"));
             Parent root = loader.load();
             Stage stage = new Stage();
             stage.setTitle("Ajouter un Suivi");
@@ -549,7 +567,7 @@ public class SuiviTraitementController implements Initializable {
 
     private void ouvrirPageAffichage(SuiviTraitement suivi) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-affichage-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-affichage-view.fxml"));
             Parent root = loader.load();
             SuiviTraitementAffichageController controller = loader.getController();
             controller.setSuiviTraitement(suivi);
@@ -564,7 +582,7 @@ public class SuiviTraitementController implements Initializable {
 
     private void ouvrirPageModification(SuiviTraitement suivi) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-modification-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-modification-view.fxml"));
             Parent root = loader.load();
             SuiviTraitementModificationController controller = loader.getController();
             controller.setSuiviTraitement(suivi);
@@ -572,6 +590,8 @@ public class SuiviTraitementController implements Initializable {
             stage.setTitle("Modifier un Suivi");
             stage.setScene(new Scene(root, 900, 700));
             stage.show();
+
+            stage.setOnHiding(event -> chargerDonnees());
         } catch (Exception e) {
             afficherErreur("Erreur d'ouverture", "Impossible d'ouvrir la page de modification: " + e.getMessage());
         }
@@ -587,7 +607,7 @@ public class SuiviTraitementController implements Initializable {
             if (confirm.showAndWait().get() == javafx.scene.control.ButtonType.OK) {
                 suiviTraitementService.supprimer(suivi.getSuivitraitementId());
                 chargerDonnees();
-                lblStatus.setText("Suivi supprimé");
+                lblStatus.setText("Suivi supprimé avec succès");
             }
         } catch (SQLException e) {
             afficherErreur("Erreur de suppression", "Erreur base de données: " + e.getMessage());
