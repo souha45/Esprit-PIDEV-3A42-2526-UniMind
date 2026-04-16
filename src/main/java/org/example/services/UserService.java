@@ -92,4 +92,30 @@ public class UserService {
         }
         return null;
     }
+
+    public Psychologue getPsychologueById(int userId) {
+        String sql = "SELECT * FROM user WHERE user_id = ? AND role = 'psychologue'";
+
+        try {
+            PreparedStatement pst = con.prepareStatement(sql);
+            pst.setInt(1, userId);
+            ResultSet rs = pst.executeQuery();
+
+            if (rs.next()) {
+                Psychologue psy = new Psychologue();
+                psy.setUserId(rs.getInt("user_id"));
+                psy.setNom(rs.getString("nom"));
+                psy.setPrenom(rs.getString("prenom"));
+                psy.setEmail(rs.getString("email"));
+                psy.setCin(rs.getString("cin"));
+                psy.setActive(rs.getBoolean("is_active"));
+                psy.setVerified(rs.getBoolean("is_verified"));
+                return psy;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération du psychologue: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

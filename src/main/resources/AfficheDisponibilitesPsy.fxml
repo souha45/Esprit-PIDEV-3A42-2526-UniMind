@@ -151,13 +151,6 @@
 
                     <Region HBox.hgrow="ALWAYS" />
 
-                    <!-- Rafraîchir -->
-                    <Button fx:id="btnRafraichir" text="🔄"
-                            style="-fx-background-color: #f3f4f6; -fx-text-fill: #6b7280;
-                                   -fx-font-size: 14px; -fx-padding: 9 14; -fx-background-radius: 10;
-                                   -fx-border-color: #e5e7eb; -fx-border-width: 1;
-                                   -fx-border-radius: 10; -fx-cursor: hand;" />
-
                     <!-- Nouvelle dispo -->
                     <Button fx:id="btnAjouter" text="＋  Nouvelle disponibilité"
                             style="-fx-background-color: #6366f1; -fx-text-fill: #ffffff;

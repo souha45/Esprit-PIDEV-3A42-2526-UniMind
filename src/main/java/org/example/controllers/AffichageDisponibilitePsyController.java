@@ -36,7 +36,6 @@ public class AffichageDisponibilitePsyController
     @FXML private TableColumn<DisponibilitePsy, Void>      colAction;
 
     @FXML private Button    btnAjouter;
-    @FXML private Button    btnRafraichir;
     @FXML private Label     lblStatut;
     @FXML private Label     lblDate;
 
@@ -80,7 +79,6 @@ public class AffichageDisponibilitePsyController
         styleTable();
 
         btnAjouter.setOnAction(e -> ouvrirFormulaireAjout());
-        btnRafraichir.setOnAction(e -> chargerDisponibilites());
 
         // Hover btn ajouter
         btnAjouter.setOnMouseEntered(e ->

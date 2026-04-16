@@ -1,6 +1,5 @@
 package org.example.controllers;
 
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -10,69 +9,72 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.example.models.DisponibilitePsy;
+import org.example.models.Psychologue;
 import org.example.models.RendezVous;
 import org.example.services.DisponibilitePsyService;
 import org.example.services.RendezVousService;
+import org.example.services.UserService;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.List;
 import java.util.Locale;
 
 public class PrendreRendezVousModalController {
 
-    // ── FXML ────────────────────────────────────────────────────────
-    // Filtres
+    // FXML
     @FXML private ComboBox<String> comboPsy;
     @FXML private ComboBox<String> comboType;
     @FXML private DatePicker       datePickerFiltre;
+    @FXML private TilePane         gridCreneaux;
+    @FXML private HBox             boxSelection;
+    @FXML private Label            lblSelection;
+    @FXML private Label            lblNbCreneaux;
+    @FXML private Button           btnDeselectionner;
+    @FXML private TextArea         txtMotif;
+    @FXML private Button           btnFermer;
+    @FXML private Button           btnAnnuler;
+    @FXML private Button           btnConfirmer;
 
-    // Table
-    @FXML private TableView<DisponibilitePsy>             tableViewDisponibilites;
-    @FXML private TableColumn<DisponibilitePsy, String>   colPsychologue;
-    @FXML private TableColumn<DisponibilitePsy, String>   colDate;
-    @FXML private TableColumn<DisponibilitePsy, String>   colHeure;
-    @FXML private TableColumn<DisponibilitePsy, String>   colType;
-    @FXML private TableColumn<DisponibilitePsy, String>   colLieu;
-
-    // Sélection
-    @FXML private HBox   boxSelection;
-    @FXML private Label  lblSelection;
-    @FXML private Label  lblNbCreneaux;
-    @FXML private Button btnDeselectionner;
-
-    // Motif + actions
-    @FXML private TextArea txtMotif;
-    @FXML private Button   btnFermer;
-    @FXML private Button   btnAnnuler;
-    @FXML private Button   btnConfirmer;
-
-    // ── Services ────────────────────────────────────────────────────
+    // Services
     private DisponibilitePsyService disponibiliteService;
     private RendezVousService       rendezVousService;
+    private UserService             userService;
 
-    // ── Données ─────────────────────────────────────────────────────
+    // Données
     private ObservableList<DisponibilitePsy> disponibilitesList;
     private FilteredList<DisponibilitePsy>   filteredList;
     private DisponibilitePsy                 disponibiliteSelectionnee;
     private int                              etudiantId;
     private Stage                            modalStage;
 
-    // ────────────────────────────────────────────────────────────────
+    // Méthode utilitaire pour récupérer le nom du psychologue
+    private String getNomPsychologue(int userId) {
+        if (userService == null) {
+            return "Psy #" + userId;
+        }
+        try {
+            Psychologue psy = userService.getPsychologueById(userId);
+            if (psy != null) {
+                return "Dr. " + psy.getPrenom() + " " + psy.getNom().toUpperCase();
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération du nom du psychologue: " + e.getMessage());
+        }
+        return "Psy #" + userId;
+    }
+
     @FXML
     public void initialize() {
         disponibiliteService = new DisponibilitePsyService();
         rendezVousService    = new RendezVousService();
+        userService          = new UserService();
         disponibilitesList   = FXCollections.observableArrayList();
         filteredList         = new FilteredList<>(disponibilitesList, p -> true);
 
         initialiserFiltres();
-        configurerColonnes();
-        configurerSelection();
-
-        tableViewDisponibilites.setItems(filteredList);
-        tableViewDisponibilites.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         btnConfirmer.setOnAction(e -> confirmerReservation());
         btnAnnuler.setOnAction(e  -> fermerModal());
@@ -92,23 +94,20 @@ public class PrendreRendezVousModalController {
                 btnFermer.setStyle(btnFermer.getStyle().replace("rgba(255,255,255,0.30)","rgba(255,255,255,0.18)")));
     }
 
-    // ── Filtres ─────────────────────────────────────────────────────
+    // Filtres
     private void initialiserFiltres() {
         comboType.setItems(FXCollections.observableArrayList("Tous", "présentiel", "en ligne"));
         comboType.setValue("Tous");
 
-        // Listeners
         comboPsy.valueProperty().addListener((o, ov, nv)          -> appliquerFiltres());
         comboType.valueProperty().addListener((o, ov, nv)         -> appliquerFiltres());
         datePickerFiltre.valueProperty().addListener((o, ov, nv)  -> appliquerFiltres());
     }
 
     private void remplirComboPsy(List<DisponibilitePsy> liste) {
-        // Note : la liste ne contient pas le nom du psy — on affiche l'ID en attendant
-        // Si vous avez un service qui retourne le nom, remplacez ici
         ObservableList<String> items = FXCollections.observableArrayList("Tous");
         liste.stream()
-                .map(d -> "Psy #" + d.getUserId())
+                .map(d -> getNomPsychologue(d.getUserId()))
                 .distinct()
                 .forEach(items::add);
         comboPsy.setItems(items);
@@ -121,15 +120,12 @@ public class PrendreRendezVousModalController {
         LocalDate dateMin = datePickerFiltre.getValue();
 
         filteredList.setPredicate(d -> {
-            // Filtre psy
             boolean matchPsy = psy == null || "Tous".equals(psy)
-                    || ("Psy #" + d.getUserId()).equals(psy);
+                    || getNomPsychologue(d.getUserId()).equals(psy);
 
-            // Filtre type
             boolean matchType = type == null || "Tous".equals(type)
                     || d.getTypeConsult().toString().equalsIgnoreCase(type);
 
-            // Filtre date
             boolean matchDate = dateMin == null
                     || !d.getDateDispo().toLocalDate().isBefore(dateMin);
 
@@ -138,115 +134,125 @@ public class PrendreRendezVousModalController {
 
         int nb = filteredList.size();
         lblNbCreneaux.setText(nb + " créneau" + (nb > 1 ? "x" : "") + " disponible" + (nb > 1 ? "s" : ""));
+
+        creerCartesDisponibilites();
     }
 
-    // ── Colonnes ────────────────────────────────────────────────────
-    private void configurerColonnes() {
+    // Création des cartes
+    private void creerCartesDisponibilites() {
+        gridCreneaux.getChildren().clear();
 
-        // Psychologue
-        colPsychologue.setCellValueFactory(cell ->
-                new SimpleStringProperty("Psy #" + cell.getValue().getUserId()));
-        colPsychologue.setCellFactory(col -> new TableCell<>() {
-            @Override protected void updateItem(String s, boolean empty) {
-                super.updateItem(s, empty);
-                if (empty || s == null) { setText(null); return; }
-                setText(s);
-                setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; " +
-                        "-fx-font-weight: bold; -fx-text-fill: #3730a3; -fx-padding: 10 14;");
-            }
-        });
+        for (DisponibilitePsy dispo : filteredList) {
+            VBox carte = creerCarteDisponibilite(dispo);
+            gridCreneaux.getChildren().add(carte);
+        }
+    }
 
-        // Date (avec jour de la semaine)
-        colDate.setCellValueFactory(cell -> {
-            LocalDate ld = cell.getValue().getDateDispo().toLocalDate();
-            String jour  = ld.getDayOfWeek().getDisplayName(
-                    java.time.format.TextStyle.SHORT, Locale.FRENCH);
-            return new SimpleStringProperty(
-                    jour + "\n" + ld.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-        });
-        colDate.setCellFactory(col -> new TableCell<>() {
-            @Override protected void updateItem(String s, boolean empty) {
-                super.updateItem(s, empty);
-                if (empty || s == null) { setText(null); setStyle(""); return; }
-                setText(s);
-                setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 12px; " +
-                        "-fx-text-fill: #374151; -fx-padding: 10 14; -fx-alignment: CENTER_LEFT;");
-            }
-        });
+    private VBox creerCarteDisponibilite(DisponibilitePsy dispo) {
+        VBox carte = new VBox(8);
+        carte.setStyle("-fx-background-color: #ffffff; -fx-border-color: #e0e7ff; " +
+                "-fx-border-width: 1; -fx-border-radius: 12; -fx-background-radius: 12; " +
+                "-fx-padding: 12; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 6, 0, 0, 2);");
+        carte.setPrefWidth(200);
+        carte.setPrefHeight(100);
+
+        // En-tête avec psychologue (nom réel)
+        String nomPsy = getNomPsychologue(dispo.getUserId());
+        Label psyLabel = new Label("Dr. " + nomPsy);
+        psyLabel.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; " +
+                "-fx-font-weight: bold; -fx-text-fill: #3730a3;");
+
+        // Date avec jour
+        LocalDate ld = dispo.getDateDispo().toLocalDate();
+        String jour = ld.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.FRENCH);
+        String date = ld.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        Label dateLabel = new Label(jour + "\n" + date);
+        dateLabel.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 12px; " +
+                "-fx-text-fill: #374151;");
 
         // Horaires
-        colHeure.setCellValueFactory(cell -> {
-            String debut = cell.getValue().getHeureDebut().toString().substring(0, 5);
-            String fin   = cell.getValue().getHeureFin().toString().substring(0, 5);
-            return new SimpleStringProperty(debut + " – " + fin);
-        });
-        colHeure.setCellFactory(col -> new TableCell<>() {
-            @Override protected void updateItem(String s, boolean empty) {
-                super.updateItem(s, empty);
-                if (empty || s == null) { setGraphic(null); return; }
-                Label lbl = new Label(s);
-                lbl.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; " +
-                        "-fx-font-weight: bold; -fx-text-fill: #6366f1;");
-                setGraphic(lbl); setText(null);
-            }
-        });
+        String debut = dispo.getHeureDebut().toString().substring(0, 5);
+        String fin = dispo.getHeureFin().toString().substring(0, 5);
+        Label horairesLabel = new Label(" " + debut + " - " + fin);
+        horairesLabel.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; " +
+                "-fx-font-weight: bold; -fx-text-fill: #6366f1;");
 
-        // Type (badge coloré)
-        colType.setCellValueFactory(cell ->
-                new SimpleStringProperty(cell.getValue().getTypeConsult().toString()));
-        colType.setCellFactory(col -> new TableCell<>() {
-            @Override protected void updateItem(String s, boolean empty) {
-                super.updateItem(s, empty);
-                if (empty || s == null) { setGraphic(null); return; }
-                boolean presentiel = "présentiel".equalsIgnoreCase(s);
-                Label badge = new Label(presentiel ? "🏢  Présentiel" : "💻  En ligne");
-                badge.setStyle(
-                        "-fx-background-color: " + (presentiel ? "#dbeafe" : "#ede9fe") + "; " +
-                                "-fx-text-fill: "         + (presentiel ? "#1d4ed8" : "#6366f1") + "; " +
-                                "-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-font-weight: bold; " +
-                                "-fx-padding: 4 12; -fx-background-radius: 20;");
-                setGraphic(badge); setText(null);
-            }
-        });
+        // Type badge
+        String type = dispo.getTypeConsult().toString();
+        boolean presentiel = "présentiel".equalsIgnoreCase(type);
+        Label typeBadge = new Label(presentiel ? " Présentiel" : " En ligne");
+        typeBadge.setStyle("-fx-background-color: " + (presentiel ? "#dbeafe" : "#ede9fe") + "; " +
+                "-fx-text-fill: "         + (presentiel ? "#1d4ed8" : "#6366f1") + "; " +
+                "-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-font-weight: bold; " +
+                "-fx-padding: 3 8; -fx-background-radius: 12;");
 
         // Lieu
-        colLieu.setCellValueFactory(cell -> {
-            String lieu = cell.getValue().getLieu();
-            return new SimpleStringProperty(
-                    lieu != null && !lieu.isEmpty() ? lieu : "—");
-        });
-        colLieu.setCellFactory(col -> new TableCell<>() {
-            @Override protected void updateItem(String s, boolean empty) {
-                super.updateItem(s, empty);
-                if (empty || s == null) { setText(null); return; }
-                setText(s);
-                setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 12px; " +
-                        "-fx-text-fill: " + ("—".equals(s) ? "#c4b5fd" : "#374151") + "; " +
-                        "-fx-padding: 10 14;");
+        String lieu = dispo.getLieu();
+        String lieuText = (lieu != null && !lieu.isEmpty()) ? lieu : "Non spécifié";
+        Label lieuLabel = new Label(" " + lieuText);
+        lieuLabel.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; " +
+                "-fx-text-fill: #374151;");
+
+        carte.getChildren().addAll(psyLabel, dateLabel, horairesLabel, typeBadge, lieuLabel);
+
+        // Gestion du clic
+        carte.setOnMouseClicked(e -> {
+            if (disponibiliteSelectionnee != null && disponibiliteSelectionnee.equals(dispo)) {
+                deselectionner();
+            } else {
+                disponibiliteSelectionnee = dispo;
+                afficherBandeauSelection(dispo);
+                mettreAJourStyleCartes();
             }
         });
+
+        // Hover effects
+        carte.setOnMouseEntered(ev -> {
+            if (!dispo.equals(disponibiliteSelectionnee)) {
+                carte.setStyle("-fx-background-color: #f8f7ff; -fx-border-color: #c7d2fe; " +
+                        "-fx-border-width: 1; -fx-border-radius: 12; -fx-background-radius: 12; " +
+                        "-fx-padding: 12; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.15), 8, 0, 0, 3);");
+            }
+        });
+        carte.setOnMouseExited(ev -> {
+            if (!dispo.equals(disponibiliteSelectionnee)) {
+                carte.setStyle("-fx-background-color: #ffffff; -fx-border-color: #e0e7ff; " +
+                        "-fx-border-width: 1; -fx-border-radius: 12; -fx-background-radius: 12; " +
+                        "-fx-padding: 12; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 6, 0, 0, 2);");
+            }
+        });
+
+        return carte;
     }
 
-    // ── Sélection ───────────────────────────────────────────────────
-    private void configurerSelection() {
-        tableViewDisponibilites.getSelectionModel().selectedItemProperty()
-                .addListener((obs, oldSel, newSel) -> {
-                    if (newSel != null) {
-                        disponibiliteSelectionnee = newSel;
-                        afficherBandeauSelection(newSel);
-                    }
-                });
+    private void mettreAJourStyleCartes() {
+        for (int i = 0; i < gridCreneaux.getChildren().size(); i++) {
+            VBox carte = (VBox) gridCreneaux.getChildren().get(i);
+            DisponibilitePsy dispo = filteredList.get(i);
+
+            if (dispo.equals(disponibiliteSelectionnee)) {
+                carte.setStyle("-fx-background-color: #ede9fe; -fx-border-color: #6366f1; " +
+                        "-fx-border-width: 2; -fx-border-radius: 12; -fx-background-radius: 12; " +
+                        "-fx-padding: 12; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.25), 8, 0, 0, 3);");
+            } else {
+                carte.setStyle("-fx-background-color: #ffffff; -fx-border-color: #e0e7ff; " +
+                        "-fx-border-width: 1; -fx-border-radius: 12; -fx-background-radius: 12; " +
+                        "-fx-padding: 12; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 6, 0, 0, 2);");
+            }
+        }
     }
 
+    // Sélection
     private void afficherBandeauSelection(DisponibilitePsy d) {
         String debut = d.getHeureDebut().toString().substring(0, 5);
         String fin   = d.getHeureFin().toString().substring(0, 5);
         String date  = d.getDateDispo().toLocalDate()
                 .format(DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy", Locale.FRENCH));
+        String nomPsy = getNomPsychologue(d.getUserId());
 
-        lblSelection.setText("Psy #" + d.getUserId()
+        lblSelection.setText("Dr. " + nomPsy
                 + "  ·  " + date
-                + "  ·  " + debut + " – " + fin
+                + "  ·  " + debut + " - " + fin
                 + "  ·  " + d.getTypeConsult());
         boxSelection.setVisible(true);
         boxSelection.setManaged(true);
@@ -254,13 +260,13 @@ public class PrendreRendezVousModalController {
 
     private void deselectionner() {
         disponibiliteSelectionnee = null;
-        tableViewDisponibilites.getSelectionModel().clearSelection();
         boxSelection.setVisible(false);
         boxSelection.setManaged(false);
         lblSelection.setText("");
+        mettreAJourStyleCartes();
     }
 
-    // ── Chargement (appelé depuis setEtudiantId) ─────────────────────
+    // Chargement
     private void chargerDisponibilites() {
         try {
             List<DisponibilitePsy> disponibilites =
@@ -276,7 +282,7 @@ public class PrendreRendezVousModalController {
         }
     }
 
-    // ── Confirmation réservation (logique inchangée) ─────────────────
+    // Confirmation réservation
     private void confirmerReservation() {
         if (disponibiliteSelectionnee == null) {
             afficherAlerte(Alert.AlertType.WARNING, "Aucune sélection",
@@ -291,16 +297,17 @@ public class PrendreRendezVousModalController {
 
         String debut = dispoSelectionnee.getHeureDebut().toString().substring(0, 5);
         String fin   = dispoSelectionnee.getHeureFin().toString().substring(0, 5);
+        String nomPsy = getNomPsychologue(dispoSelectionnee.getUserId());
 
         Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
         confirmation.setTitle("Confirmation de réservation");
         confirmation.setHeaderText("Confirmer la réservation");
         confirmation.setContentText(
-                "📅 Date : "         + dispoSelectionnee.getDateDispo()       + "\n" +
-                        "⏰ Horaire : "       + debut + " – " + fin                    + "\n" +
-                        "👨‍⚕️ Psychologue : Psy #" + dispoSelectionnee.getUserId()   + "\n" +
-                        "💬 Type : "          + dispoSelectionnee.getTypeConsult()     + "\n" +
-                        "📝 Motif : "         + motifFinal                             + "\n\n" +
+                " Date : "         + dispoSelectionnee.getDateDispo()       + "\n" +
+                        " Horaire : "       + debut + " - " + fin                    + "\n" +
+                        " Psychologue : Dr. " + nomPsy                             + "\n" +
+                        " Type : "          + dispoSelectionnee.getTypeConsult()     + "\n" +
+                        " Motif : "         + motifFinal                             + "\n\n" +
                         "Confirmez-vous cette réservation ?"
         );
 
@@ -325,21 +332,21 @@ public class PrendreRendezVousModalController {
             String fin   = dispo.getHeureFin().toString().substring(0, 5);
 
             afficherAlerte(Alert.AlertType.INFORMATION, "Succès",
-                    "✅ Rendez-vous réservé avec succès !\n\n" +
-                            "📅 Date : "    + dispo.getDateDispo()  + "\n" +
-                            "⏰ Horaire : " + debut + " – " + fin    + "\n" +
-                            "📝 Motif : "   + motif);
+                    " Rendez-vous réservé avec succès !\n\n" +
+                            " Date : "    + dispo.getDateDispo()  + "\n" +
+                            " Horaire : " + debut + " - " + fin    + "\n" +
+                            " Motif : "   + motif);
 
             fermerModal();
 
         } catch (SQLException e) {
             afficherAlerte(Alert.AlertType.ERROR, "Erreur",
-                    "❌ Impossible de réserver le rendez-vous.\nErreur : " + e.getMessage());
+                    " Impossible de réserver le rendez-vous.\nErreur : " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    // ── Utilitaires ─────────────────────────────────────────────────
+    // Utilitaires
     private void afficherAlerte(Alert.AlertType type, String titre, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(titre);
@@ -352,7 +359,7 @@ public class PrendreRendezVousModalController {
         if (modalStage != null) modalStage.close();
     }
 
-    // ── Appelées depuis l'extérieur (inchangées) ─────────────────────
+    // Appelées depuis l'extérieur
     public void setEtudiantId(int id) {
         this.etudiantId = id;
         chargerDisponibilites();

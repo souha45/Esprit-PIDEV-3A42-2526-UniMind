@@ -13,7 +13,7 @@
       maxHeight="600"
       style="-fx-background-color: #f0f4ff;">
 
-    <!-- ── HEADER ── (inchangé) -->
+    <!-- ── HEADER ── -->
     <VBox style="-fx-background-color: linear-gradient(to bottom right, #6366f1, #8b5cf6);
                  -fx-padding: 20 24 18 24;" spacing="3">
         <HBox alignment="CENTER_LEFT">
@@ -32,12 +32,12 @@
         </HBox>
     </VBox>
 
-    <!-- ── BODY avec hauteur limitée pour que le footer soit visible ── -->
+    <!-- ── BODY ── -->
     <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
                 style="-fx-background-color: #f0f4ff; -fx-background: #f0f4ff; -fx-border-width: 0;">
         <VBox spacing="16" style="-fx-padding: 20 22 16 22;">
 
-            <!-- FILTRES (inchangé) -->
+            <!-- FILTRES -->
             <VBox spacing="10"
                   style="-fx-background-color: #ffffff; -fx-background-radius: 12;
                          -fx-padding: 16 18; -fx-border-color: #e0e7ff; -fx-border-width: 1;
@@ -91,7 +91,7 @@
                 </HBox>
             </VBox>
 
-            <!-- BADGE résultat + nb créneaux (inchangé) -->
+            <!-- BADGE résultat -->
             <HBox alignment="CENTER_LEFT" spacing="8">
                 <Label text="Créneaux disponibles"
                        style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
@@ -103,32 +103,19 @@
                               -fx-padding: 3 12; -fx-background-radius: 20;" />
             </HBox>
 
-            <!-- TABLE créneaux (hauteur réduite) -->
+            <!-- GRILLE créneaux (sans placeholder) -->
             <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 12;
                          -fx-border-color: #e0e7ff; -fx-border-width: 1; -fx-border-radius: 12;
                          -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 8, 0, 0, 2);">
 
-                <TableView fx:id="tableViewDisponibilites"
-                           prefHeight="220"
-                           style="-fx-background-color: transparent; -fx-border-width: 0;
-                                  -fx-table-cell-border-color: #f3f4f6;">
-                    <columns>
-                        <TableColumn fx:id="colPsychologue" prefWidth="170" text="👨‍⚕️  Psychologue" />
-                        <TableColumn fx:id="colDate"        prefWidth="110" text="📅  Date" />
-                        <TableColumn fx:id="colHeure"       prefWidth="130" text="🕐  Horaires" />
-                        <TableColumn fx:id="colType"        prefWidth="130" text="💬  Type" />
-                        <TableColumn fx:id="colLieu"        prefWidth="160" text="📍  Lieu" />
-                    </columns>
-                    <placeholder>
-                        <Label text="Aucun créneau disponible pour ces critères"
-                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
-                                      -fx-text-fill: #c4b5fd;" />
-                    </placeholder>
-                </TableView>
+                <TilePane fx:id="gridCreneaux"
+                          hgap="12" vgap="12"
+                          prefTileWidth="220" prefTileHeight="120"
+                          style="-fx-background-color: transparent; -fx-padding: 16;"/>
 
             </VBox>
 
-            <!-- CRÉNEAU SÉLECTIONNÉ (inchangé) -->
+            <!-- CRÉNEAU SÉLECTIONNÉ -->
             <HBox fx:id="boxSelection" alignment="CENTER_LEFT" spacing="10"
                   visible="false" managed="false"
                   style="-fx-background-color: #ecfdf5; -fx-background-radius: 10;
@@ -148,7 +135,7 @@
                                -fx-font-size: 11px; -fx-cursor: hand; -fx-border-width: 0;" />
             </HBox>
 
-            <!-- MOTIF (inchangé) -->
+            <!-- MOTIF -->
             <VBox spacing="6"
                   style="-fx-background-color: #ffffff; -fx-background-radius: 12;
                          -fx-padding: 16 18; -fx-border-color: #e0e7ff; -fx-border-width: 1;
@@ -175,7 +162,7 @@
         </VBox>
     </ScrollPane>
 
-    <!-- ── FOOTER ACTIONS (toujours visible) ── -->
+    <!-- ── FOOTER ACTIONS ── -->
     <HBox alignment="CENTER_RIGHT" spacing="10"
           style="-fx-padding: 14 22; -fx-background-color: #ffffff;
                  -fx-border-color: #e0e7ff; -fx-border-width: 1 0 0 0;">
