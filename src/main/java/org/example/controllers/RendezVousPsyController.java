@@ -74,7 +74,7 @@ public class RendezVousPsyController implements SidebarPsyController.PsyPageCont
     private void configurerFiltres() {
         // Remplir les filtres
         comboFiltreStatut.setItems(FXCollections.observableArrayList(
-                "Tous", "demande", "confirme", "en-cours", "termine", "annule", "absent"
+                "Tous", "demande", "confirme", "en-cours", "terminé", "annulé", "absent"
         ));
         comboFiltreStatut.setValue("Tous");
 
@@ -179,8 +179,8 @@ public class RendezVousPsyController implements SidebarPsyController.PsyPageCont
                         case "demande" -> setStyle("-fx-text-fill: #f59e0b; -fx-font-weight: bold;");
                         case "confirme" -> setStyle("-fx-text-fill: #10b981; -fx-font-weight: bold;");
                         case "en-cours" -> setStyle("-fx-text-fill: #0ea5e9; -fx-font-weight: bold;");
-                        case "termine" -> setStyle("-fx-text-fill: #6366f1; -fx-font-weight: bold;");
-                        case "annule" -> setStyle("-fx-text-fill: #ef4444;");
+                        case "terminé" -> setStyle("-fx-text-fill: #6366f1; -fx-font-weight: bold;");
+                        case "annulé" -> setStyle("-fx-text-fill: #ef4444;");
                         case "absent" -> setStyle("-fx-text-fill: #6b7280;");
                         default -> setStyle("");
                     }
@@ -210,20 +210,20 @@ public class RendezVousPsyController implements SidebarPsyController.PsyPageCont
                         Button btnConfirmer = createButton("✓ Confirmer", "#10b981");
                         Button btnRefuser = createButton("✗ Refuser", "#ef4444");
                         btnConfirmer.setOnAction(e -> changerStatut(rdv, "confirme"));
-                        btnRefuser.setOnAction(e -> changerStatut(rdv, "annule"));
+                        btnRefuser.setOnAction(e -> changerStatut(rdv, "annulé"));
                         buttons.getChildren().addAll(btnConfirmer, btnRefuser);
                         break;
                     case "confirme":
                         Button btnEnCours = createButton("▶ En cours", "#0ea5e9");
                         Button btnAnnuler = createButton("✗ Annuler", "#ef4444");
                         btnEnCours.setOnAction(e -> changerStatut(rdv, "en-cours"));
-                        btnAnnuler.setOnAction(e -> changerStatut(rdv, "annule"));
+                        btnAnnuler.setOnAction(e -> changerStatut(rdv, "annulé"));
                         buttons.getChildren().addAll(btnEnCours, btnAnnuler);
                         break;
                     case "en-cours":
                         Button btnTerminer = createButton("✓ Terminer", "#6366f1");
                         Button btnAbsent = createButton("⏤ Absent", "#6b7280");
-                        btnTerminer.setOnAction(e -> changerStatut(rdv, "termine"));
+                        btnTerminer.setOnAction(e -> changerStatut(rdv, "terminé"));
                         btnAbsent.setOnAction(e -> changerStatut(rdv, "absent"));
                         buttons.getChildren().addAll(btnTerminer, btnAbsent);
                         break;
@@ -262,9 +262,9 @@ public class RendezVousPsyController implements SidebarPsyController.PsyPageCont
     private String getMessageStatut(String statut) {
         switch (statut) {
             case "confirme": return "confirmé !";
-            case "annule": return "annulé !";
+            case "annulé": return "annulé !";
             case "en-cours": return "passé en cours !";
-            case "termine": return "terminé !";
+            case "terminé": return "terminé !";
             case "absent": return "marqué absent !";
             default: return "modifié !";
         }

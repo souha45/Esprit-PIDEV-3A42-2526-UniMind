@@ -2,190 +2,273 @@ package org.example.controllers;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.example.enums.TypeConsultation;
 import org.example.models.DisponibilitePsy;
 import org.example.services.DisponibilitePsyService;
-import org.example.enums.TypeConsultation;
 
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.time.LocalDate;
 
-/**
- * Contrôleur pour le modal d'ajout de disponibilité
- * Permet de choisir n'importe quelle heure et minute (00:00 à 23:59)
- */
 public class AjoutDisponibiliteController {
 
-    // ========== COMPOSANTS FXML ==========
-    @FXML private DatePicker datePicker;                    // Sélecteur de date
-    @FXML private TextField txtHeureDebut;                  // Heure début (0-23)
-    @FXML private TextField txtMinuteDebut;                 // Minute début (0-59)
-    @FXML private TextField txtHeureFin;                    // Heure fin (0-23)
-    @FXML private TextField txtMinuteFin;                   // Minute fin (0-59)
-    @FXML private ComboBox<String> cbTypeConsult;           // Type consultation
-    @FXML private TextField txtLieu;                        // Lieu
-    @FXML private Button btnFermer;                         // Bouton fermeture
-    @FXML private Button btnAnnuler;                        // Bouton annuler
-    @FXML private Button btnEnregistrer;                    // Bouton enregistrer
+    // ── FXML ────────────────────────────────────────────────────────
+    @FXML private DatePicker datePicker;
 
-    // ========== SERVICES ==========
+    // Spinners heure début
+    @FXML private Spinner<Integer> spinnerHeureDebut;
+    @FXML private Spinner<Integer> spinnerMinuteDebut;
+    @FXML private Label            lblPreviewDebut;
+
+    // Spinners heure fin
+    @FXML private Spinner<Integer> spinnerHeureFin;
+    @FXML private Spinner<Integer> spinnerMinuteFin;
+    @FXML private Label            lblPreviewFin;
+
+    // Type + lieu conditionnel
+    @FXML private ComboBox<String> cbTypeConsult;
+    @FXML private VBox             boxLieu;
+    @FXML private TextField        txtLieu;
+
+    // Boutons
+    @FXML private Button btnFermer;
+    @FXML private Button btnAnnuler;
+    @FXML private Button btnEnregistrer;
+
+    // ── Labels d'erreur inline ──────────────────────────────────────
+    @FXML private Label errDate;
+    @FXML private Label errHeureDebut;
+    @FXML private Label errHeureFin;
+    @FXML private Label errType;
+    @FXML private Label errLieu;
+
+    // ── Services / données ──────────────────────────────────────────
     private DisponibilitePsyService disponibiliteService;
-
-    // ========== DONNÉES ==========
-    private int userIdConnecte;
+    private int   userIdConnecte;
     private Stage modalStage;
 
-    // ========== INITIALISATION ==========
+    // ────────────────────────────────────────────────────────────────
     @FXML
     public void initialize() {
         disponibiliteService = new DisponibilitePsyService();
 
-        // Restreindre la saisie des champs (chiffres seulement)
-        restreindreSaisieChiffres(txtHeureDebut, 2);
-        restreindreSaisieChiffres(txtMinuteDebut, 2);
-        restreindreSaisieChiffres(txtHeureFin, 2);
-        restreindreSaisieChiffres(txtMinuteFin, 2);
+        // ── Spinners : valeurs initiales et format éditable (valeur -1 = vide)
+        configurerSpinner(spinnerHeureDebut,   0, 23, -1);
+        configurerSpinner(spinnerMinuteDebut,  0, 59, -1);
+        configurerSpinner(spinnerHeureFin,     0, 23, -1);
+        configurerSpinner(spinnerMinuteFin,    0, 59, -1);
 
-        // Configurer les actions des boutons
-        btnEnregistrer.setOnAction(event -> enregistrerDisponibilite());
-        btnAnnuler.setOnAction(event -> fermerModal());
-        btnFermer.setOnAction(event -> fermerModal());
+        // ── Preview live des horaires ────────────────────────────────
+        spinnerHeureDebut.valueProperty().addListener((o,ov,nv)  -> mettreAJourPreviewDebut());
+        spinnerMinuteDebut.valueProperty().addListener((o,ov,nv) -> mettreAJourPreviewDebut());
+        spinnerHeureFin.valueProperty().addListener((o,ov,nv)    -> mettreAJourPreviewFin());
+        spinnerMinuteFin.valueProperty().addListener((o,ov,nv)   -> mettreAJourPreviewFin());
+
+        mettreAJourPreviewDebut();
+        mettreAJourPreviewFin();
+
+        // ── Effacer erreurs à la saisie ──────────────────────────────
+        datePicker.valueProperty().addListener((o,ov,nv) -> cacherErreur(errDate, datePicker));
+        spinnerHeureDebut.valueProperty().addListener((o,ov,nv)  -> cacherErreurSimple(errHeureDebut));
+        spinnerMinuteDebut.valueProperty().addListener((o,ov,nv) -> cacherErreurSimple(errHeureDebut));
+        spinnerHeureFin.valueProperty().addListener((o,ov,nv)    -> cacherErreurSimple(errHeureFin));
+        spinnerMinuteFin.valueProperty().addListener((o,ov,nv)   -> cacherErreurSimple(errHeureFin));
+        cbTypeConsult.valueProperty().addListener((o,ov,nv)      -> {
+            cacherErreurSimple(errType);
+            gererAffichageLieu(nv);
+        });
+        txtLieu.textProperty().addListener((o,ov,nv) -> cacherErreurSimple(errLieu));
+
+        // ── Actions boutons ──────────────────────────────────────────
+        btnEnregistrer.setOnAction(e -> enregistrerDisponibilite());
+        btnAnnuler.setOnAction(e     -> fermerModal());
+        btnFermer.setOnAction(e      -> fermerModal());
+
+        // ── Hover ────────────────────────────────────────────────────
+        btnEnregistrer.setOnMouseEntered(e ->
+                btnEnregistrer.setStyle(btnEnregistrer.getStyle().replace("#6366f1","#4f46e5")));
+        btnEnregistrer.setOnMouseExited(e ->
+                btnEnregistrer.setStyle(btnEnregistrer.getStyle().replace("#4f46e5","#6366f1")));
     }
 
-    /**
-     * Restreint la saisie d'un TextField aux chiffres seulement
-     * @param textField Le champ à restreindre
-     * @param maxLength Longueur maximale
-     */
-    private void restreindreSaisieChiffres(TextField textField, int maxLength) {
-        textField.textProperty().addListener((obs, oldVal, newVal) -> {
-            // Ne garder que les chiffres
-            if (!newVal.matches("\\d*")) {
-                textField.setText(oldVal);
+    // ── Configuration Spinner ────────────────────────────────────────
+    private void configurerSpinner(Spinner<Integer> spinner, int min, int max, int init) {
+        SpinnerValueFactory<Integer> factory =
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(min, max, init);
+        // Afficher "--" pour valeur vide (-1), sinon 2 chiffres
+        factory.setConverter(new javafx.util.StringConverter<>() {
+            @Override public String toString(Integer v) {
+                if (v == null || v == -1) return "--";
+                return String.format("%02d", v);
             }
-            // Limiter la longueur
-            if (newVal.length() > maxLength) {
-                textField.setText(newVal.substring(0, maxLength));
+            @Override public Integer fromString(String s) {
+                try {
+                    String trimmed = s.trim();
+                    if ("--".equals(trimmed) || trimmed.isEmpty()) return -1;
+                    return Integer.parseInt(trimmed);
+                }
+                catch (NumberFormatException e) { return init; }
             }
+        });
+        spinner.setValueFactory(factory);
+        spinner.setEditable(true);
+        // Valider saisie manuelle à la perte de focus
+        spinner.getEditor().focusedProperty().addListener((o, ov, nv) -> {
+            if (!nv) spinner.increment(0); // force commit
         });
     }
 
-    /**
-     * Valide et récupère une valeur entière depuis un TextField
-     * @param textField Le champ à lire
-     * @param min Valeur minimale
-     * @param max Valeur maximale
-     * @return La valeur entière, ou -1 si invalide
-     */
-    private int getValeurTextField(TextField textField, int min, int max) {
-        String texte = textField.getText().trim();
-        if (texte.isEmpty()) {
-            return -1;
+    // ── Preview heure ────────────────────────────────────────────────
+    private void mettreAJourPreviewDebut() {
+        int heure = spinnerHeureDebut.getValue();
+        int minute = spinnerMinuteDebut.getValue();
+
+        if (heure == -1 || minute == -1) {
+            lblPreviewDebut.setText("--:--");
+        } else {
+            lblPreviewDebut.setText(String.format("%02d:%02d", heure, minute));
         }
-        try {
-            int valeur = Integer.parseInt(texte);
-            if (valeur >= min && valeur <= max) {
-                return valeur;
-            }
-        } catch (NumberFormatException e) {
-            // Ignorer
-        }
-        return -1;
     }
 
-    /**
-     * Enregistre la disponibilité
-     */
+    private void mettreAJourPreviewFin() {
+        int heure = spinnerHeureFin.getValue();
+        int minute = spinnerMinuteFin.getValue();
+
+        if (heure == -1 || minute == -1) {
+            lblPreviewFin.setText("--:--");
+        } else {
+            lblPreviewFin.setText(String.format("%02d:%02d", heure, minute));
+        }
+    }
+
+    // ── Lieu conditionnel ────────────────────────────────────────────
+    private void gererAffichageLieu(String typeChoisi) {
+        boolean presentiel = "Présentiel".equals(typeChoisi);
+        boxLieu.setVisible(presentiel);
+        boxLieu.setManaged(presentiel);
+        if (!presentiel) {
+            txtLieu.clear();
+            cacherErreurSimple(errLieu);
+        }
+    }
+
+    // ── Erreurs inline ───────────────────────────────────────────────
+    private void afficherErreur(Label errLabel, Control champ, String message) {
+        errLabel.setText("⚠ " + message);
+        errLabel.setVisible(true);
+        errLabel.setManaged(true);
+        if (champ != null) {
+            String baseStyle = champ.getStyle();
+            if (!baseStyle.contains("#ef4444")) {
+                champ.setStyle(baseStyle
+                        .replace("#e0e7ff", "#fca5a5")
+                        .replace("#f5f3ff", "#fff1f2"));
+            }
+        }
+    }
+
+    private void afficherErreurSimple(Label errLabel, String message) {
+        errLabel.setText("⚠ " + message);
+        errLabel.setVisible(true);
+        errLabel.setManaged(true);
+    }
+
+    private void cacherErreur(Label errLabel, Control champ) {
+        errLabel.setVisible(false);
+        errLabel.setManaged(false);
+        if (champ != null) {
+            champ.setStyle(champ.getStyle()
+                    .replace("#fca5a5", "#e0e7ff")
+                    .replace("#fff1f2", "#f5f3ff"));
+        }
+    }
+
+    private void cacherErreurSimple(Label errLabel) {
+        errLabel.setVisible(false);
+        errLabel.setManaged(false);
+    }
+
+    private void reinitialiserErreurs() {
+        cacherErreur(errDate, datePicker);
+        cacherErreurSimple(errHeureDebut);
+        cacherErreurSimple(errHeureFin);
+        cacherErreurSimple(errType);
+        cacherErreurSimple(errLieu);
+    }
+
+    // ── Enregistrement ───────────────────────────────────────────────
     private void enregistrerDisponibilite() {
-        // ========== 1. VÉRIFICATION DATE ==========
+        reinitialiserErreurs();
+        boolean valide = true;
+
+        // 1. Date
         if (datePicker.getValue() == null) {
-            afficherAlerte(Alert.AlertType.WARNING, "Champ manquant",
-                    "❌ Veuillez sélectionner une date.");
-            return;
+            afficherErreur(errDate, datePicker, "Veuillez sélectionner une date.");
+            valide = false;
+        } else if (datePicker.getValue().isBefore(LocalDate.now())) {
+            afficherErreur(errDate, datePicker, "La date ne peut pas être dans le passé.");
+            valide = false;
         }
 
-        LocalDate dateChoisie = datePicker.getValue();
-        LocalDate dateActuelle = LocalDate.now();
-
-        if (dateChoisie.isBefore(dateActuelle)) {
-            afficherAlerte(Alert.AlertType.WARNING, "Date invalide",
-                    "❌ La date ne peut pas être dans le passé.");
-            return;
+        // 2. Validation des heures non vides
+        if (spinnerHeureDebut.getValue() == -1 || spinnerMinuteDebut.getValue() == -1) {
+            afficherErreurSimple(errHeureDebut, "Veuillez sélectionner l'heure de début.");
+            valide = false;
         }
 
-        // ========== 2. RÉCUPÉRATION ET VALIDATION HEURE DÉBUT ==========
-        int heureDebut = getValeurTextField(txtHeureDebut, 0, 23);
-        if (heureDebut == -1) {
-            afficherAlerte(Alert.AlertType.WARNING, "Heure invalide",
-                    "❌ Heure de début invalide.\nVeuillez saisir un nombre entre 0 et 23.");
-            return;
+        if (spinnerHeureFin.getValue() == -1 || spinnerMinuteFin.getValue() == -1) {
+            afficherErreurSimple(errHeureFin, "Veuillez sélectionner l'heure de fin.");
+            valide = false;
         }
 
-        int minuteDebut = getValeurTextField(txtMinuteDebut, 0, 59);
-        if (minuteDebut == -1) {
-            afficherAlerte(Alert.AlertType.WARNING, "Minute invalide",
-                    "❌ Minute de début invalide.\nVeuillez saisir un nombre entre 0 et 59.");
-            return;
+        // 3. Cohérence heure début < heure fin (seulement si les heures sont valides)
+        if (valide) {
+            int debutMin = spinnerHeureDebut.getValue() * 60 + spinnerMinuteDebut.getValue();
+            int finMin   = spinnerHeureFin.getValue()   * 60 + spinnerMinuteFin.getValue();
+
+            if (debutMin >= finMin) {
+                afficherErreurSimple(errHeureFin,
+                        "L'heure de fin doit être après l'heure de début ("
+                                + lblPreviewDebut.getText() + " - " + lblPreviewFin.getText() + ").");
+                valide = false;
+            }
         }
 
-        // ========== 3. RÉCUPÉRATION ET VALIDATION HEURE FIN ==========
-        int heureFin = getValeurTextField(txtHeureFin, 0, 23);
-        if (heureFin == -1) {
-            afficherAlerte(Alert.AlertType.WARNING, "Heure invalide",
-                    "❌ Heure de fin invalide.\nVeuillez saisir un nombre entre 0 et 23.");
-            return;
-        }
-
-        int minuteFin = getValeurTextField(txtMinuteFin, 0, 59);
-        if (minuteFin == -1) {
-            afficherAlerte(Alert.AlertType.WARNING, "Minute invalide",
-                    "❌ Minute de fin invalide.\nVeuillez saisir un nombre entre 0 et 59.");
-            return;
-        }
-
-        // ========== 4. VÉRIFICATION DÉBUT < FIN ==========
-        int debutTotalMinutes = heureDebut * 60 + minuteDebut;
-        int finTotalMinutes = heureFin * 60 + minuteFin;
-
-        if (debutTotalMinutes >= finTotalMinutes) {
-            afficherAlerte(Alert.AlertType.WARNING, "Erreur horaire",
-                    "❌ L'heure de début doit être avant l'heure de fin.\n\n" +
-                            "Début: " + String.format("%02d:%02d", heureDebut, minuteDebut) + "\n" +
-                            "Fin: " + String.format("%02d:%02d", heureFin, minuteFin));
-            return;
-        }
-
-        // ========== 5. VÉRIFICATION TYPE ==========
+        // 4. Type
         if (cbTypeConsult.getValue() == null) {
-            afficherAlerte(Alert.AlertType.WARNING, "Champ manquant",
-                    "❌ Veuillez sélectionner un type de consultation.");
-            return;
+            afficherErreurSimple(errType, "Veuillez sélectionner un type de consultation.");
+            valide = false;
         }
 
-        // ========== 6. VÉRIFICATION LIEU ==========
-        String lieu = txtLieu.getText().trim();
-        if (lieu.isEmpty()) {
-            afficherAlerte(Alert.AlertType.WARNING, "Champ manquant",
-                    "❌ Veuillez saisir un lieu.");
-            return;
+        // 4. Lieu (si présentiel)
+        if ("Présentiel".equals(cbTypeConsult.getValue())) {
+            if (txtLieu.getText().trim().isEmpty()) {
+                afficherErreur(errLieu, txtLieu, "Veuillez saisir le lieu de consultation.");
+                valide = false;
+            }
         }
 
-        // ========== 7. ENREGISTREMENT ==========
+        if (!valide) return;
+
+        // ── Tout est valide → enregistrement ────────────────────────
         try {
-            LocalDate date = datePicker.getValue();
-            String heureDebutStr = String.format("%02d:%02d", heureDebut, minuteDebut);
-            String heureFinStr = String.format("%02d:%02d", heureFin, minuteFin);
-            String typeConsultStr = cbTypeConsult.getValue();
+            LocalDate date        = datePicker.getValue();
+            int hd = spinnerHeureDebut.getValue(), md = spinnerMinuteDebut.getValue();
+            int hf = spinnerHeureFin.getValue(),   mf = spinnerMinuteFin.getValue();
 
-            // Conversion en Time pour la base de données
-            Time heureDebutTime = Time.valueOf(String.format("%02d:%02d:00", heureDebut, minuteDebut));
-            Time heureFinTime = Time.valueOf(String.format("%02d:%02d:00", heureFin, minuteFin));
+            Time heureDebutTime = Time.valueOf(String.format("%02d:%02d:00", hd, md));
+            Time heureFinTime   = Time.valueOf(String.format("%02d:%02d:00", hf, mf));
 
-            TypeConsultation typeConsult = "Présentiel".equals(typeConsultStr)
+            TypeConsultation typeConsult = "Présentiel".equals(cbTypeConsult.getValue())
                     ? TypeConsultation.présentiel
                     : TypeConsultation.en_ligne;
+
+            String lieu = typeConsult == TypeConsultation.présentiel
+                    ? txtLieu.getText().trim()
+                    : null;
 
             DisponibilitePsy disponibilite = new DisponibilitePsy(
                     userIdConnecte,
@@ -198,46 +281,106 @@ public class AjoutDisponibiliteController {
 
             disponibiliteService.ajouter(disponibilite);
 
-            afficherAlerte(Alert.AlertType.INFORMATION, "Succès",
-                    "✅ Disponibilité ajoutée avec succès !\n\n" +
-                            "📅 Date: " + date + "\n" +
-                            "⏰ Horaire: " + heureDebutStr + " - " + heureFinStr + "\n" +
-                            "📍 Type: " + typeConsultStr + "\n" +
-                            "🏠 Lieu: " + lieu);
-
-            fermerModal();
+            // Alerte succès personnalisée
+            afficherAlerteSucces(date, lieu);
 
         } catch (SQLException e) {
-            afficherAlerte(Alert.AlertType.ERROR, "Erreur",
-                    "❌ Erreur lors de l'ajout: " + e.getMessage());
+            afficherAlerteErreur("Erreur SQL", "Une erreur est survenue lors de l'ajout de la disponibilité.", e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
-            afficherAlerte(Alert.AlertType.ERROR, "Erreur",
-                    "❌ Erreur inattendue: " + e.getMessage());
+            afficherAlerteErreur("Erreur système", "Une erreur inattendue est survenue.", e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private void afficherAlerte(Alert.AlertType type, String titre, String message) {
-        Alert alert = new Alert(type);
-        alert.setTitle(titre);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
+    // ── Utilitaires ─────────────────────────────────────────────────
     private void fermerModal() {
-        if (modalStage != null) {
-            modalStage.close();
-        }
+        if (modalStage != null) modalStage.close();
     }
 
     public void setUserId(int userId) {
         this.userIdConnecte = userId;
-        System.out.println("Modal d'ajout - ID psychologue: " + userId);
     }
 
     public void setModalStage(Stage stage) {
         this.modalStage = stage;
+    }
+
+    // ===== ALERTES PERSONNALISÉES =====
+
+    private void afficherAlerteSucces(LocalDate date, String lieu) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Unimind - Succès");
+        alert.setHeaderText("Disponibilité ajoutée avec succès !");
+
+        // Contenu formaté avec style
+        String contenu = buildContenuSucces(date, lieu);
+        alert.setContentText(contenu);
+
+        // Personnaliser les boutons
+        ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        alert.getButtonTypes().setAll(okButton);
+
+        // Appliquer le style personnalisé
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.setStyle(getStyleAlerteSucces());
+
+        // Centrer et afficher
+        alert.showAndWait();
+        fermerModal();
+    }
+
+    private void afficherAlerteErreur(String titre, String header, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Unimind - " + titre);
+        alert.setHeaderText(header);
+        alert.setContentText(message);
+
+        // Personnaliser les boutons
+        ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        alert.getButtonTypes().setAll(okButton);
+
+        // Appliquer le style personnalisé
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.setStyle(getStyleAlerteErreur());
+
+        alert.showAndWait();
+    }
+
+    private String buildContenuSucces(LocalDate date, String lieu) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Votre créneau a été enregistré :\n\n");
+        sb.append("Date : ").append(date).append("\n");
+        sb.append("Horaire : ").append(lblPreviewDebut.getText())
+                .append(" - ").append(lblPreviewFin.getText()).append("\n");
+        sb.append("Type : ").append(cbTypeConsult.getValue());
+
+        if (lieu != null && !lieu.trim().isEmpty()) {
+            sb.append("\nLieu : ").append(lieu);
+        }
+
+        return sb.toString();
+    }
+
+    private String getStyleAlerteSucces() {
+        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; " +
+                "-fx-font-size: 14px; " +
+                "-fx-background-color: #f0fdf4; " +
+                "-fx-border-color: #86efac; " +
+                "-fx-border-width: 2px; " +
+                "-fx-border-radius: 12px; " +
+                "-fx-background-radius: 12px; " +
+                "-fx-padding: 20px;";
+    }
+
+    private String getStyleAlerteErreur() {
+        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; " +
+                "-fx-font-size: 14px; " +
+                "-fx-background-color: #fef2f2; " +
+                "-fx-border-color: #fca5a5; " +
+                "-fx-border-width: 2px; " +
+                "-fx-border-radius: 12px; " +
+                "-fx-background-radius: 12px; " +
+                "-fx-padding: 20px;";
     }
 }

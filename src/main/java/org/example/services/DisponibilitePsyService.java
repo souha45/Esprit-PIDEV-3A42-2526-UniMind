@@ -24,11 +24,26 @@ public class DisponibilitePsyService  implements ICrud<DisponibilitePsy>{
 
     @Override
     public void ajouter(DisponibilitePsy disponibilitePsy) throws SQLException {
-        String sql = "INSERT INTO `disponibilite_psy`(`date_dispo`, `heure_debut`, `heure_fin`, `type_consult`, `lieu`, `statut`, `created_at`, `user_id`) VALUES ('"+disponibilitePsy.getDateDispo()+"','"+disponibilitePsy.getHeureDebut()+"','"+disponibilitePsy.getHeureFin()+"','"+disponibilitePsy.getTypeConsult()+"','"+disponibilitePsy.getLieu()+"','"+disponibilitePsy.getStatut()+"','"+disponibilitePsy.getCreatedAt()+"',"+disponibilitePsy.getUserId()+")";
-        Statement statement = con.createStatement();
-        statement.executeUpdate(sql);
-        System.out.println("DisponibilitePsy ajouté avec succés");
+        String sql = "INSERT INTO `disponibilite_psy`(`date_dispo`, `heure_debut`, `heure_fin`, `type_consult`, `lieu`, `statut`, `created_at`, `user_id`) VALUES (?,?,?,?,?,?,?,?)";
+        PreparedStatement preparedStatement = con.prepareStatement(sql);
+        preparedStatement.setDate(1, disponibilitePsy.getDateDispo());
+        preparedStatement.setTime(2, disponibilitePsy.getHeureDebut());
+        preparedStatement.setTime(3, disponibilitePsy.getHeureFin());
+        preparedStatement.setString(4, disponibilitePsy.getTypeConsult().toString());
 
+        // Gérer correctement le lieu : null pour "en ligne", valeur pour "présentiel"
+        if (disponibilitePsy.getLieu() == null || disponibilitePsy.getLieu().trim().isEmpty()) {
+            preparedStatement.setNull(5, java.sql.Types.VARCHAR);
+        } else {
+            preparedStatement.setString(5, disponibilitePsy.getLieu());
+        }
+
+        preparedStatement.setString(6, disponibilitePsy.getStatut().toString());
+        preparedStatement.setTimestamp(7, disponibilitePsy.getCreatedAt());
+        preparedStatement.setInt(8, disponibilitePsy.getUserId());
+
+        preparedStatement.executeUpdate();
+        System.out.println("DisponibilitePsy ajouté avec succés");
     }
 
     @Override
