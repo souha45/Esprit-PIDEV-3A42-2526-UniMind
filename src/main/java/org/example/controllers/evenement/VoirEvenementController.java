@@ -31,8 +31,10 @@ public class VoirEvenementController {
 
     private Evenement evenementCourant;
     private String pagePrecedente; // Pour savoir où retourner
+    private boolean estFavori; // Pour suivre l'état favori
     private final EvenementService evenementService = new EvenementService();
     private final ParticipationService participationService = new ParticipationService();
+    private final FavoriService favoriService = new FavoriService();
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @FXML
@@ -109,6 +111,17 @@ public class VoirEvenementController {
             lblOrganisateur.setText(nomOrganisateur);
         } catch (SQLException e) {
             lblOrganisateur.setText("Erreur lors de la récupération du nom");
+        }
+
+        // Vérifier si l'événement est déjà dans les favoris
+        try {
+            int currentUserId = SessionManager.getInstance().getCurrentUserId().orElse(-1);
+            if (currentUserId > 0) {
+                estFavori = favoriService.verifierUnicite(evenementCourant.getEvenementId(), currentUserId);
+                mettreAJourStyleBoutonFavori();
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la vérification des favoris: " + e.getMessage());
         }
 
         // Charger et afficher l'image
@@ -374,22 +387,54 @@ public class VoirEvenementController {
                 return;
             }
 
-            FavoriService favoriService = new FavoriService();
-
-            // Vérifier si l'événement est déjà dans les favoris
-            if (favoriService.verifierUnicite(evenementCourant.getEvenementId(), currentUserId)) {
-                afficherAlerte("Information", "Cet événement est déjà dans vos favoris");
-                return;
+            if (estFavori) {
+                // Supprimer des favoris
+                supprimerFavori();
+            } else {
+                // Ajouter aux favoris
+                org.example.entities.Favori favori = new org.example.entities.Favori();
+                favori.setEvenementId(evenementCourant.getEvenementId());
+                favori.setEtudiantId(currentUserId);
+                favoriService.ajouter(favori);
+                estFavori = true;
+                mettreAJourStyleBoutonFavori();
+                afficherAlerte("Succès", "Événement ajouté aux favoris");
             }
-
-            org.example.entities.Favori favori = new org.example.entities.Favori();
-            favori.setEvenementId(evenementCourant.getEvenementId());
-            favori.setEtudiantId(currentUserId);
-
-            favoriService.ajouter(favori);
-            afficherAlerte("Succès", "Événement ajouté aux favoris");
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible d'ajouter aux favoris: " + e.getMessage());
+        }
+    }
+
+    private void supprimerFavori() throws SQLException {
+        int currentUserId = SessionManager.getInstance().getCurrentUserId().orElse(-1);
+        if (currentUserId <= 0) {
+            return;
+        }
+
+        // Trouver l'ID du favori
+        int favoriId = -1;
+        for (org.example.entities.Favori f : favoriService.afficher()) {
+            if (f.getEvenementId() == evenementCourant.getEvenementId() && f.getEtudiantId() == currentUserId) {
+                favoriId = f.getId();
+                break;
+            }
+        }
+
+        if (favoriId > 0) {
+            favoriService.supprimer(favoriId);
+            estFavori = false;
+            mettreAJourStyleBoutonFavori();
+            afficherAlerte("Succès", "Événement retiré des favoris");
+        }
+    }
+
+    private void mettreAJourStyleBoutonFavori() {
+        if (estFavori) {
+            btnFavori.setText("⭐ Retirer des favoris");
+            btnFavori.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 180;");
+        } else {
+            btnFavori.setText("⭐ Ajouter aux favoris");
+            btnFavori.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 180;");
         }
     }
 

@@ -21,6 +21,7 @@ import org.example.enums.StatutEvenement;
 import org.example.enums.TypeEvenement;
 import org.example.services.EvenementService;
 import org.example.services.FavoriService;
+import org.example.services.ParticipationService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
@@ -56,8 +57,10 @@ public class EvenementsEtudiantController {
 
     private EvenementService evenementService;
     private FavoriService favoriService;
+    private ParticipationService participationService;
     private List<Evenement> listeEvenements;
     private Set<Integer> favoriEvenementIds;
+    private Set<Integer> participationEvenementIds;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @FXML
@@ -66,11 +69,14 @@ public class EvenementsEtudiantController {
         try {
             evenementService = new EvenementService();
             favoriService = new FavoriService();
+            participationService = new ParticipationService();
             favoriEvenementIds = new HashSet<>();
+            participationEvenementIds = new HashSet<>();
             System.out.println("EvenementService créé avec succès");
 
             initialiserFiltres();
             chargerFavorisEtudiant();
+            chargerParticipationsEtudiant();
             chargerEvenements();
         } catch (Exception e) {
             System.err.println("Erreur lors de l'initialisation: " + e.getMessage());
@@ -207,6 +213,24 @@ public class EvenementsEtudiantController {
         }
     }
 
+    private void chargerParticipationsEtudiant() {
+        try {
+            int etudiantId = SessionManager.getInstance().getCurrentUserId().orElse(-1);
+            if (etudiantId <= 0) {
+                return;
+            }
+
+            participationEvenementIds.clear();
+            for (org.example.entities.Participation p : participationService.afficher()) {
+                if (p.getEtudiantId() == etudiantId) {
+                    participationEvenementIds.add(p.getEvenementId());
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors du chargement des participations: " + e.getMessage());
+        }
+    }
+
     private void chargerEvenements() {
         System.out.println("Chargement des événements...");
         try {
@@ -331,7 +355,7 @@ public class EvenementsEtudiantController {
             lblPlacesLibres.setStyle("-fx-font-size: 12px; -fx-text-fill: #e74c3c; -fx-font-weight: bold;");
         }
 
-        // Boutons style Symfony (détail + coeur)
+        // Boutons style Symfony (détail + coeur + participer)
         Button btnVoir = new Button("Voir le détail");
         btnVoir.setStyle("-fx-background-color: transparent; -fx-text-fill: #6366f1; -fx-border-color: #6366f1; -fx-border-width: 1; -fx-background-radius: 10; -fx-border-radius: 10; -fx-padding: 8 16; -fx-cursor: hand; -fx-font-weight: bold;");
         btnVoir.setOnAction(event -> voirEvenement(evenement));
@@ -348,8 +372,21 @@ public class EvenementsEtudiantController {
         // Contenu de la carte
         VBox contenu = new VBox(8);
         contenu.setPadding(new Insets(15));
-        javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(10, btnVoir, btnFavori);
-        contenu.getChildren().addAll(lblStatut, lblTitre, lblDate, lblLieu, lblPlacesLibres, actions);
+
+        // Bouton Participer ou label Inscrit
+        boolean estInscrit = participationEvenementIds != null && participationEvenementIds.contains(evenement.getEvenementId());
+        if (estInscrit) {
+            Label lblInscrit = new Label("✅ Inscrit");
+            lblInscrit.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 8 14;");
+            javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(10, btnVoir, lblInscrit, btnFavori);
+            contenu.getChildren().addAll(lblStatut, lblTitre, lblDate, lblLieu, lblPlacesLibres, actions);
+        } else {
+            Button btnParticiper = new Button("🎯 Participer");
+            btnParticiper.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 8 14; -fx-cursor: hand; -fx-font-weight: bold;");
+            btnParticiper.setOnAction(evt -> participer(evenement, btnParticiper));
+            javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(10, btnVoir, btnParticiper, btnFavori);
+            contenu.getChildren().addAll(lblStatut, lblTitre, lblDate, lblLieu, lblPlacesLibres, actions);
+        }
 
         carte.getChildren().addAll(imageContainer, contenu);
 
@@ -384,6 +421,37 @@ public class EvenementsEtudiantController {
             }
         } catch (SQLException e) {
             System.err.println("Erreur lors du toggle favori: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void participer(Evenement evenement, Button btnParticiper) {
+        try {
+            int etudiantId = SessionManager.getInstance().getCurrentUserId().orElse(-1);
+            if (etudiantId <= 0) {
+                return;
+            }
+
+            // Vérifier si déjà inscrit
+            if (participationEvenementIds != null && participationEvenementIds.contains(evenement.getEvenementId())) {
+                return;
+            }
+
+            // Créer la participation
+            org.example.entities.Participation participation = new org.example.entities.Participation();
+            participation.setEvenementId(evenement.getEvenementId());
+            participation.setEtudiantId(etudiantId);
+            participation.setStatut(org.example.enums.StatutParticipation.CONFIRME);
+            participation.setDateInscription(new java.sql.Timestamp(System.currentTimeMillis()));
+
+            participationService.ajouter(participation);
+            participationEvenementIds.add(evenement.getEvenementId());
+
+            // Recharger les cartes
+            chargerEvenements();
+
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la participation: " + e.getMessage());
             e.printStackTrace();
         }
     }
