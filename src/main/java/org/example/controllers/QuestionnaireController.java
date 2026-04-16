@@ -11,7 +11,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.shape.Rectangle;
 import org.example.entities.Questionnaire;
 import org.example.enums.TypeQuestionnaire;
 import org.example.services.QuestionnaireServices;
@@ -38,8 +37,8 @@ public class QuestionnaireController implements Initializable {
     // ─── LIST ───
     @FXML private ListView<Questionnaire> listQuestionnaire;
 
-    private final QuestionnaireServices   service = new QuestionnaireServices();
-    private final ObservableList<Questionnaire> data     = FXCollections.observableArrayList();
+    private final QuestionnaireServices    service = new QuestionnaireServices();
+    private final ObservableList<Questionnaire> data    = FXCollections.observableArrayList();
     private FilteredList<Questionnaire>         filtered;
     private int selectedId = -1;
 
@@ -51,12 +50,10 @@ public class QuestionnaireController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         cbType.setItems(FXCollections.observableArrayList(TypeQuestionnaire.values()));
 
-        // FilteredList pour la recherche
         filtered = new FilteredList<>(data, p -> true);
         listQuestionnaire.setItems(filtered);
         listQuestionnaire.setCellFactory(lv -> new QuestionnaireCard());
 
-        // Recherche dynamique
         if (tfSearch != null) {
             tfSearch.textProperty().addListener((obs, old, val) -> {
                 String lower = val == null ? "" : val.toLowerCase().trim();
@@ -69,7 +66,6 @@ public class QuestionnaireController implements Initializable {
             });
         }
 
-        // Sélection d'un item
         listQuestionnaire.setOnMouseClicked(e -> {
             Questionnaire selected = listQuestionnaire.getSelectionModel().getSelectedItem();
             if (selected != null) fillForm(selected);
@@ -84,21 +80,20 @@ public class QuestionnaireController implements Initializable {
 
     private static class QuestionnaireCard extends ListCell<Questionnaire> {
 
-        private final HBox  root      = new HBox(12);
-        private final StackPane avatar = new StackPane();
-        private final Label  avLetter  = new Label();
-        private final VBox   info      = new VBox(4);
-        private final HBox   topRow    = new HBox(8);
-        private final HBox   botRow    = new HBox(6);
-        private final Label  nomLbl    = new Label();
-        private final Label  codeLbl   = new Label();
-        private final Label  typeBadge = new Label();
-        private final Label  nbLbl     = new Label();
-        private final HBox   seuilBox  = new HBox(4);
-        private final Label  seuilL    = new Label();
-        private final Label  seuilM    = new Label();
-        private final Label  seuilS    = new Label();
-        private final Region spacer    = new Region();
+        private final HBox     root      = new HBox(12);
+        private final StackPane avatar   = new StackPane();
+        private final Label    avLetter  = new Label();
+        private final VBox     info      = new VBox(4);
+        private final HBox     topRow    = new HBox(8);
+        private final HBox     botRow    = new HBox(6);
+        private final Label    nomLbl    = new Label();
+        private final Label    typeBadge = new Label();
+        private final Label    nbLbl     = new Label();
+        private final HBox     seuilBox  = new HBox(4);
+        private final Label    seuilL    = new Label();
+        private final Label    seuilM    = new Label();
+        private final Label    seuilS    = new Label();
+        private final Region   spacer    = new Region();
 
         QuestionnaireCard() {
             // Avatar cercle
@@ -110,11 +105,8 @@ public class QuestionnaireController implements Initializable {
 
             // Nom
             nomLbl.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
-            nomLbl.setMaxWidth(180);
+            nomLbl.setMaxWidth(220);
             nomLbl.setEllipsisString("…");
-
-            // Code
-            codeLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-font-family: monospace;");
 
             // Type badge
             typeBadge.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 2 8 2 8; -fx-background-radius: 20;");
@@ -129,8 +121,8 @@ public class QuestionnaireController implements Initializable {
             seuilBox.getChildren().addAll(seuilL, seuilM, seuilS);
             seuilBox.setAlignment(Pos.CENTER_RIGHT);
 
-            // Assemblage top row
-            topRow.getChildren().addAll(nomLbl, codeLbl);
+            // Assemblage top row — SANS codeLbl
+            topRow.getChildren().addAll(nomLbl);
             topRow.setAlignment(Pos.CENTER_LEFT);
 
             // Séparateur
@@ -167,9 +159,8 @@ public class QuestionnaireController implements Initializable {
                 return;
             }
 
-            // Nom + code
+            // Nom seulement — SANS code
             nomLbl.setText(q.getNom());
-            codeLbl.setText(q.getCode());
             nbLbl.setText(q.getNbreQuestions() + " question" + (q.getNbreQuestions() > 1 ? "s" : ""));
 
             // Seuils
@@ -179,15 +170,14 @@ public class QuestionnaireController implements Initializable {
 
             // Couleurs selon le type
             String[] colors = typeColors(q.getType());
-            String avBg  = colors[0]; // bg avatar
-            String avFg  = colors[1]; // fg avatar
-            String bdBg  = colors[2]; // bg badge
-            String bdFg  = colors[3]; // fg badge
-            String label = colors[4]; // texte badge
+            String avBg  = colors[0];
+            String avFg  = colors[1];
+            String bdBg  = colors[2];
+            String bdFg  = colors[3];
+            String label = colors[4];
 
             avLetter.setText(label.substring(0, 1));
             avLetter.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: " + avFg + ";");
-            // Recolor circle via lookup trick
             avatar.setStyle("-fx-background-color: " + avBg + "; -fx-background-radius: 19;");
             avatar.getChildren().stream()
                     .filter(n -> n instanceof Circle)
@@ -197,7 +187,6 @@ public class QuestionnaireController implements Initializable {
             typeBadge.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 2 8 2 8; "
                     + "-fx-background-color: " + bdBg + "; -fx-text-fill: " + bdFg + "; -fx-background-radius: 20;");
 
-            // Highlight si sélectionné
             if (isSelected()) {
                 root.setStyle("-fx-background-color: #eff6ff; -fx-background-radius: 10; "
                         + "-fx-border-color: #3b82f6; -fx-border-radius: 10; -fx-border-width: 1.5;");
@@ -209,7 +198,6 @@ public class QuestionnaireController implements Initializable {
             setGraphic(root);
         }
 
-        /** Retourne [avBg, avFg, badgeBg, badgeFg, label] selon le type */
         private String[] typeColors(TypeQuestionnaire type) {
             if (type == null) return new String[]{"#f1f5f9","#64748b","#f1f5f9","#64748b","?"};
             return switch (type) {
@@ -342,8 +330,7 @@ public class QuestionnaireController implements Initializable {
         tfSeuilModere.setText(String.valueOf(q.getSeuilModere()));
         tfSeuilSevere.setText(String.valueOf(q.getSeuilSevere()));
         tfNbreQuestions.setText(String.valueOf(q.getNbreQuestions()));
-        setStatus("📌 Questionnaire #" + selectedId + " sélectionné", true);
-        // Refresh la carte sélectionnée pour le highlight
+        setStatus("📌 Questionnaire sélectionné", true);
         listQuestionnaire.refresh();
     }
 
