@@ -76,6 +76,7 @@ public class RendezVousService implements ICrud<RendezVous>{
                 "  rdv.rendez_vous_id, " +
                 "  rdv.statut, " +
                 "  rdv.created_at, " +
+                "  rdv.motif, " +
                 "  dp.date_dispo, " +
                 "  dp.heure_debut, " +
                 "  dp.heure_fin, " +
@@ -110,6 +111,8 @@ public class RendezVousService implements ICrud<RendezVous>{
                     rs.getInt("etudiant_id"),
                     rs.getInt("dispo_id")
             );
+            // Ajouter le motif séparément car le constructeur utilisé ne le prend pas en paramètre
+            detail.setMotif(rs.getString("motif"));
             rendezVousDetails.add(detail);
         }
 
