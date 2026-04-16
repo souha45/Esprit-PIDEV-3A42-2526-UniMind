@@ -56,7 +56,7 @@ public class EtudiantDashboardController {
 
     @FXML
     private void voirParticipations(ActionEvent event) throws IOException {
-        chargerContenuDansCentre("/participation/GestionParticipation.fxml");
+        chargerContenuDansCentre("/participation/ParticipationsEtudiant.fxml");
     }
 
     @FXML

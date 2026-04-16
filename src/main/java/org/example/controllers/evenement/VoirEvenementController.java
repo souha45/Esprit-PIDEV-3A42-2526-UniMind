@@ -7,6 +7,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
 import org.example.entities.Evenement;
 import org.example.entities.Participation;
 import org.example.enums.Role;
@@ -23,11 +24,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class VoirEvenementController {
 
     private Evenement evenementCourant;
     private final EvenementService evenementService = new EvenementService();
+    private final ParticipationService participationService = new ParticipationService();
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @FXML
@@ -62,6 +66,16 @@ public class VoirEvenementController {
     private Label lblDejaInscrit;
     @FXML
     private Button btnFavori;
+    @FXML
+    private Button btnLaisserAvis;
+    @FXML
+    private VBox vboxAvis;
+    @FXML
+    private Label lblNoteMoyenne;
+    @FXML
+    private Label lblNbAvis;
+    @FXML
+    private Label lblAucunAvis;
 
     public void setEvenement(Evenement evenement) {
         this.evenementCourant = evenement;
@@ -115,6 +129,9 @@ public class VoirEvenementController {
 
         // Vérifier les permissions : cacher les boutons si l'utilisateur n'est pas l'organisateur (sauf admin)
         verifierPermissions();
+
+        // Charger les avis
+        chargerAvis();
     }
 
     private void verifierPermissions() {
@@ -132,9 +149,11 @@ public class VoirEvenementController {
             if (dejaInscrit) {
                 btnParticiper.setVisible(false);
                 lblDejaInscrit.setVisible(true);
+                btnLaisserAvis.setVisible(true); // Afficher le bouton laisser avis si inscrit
             } else {
                 btnParticiper.setVisible(true);
                 lblDejaInscrit.setVisible(false);
+                btnLaisserAvis.setVisible(false);
             }
             btnFavori.setVisible(true);
             btnModifier.setVisible(false);
@@ -322,5 +341,168 @@ public class VoirEvenementController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void chargerAvis() {
+        try {
+            int currentUserId = SessionManager.getInstance().getCurrentUserId().orElse(-1);
+            if (currentUserId <= 0) {
+                return;
+            }
+
+            // Récupérer la participation de l'étudiant pour cet événement
+            Participation participationEtudiant = null;
+            for (Participation p : participationService.afficher()) {
+                if (p.getEvenementId() == evenementCourant.getEvenementId() && p.getEtudiantId() == currentUserId) {
+                    participationEtudiant = p;
+                    break;
+                }
+            }
+
+            // Charger tous les avis pour cet événement
+            List<Participation> toutesParticipations = new ArrayList<>();
+            for (Participation p : participationService.afficher()) {
+                if (p.getEvenementId() == evenementCourant.getEvenementId() && p.hasFeedback()) {
+                    toutesParticipations.add(p);
+                }
+            }
+
+            if (toutesParticipations.isEmpty()) {
+                lblAucunAvis.setVisible(true);
+                vboxAvis.getChildren().clear();
+                vboxAvis.getChildren().add(lblAucunAvis);
+                lblNoteMoyenne.setText("⭐ 0.0/5");
+                lblNbAvis.setText("(0 avis)");
+            } else {
+                lblAucunAvis.setVisible(false);
+                vboxAvis.getChildren().clear();
+                
+                for (Participation p : toutesParticipations) {
+                    VBox avisCard = creerCarteAvis(p);
+                    vboxAvis.getChildren().add(avisCard);
+                }
+
+                // Calculer la note moyenne
+                double somme = 0;
+                for (Participation p : toutesParticipations) {
+                    somme += p.getNoteSatisfaction();
+                }
+                double moyenne = toutesParticipations.size() > 0 ? somme / toutesParticipations.size() : 0.0;
+                lblNoteMoyenne.setText(String.format("⭐ %.1f/5", moyenne));
+                lblNbAvis.setText("(" + toutesParticipations.size() + " avis)");
+            }
+
+            // Si l'étudiant a déjà laissé un avis, changer le texte du bouton
+            if (participationEtudiant != null && participationEtudiant.hasFeedback()) {
+                btnLaisserAvis.setText("✏️ Modifier mon avis");
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erreur lors du chargement des avis: " + e.getMessage());
+        }
+    }
+
+    private VBox creerCarteAvis(Participation participation) {
+        VBox card = new VBox();
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
+        card.setSpacing(8);
+
+        // Note en étoiles
+        String etoiles = "⭐".repeat(participation.getNoteSatisfaction());
+        Label lblNote = new Label(etoiles);
+        lblNote.setStyle("-fx-font-size: 18px; -fx-text-fill: #f39c12; -fx-font-weight: bold;");
+
+        // Commentaire
+        Label lblCommentaire = new Label(participation.getFeedbackCommentaire());
+        lblCommentaire.setStyle("-fx-font-size: 14px; -fx-text-fill: #2c3e50; -fx-wrap-text: true;");
+        lblCommentaire.setMaxWidth(650);
+
+        // Date
+        String dateStr = participation.getFeedbackAt() != null 
+                ? participation.getFeedbackAt().toLocalDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                : "Date inconnue";
+        Label lblDate = new Label(dateStr);
+        lblDate.setStyle("-fx-font-size: 12px; -fx-text-fill: #95a5a6;");
+
+        card.getChildren().addAll(lblNote, lblCommentaire, lblDate);
+        return card;
+    }
+
+    @FXML
+    private void laisserAvis(ActionEvent event) {
+        try {
+            int currentUserId = SessionManager.getInstance().getCurrentUserId().orElse(-1);
+            if (currentUserId <= 0) {
+                afficherAlerte("Erreur", "Utilisateur non connecté");
+                return;
+            }
+
+            // Récupérer la participation de l'étudiant
+            final Participation[] participation = new Participation[1];
+            for (Participation p : participationService.afficher()) {
+                if (p.getEvenementId() == evenementCourant.getEvenementId() && p.getEtudiantId() == currentUserId) {
+                    participation[0] = p;
+                    break;
+                }
+            }
+
+            if (participation[0] == null) {
+                afficherAlerte("Erreur", "Vous devez être inscrit à cet événement pour laisser un avis");
+                return;
+            }
+
+            // Créer une boîte de dialogue pour le feedback
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("Laisser un avis");
+
+            DialogPane dialogPane = dialog.getDialogPane();
+            dialogPane.getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+            VBox content = new VBox(15);
+            
+            // Note
+            Label lblNote = new Label("Note (1-5 étoiles):");
+            ComboBox<Integer> comboNote = new ComboBox<>();
+            for (int i = 1; i <= 5; i++) {
+                comboNote.getItems().add(i);
+            }
+            comboNote.setValue(participation[0].hasFeedback() ? (int) participation[0].getNoteSatisfaction() : 5);
+            
+            // Commentaire
+            Label lblCommentaire = new Label("Commentaire:");
+            TextArea txtCommentaire = new TextArea();
+            txtCommentaire.setPrefRowCount(4);
+            txtCommentaire.setPrefWidth(400);
+            txtCommentaire.setText(participation[0].getFeedbackCommentaire() != null ? participation[0].getFeedbackCommentaire() : "");
+            
+            content.getChildren().addAll(lblNote, comboNote, lblCommentaire, txtCommentaire);
+            dialogPane.setContent(content);
+
+            dialog.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.OK) {
+                    int note = comboNote.getValue();
+                    String commentaire = txtCommentaire.getText().trim();
+
+                    if (commentaire.isEmpty()) {
+                        afficherAlerte("Erreur", "Veuillez laisser un commentaire");
+                        return;
+                    }
+
+                    // Mettre à jour la participation
+                    participation[0].ajouterFeedback((short) note, commentaire);
+                    
+                    try {
+                        participationService.modifier(participation[0]);
+                        afficherAlerte("Succès", "Votre avis a été enregistré avec succès !");
+                        chargerAvis(); // Recharger les avis
+                    } catch (SQLException e) {
+                        afficherAlerte("Erreur", "Impossible d'enregistrer votre avis: " + e.getMessage());
+                    }
+                }
+            });
+
+        } catch (Exception e) {
+            afficherAlerte("Erreur", "Impossible d'ouvrir le formulaire d'avis: " + e.getMessage());
+        }
     }
 }
