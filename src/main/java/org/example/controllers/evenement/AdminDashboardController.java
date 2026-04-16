@@ -8,7 +8,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.example.services.EvenementService;
 import org.example.services.ParticipationService;
@@ -113,7 +112,16 @@ public class AdminDashboardController {
 
     @FXML
     private void gestionParticipations(ActionEvent event) throws IOException {
-        chargerContenuDansCentre("/participation/GestionParticipation.fxml");
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/participation/GestionParticipation.fxml"));
+        Parent root = loader.load();
+        contentScrollPane.setContent(root);
+    }
+
+    @FXML
+    private void gestionFeedbacks(ActionEvent event) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/feedback/FeedbacksAdmin.fxml"));
+        Parent root = loader.load();
+        contentScrollPane.setContent(root);
     }
 
     @FXML

@@ -34,6 +34,7 @@
                         <Button text="🎪  Gestion Événements" onAction="#gestionEvenements" styleClass="nav-btn" maxWidth="Infinity" />
                         <Button text="🏢  Gestion Sponsors" onAction="#gestionSponsors" styleClass="nav-btn" maxWidth="Infinity" />
                         <Button text="✅  Gestion Participations" onAction="#gestionParticipations" styleClass="nav-btn" maxWidth="Infinity" />
+                        <Button text="💬  Avis des participants" onAction="#gestionFeedbacks" styleClass="nav-btn" maxWidth="Infinity" />
                     </children>
                 </VBox>
 

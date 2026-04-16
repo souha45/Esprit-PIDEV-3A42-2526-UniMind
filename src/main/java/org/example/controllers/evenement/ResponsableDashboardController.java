@@ -64,6 +64,11 @@ public class ResponsableDashboardController {
     }
 
     @FXML
+    private void gestionFeedbacks(ActionEvent event) throws IOException {
+        chargerContenuDansCentre("/feedback/FeedbacksAdmin.fxml");
+    }
+
+    @FXML
     private void logout(ActionEvent event) throws IOException {
         SessionManager.getInstance().logout();
         naviguerVersEcran(event, "/auth/Login.fxml", "Connexion");

@@ -28,6 +28,7 @@
                                 <Button text="🎪 Gestion Événements" styleClass="navbar-btn, navbar-btn-active" onAction="#gestionEvenements" />
                                 <Button text="✅ Gestion Participations" styleClass="navbar-btn" onAction="#gestionParticipations" />
                                 <Button text="🏢 Attribution Sponsors" styleClass="navbar-btn" onAction="#attributionSponsors" />
+                                <Button text="💬 Avis des participants" styleClass="navbar-btn" onAction="#gestionFeedbacks" />
                             </children>
                         </HBox>
                     </content>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.TilePane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="20" style="-fx-padding: 20; -fx-background-color: #f5f6fa;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.feedback.FeedbacksAdminController">
+    <children>
+        <!-- En-tête -->
+        <VBox spacing="10">
+            <children>
+                <Label text="Avis des participants" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+                <Label text="Tous les avis des participants" style="-fx-font-size: 14px; -fx-text-fill: #7f8c8d;" />
+                <Label fx:id="lblTotal" text="0 avis" style="-fx-font-size: 16px; -fx-text-fill: #3498db; -fx-font-weight: bold;" />
+            </children>
+        </VBox>
+
+        <!-- Conteneur des cartes de feedbacks -->
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+            <content>
+                <TilePane fx:id="tileFeedbacks" hgap="15" vgap="15" prefColumns="3" style="-fx-padding: 10;">
+                </TilePane>
+            </content>
+        </ScrollPane>
+    </children>
+</VBox>
