@@ -1,6 +1,7 @@
 package org.example.controllers.favori;
 
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -16,6 +17,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import org.example.entities.Evenement;
 import org.example.entities.Favori;
+import org.example.enums.StatutEvenement;
+import org.example.enums.TypeEvenement;
 import org.example.services.EvenementService;
 import org.example.services.FavoriService;
 import org.example.utils.NavigationContext;
@@ -44,6 +47,12 @@ public class FavorisEtudiantController {
     private TextField txtRecherche;
 
     @FXML
+    private ComboBox<TypeEvenement> comboType;
+
+    @FXML
+    private ComboBox<StatutEvenement> comboStatut;
+
+    @FXML
     private ComboBox<String> comboTri;
 
     private FavoriService favoriService;
@@ -67,9 +76,41 @@ public class FavorisEtudiantController {
             ));
             comboTri.setValue("Date (plus proche)");
 
-            // Ajouter les listeners pour recherche et tri
-            txtRecherche.textProperty().addListener((observable, oldValue, newValue) -> appliquerFiltres());
-            comboTri.valueProperty().addListener((observable, oldValue, newValue) -> appliquerFiltres());
+            // Initialiser le ComboBox de type
+            comboType.setItems(FXCollections.observableArrayList(TypeEvenement.values()));
+            comboType.setValue(null);
+            comboType.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+                @Override
+                protected void updateItem(TypeEvenement item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.name());
+                }
+            });
+            comboType.setButtonCell(new javafx.scene.control.ListCell<>() {
+                @Override
+                protected void updateItem(TypeEvenement item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.name());
+                }
+            });
+
+            // Initialiser le ComboBox de statut
+            comboStatut.setItems(FXCollections.observableArrayList(StatutEvenement.values()));
+            comboStatut.setValue(null);
+            comboStatut.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+                @Override
+                protected void updateItem(StatutEvenement item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.name());
+                }
+            });
+            comboStatut.setButtonCell(new javafx.scene.control.ListCell<>() {
+                @Override
+                protected void updateItem(StatutEvenement item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.name());
+                }
+            });
 
             chargerFavorisEtudiant();
             chargerEvenementsFavoris();
@@ -123,6 +164,7 @@ public class FavorisEtudiantController {
         }
     }
 
+    @FXML
     private void appliquerFiltres() {
         List<Evenement> filtres = new ArrayList<>(listeFavoris);
 
@@ -131,6 +173,18 @@ public class FavorisEtudiantController {
         if (recherche != null && !recherche.trim().isEmpty()) {
             String rechercheLower = recherche.toLowerCase();
             filtres.removeIf(e -> !e.getTitre().toLowerCase().contains(rechercheLower));
+        }
+
+        // Filtrer par type
+        TypeEvenement type = comboType.getValue();
+        if (type != null) {
+            filtres.removeIf(e -> e.getType() != type);
+        }
+
+        // Filtrer par statut
+        StatutEvenement statut = comboStatut.getValue();
+        if (statut != null) {
+            filtres.removeIf(e -> e.getStatut() != statut);
         }
 
         // Trier par date
@@ -151,6 +205,15 @@ public class FavorisEtudiantController {
             afficherCartesFavoris(filtres);
             lblTotal.setText(filtres.size() + " favoris");
         }
+    }
+
+    @FXML
+    private void reinitialiserFiltres(ActionEvent event) {
+        txtRecherche.clear();
+        comboType.setValue(null);
+        comboStatut.setValue(null);
+        comboTri.setValue("Date (plus proche)");
+        appliquerFiltres();
     }
 
     private void afficherMessageAucunFavori() {
