@@ -53,6 +53,9 @@ public class EvenementsEtudiantController {
     private DatePicker dateAu;
 
     @FXML
+    private ComboBox<String> comboTri;
+
+    @FXML
     private Label lblTotal;
 
     private EvenementService evenementService;
@@ -108,6 +111,7 @@ public class EvenementsEtudiantController {
         comboStatut.setValue(null);
         dateDu.setValue(null);
         dateAu.setValue(null);
+        comboTri.setValue("Date (plus proche)");
 
         if (listeEvenements == null) {
             return;
@@ -123,8 +127,9 @@ public class EvenementsEtudiantController {
         StatutEvenement statut = comboStatut.getValue();
         var du = dateDu.getValue();
         var au = dateAu.getValue();
+        String tri = comboTri.getValue();
 
-        return base.stream().filter(e -> {
+        List<Evenement> filtres = base.stream().filter(e -> {
             if (e == null) {
                 return false;
             }
@@ -158,6 +163,21 @@ public class EvenementsEtudiantController {
 
             return true;
         }).toList();
+
+        // Trier par date
+        if (tri != null && tri.equals("Date (plus lointain)")) {
+            filtres.sort((e1, e2) -> {
+                if (e1.getDateDebut() == null || e2.getDateDebut() == null) return 0;
+                return e2.getDateDebut().toLocalDateTime().compareTo(e1.getDateDebut().toLocalDateTime());
+            });
+        } else {
+            filtres.sort((e1, e2) -> {
+                if (e1.getDateDebut() == null || e2.getDateDebut() == null) return 0;
+                return e1.getDateDebut().toLocalDateTime().compareTo(e2.getDateDebut().toLocalDateTime());
+            });
+        }
+
+        return filtres;
     }
 
     private void initialiserFiltres() {
@@ -193,6 +213,10 @@ public class EvenementsEtudiantController {
                 setText(empty || item == null ? "Tous" : item.name());
             }
         });
+
+        // Initialiser le ComboBox de tri
+        comboTri.getItems().setAll("Date (plus proche)", "Date (plus lointain)");
+        comboTri.setValue("Date (plus proche)");
     }
 
     private void chargerFavorisEtudiant() {

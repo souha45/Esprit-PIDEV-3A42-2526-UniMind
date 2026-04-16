@@ -9,9 +9,12 @@
       fx:controller="org.example.controllers.evenement.EvenementsEtudiantController"
       stylesheets="@../styles/etudiant.css"
       spacing="16" styleClass="etudiant-content" maxWidth="Infinity">
+	<padding>
+		<Insets topRightBottomLeft="20"/>
+	</padding>
 
     <children>
-        <VBox spacing="12" styleClass="etudiant-page" maxWidth="Infinity">
+        <VBox spacing="16" styleClass="etudiant-page" maxWidth="Infinity">
             <children>
                 <VBox spacing="6" styleClass="page-header">
                     <children>
@@ -32,7 +35,12 @@
                                 <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
                                     <children>
                                         <Label text="Recherche" styleClass="form-label" />
-                                        <TextField fx:id="txtRecherche" promptText="Titre, description, lieu" styleClass="form-input" />
+                                        <HBox spacing="5" alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label text="🔍" style="-fx-font-size: 16px;" />
+                                                <TextField fx:id="txtRecherche" promptText="Titre, description, lieu" styleClass="form-input" HBox.hgrow="ALWAYS" />
+                                            </children>
+                                        </HBox>
                                     </children>
                                 </VBox>
 
@@ -64,7 +72,14 @@
                                     </children>
                                 </VBox>
 
-                                <HBox spacing="10" alignment="CENTER_LEFT" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="6">
+                                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                    <children>
+                                        <Label text="Tri par date" styleClass="form-label" />
+                                        <ComboBox fx:id="comboTri" promptText="Date (plus proche)" styleClass="filter-combo" />
+                                    </children>
+                                </VBox>
+
+                                <HBox spacing="10" alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.columnSpan="5">
                                     <children>
                                         <Button text="Filtrer" onAction="#appliquerFiltres" styleClass="btn-primary" />
                                         <Button text="Réinitialiser" onAction="#reinitialiserFiltres" styleClass="btn-secondary" />
@@ -76,10 +91,15 @@
                 </VBox>
 
                 <VBox spacing="12" styleClass="card-surface" maxWidth="Infinity">
+                    <VBox.margin>
+                        <Insets top="14" />
+                    </VBox.margin>
                     <children>
-                        <HBox alignment="CENTER_LEFT" styleClass="card-header">
+                        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="card-header">
                             <children>
                                 <Label text="Événements à venir" styleClass="section-title" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label fx:id="lblTotal" text="" style="-fx-text-fill: #7f8c8d; -fx-font-size: 14px;" />
                             </children>
                         </HBox>
 
@@ -99,12 +119,6 @@
                                 </VBox>
                             </content>
                         </ScrollPane>
-
-                        <HBox spacing="16" alignment="CENTER">
-                            <children>
-                                <Label fx:id="lblTotal" text="0 événements" styleClass="total-label"/>
-                            </children>
-                        </HBox>
                     </children>
                 </VBox>
             </children>
