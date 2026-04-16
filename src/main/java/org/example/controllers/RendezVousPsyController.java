@@ -275,12 +275,23 @@ public class RendezVousPsyController implements SidebarPsyController.PsyPageCont
     }
 
     private void afficherDetailsRendezVous(RendezVousDetail rdv) {
-        // Pour le moment, juste afficher un message simple
-        showAlert(Alert.AlertType.INFORMATION, "Détails du rendez-vous", 
-                "Patient: " + rdv.getEtudiantPrenom() + " " + rdv.getEtudiantNom() + "\n" +
-                "Email: " + rdv.getEtudiantEmail() + "\n" +
-                "Date: " + rdv.getDateDispo() + "\n" +
-                "Statut: " + rdv.getStatut());
+        // Afficher les détails complets du rendez-vous avec le motif
+        StringBuilder details = new StringBuilder();
+        details.append("Patient: ").append(rdv.getEtudiantPrenom()).append(" ").append(rdv.getEtudiantNom()).append("\n");
+        details.append("Email: ").append(rdv.getEtudiantEmail()).append("\n");
+        details.append("Date: ").append(rdv.getDateDispo()).append("\n");
+        details.append("Heure: ").append(rdv.getHeureDebut()).append(" - ").append(rdv.getHeureFin()).append("\n");
+        details.append("Type: ").append(rdv.getTypeConsult()).append("\n");
+        details.append("Statut: ").append(rdv.getStatut()).append("\n");
+        
+        // Ajouter le motif si disponible
+        if (rdv.getMotif() != null && !rdv.getMotif().trim().isEmpty()) {
+            details.append("Motif: ").append(rdv.getMotif());
+        } else {
+            details.append("Motif: Non spécifié");
+        }
+        
+        showAlert(Alert.AlertType.INFORMATION, "Détails du rendez-vous", details.toString());
     }
 
     private void changerStatut(RendezVousDetail rdv, String nouveauStatut) {
