@@ -13,6 +13,7 @@ import java.sql.SQLException;
 
 public class ModifierConsultationModalController {
 
+    // ========== COMPOSANTS FXML ==========
     @FXML private TextArea txtAvis;
     @FXML private HBox etoilesContainer;
     @FXML private Label lblNoteValue;
@@ -21,13 +22,13 @@ public class ModifierConsultationModalController {
     @FXML private Button btnEnregistrer;
     @FXML private Button btnEffacer;
 
+    // ========== VARIABLES ==========
+    private Button[] etoiles = new Button[5];
     private ConsultationService consultationService;
     private ConsultationDetail consultationDetail;
     private User utilisateur;
     private Stage modalStage;
     private int noteActuelle = 0;
-
-    private Button[] etoiles = new Button[5];
 
     // ========== DÉTECTION OS POUR POLICE EMOJI ==========
     private static final String EMOJI_FONT;
@@ -38,6 +39,7 @@ public class ModifierConsultationModalController {
         else                            EMOJI_FONT = "'Noto Color Emoji'";
     }
 
+    // ========== INITIALISATION ==========
     @FXML
     public void initialize() {
         consultationService = new ConsultationService();
@@ -82,13 +84,21 @@ public class ModifierConsultationModalController {
     private void definirNote(int note) {
         this.noteActuelle = note;
         mettreAJourAffichageEtoiles();
-        lblNoteValue.setText(noteActuelle + "/5");
+        updateNoteLabel();
     }
 
     private void effacerNote() {
         this.noteActuelle = 0;
         mettreAJourAffichageEtoiles();
-        lblNoteValue.setText("0/5");
+        updateNoteLabel();
+    }
+
+    private void updateNoteLabel() {
+        if (noteActuelle > 0) {
+            lblNoteValue.setText(noteActuelle + "/5");
+        } else {
+            lblNoteValue.setText("0/5");
+        }
     }
 
     private void mettreAJourAffichageEtoiles() {
@@ -145,11 +155,11 @@ public class ModifierConsultationModalController {
             consultationService.modifier(consultationEntity);
 
             afficherAlerte(Alert.AlertType.INFORMATION, "Succès",
-                    "Avis et note enregistrés avec succès !\n\nNote: " + noteActuelle + "/5");
+                    "✅ Avis et note enregistrés avec succès !\n\n⭐ Note: " + noteActuelle + "/5");
             fermerModal();
 
         } catch (SQLException e) {
-            afficherAlerte(Alert.AlertType.ERROR, "Erreur", "Erreur: " + e.getMessage());
+            afficherAlerte(Alert.AlertType.ERROR, "Erreur", "❌ Erreur: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -171,6 +181,7 @@ public class ModifierConsultationModalController {
     public void setConsultation(ConsultationDetail consultation) {
         this.consultationDetail = consultation;
 
+        // Remplir l'avis
         String avisExistant = consultation.getAvisPsy();
         if (avisExistant != null && !avisExistant.isEmpty()
                 && !avisExistant.equals("Aucun avis")
@@ -178,10 +189,17 @@ public class ModifierConsultationModalController {
             txtAvis.setText(avisExistant);
         }
 
+        // ✅ Remplir la note et mettre à jour l'affichage
         short noteExistante = consultation.getNoteSatisfaction();
         if (noteExistante > 0) {
             this.noteActuelle = noteExistante;
-            mettreAJourAffichageEtoiles();
+        } else {
+            this.noteActuelle = 0;
+        }
+
+        // ✅ Mettre à jour l'affichage des étoiles ET le label
+        mettreAJourAffichageEtoiles();
+        if (noteExistante > 0) {
             lblNoteValue.setText(noteActuelle + "/5");
         } else {
             lblNoteValue.setText("0/5");
