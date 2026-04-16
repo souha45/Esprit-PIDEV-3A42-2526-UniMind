@@ -3,6 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.GridPane?>
 
 <VBox xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="org.example.controllers.favori.FavorisEtudiantController"
@@ -26,11 +27,40 @@
 
                 <VBox spacing="12" styleClass="card-surface" maxWidth="Infinity">
                     <children>
-                        <HBox alignment="CENTER_LEFT" styleClass="card-header">
+                        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="card-header">
                             <children>
                                 <Label text="Événements favoris" styleClass="section-title" />
+                                <Label fx:id="lblTotal" text="" style="-fx-text-fill: #7f8c8d; -fx-font-size: 14px;" />
                             </children>
                         </HBox>
+
+                        <!-- Recherche et tri -->
+                        <VBox spacing="10">
+                            <children>
+                                <GridPane hgap="12" vgap="10" styleClass="filter-grid">
+                                    <children>
+                                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
+                                            <children>
+                                                <Label text="Recherche" styleClass="form-label" />
+                                                <HBox spacing="5" alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <Label text="🔍" style="-fx-font-size: 16px;" />
+                                                        <TextField fx:id="txtRecherche" promptText="Titre de l'événement" styleClass="form-input" HBox.hgrow="ALWAYS" />
+                                                    </children>
+                                                </HBox>
+                                            </children>
+                                        </VBox>
+
+                                        <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                            <children>
+                                                <Label text="Tri par date" styleClass="form-label" />
+                                                <ComboBox fx:id="comboTri" promptText="Date (plus proche)" styleClass="filter-combo" />
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </GridPane>
+                            </children>
+                        </VBox>
 
                         <ScrollPane fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS" styleClass="event-scroll">
                             <content>

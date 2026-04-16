@@ -1,11 +1,13 @@
 package org.example.controllers.favori;
 
-import javafx.event.ActionEvent;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.TilePane;
@@ -14,7 +16,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import org.example.entities.Evenement;
 import org.example.entities.Favori;
-import org.example.enums.StatutEvenement;
 import org.example.services.EvenementService;
 import org.example.services.FavoriService;
 import org.example.utils.NavigationContext;
@@ -26,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +39,12 @@ public class FavorisEtudiantController {
 
     @FXML
     private Label lblTotal;
+
+    @FXML
+    private TextField txtRecherche;
+
+    @FXML
+    private ComboBox<String> comboTri;
 
     private FavoriService favoriService;
     private EvenementService evenementService;
@@ -51,7 +59,18 @@ public class FavorisEtudiantController {
             favoriService = new FavoriService();
             evenementService = new EvenementService();
             favoriEvenementIds = new HashSet<>();
-            
+
+            // Initialiser le ComboBox de tri
+            comboTri.setItems(FXCollections.observableArrayList(
+                "Date (plus proche)",
+                "Date (plus lointain)"
+            ));
+            comboTri.setValue("Date (plus proche)");
+
+            // Ajouter les listeners pour recherche et tri
+            txtRecherche.textProperty().addListener((observable, oldValue, newValue) -> appliquerFiltres());
+            comboTri.valueProperty().addListener((observable, oldValue, newValue) -> appliquerFiltres());
+
             chargerFavorisEtudiant();
             chargerEvenementsFavoris();
         } catch (Exception e) {
@@ -83,31 +102,54 @@ public class FavorisEtudiantController {
         try {
             listeFavoris = new ArrayList<>();
             List<Evenement> tousEvenements = evenementService.afficher();
-            
+
             // Filtrer pour ne garder que les favoris
             for (Evenement e : tousEvenements) {
                 if (favoriEvenementIds.contains(e.getEvenementId())) {
                     listeFavoris.add(e);
                 }
             }
-            
+
             System.out.println("Nombre d'événements favoris chargés: " + listeFavoris.size());
 
-            if (listeFavoris.isEmpty()) {
-                System.out.println("Aucun favori trouvé");
-                afficherMessageAucunFavori();
-                lblTotal.setText("0 favoris");
-            } else {
-                afficherCartesFavoris(listeFavoris);
-                lblTotal.setText(listeFavoris.size() + " favoris");
-            }
-            System.out.println("Favoris affichés avec succès");
+            // Appliquer les filtres initiaux
+            appliquerFiltres();
         } catch (SQLException e) {
             System.err.println("Erreur SQL lors du chargement des favoris: " + e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
             System.err.println("Erreur inattendue lors du chargement des favoris: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void appliquerFiltres() {
+        List<Evenement> filtres = new ArrayList<>(listeFavoris);
+
+        // Filtrer par recherche
+        String recherche = txtRecherche.getText();
+        if (recherche != null && !recherche.trim().isEmpty()) {
+            String rechercheLower = recherche.toLowerCase();
+            filtres.removeIf(e -> !e.getTitre().toLowerCase().contains(rechercheLower));
+        }
+
+        // Trier par date
+        String tri = comboTri.getValue();
+        if (tri != null) {
+            if (tri.equals("Date (plus proche)")) {
+                filtres.sort(Comparator.comparing(e -> e.getDateDebut().toLocalDateTime()));
+            } else if (tri.equals("Date (plus lointain)")) {
+                filtres.sort((e1, e2) -> e2.getDateDebut().toLocalDateTime().compareTo(e1.getDateDebut().toLocalDateTime()));
+            }
+        }
+
+        // Afficher les résultats
+        if (filtres.isEmpty()) {
+            afficherMessageAucunFavori();
+            lblTotal.setText("0 favoris");
+        } else {
+            afficherCartesFavoris(filtres);
+            lblTotal.setText(filtres.size() + " favoris");
         }
     }
 
@@ -237,9 +279,10 @@ public class FavorisEtudiantController {
             if (favoriId > 0) {
                 favoriService.supprimer(favoriId);
                 favoriEvenementIds.remove(evenement.getEvenementId());
-                
-                // Recharger la liste
-                chargerEvenementsFavoris();
+
+                // Retirer de la liste locale et réappliquer les filtres
+                listeFavoris.removeIf(e -> e.getEvenementId() == evenement.getEvenementId());
+                appliquerFiltres();
             }
         } catch (SQLException e) {
             System.err.println("Erreur lors de la suppression du favori: " + e.getMessage());
