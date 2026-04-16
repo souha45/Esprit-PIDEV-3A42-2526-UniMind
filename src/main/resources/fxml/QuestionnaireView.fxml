@@ -99,20 +99,14 @@
 
     <VBox spacing="8" HBox.hgrow="ALWAYS"
           style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+
         <Label text="Liste des Questionnaires"
                style="-fx-text-fill: #64748b; -fx-font-size: 13px; -fx-font-weight: bold;"/>
-        <TableView fx:id="tableQuestionnaire" VBox.vgrow="ALWAYS"
-                   style="-fx-background-color: #ffffff; -fx-font-size: 13px;">
-            <columns>
-                <TableColumn fx:id="colId"   text="ID"           prefWidth="50"/>
-                <TableColumn fx:id="colCode" text="Code"         prefWidth="80"/>
-                <TableColumn fx:id="colNom"  text="Nom"          prefWidth="150"/>
-                <TableColumn fx:id="colType" text="Type"         prefWidth="100"/>
-                <TableColumn fx:id="colNbre" text="Nb Questions" prefWidth="110"/>
-                <TableColumn fx:id="colSL"   text="Seuil L."     prefWidth="70"/>
-                <TableColumn fx:id="colSM"   text="Seuil M."     prefWidth="70"/>
-                <TableColumn fx:id="colSS"   text="Seuil S."     prefWidth="70"/>
-            </columns>
-        </TableView>
+
+        <TextField fx:id="tfSearch" promptText="🔍 Rechercher par nom, code ou type..."
+                   style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+
+        <ListView fx:id="listQuestionnaire" VBox.vgrow="ALWAYS"
+                  style="-fx-background-color: transparent; -fx-border-color: transparent;"/>
     </VBox>
 </HBox>
