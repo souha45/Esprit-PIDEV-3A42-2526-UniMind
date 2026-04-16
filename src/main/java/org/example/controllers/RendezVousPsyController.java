@@ -25,8 +25,7 @@ public class RendezVousPsyController implements SidebarPsyController.PsyPageCont
     @FXML private TableColumn<RendezVousDetail, String> colType;
     @FXML private TableColumn<RendezVousDetail, String> colStatut;
     @FXML private TableColumn<RendezVousDetail, Void> colActions;
-    @FXML private Button btnRafraichir;
-    @FXML private Label lblStatut;
+        @FXML private Label lblStatut;
     @FXML private Label lblDate;
     @FXML private ComboBox<String> comboFiltreStatut;
     @FXML private ComboBox<String> comboFiltreType;
@@ -56,7 +55,6 @@ public class RendezVousPsyController implements SidebarPsyController.PsyPageCont
 
         configurerColonnes();
         configurerFiltres();
-        btnRafraichir.setOnAction(event -> chargerRendezVous());
     }
 
     @Override
@@ -124,13 +122,30 @@ public class RendezVousPsyController implements SidebarPsyController.PsyPageCont
     }
 
     private void configurerColonnes() {
-        // Colonne Étudiant (nom + prénom + email)
+        // Colonne Étudiant (nom + prénom + email avec wrap-text)
         colEtudiant.setCellValueFactory(cellData ->
                 new SimpleStringProperty(
                         cellData.getValue().getEtudiantPrenom() + " " +
                                 cellData.getValue().getEtudiantNom() + "\n" +
                                 cellData.getValue().getEtudiantEmail()
                 ));
+
+        colEtudiant.setCellFactory(column -> new TableCell<RendezVousDetail, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(item);
+                    setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 12px; " +
+                            "-fx-text-fill: #374151; " +
+                            "-fx-padding: 10 16; " +
+                            "-fx-wrap-text: true;");
+                }
+            }
+        });
 
         // Colonne Date et Heure
         colDateHeure.setCellValueFactory(cellData ->
@@ -140,51 +155,60 @@ public class RendezVousPsyController implements SidebarPsyController.PsyPageCont
                                 cellData.getValue().getHeureFin()
                 ));
 
-        // Colonne Type (avec couleur)
+        // Colonne Type (badge coloré comme dans les disponibilités)
         colType.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getTypeConsult().toUpperCase()));
+                new SimpleStringProperty(cellData.getValue().getTypeConsult().toString()));
 
         colType.setCellFactory(column -> new TableCell<RendezVousDetail, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(item);
-                    if (item.equalsIgnoreCase("présentiel")) {
-                        setStyle("-fx-text-fill: #8b5cf6; -fx-font-weight: bold;");
-                    } else {
-                        setStyle("-fx-text-fill: #06b6d4; -fx-font-weight: bold;");
-                    }
+                    setGraphic(null);
+                    return;
                 }
+                boolean presentiel = "présentiel".equalsIgnoreCase(item);
+                Label badge = new Label(presentiel ? "Présentiel" : "En ligne");
+                badge.setStyle(
+                        "-fx-background-color: " + (presentiel ? "#dbeafe" : "#ede9fe") + "; " +
+                                "-fx-text-fill: "         + (presentiel ? "#1d4ed8" : "#6366f1") + "; " +
+                                "-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-font-weight: bold; " +
+                                "-fx-padding: 4 12; -fx-background-radius: 20;");
+                setGraphic(badge);
+                setText(null);
             }
         });
 
-        // Colonne Statut (avec couleur)
+        // Colonne Statut (badge coloré comme dans les disponibilités)
         colStatut.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getStatut().toUpperCase()));
+                new SimpleStringProperty(cellData.getValue().getStatut().toString()));
 
         colStatut.setCellFactory(column -> new TableCell<RendezVousDetail, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(item);
-                    switch (item.toLowerCase()) {
-                        case "demande" -> setStyle("-fx-text-fill: #f59e0b; -fx-font-weight: bold;");
-                        case "confirme" -> setStyle("-fx-text-fill: #10b981; -fx-font-weight: bold;");
-                        case "en-cours" -> setStyle("-fx-text-fill: #0ea5e9; -fx-font-weight: bold;");
-                        case "terminé" -> setStyle("-fx-text-fill: #6366f1; -fx-font-weight: bold;");
-                        case "annulé" -> setStyle("-fx-text-fill: #ef4444;");
-                        case "absent" -> setStyle("-fx-text-fill: #6b7280;");
-                        default -> setStyle("");
-                    }
+                    setGraphic(null);
+                    return;
                 }
+
+                String bg, fg, txt;
+                switch (item.toLowerCase()) {
+                    case "demande" -> { bg = "#fef3c7"; fg = "#f59e0b"; txt = "Demande"; }
+                    case "confirme" -> { bg = "#ecfdf5"; fg = "#10b981"; txt = "Confirmé"; }
+                    case "en-cours" -> { bg = "#e0f2fe"; fg = "#0ea5e9"; txt = "En cours"; }
+                    case "terminé" -> { bg = "#eef2ff"; fg = "#6366f1"; txt = "Terminé"; }
+                    case "annulé" -> { bg = "#fee2e2"; fg = "#ef4444"; txt = "Annulé"; }
+                    case "absent" -> { bg = "#f3f4f6"; fg = "#6b7280"; txt = "Absent"; }
+                    default -> { bg = "#f3f4f6"; fg = "#6b7280"; txt = item; }
+                }
+                Label badge = new Label(txt);
+                badge.setStyle(
+                        "-fx-background-color: " + bg + "; -fx-text-fill: " + fg + "; " +
+                                "-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-font-weight: bold; " +
+                                "-fx-padding: 4 12; -fx-background-radius: 20;");
+                setGraphic(badge);
+                setText(null);
             }
         });
 
@@ -207,30 +231,36 @@ public class RendezVousPsyController implements SidebarPsyController.PsyPageCont
 
                 switch (statut) {
                     case "demande":
-                        Button btnConfirmer = createButton("✓ Confirmer", "#10b981");
-                        Button btnRefuser = createButton("✗ Refuser", "#ef4444");
+                        Button btnConfirmer = createButton("Confirmer", "#10b981");
+                        Button btnRefuser = createButton("Refuser", "#ef4444");
+                        Button btnDetailsDemande = createButton("Détails", "#6b7280");
                         btnConfirmer.setOnAction(e -> changerStatut(rdv, "confirme"));
                         btnRefuser.setOnAction(e -> changerStatut(rdv, "annulé"));
-                        buttons.getChildren().addAll(btnConfirmer, btnRefuser);
+                        btnDetailsDemande.setOnAction(e -> afficherDetailsRendezVous(rdv));
+                        buttons.getChildren().addAll(btnConfirmer, btnRefuser, btnDetailsDemande);
                         break;
                     case "confirme":
-                        Button btnEnCours = createButton("▶ En cours", "#0ea5e9");
-                        Button btnAnnuler = createButton("✗ Annuler", "#ef4444");
+                        Button btnEnCours = createButton("En cours", "#0ea5e9");
+                        Button btnAbsent = createButton("Absent", "#6b7280");
+                        Button btnDetailsConfirme = createButton("Détails", "#6b7280");
                         btnEnCours.setOnAction(e -> changerStatut(rdv, "en-cours"));
-                        btnAnnuler.setOnAction(e -> changerStatut(rdv, "annulé"));
-                        buttons.getChildren().addAll(btnEnCours, btnAnnuler);
+                        btnAbsent.setOnAction(e -> changerStatut(rdv, "absent"));
+                        btnDetailsConfirme.setOnAction(e -> afficherDetailsRendezVous(rdv));
+                        buttons.getChildren().addAll(btnEnCours, btnAbsent, btnDetailsConfirme);
                         break;
                     case "en-cours":
-                        Button btnTerminer = createButton("✓ Terminer", "#6366f1");
-                        Button btnAbsent = createButton("⏤ Absent", "#6b7280");
+                        Button btnTerminer = createButton("Terminer", "#6366f1");
+                        Button btnDetailsEnCours = createButton("Détails", "#6b7280");
                         btnTerminer.setOnAction(e -> changerStatut(rdv, "terminé"));
-                        btnAbsent.setOnAction(e -> changerStatut(rdv, "absent"));
-                        buttons.getChildren().addAll(btnTerminer, btnAbsent);
+                        btnDetailsEnCours.setOnAction(e -> afficherDetailsRendezVous(rdv));
+                        buttons.getChildren().addAll(btnTerminer, btnDetailsEnCours);
                         break;
                     default:
-                        Label info = new Label("✓ Traité");
+                        Button btnDetailsTraite = createButton("Détails", "#6b7280");
+                        Label info = new Label("Traité");
                         info.setStyle("-fx-text-fill: #9ca3af; -fx-font-style: italic;");
-                        buttons.getChildren().add(info);
+                        btnDetailsTraite.setOnAction(e -> afficherDetailsRendezVous(rdv));
+                        buttons.getChildren().addAll(btnDetailsTraite, info);
                 }
                 setGraphic(buttons);
             }
@@ -242,6 +272,15 @@ public class RendezVousPsyController implements SidebarPsyController.PsyPageCont
         btn.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; " +
                 "-fx-font-size: 11px; -fx-padding: 5 10; -fx-background-radius: 6; -fx-cursor: hand;");
         return btn;
+    }
+
+    private void afficherDetailsRendezVous(RendezVousDetail rdv) {
+        // Pour le moment, juste afficher un message simple
+        showAlert(Alert.AlertType.INFORMATION, "Détails du rendez-vous", 
+                "Patient: " + rdv.getEtudiantPrenom() + " " + rdv.getEtudiantNom() + "\n" +
+                "Email: " + rdv.getEtudiantEmail() + "\n" +
+                "Date: " + rdv.getDateDispo() + "\n" +
+                "Statut: " + rdv.getStatut());
     }
 
     private void changerStatut(RendezVousDetail rdv, String nouveauStatut) {
