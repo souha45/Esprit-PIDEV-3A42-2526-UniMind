@@ -10,10 +10,13 @@ import java.util.stream.Collectors;
 
 import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
+import org.example.enums.SaisiPar;
 import org.example.services.SuiviTraitementService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -21,7 +24,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
@@ -207,7 +212,7 @@ public class TraitementEtudiantController implements Initializable {
         suivisSection.setSpacing(10);
 
         if (!suivis.isEmpty()) {
-            Label suivisTitle = new Label("📝 Derniers suivis (" + suivis.size() + ")");
+            Label suivisTitle = new Label("📝 Historique des suivis (" + suivis.size() + ")");
             suivisTitle.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #4f46e5;");
 
             VBox suivisList = new VBox();
@@ -245,14 +250,14 @@ public class TraitementEtudiantController implements Initializable {
 
     private VBox creerCarteSuivi(SuiviTraitement suivi, DateTimeFormatter dateFormatter) {
         VBox suiviCard = new VBox();
-        suiviCard.setSpacing(6);
+        suiviCard.setSpacing(8);
         suiviCard.setStyle("-fx-background-color: #fefce8; -fx-background-radius: 8; -fx-padding: 10; -fx-border-color: #fde68a; -fx-border-radius: 8;");
 
         String dateSuivi = suivi.getDateSuivi() != null ? suivi.getDateSuivi().toLocalDate().format(dateFormatter) : "Date inconnue";
         Label dateLabel = new Label("📌 " + dateSuivi);
         dateLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #92400e;");
 
-        String saisiePar = suivi.getSaisiPar() == org.example.enums.SaisiPar.PSYCHOLOGUE ? "👨‍⚕️ Psychologue" : "👨‍🎓 Vous";
+        String saisiePar = suivi.getSaisiPar() == SaisiPar.PSYCHOLOGUE ? "👨‍⚕️ Psychologue" : "👨‍🎓 Vous";
         Label saisieLabel = new Label(saisiePar);
         saisieLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #78716c;");
 
@@ -262,9 +267,84 @@ public class TraitementEtudiantController implements Initializable {
         notesLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #374151;");
         notesLabel.setWrapText(true);
 
-        suiviCard.getChildren().addAll(dateLabel, saisieLabel, notesLabel);
+        // ===== BOUTONS POUR MODIFIER/SUPPRIMER =====
+        HBox actionsBox = new HBox();
+        actionsBox.setSpacing(10);
+        actionsBox.setAlignment(Pos.CENTER_RIGHT);
+
+        Button btnModifier = new Button("Modifier");
+        Button btnSupprimer = new Button("Supprimer");
+
+        btnModifier.getStyleClass().addAll("table-action-button", "table-action-button-edit");
+        btnSupprimer.getStyleClass().addAll("table-action-button", "table-action-button-delete");
+
+        btnModifier.setPrefWidth(70);
+        btnSupprimer.setPrefWidth(70);
+
+        // Vérifier si l'étudiant peut modifier/supprimer ce suivi
+        SessionManager session = SessionManager.getInstance();
+        boolean peutModifier = false;
+
+        if (session.estEtudiant()) {
+            // L'étudiant ne peut modifier/supprimer que ses propres suivis
+            peutModifier = (suivi.getSaisiPar() == SaisiPar.ETUDIANT);
+        } else {
+            peutModifier = true;
+        }
+
+        if (peutModifier) {
+            btnModifier.setOnAction(e -> ouvrirModificationSuivi(suivi));
+            btnSupprimer.setOnAction(e -> supprimerSuivi(suivi));
+            actionsBox.getChildren().addAll(btnModifier, btnSupprimer);
+        }
+
+        suiviCard.getChildren().addAll(dateLabel, saisieLabel, notesLabel, actionsBox);
 
         return suiviCard;
+    }
+
+    private void ouvrirModificationSuivi(SuiviTraitement suivi) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-modification-view.fxml"));
+            Parent root = loader.load();
+
+            SuiviTraitementModificationController controller = loader.getController();
+            controller.setSuiviTraitement(suivi);
+
+            Stage stage = new Stage();
+            stage.setTitle("Modifier le suivi");
+            stage.setScene(new Scene(root, 800, 650));
+            stage.show();
+
+            stage.setOnHiding(event -> {
+                try {
+                    chargerDonnees();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            lblStatus.setText("✗ Erreur: Impossible d'ouvrir la page de modification");
+        }
+    }
+
+    private void supprimerSuivi(SuiviTraitement suivi) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirmation");
+        confirm.setHeaderText("Supprimer le suivi");
+        confirm.setContentText("Êtes-vous sûr de vouloir supprimer ce suivi ?");
+
+        if (confirm.showAndWait().get() == ButtonType.OK) {
+            try {
+                suiviTraitementService.supprimer(suivi.getSuivitraitementId());
+                chargerDonnees();
+                lblStatus.setText("✓ Suivi supprimé avec succès");
+            } catch (SQLException e) {
+                afficherErreur("Erreur", "Impossible de supprimer le suivi: " + e.getMessage());
+            }
+        }
     }
 
     private void filtrerCartes() {
@@ -321,5 +401,13 @@ public class TraitementEtudiantController implements Initializable {
             e.printStackTrace();
             lblStatus.setText("✗ Erreur: Impossible d'ouvrir la page d'ajout");
         }
+    }
+
+    private void afficherErreur(String titre, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(titre);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
