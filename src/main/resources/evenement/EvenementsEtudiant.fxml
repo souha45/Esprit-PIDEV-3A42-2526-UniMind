@@ -32,54 +32,49 @@
                     <children>
                         <GridPane hgap="12" vgap="10" styleClass="filter-grid">
                             <children>
-                                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
+                                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
                                     <children>
                                         <Label text="Recherche" styleClass="form-label" />
-                                        <HBox spacing="5" alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label text="🔍" style="-fx-font-size: 16px;" />
-                                                <TextField fx:id="txtRecherche" promptText="Titre, description, lieu" styleClass="form-input" HBox.hgrow="ALWAYS" />
-                                            </children>
-                                        </HBox>
+                                        <TextField fx:id="txtRecherche" promptText="Titre, description, lieu" styleClass="form-input" HBox.hgrow="ALWAYS" />
                                     </children>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
                                     <children>
                                         <Label text="Type" styleClass="form-label" />
                                         <ComboBox fx:id="comboType" promptText="Tous" styleClass="filter-combo" />
                                     </children>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="3" GridPane.rowIndex="0">
+                                <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
                                     <children>
                                         <Label text="Statut" styleClass="form-label" />
                                         <ComboBox fx:id="comboStatut" promptText="Tous" styleClass="filter-combo" />
                                     </children>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="4" GridPane.rowIndex="0">
+                                <VBox spacing="6" GridPane.columnIndex="3" GridPane.rowIndex="0">
                                     <children>
                                         <Label text="Du" styleClass="form-label" />
                                         <DatePicker fx:id="dateDu" styleClass="form-input" />
                                     </children>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="5" GridPane.rowIndex="0">
+                                <VBox spacing="6" GridPane.columnIndex="4" GridPane.rowIndex="0">
                                     <children>
                                         <Label text="Au" styleClass="form-label" />
                                         <DatePicker fx:id="dateAu" styleClass="form-input" />
                                     </children>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                <VBox spacing="6" GridPane.columnIndex="5" GridPane.rowIndex="0">
                                     <children>
                                         <Label text="Tri par date" styleClass="form-label" />
                                         <ComboBox fx:id="comboTri" promptText="Date (plus proche)" styleClass="filter-combo" />
                                     </children>
                                 </VBox>
 
-                                <HBox spacing="10" alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.columnSpan="5">
+                                <HBox spacing="10" alignment="CENTER_LEFT" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="6">
                                     <children>
                                         <Button text="Filtrer" onAction="#appliquerFiltres" styleClass="btn-primary" />
                                         <Button text="Réinitialiser" onAction="#reinitialiserFiltres" styleClass="btn-secondary" />
@@ -112,7 +107,7 @@
                                     <children>
                                         <StackPane maxWidth="Infinity">
                                             <children>
-                                                <TilePane fx:id="tileEvenements" hgap="30" vgap="30" styleClass="event-tile-pane" prefTileWidth="340" prefTileHeight="440" maxWidth="Infinity" />
+                                                <TilePane fx:id="tileEvenements" hgap="30" vgap="30" styleClass="event-tile-pane" prefColumns="3" tileAlignment="TOP_LEFT" maxWidth="Infinity" />
                                             </children>
                                         </StackPane>
                                     </children>

@@ -18,6 +18,8 @@ import javafx.geometry.Pos;
 import org.example.entities.Evenement;
 import org.example.entities.Favori;
 import org.example.enums.StatutEvenement;
+
+import java.util.ArrayList;
 import org.example.enums.TypeEvenement;
 import org.example.services.EvenementService;
 import org.example.services.FavoriService;
@@ -89,12 +91,15 @@ public class EvenementsEtudiantController {
     }
 
     @FXML
-    private void appliquerFiltres(ActionEvent event) {
+    public void appliquerFiltres(ActionEvent event) {
+        System.out.println("appliquerFiltres appelé");
         if (listeEvenements == null) {
+            System.out.println("listeEvenements est null");
             return;
         }
 
         List<Evenement> resultats = filtrerEvenements(listeEvenements);
+        System.out.println("Résultats filtrés: " + resultats.size());
         if (resultats.isEmpty()) {
             afficherMessageAucunEvenement();
             lblTotal.setText("0 événements (filtrés)");
@@ -127,9 +132,10 @@ public class EvenementsEtudiantController {
         StatutEvenement statut = comboStatut.getValue();
         var du = dateDu.getValue();
         var au = dateAu.getValue();
-        String tri = comboTri.getValue();
+        String tri = comboTri != null ? comboTri.getValue() : "Date (plus proche)";
+        System.out.println("Filtres - q: " + q + ", type: " + type + ", statut: " + statut + ", du: " + du + ", au: " + au + ", tri: " + tri);
 
-        List<Evenement> filtres = base.stream().filter(e -> {
+        List<Evenement> filtres = new ArrayList<>(base.stream().filter(e -> {
             if (e == null) {
                 return false;
             }
@@ -162,7 +168,7 @@ public class EvenementsEtudiantController {
             }
 
             return true;
-        }).toList();
+        }).toList());
 
         // Trier par date
         if (tri != null && tri.equals("Date (plus lointain)")) {

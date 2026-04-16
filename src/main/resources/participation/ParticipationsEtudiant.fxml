@@ -100,7 +100,7 @@
                                     <children>
                                         <StackPane maxWidth="Infinity">
                                             <children>
-                                                <TilePane fx:id="tileParticipations" hgap="30" vgap="30" styleClass="event-tile-pane" prefTileWidth="340" prefTileHeight="440" maxWidth="Infinity" />
+                                                <TilePane fx:id="tileParticipations" hgap="30" vgap="30" styleClass="event-tile-pane" prefColumns="3" tileAlignment="TOP_LEFT" maxWidth="Infinity" />
                                             </children>
                                         </StackPane>
                                     </children>

@@ -493,10 +493,9 @@
    PAGE HEADER
    ============================================= */
 .page-header {
-    -fx-background-color: white;
-    -fx-padding: 20 24 16 24;
-    -fx-border-color: #e0e7ff;
-    -fx-border-width: 0 0 1 0;
+    -fx-background-color: transparent;
+    -fx-padding: 10 0 15 0;
+    -fx-border-width: 0;
     -fx-spacing: 4;
 }
 
@@ -580,6 +579,7 @@
     -fx-background-color: transparent;
     -fx-background: transparent;
     -fx-border-color: transparent;
+    -fx-fit-to-width: true;
 }
 
 .event-scroll .viewport {
@@ -590,7 +590,6 @@
     -fx-background-color: transparent;
     -fx-hgap: 30;
     -fx-vgap: 30;
-    -fx-pref-tile-width: 340;
-    -fx-pref-tile-height: 440;
     -fx-alignment: TOP_LEFT;
+    -fx-pref-columns: 3;
 }
