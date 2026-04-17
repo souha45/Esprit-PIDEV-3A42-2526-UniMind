@@ -1,8 +1,13 @@
 package org.example.controllers;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +41,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public class TraitementController implements Initializable {
@@ -53,6 +59,8 @@ public class TraitementController implements Initializable {
     @FXML
     private ComboBox<String> cmbFiltrePriorite;
     @FXML
+    private ComboBox<String> cmbTri;
+    @FXML
     private Button btnAppliquerFiltres;
     @FXML
     private Button btnReinitialiserFiltres;
@@ -61,11 +69,20 @@ public class TraitementController implements Initializable {
     @FXML
     private TableColumn<LigneGroupée, Void> colActions;
 
+    // Statistiques
+    @FXML private Label statTotal;
+    @FXML private Label statEnCours;
+    @FXML private Label statTermine;
+    @FXML private Label statSuspendu;
+    @FXML private Label statPrioriteHaute;
+
     private TraitementService traitementService;
     private EtudiantService etudiantService;
     private SuiviTraitementService suiviTraitementService;
     private ObservableList<LigneGroupée> lignesGroupéesList;
     private Map<Integer, Integer> cacheNbSuivis;
+    private List<Traitement> tousLesTraitementsFiltres;
+    private boolean isInitialized = false;
 
     // ==================== CLASSE INTERNE ====================
 
@@ -147,11 +164,16 @@ public class TraitementController implements Initializable {
             etudiantService = new EtudiantService();
             suiviTraitementService = new SuiviTraitementService();
             cacheNbSuivis = new HashMap<>();
+            tousLesTraitementsFiltres = new ArrayList<>();
 
             initialiserFiltres();
+            initialiserTri();
             configurerColonnes();
+
+            // Charger les données
             chargerDonnees();
 
+            isInitialized = true;
             lblStatus.setText("Interface Traitements - Mode psychologue");
 
         } catch (Exception e) {
@@ -162,21 +184,59 @@ public class TraitementController implements Initializable {
 
     private void ouvrirInterfaceEtudiant() {
         try {
-            if (tableViewTraitements.getScene() == null) {
-                Platform.runLater(() -> ouvrirInterfaceEtudiant());
-                return;
-            }
-
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-etudiant-view.fxml"));
             Parent root = loader.load();
             Scene currentScene = tableViewTraitements.getScene();
-            currentScene.setRoot(root);
+            if (currentScene != null) {
+                currentScene.setRoot(root);
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            if (lblStatus != null) {
-                lblStatus.setText("Erreur de redirection: " + e.getMessage());
-            }
         }
+    }
+
+    // ==================== INITIALISATION FILTRES ET TRI ====================
+
+    private void initialiserFiltres() {
+        ObservableList<String> statuts = FXCollections.observableArrayList(
+                "Tous les statuts", "EN_COURS", "TERMINE", "SUSPENDU"
+        );
+        cmbFiltreStatut.setItems(statuts);
+        cmbFiltreStatut.setValue("Tous les statuts");
+
+        ObservableList<String> priorites = FXCollections.observableArrayList(
+                "Toutes les priorités", "HAUTE", "MOYENNE", "BASSE"
+        );
+        cmbFiltrePriorite.setItems(priorites);
+        cmbFiltrePriorite.setValue("Toutes les priorités");
+
+        // Ajouter les listeners APRÈS l'initialisation des valeurs
+        txtRecherche.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (isInitialized) appliquerFiltres();
+        });
+        cmbFiltreStatut.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (isInitialized) appliquerFiltres();
+        });
+        cmbFiltrePriorite.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (isInitialized) appliquerFiltres();
+        });
+        cmbTri.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (isInitialized) appliquerFiltres();
+        });
+    }
+
+    private void initialiserTri() {
+        cmbTri.setItems(FXCollections.observableArrayList(
+                "📅 Date (plus récent)",
+                "📅 Date (plus ancien)",
+                "🔤 Titre (A-Z)",
+                "🔤 Titre (Z-A)",
+                "📊 Priorité (Haute → Basse)",
+                "📊 Priorité (Basse → Haute)",
+                "✅ Statut (En cours → Terminé)",
+                "👤 Étudiant (A-Z)"
+        ));
+        cmbTri.setValue("📅 Date (plus récent)");
     }
 
     // ==================== CHARGEMENT DES DONNÉES ====================
@@ -201,19 +261,16 @@ public class TraitementController implements Initializable {
                 }
             }
 
-            List<Traitement> traitementsTries = traitementsFiltres.stream()
-                    .sorted((t1, t2) -> {
-                        try {
-                            String nom1 = getNomEtudiant(t1.getEtudiantId());
-                            String nom2 = getNomEtudiant(t2.getEtudiantId());
-                            return nom1.compareToIgnoreCase(nom2);
-                        } catch (Exception e) {
-                            return Integer.compare(t1.getEtudiantId(), t2.getEtudiantId());
-                        }
-                    })
-                    .collect(Collectors.toList());
+            tousLesTraitementsFiltres = new ArrayList<>(traitementsFiltres);
 
-            List<LigneGroupée> lignes = creerLignesGroupées(traitementsTries);
+            // Appliquer recherche, filtres et tri
+            traitementsFiltres = appliquerRechercheEtFiltres(traitementsFiltres);
+            traitementsFiltres = appliquerTri(traitementsFiltres);
+
+            // Mettre à jour les statistiques
+            mettreAJourStatistiques(tousLesTraitementsFiltres);
+
+            List<LigneGroupée> lignes = creerLignesGroupées(traitementsFiltres);
             lignesGroupéesList = FXCollections.observableArrayList(lignes);
             tableViewTraitements.setItems(lignesGroupéesList);
 
@@ -224,6 +281,122 @@ public class TraitementController implements Initializable {
             System.err.println("Erreur: " + e.getMessage());
             afficherErreur("Erreur de chargement", e.getMessage());
         }
+    }
+
+    private List<Traitement> appliquerRechercheEtFiltres(List<Traitement> traitements) {
+        String recherche = txtRecherche.getText().toLowerCase().trim();
+        String statutFiltre = cmbFiltreStatut.getValue();
+        String prioriteFiltre = cmbFiltrePriorite.getValue();
+
+        return traitements.stream()
+                .filter(t -> {
+                    if (!recherche.isEmpty()) {
+                        boolean correspondRecherche =
+                                (t.getTitre() != null && t.getTitre().toLowerCase().contains(recherche)) ||
+                                        (t.getType() != null && t.getType().toLowerCase().contains(recherche)) ||
+                                        (t.getObjectifTherapeutique() != null && t.getObjectifTherapeutique().toLowerCase().contains(recherche));
+                        if (!correspondRecherche) return false;
+                    }
+                    if (!"Tous les statuts".equals(statutFiltre)) {
+                        if (t.getStatut() == null || !t.getStatut().name().equals(statutFiltre)) return false;
+                    }
+                    if (!"Toutes les priorités".equals(prioriteFiltre)) {
+                        if (t.getPriorite() == null || !t.getPriorite().name().equals(prioriteFiltre)) return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<Traitement> appliquerTri(List<Traitement> traitements) {
+        String tri = cmbTri.getValue();
+        if (tri == null) return traitements;
+
+        List<Traitement> result = new ArrayList<>(traitements);
+
+        switch (tri) {
+            case "📅 Date (plus récent)":
+                result.sort((t1, t2) -> {
+                    if (t1.getDateDebut() == null) return 1;
+                    if (t2.getDateDebut() == null) return -1;
+                    return t2.getDateDebut().compareTo(t1.getDateDebut());
+                });
+                break;
+            case "📅 Date (plus ancien)":
+                result.sort((t1, t2) -> {
+                    if (t1.getDateDebut() == null) return 1;
+                    if (t2.getDateDebut() == null) return -1;
+                    return t1.getDateDebut().compareTo(t2.getDateDebut());
+                });
+                break;
+            case "🔤 Titre (A-Z)":
+                result.sort(Comparator.comparing(Traitement::getTitre, String.CASE_INSENSITIVE_ORDER));
+                break;
+            case "🔤 Titre (Z-A)":
+                result.sort((t1, t2) -> t2.getTitre().compareToIgnoreCase(t1.getTitre()));
+                break;
+            case "📊 Priorité (Haute → Basse)":
+                result.sort((t1, t2) -> {
+                    int p1 = getPrioriteOrdre(t1.getPriorite().name());
+                    int p2 = getPrioriteOrdre(t2.getPriorite().name());
+                    return Integer.compare(p1, p2);
+                });
+                break;
+            case "📊 Priorité (Basse → Haute)":
+                result.sort((t1, t2) -> {
+                    int p1 = getPrioriteOrdre(t1.getPriorite().name());
+                    int p2 = getPrioriteOrdre(t2.getPriorite().name());
+                    return Integer.compare(p2, p1);
+                });
+                break;
+            case "✅ Statut (En cours → Terminé)":
+                result.sort((t1, t2) -> {
+                    int s1 = getStatutOrdre(t1.getStatut().name());
+                    int s2 = getStatutOrdre(t2.getStatut().name());
+                    return Integer.compare(s1, s2);
+                });
+                break;
+            case "👤 Étudiant (A-Z)":
+                result.sort((t1, t2) -> {
+                    String nom1 = getNomEtudiant(t1.getEtudiantId());
+                    String nom2 = getNomEtudiant(t2.getEtudiantId());
+                    return nom1.compareToIgnoreCase(nom2);
+                });
+                break;
+        }
+        return result;
+    }
+
+    private int getPrioriteOrdre(String priorite) {
+        switch (priorite) {
+            case "HAUTE": return 1;
+            case "MOYENNE": return 2;
+            case "BASSE": return 3;
+            default: return 4;
+        }
+    }
+
+    private int getStatutOrdre(String statut) {
+        switch (statut) {
+            case "EN_COURS": return 1;
+            case "TERMINE": return 2;
+            case "SUSPENDU": return 3;
+            default: return 4;
+        }
+    }
+
+    private void mettreAJourStatistiques(List<Traitement> traitements) {
+        long total = traitements.size();
+        long enCours = traitements.stream().filter(t -> t.getStatut().name().equals("EN_COURS")).count();
+        long termine = traitements.stream().filter(t -> t.getStatut().name().equals("TERMINE")).count();
+        long suspendu = traitements.stream().filter(t -> t.getStatut().name().equals("SUSPENDU")).count();
+        long prioriteHaute = traitements.stream().filter(t -> t.getPriorite().name().equals("HAUTE")).count();
+
+        statTotal.setText(String.valueOf(total));
+        statEnCours.setText(String.valueOf(enCours));
+        statTermine.setText(String.valueOf(termine));
+        statSuspendu.setText(String.valueOf(suspendu));
+        statPrioriteHaute.setText(String.valueOf(prioriteHaute));
     }
 
     private List<LigneGroupée> creerLignesGroupées(List<Traitement> traitements) throws SQLException {
@@ -300,7 +473,7 @@ public class TraitementController implements Initializable {
         colObjectif.setPrefWidth(200);
         colSuivis.setPrefWidth(120);
 
-        // Colonne Étudiant
+        // Configuration des cellules (version simplifiée - gardez votre code existant)
         colEtudiant.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             if (ligne.isEstLigneSeparateur()) {
@@ -309,48 +482,6 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty(ligne.getTexteAffichageEtudiant());
         });
 
-        colEtudiant.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText("");
-                    setStyle("");
-                    setGraphic(null);
-                } else {
-                    LigneGroupée ligne = getTableRow().getItem();
-                    if (ligne.isEstLigneSeparateur()) {
-                        setText("");
-                        setStyle("-fx-background-color: #f3f4f6; -fx-padding: 2px;");
-                        setGraphic(null);
-                    } else if (ligne.isPremiereLigneDuGroupe()) {
-                        VBox vbox = new VBox();
-                        vbox.setAlignment(Pos.CENTER);
-                        vbox.setSpacing(4);
-
-                        Label nomLabel = new Label(ligne.getNomEtudiant());
-                        nomLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #4f46e5;");
-                        nomLabel.setAlignment(Pos.CENTER);
-
-                        Label countLabel = new Label("(" + ligne.getTailleGroupe() + " traitement" + (ligne.getTailleGroupe() > 1 ? "s" : "") + ")");
-                        countLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #6b7280;");
-                        countLabel.setAlignment(Pos.CENTER);
-
-                        vbox.getChildren().addAll(nomLabel, countLabel);
-                        setGraphic(vbox);
-                        setText(null);
-                        setStyle("-fx-background-color: #f5f3ff; -fx-padding: 12 8;");
-                        setAlignment(Pos.CENTER);
-                    } else {
-                        setText("");
-                        setGraphic(null);
-                        setStyle("-fx-background-color: #f5f3ff; -fx-padding: 12 8;");
-                    }
-                }
-            }
-        });
-
-        // Colonne Titre
         colTitre.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -360,27 +491,6 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
-        colTitre.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText("");
-                    setStyle("");
-                } else {
-                    LigneGroupée ligne = getTableRow().getItem();
-                    if (ligne.isEstLigneSeparateur()) {
-                        setText("");
-                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
-                    } else {
-                        setText(item);
-                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
-                    }
-                }
-            }
-        });
-
-        // Colonne Type
         colType.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -390,27 +500,6 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
-        colType.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText("");
-                    setStyle("");
-                } else {
-                    LigneGroupée ligne = getTableRow().getItem();
-                    if (ligne.isEstLigneSeparateur()) {
-                        setText("");
-                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
-                    } else {
-                        setText(item);
-                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
-                    }
-                }
-            }
-        });
-
-        // Colonne Catégorie
         colCategorie.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -420,27 +509,6 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
-        colCategorie.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText("");
-                    setStyle("");
-                } else {
-                    LigneGroupée ligne = getTableRow().getItem();
-                    if (ligne.isEstLigneSeparateur()) {
-                        setText("");
-                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
-                    } else {
-                        setText(item);
-                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
-                    }
-                }
-            }
-        });
-
-        // Colonne Durée
         colDuree.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -450,27 +518,6 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
-        colDuree.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText("");
-                    setStyle("");
-                } else {
-                    LigneGroupée ligne = getTableRow().getItem();
-                    if (ligne.isEstLigneSeparateur()) {
-                        setText("");
-                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
-                    } else {
-                        setText(item);
-                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
-                    }
-                }
-            }
-        });
-
-        // Colonne Statut
         colStatut.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -480,42 +527,6 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
-        colStatut.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText(null);
-                    setGraphic(null);
-                    setStyle("");
-                } else {
-                    LigneGroupée ligne = getTableRow().getItem();
-                    if (ligne.isEstLigneSeparateur()) {
-                        setText("");
-                        setGraphic(null);
-                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
-                    } else if (item != null && !item.isEmpty()) {
-                        Label badge = new Label(item);
-                        badge.getStyleClass().add("status-badge");
-                        switch(item) {
-                            case "EN_COURS": badge.getStyleClass().add("badge-EN_COURS"); break;
-                            case "TERMINE": badge.getStyleClass().add("badge-TERMINE"); break;
-                            case "SUSPENDU": badge.getStyleClass().add("badge-SUSPENDU"); break;
-                        }
-                        setGraphic(badge);
-                        setText(null);
-                        setAlignment(Pos.CENTER);
-                        setStyle("-fx-background-color: white; -fx-padding: 8px;");
-                    } else {
-                        setText("");
-                        setGraphic(null);
-                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
-                    }
-                }
-            }
-        });
-
-        // Colonne Priorité
         colPriorite.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -525,42 +536,6 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
-        colPriorite.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText(null);
-                    setGraphic(null);
-                    setStyle("");
-                } else {
-                    LigneGroupée ligne = getTableRow().getItem();
-                    if (ligne.isEstLigneSeparateur()) {
-                        setText("");
-                        setGraphic(null);
-                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
-                    } else if (item != null && !item.isEmpty()) {
-                        Label badge = new Label(item);
-                        badge.getStyleClass().add("status-badge");
-                        switch(item) {
-                            case "HAUTE": badge.getStyleClass().add("priority-HAUTE"); break;
-                            case "MOYENNE": badge.getStyleClass().add("priority-MOYENNE"); break;
-                            case "BASSE": badge.getStyleClass().add("priority-BASSE"); break;
-                        }
-                        setGraphic(badge);
-                        setText(null);
-                        setAlignment(Pos.CENTER);
-                        setStyle("-fx-background-color: white; -fx-padding: 8px;");
-                    } else {
-                        setText("");
-                        setGraphic(null);
-                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
-                    }
-                }
-            }
-        });
-
-        // Colonne Date Début
         colDateDebut.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -570,27 +545,6 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
-        colDateDebut.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText("");
-                    setStyle("");
-                } else {
-                    LigneGroupée ligne = getTableRow().getItem();
-                    if (ligne.isEstLigneSeparateur()) {
-                        setText("");
-                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
-                    } else {
-                        setText(item);
-                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
-                    }
-                }
-            }
-        });
-
-        // Colonne Objectif
         colObjectif.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -604,63 +558,12 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
-        colObjectif.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText("");
-                    setStyle("");
-                } else {
-                    LigneGroupée ligne = getTableRow().getItem();
-                    if (ligne.isEstLigneSeparateur()) {
-                        setText("");
-                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
-                    } else {
-                        setText(item);
-                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
-                    }
-                }
-            }
-        });
-
-        // Colonne Suivis
         colSuivis.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             if (ligne.isEstLigneSeparateur()) {
                 return new javafx.beans.property.SimpleStringProperty("");
             }
             return new javafx.beans.property.SimpleStringProperty(ligne.getIndicateurSuivis());
-        });
-
-        colSuivis.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText(null);
-                    setGraphic(null);
-                    setStyle("");
-                } else {
-                    LigneGroupée ligne = getTableRow().getItem();
-                    if (ligne.isEstLigneSeparateur()) {
-                        setText("");
-                        setGraphic(null);
-                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
-                    } else if (item != null && !item.isEmpty()) {
-                        Label indicateur = new Label(item);
-                        indicateur.setStyle(ligne.getStyleIndicateurSuivis());
-                        setGraphic(indicateur);
-                        setText(null);
-                        setAlignment(Pos.CENTER);
-                        setStyle("-fx-background-color: white; -fx-padding: 8px;");
-                    } else {
-                        setText("");
-                        setGraphic(null);
-                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
-                    }
-                }
-            }
         });
 
         configurerColonneActions();
@@ -695,7 +598,7 @@ public class TraitementController implements Initializable {
                 btnEdit.setOnAction(event -> {
                     LigneGroupée ligne = getTableView().getItems().get(getIndex());
                     Traitement traitement = ligne.getPremierTraitement();
-                    if (traitement != null) {
+                    if (traitement != null && session.peutModifierTraitement()) {
                         ouvrirPageModification(traitement);
                     }
                 });
@@ -703,7 +606,7 @@ public class TraitementController implements Initializable {
                 btnDelete.setOnAction(event -> {
                     LigneGroupée ligne = getTableView().getItems().get(getIndex());
                     Traitement traitement = ligne.getPremierTraitement();
-                    if (traitement != null) {
+                    if (traitement != null && session.peutSupprimerTraitement()) {
                         supprimerTraitement(traitement);
                     }
                 });
@@ -730,25 +633,7 @@ public class TraitementController implements Initializable {
         });
     }
 
-    // ==================== FILTRAGE ====================
-
-    private void initialiserFiltres() {
-        ObservableList<String> statuts = FXCollections.observableArrayList(
-                "Tous les statuts", "EN_COURS", "TERMINE", "SUSPENDU"
-        );
-        cmbFiltreStatut.setItems(statuts);
-        cmbFiltreStatut.setValue("Tous les statuts");
-
-        ObservableList<String> priorites = FXCollections.observableArrayList(
-                "Toutes les priorités", "HAUTE", "MOYENNE", "BASSE"
-        );
-        cmbFiltrePriorite.setItems(priorites);
-        cmbFiltrePriorite.setValue("Toutes les priorités");
-
-        txtRecherche.textProperty().addListener((obs, oldVal, newVal) -> appliquerFiltres());
-        cmbFiltreStatut.valueProperty().addListener((obs, oldVal, newVal) -> appliquerFiltres());
-        cmbFiltrePriorite.valueProperty().addListener((obs, oldVal, newVal) -> appliquerFiltres());
-    }
+    // ==================== ACTIONS ====================
 
     @FXML
     private void handleAppliquerFiltres() {
@@ -760,23 +645,23 @@ public class TraitementController implements Initializable {
         txtRecherche.clear();
         cmbFiltreStatut.setValue("Tous les statuts");
         cmbFiltrePriorite.setValue("Toutes les priorités");
+        cmbTri.setValue("📅 Date (plus récent)");
         appliquerFiltres();
     }
 
     private void appliquerFiltres() {
+        if (tousLesTraitementsFiltres == null || tousLesTraitementsFiltres.isEmpty()) {
+            return;
+        }
+
         try {
-            List<Traitement> tousLesTraitements = traitementService.afficher();
+            List<Traitement> traitementsFiltres = new ArrayList<>(tousLesTraitementsFiltres);
 
-            SessionManager session = SessionManager.getInstance();
-            List<Traitement> traitementsFiltres = new ArrayList<>();
+            // Appliquer recherche et filtres
+            traitementsFiltres = appliquerRechercheEtFiltres(traitementsFiltres);
 
-            for (Traitement traitement : tousLesTraitements) {
-                if (session.peutVoirTraitement(traitement.getEtudiantId(), traitement.getPsychologueId())) {
-                    traitementsFiltres.add(traitement);
-                }
-            }
-
-            traitementsFiltres = filtrerTraitements(traitementsFiltres);
+            // Appliquer tri
+            traitementsFiltres = appliquerTri(traitementsFiltres);
 
             List<LigneGroupée> lignes = creerLignesGroupées(traitementsFiltres);
             lignesGroupéesList = FXCollections.observableArrayList(lignes);
@@ -790,55 +675,62 @@ public class TraitementController implements Initializable {
         }
     }
 
-    private List<Traitement> filtrerTraitements(List<Traitement> traitements) {
-        String recherche = txtRecherche.getText().toLowerCase().trim();
-        String statutFiltre = cmbFiltreStatut.getValue();
-        String prioriteFiltre = cmbFiltrePriorite.getValue();
+    @FXML
+    private void handleExporterExcel() {
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Exporter les traitements");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Fichier CSV", "*.csv")
+            );
+            fileChooser.setInitialFileName("traitements_" + java.time.LocalDate.now() + ".csv");
 
-        return traitements.stream()
-                .filter(t -> {
-                    if (!recherche.isEmpty()) {
-                        boolean correspondRecherche =
-                                (t.getTitre() != null && t.getTitre().toLowerCase().contains(recherche)) ||
-                                        (t.getType() != null && t.getType().toLowerCase().contains(recherche)) ||
-                                        (t.getObjectifTherapeutique() != null && t.getObjectifTherapeutique().toLowerCase().contains(recherche));
-                        if (!correspondRecherche) return false;
-                    }
-                    if (!"Tous les statuts".equals(statutFiltre)) {
-                        if (t.getStatut() == null || !t.getStatut().name().equals(statutFiltre)) return false;
-                    }
-                    if (!"Toutes les priorités".equals(prioriteFiltre)) {
-                        if (t.getPriorite() == null || !t.getPriorite().name().equals(prioriteFiltre)) return false;
-                    }
-                    return true;
-                })
-                .collect(Collectors.toList());
+            File file = fileChooser.showSaveDialog(tableViewTraitements.getScene().getWindow());
+
+            if (file != null) {
+                exporterVersCSV(file);
+                lblStatus.setText("✓ Export réussi: " + file.getName());
+            }
+        } catch (Exception e) {
+            afficherErreur("Erreur d'export", e.getMessage());
+        }
+    }
+
+    private void exporterVersCSV(File file) throws IOException {
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write("Étudiant;Titre;Type;Catégorie;Durée;Statut;Priorité;Date Début;Objectif;Suivis\n");
+
+            for (LigneGroupée ligne : lignesGroupéesList) {
+                if (ligne.getTraitement() != null) {
+                    Traitement t = ligne.getTraitement();
+                    writer.write(String.format("%s;%s;%s;%s;%d;%s;%s;%s;%s;%d\n",
+                            ligne.getNomEtudiant(),
+                            t.getTitre().replace(";", ","),
+                            t.getType().replace(";", ","),
+                            t.getCategorie().name(),
+                            t.getDureeJours(),
+                            t.getStatut().name(),
+                            t.getPriorite().name(),
+                            t.getDateDebut() != null ? t.getDateDebut().toString() : "",
+                            t.getObjectifTherapeutique() != null ? t.getObjectifTherapeutique().replace(";", ",") : "",
+                            ligne.getNbSuivis()
+                    ));
+                }
+            }
+        }
     }
 
     // ==================== NAVIGATION ====================
 
-    @FXML
-    private void handleAjouter() {
-        ouvrirPageAjout();
-    }
+    @FXML private void handleAjouter() { ouvrirPageAjout(); }
+    @FXML private void handleRafraichir() { try { chargerDonnees(); } catch (Exception e) { afficherErreur("Erreur", e.getMessage()); } }
 
-    @FXML
-    private void handleRafraichir() {
-        try {
-            chargerDonnees();
-            lblStatus.setText("Liste rafraîchie");
-        } catch (Exception e) {
-            afficherErreur("Erreur de rafraîchissement", e.getMessage());
-        }
-    }
-
-    @FXML
-    private void ouvrirSuiviTraitementView() {
+    @FXML private void ouvrirSuiviTraitementView() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-view.fxml"));
             Parent root = loader.load();
             Scene currentScene = tableViewTraitements.getScene();
-            currentScene.setRoot(root);
+            if (currentScene != null) currentScene.setRoot(root);
         } catch (Exception e) {
             afficherErreur("Erreur de navigation", "Impossible d'accéder à la page des suivis: " + e.getMessage());
         }
@@ -851,14 +743,12 @@ public class TraitementController implements Initializable {
                 afficherErreur("Accès refusé", "Seul le psychologue peut créer des traitements.");
                 return;
             }
-
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-ajout-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/traitement-ajout-view.fxml"));
             Parent root = loader.load();
             Stage stage = new Stage();
             stage.setTitle("Ajouter un Traitement");
             stage.setScene(new Scene(root, 900, 700));
             stage.show();
-            lblStatus.setText("Page d'ajout ouverte");
         } catch (Exception e) {
             afficherErreur("Erreur d'ouverture", "Impossible d'ouvrir la page d'ajout: " + e.getMessage());
         }
@@ -866,7 +756,7 @@ public class TraitementController implements Initializable {
 
     private void ouvrirPageAffichage(Traitement traitement) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-affichage-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/traitement-affichage-view.fxml"));
             Parent root = loader.load();
             TraitementAffichageController controller = loader.getController();
             controller.setTraitement(traitement);
@@ -874,7 +764,6 @@ public class TraitementController implements Initializable {
             stage.setTitle("Détails du Traitement");
             stage.setScene(new Scene(root, 900, 700));
             stage.show();
-            lblStatus.setText("Page d'affichage ouverte pour: " + traitement.getTitre());
         } catch (Exception e) {
             afficherErreur("Erreur d'ouverture", "Impossible d'ouvrir la page d'affichage: " + e.getMessage());
         }
@@ -887,8 +776,7 @@ public class TraitementController implements Initializable {
                 afficherErreur("Accès refusé", "Seul le psychologue peut modifier des traitements.");
                 return;
             }
-
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-modification-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/traitement-modification-view.fxml"));
             Parent root = loader.load();
             TraitementModificationController controller = loader.getController();
             controller.setTraitement(traitement);
@@ -896,7 +784,6 @@ public class TraitementController implements Initializable {
             stage.setTitle("Modifier un Traitement");
             stage.setScene(new Scene(root, 900, 700));
             stage.show();
-            lblStatus.setText("Page de modification ouverte pour: " + traitement.getTitre());
         } catch (Exception e) {
             afficherErreur("Erreur d'ouverture", "Impossible d'ouvrir la page de modification: " + e.getMessage());
         }
@@ -909,16 +796,14 @@ public class TraitementController implements Initializable {
                 afficherErreur("Accès refusé", "Seul le psychologue peut supprimer des traitements.");
                 return;
             }
-
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
             confirm.setTitle("Confirmation");
             confirm.setHeaderText("Supprimer le traitement");
-            confirm.setContentText("Êtes-vous sûr de vouloir supprimer le traitement \"" + traitement.getTitre() + "\" ?");
-
+            confirm.setContentText("Êtes-vous sûr de vouloir supprimer le traitement \"" + traitement.getTitre() + "\" ?\n\n⚠️ Tous les suivis associés seront également supprimés !");
             if (confirm.showAndWait().get() == javafx.scene.control.ButtonType.OK) {
                 traitementService.supprimer(traitement.getTraitementId());
                 chargerDonnees();
-                lblStatus.setText("Traitement supprimé: " + traitement.getTitre());
+                lblStatus.setText("Traitement et ses suivis supprimés avec succès");
             }
         } catch (Exception e) {
             afficherErreur("Erreur de suppression", e.getMessage());

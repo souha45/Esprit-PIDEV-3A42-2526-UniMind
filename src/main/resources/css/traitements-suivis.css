@@ -941,3 +941,68 @@
     -fx-border-radius: 8;
     -fx-border-style: dashed;
 }
+
+/* =============================================
+   STATISTIQUES
+   ============================================= */
+
+.stats-container {
+    -fx-background-color: white;
+    -fx-padding: 20 24;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 0 0 1 0;
+    -fx-spacing: 15;
+}
+
+.stat-card {
+    -fx-background-color: #f9fafb;
+    -fx-background-radius: 12;
+    -fx-padding: 12 20;
+    -fx-min-width: 100;
+    -fx-alignment: CENTER;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 4, 0, 0, 2);
+}
+
+.stat-card:hover {
+    -fx-border-color: #c4b5fd;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.1), 8, 0, 0, 4);
+}
+
+.stat-card-en-cours {
+    -fx-background-color: #e0e7ff;
+    -fx-border-color: #c4b5fd;
+}
+
+.stat-card-termine {
+    -fx-background-color: #dcfce7;
+    -fx-border-color: #86efac;
+}
+
+.stat-card-suspendu {
+    -fx-background-color: #fed7aa;
+    -fx-border-color: #fdba74;
+}
+
+.stat-card-haute {
+    -fx-background-color: #fee2e2;
+    -fx-border-color: #fecaca;
+}
+
+.stat-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #6b7280;
+    -fx-font-weight: normal;
+}
+
+.stat-value {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e1b4b;
+}
+
+.stat-card-en-cours .stat-value { -fx-text-fill: #4338ca; }
+.stat-card-termine .stat-value { -fx-text-fill: #166534; }
+.stat-card-suspendu .stat-value { -fx-text-fill: #9a3412; }
+.stat-card-haute .stat-value { -fx-text-fill: #dc2626; }

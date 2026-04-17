@@ -14,14 +14,14 @@ public class SessionManager {
 
     private SessionManager() {
         // Par défaut, psychologue connecté avec ID 1 (pour développement)
-        //this.utilisateurConnecteId = 1;
-        //this.roleUtilisateur = "PSYCHOLOGUE";
-        //this.nomUtilisateur = "psy psy";
+        this.utilisateurConnecteId = 1;
+        this.roleUtilisateur = "PSYCHOLOGUE";
+        this.nomUtilisateur = "psy psy";
 
         // Par défaut, étudiant connecté avec ID 3 (pour développement)
-        this.utilisateurConnecteId = 3;
-        this.roleUtilisateur = "ETUDIANT";
-        this.nomUtilisateur = "etudiant etudiant";
+        //this.utilisateurConnecteId = 3;
+        //this.roleUtilisateur = "ETUDIANT";
+        //this.nomUtilisateur = "etudiant etudiant";
     }
 
     public static SessionManager getInstance() {
