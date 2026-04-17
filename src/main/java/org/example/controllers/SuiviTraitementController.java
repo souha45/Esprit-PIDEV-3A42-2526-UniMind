@@ -239,12 +239,15 @@ public class SuiviTraitementController implements Initializable {
                 Traitement traitementAssocie = traitementsMap.get(suivi.getTraitementId());
                 if (traitementAssocie == null) continue;
 
-                int etudiantId = traitementAssocie.getEtudiantId();
+                int psychologueId = traitementAssocie.getPsychologueId();
 
                 boolean peutVoir = false;
+
                 if (session.estPsychologue()) {
-                    peutVoir = true;
+                    // CORRECTION : Le psychologue ne voit que les suivis de SES traitements
+                    peutVoir = (psychologueId == session.getUtilisateurConnecteId());
                 } else if (session.estEtudiant()) {
+                    int etudiantId = traitementAssocie.getEtudiantId();
                     peutVoir = (etudiantId == session.getUtilisateurConnecteId());
                 } else {
                     peutVoir = true;
@@ -257,11 +260,16 @@ public class SuiviTraitementController implements Initializable {
 
             tousLesSuivisFiltres = new ArrayList<>(suivisFiltres);
 
+            // Mettre à jour les statistiques
             mettreAJourStatistiques(tousLesSuivisFiltres, traitementsMap);
 
+            // Appliquer filtres
             suivisFiltres = appliquerRechercheEtFiltres(suivisFiltres, traitementsMap);
+
+            // Appliquer tri
             suivisFiltres = appliquerTri(suivisFiltres, traitementsMap);
 
+            // Créer les lignes groupées
             List<LigneSuiviGroupée> lignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
             lignesSuivisGroupéesList = FXCollections.observableArrayList(lignes);
             tableViewSuiviTraitements.setItems(lignesSuivisGroupéesList);
@@ -298,6 +306,7 @@ public class SuiviTraitementController implements Initializable {
                 s.getDateSuivi().toLocalDate().equals(today)
         ).count();
 
+        // Nombre d'étudiants différents ayant des suivis
         long parEtudiant = suivis.stream()
                 .map(s -> {
                     Traitement t = traitementsMap.get(s.getTraitementId());
@@ -321,6 +330,7 @@ public class SuiviTraitementController implements Initializable {
 
         return suivis.stream()
                 .filter(s -> {
+                    // Filtre de recherche
                     if (!recherche.isEmpty()) {
                         Traitement traitement = traitementsMap.get(s.getTraitementId());
                         if (traitement != null) {
@@ -339,11 +349,13 @@ public class SuiviTraitementController implements Initializable {
                         }
                     }
 
+                    // Filtre de période
                     if (!"Toutes les périodes".equals(periodeFiltre)) {
                         if (s.getDateSuivi() == null) return false;
                         if (!estDansPeriode(s.getDateSuivi().toLocalDate(), periodeFiltre)) return false;
                     }
 
+                    // Filtre par "Saisi par"
                     if (!"Tous".equals(saisiParFiltre)) {
                         if ("Psychologue".equals(saisiParFiltre) && s.getSaisiPar() != SaisiPar.PSYCHOLOGUE) return false;
                         if ("Étudiant".equals(saisiParFiltre) && s.getSaisiPar() != SaisiPar.ETUDIANT) return false;
@@ -427,6 +439,7 @@ public class SuiviTraitementController implements Initializable {
     private List<LigneSuiviGroupée> creerLignesSuivisGroupées(List<SuiviTraitement> suivis, Map<Integer, Traitement> traitementsMap) {
         List<LigneSuiviGroupée> lignes = new ArrayList<>();
 
+        // Grouper les suivis par étudiant
         Map<Integer, List<SuiviTraitement>> suivisParEtudiant = new LinkedHashMap<>();
 
         for (SuiviTraitement suivi : suivis) {
@@ -443,6 +456,7 @@ public class SuiviTraitementController implements Initializable {
 
             String nomEtudiant = getNomEtudiant(etudiantId);
 
+            // Regrouper par traitement
             Map<Integer, List<SuiviTraitement>> suivisParTraitement = new LinkedHashMap<>();
             Map<Integer, String> nomsTraitements = new HashMap<>();
 
@@ -455,17 +469,21 @@ public class SuiviTraitementController implements Initializable {
                 }
             }
 
+            // En-tête étudiant
             LigneSuiviGroupée ligneEnteteEtudiant = new LigneSuiviGroupée(nomEtudiant, suivisEtudiant);
             lignes.add(ligneEnteteEtudiant);
 
+            // Pour chaque traitement
             for (Map.Entry<Integer, List<SuiviTraitement>> traitementEntry : suivisParTraitement.entrySet()) {
                 Integer traitementId = traitementEntry.getKey();
                 List<SuiviTraitement> suivisTraitement = traitementEntry.getValue();
                 String nomTraitement = nomsTraitements.getOrDefault(traitementId, "Traitement #" + traitementId);
 
+                // En-tête traitement
                 LigneSuiviGroupée ligneEnteteTraitement = new LigneSuiviGroupée(nomEtudiant, nomTraitement, suivisTraitement);
                 lignes.add(ligneEnteteTraitement);
 
+                // Suivis individuels
                 for (SuiviTraitement suivi : suivisTraitement) {
                     lignes.add(new LigneSuiviGroupée(suivi));
                 }
