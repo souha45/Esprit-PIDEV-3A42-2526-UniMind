@@ -14,29 +14,24 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class EtudiantMesReponsesController implements Initializable  {
+public class EtudiantMesReponsesController implements Initializable {
 
     @FXML private TableView<Reponsequestionnaire> tableReponse;
-    @FXML private TableColumn<Reponsequestionnaire, Integer> colId, colQId, colDuree;
     @FXML private TableColumn<Reponsequestionnaire, Double>  colScore;
+    @FXML private TableColumn<Reponsequestionnaire, Integer> colDuree;
     @FXML private TableColumn<Reponsequestionnaire, String>  colNiveau, colPsy, colDate;
 
     private final ReponseQuestionnaireServices service = new ReponseQuestionnaireServices();
     private final ObservableList<Reponsequestionnaire> data = FXCollections.observableArrayList();
 
-    // ⚠️ ID étudiant connecté — à remplacer par le vrai ID après login
-    private static final int USER_ID = 1;
-
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        colId.setCellValueFactory(new PropertyValueFactory<>("reponseQuestionnaireId"));
         colScore.setCellValueFactory(new PropertyValueFactory<>("scoreTotale"));
         colNiveau.setCellValueFactory(new PropertyValueFactory<>("niveau"));
-        colQId.setCellValueFactory(new PropertyValueFactory<>("questionnaireId"));
         colDuree.setCellValueFactory(new PropertyValueFactory<>("dureePassage"));
         colDate.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
 
-        // Colonne besoin psy
+        // ✅ Colonne besoin psy — Oui/Non
         colPsy.setCellValueFactory(new PropertyValueFactory<>("aBesoinPsy"));
         colPsy.setCellFactory(col -> new TableCell<>() {
             @Override
