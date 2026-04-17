@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.geometry.*?>
+
+<HBox spacing="10" alignment="CENTER_LEFT"
+      style="-fx-background-color: white; -fx-padding: 10 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 2);"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.controllers.NavbarController">
+
+    <ImageView fitWidth="32" fitHeight="32" preserveRatio="true">
+        <Image url="/images/unimind.png"/>
+    </ImageView>
+    <Label text="UniMind" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #5B21B6;"/>
+
+    <Region HBox.hgrow="ALWAYS"/>
+
+    <TextField fx:id="navRechercheField" promptText="🔍 Rechercher..."
+               style="-fx-background-radius: 20; -fx-padding: 6 15; -fx-pref-width: 200;"
+               onAction="#onRecherche"/>
+
+    <HBox spacing="8" alignment="CENTER">
+        <Label fx:id="navNomLabel" style="-fx-text-fill: #374151; -fx-font-weight: bold;"/>
+        <ImageView fx:id="navPhoto" fitWidth="32" fitHeight="32" preserveRatio="true">
+            <clip><Circle centerX="16" centerY="16" radius="16"/></clip>
+        </ImageView>
+    </HBox>
+</HBox>

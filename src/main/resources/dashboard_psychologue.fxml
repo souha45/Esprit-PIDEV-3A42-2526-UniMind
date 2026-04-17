@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.DashboardPsychologueController"
+            style="-fx-background-color: #F3F0FF;">
+
+    <top><fx:include source="/navbar.fxml"/></top>
+
+    <left>
+        <VBox fx:id="sidebarContainer"/>    </left>
+
+    <center>
+        <VBox spacing="20" alignment="CENTER" style="-fx-padding: 30;">
+            <Label text="Bienvenue dans votre espace psychologue" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #5B21B6;"/>
+            <VBox spacing="10" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 10;">
+                <Label text="🧠 Mes informations professionnelles" style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+                <GridPane hgap="15" vgap="8">
+                    <Label text="Spécialité :" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <Label fx:id="specialiteLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                    <Label text="Adresse :" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <Label fx:id="adresseLabel" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                    <Label text="Téléphone :" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <Label fx:id="telephoneLabel" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                </GridPane>
+            </VBox>
+        </VBox>
+    </center>
+</BorderPane>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.DashboardEtudiantController"
+            style="-fx-background-color: #F3F0FF;">
+
+    <top><fx:include source="/navbar.fxml"/></top>
+
+    <!-- 🔥 IMPORTANT: ajouter fx:id pour lier le controller -->
+    <left>
+        <VBox fx:id="sidebarContainer"/>    </left>
+
+    <center>
+        <VBox spacing="20" alignment="CENTER" style="-fx-padding: 30;">
+            <Label text="Bienvenue dans votre espace étudiant" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #5B21B6;"/>
+            <VBox spacing="10" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 10;">
+                <Label text="📚 Mes informations académiques" style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+                <GridPane hgap="15" vgap="8">
+                    <Label text="Identifiant étudiant :" style="-fx-font-weight: bold;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <Label fx:id="identifiantLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                    <Label text="Établissement :" style="-fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <Label fx:id="etablissementLabel" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                </GridPane>
+            </VBox>
+        </VBox>
+    </center>
+</BorderPane>

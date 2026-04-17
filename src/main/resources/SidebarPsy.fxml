@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.geometry.*?>
+
+<VBox spacing="15" style="-fx-background-color: #5B21B6; -fx-padding: 20 0;"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.controllers.SidebarPsychologueController">
+
+    <VBox alignment="CENTER" spacing="8" style="-fx-padding: 0 0 20 0;">
+        <ImageView fx:id="sidebarPhoto" fitWidth="70" fitHeight="70">
+            <clip><Circle centerX="35" centerY="35" radius="35"/></clip>
+        </ImageView>
+        <Label fx:id="sidebarNomLabel" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;"/>
+        <Label fx:id="sidebarPrenomLabel" style="-fx-text-fill: #C4B5FD; -fx-font-size: 13;"/>
+        <Label fx:id="sidebarRoleLabel" text="Psychologue" style="-fx-text-fill: #A78BFA; -fx-font-size: 11;"/>
+    </VBox>
+
+    <Separator style="-fx-background-color: #7C3AED;"/>
+
+    <VBox spacing="5" style="-fx-padding: 10 0 0 0;">
+        <Button fx:id="btnProfil" text="👤  Mon Profil" onAction="#ouvrirProfil"
+                style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 200; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+
+        <Button fx:id="btnDeconnexion" text="🚪  Déconnexion" onAction="#seDeconnecter"
+                style="-fx-background-color: transparent; -fx-text-fill: #FCA5A5; -fx-pref-width: 200; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+    </VBox>
+
+    <Region VBox.vgrow="ALWAYS"/>
+</VBox>

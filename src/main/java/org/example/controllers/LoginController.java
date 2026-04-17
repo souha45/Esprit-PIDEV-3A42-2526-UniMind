@@ -6,6 +6,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import org.example.controllers.admin.AdminDashboardController;
+import org.example.controllers.DashboardEtudiantController;
+import org.example.controllers.DashboardPsychologueController;
+import org.example.controllers.DashboardResponsableController;
 import org.example.entities.User;
 import org.example.services.*;
 import org.example.utils.MyDataBase_Unimind;
@@ -18,12 +21,15 @@ public class LoginController {
     @FXML private Label messageErreur;
     @FXML private TextField passwordVisible;
     @FXML private Button btnOeilLogin;
+
     private boolean passwordShown = false;
+
     private AdminService adminService = new AdminService();
     private EtudiantService etudiantService = new EtudiantService();
     private PsychologueService psychologueService = new PsychologueService();
     private ResponsableService responsableService = new ResponsableService();
 
+    // ── Toggle affichage mot de passe ──────────────────────────────────
     @FXML
     public void togglePasswordLogin() {
         passwordShown = !passwordShown;
@@ -44,10 +50,9 @@ public class LoginController {
     public void seConnecter() {
         messageErreur.setText("");
         String email    = emailField.getText().trim();
-        String password = passwordShown
-                ? passwordVisible.getText()
-                : passwordField.getText();
-        // Validations
+        String password = passwordShown ? passwordVisible.getText() : passwordField.getText();
+
+        // ── Validations ───────────────────────────────────────────────
         if (!ValidationUtils.isNonVide(email)) {
             messageErreur.setText("Email obligatoire"); return;
         }
@@ -70,24 +75,49 @@ public class LoginController {
 
             Stage currentStage = (Stage) emailField.getScene().getWindow();
 
+            // ── Redirection selon le rôle ─────────────────────────────
             switch (user.getRole()) {
+
                 case ADMIN -> {
                     FXMLLoader loader = new FXMLLoader(
                             getClass().getResource("/admin_dashboard.fxml"));
                     Stage stage = new Stage();
-                    stage.setTitle("UniMind — Admin");
-                    stage.setScene(new Scene(loader.load(), 1100, 700));
+                    stage.setTitle("UniMind — Administration");
+                    stage.setScene(new Scene(loader.load(), 1200, 700));
                     AdminDashboardController ctrl = loader.getController();
                     ctrl.setUser(user);
                     stage.show();
                 }
-                case ETUDIANT, PSYCHOLOGUE, RESPONSABLE_ETUDIANT -> {
+
+                case ETUDIANT -> {
                     FXMLLoader loader = new FXMLLoader(
-                            getClass().getResource("/user_dashboard.fxml"));
+                            getClass().getResource("/dashboard_etudiant.fxml"));
                     Stage stage = new Stage();
-                    stage.setTitle("UniMind — " + user.getPrenom() + " " + user.getNom());
-                    stage.setScene(new Scene(loader.load(), 900, 650));
-                    UserDashboardController ctrl = loader.getController();
+                    stage.setTitle("UniMind — Espace Étudiant");
+                    stage.setScene(new Scene(loader.load(), 1000, 700));
+                    DashboardEtudiantController ctrl = loader.getController();
+                    ctrl.setUser(user);
+                    stage.show();
+                }
+
+                case PSYCHOLOGUE -> {
+                    FXMLLoader loader = new FXMLLoader(
+                            getClass().getResource("/dashboard_psychologue.fxml"));
+                    Stage stage = new Stage();
+                    stage.setTitle("UniMind — Espace Psychologue");
+                    stage.setScene(new Scene(loader.load(), 1000, 700));
+                    DashboardPsychologueController ctrl = loader.getController();
+                    ctrl.setUser(user);
+                    stage.show();
+                }
+
+                case RESPONSABLE_ETUDIANT -> {
+                    FXMLLoader loader = new FXMLLoader(
+                            getClass().getResource("/dashboard_responsable.fxml"));
+                    Stage stage = new Stage();
+                    stage.setTitle("UniMind — Espace Responsable");
+                    stage.setScene(new Scene(loader.load(), 1000, 700));
+                    DashboardResponsableController ctrl = loader.getController();
                     ctrl.setUser(user);
                     stage.show();
                 }
@@ -96,6 +126,7 @@ public class LoginController {
 
         } catch (Exception e) {
             messageErreur.setText("Erreur : " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

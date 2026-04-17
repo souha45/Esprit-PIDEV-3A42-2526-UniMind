@@ -309,4 +309,15 @@ public class AdminService extends UserService {
             return admin;
         }
     }
+    public Connection getConnection() {
+        return this.connection;
+    }
+
+    public boolean isConnectionValid() {
+        try {
+            return connection != null && !connection.isClosed();
+        } catch (SQLException e) {
+            return false;
+        }
+    }
 }
