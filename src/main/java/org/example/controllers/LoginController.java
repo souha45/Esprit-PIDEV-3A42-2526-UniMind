@@ -143,4 +143,12 @@ public class LoginController {
             messageErreur.setText("Erreur : " + e.getMessage());
         }
     }
+    @FXML
+    public void allerReinitialisationMdp() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Mot de passe oublié");
+        alert.setHeaderText("Réinitialisation du mot de passe");
+        alert.setContentText("Un email de réinitialisation sera envoyé à l'adresse indiquée.");
+        alert.showAndWait();
+    }
 }
