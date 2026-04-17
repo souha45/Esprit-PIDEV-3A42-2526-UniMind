@@ -5,30 +5,23 @@
 <?import javafx.scene.shape.*?>
 <?import javafx.geometry.*?>
 
-<!--
-    UniMind Login - Design professionnel deux colonnes
-    Inspiré du style Argon Dashboard (split-panel)
-    Adaptable à toutes les tailles de fenêtre via AnchorPane + HBox
--->
 <AnchorPane xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.controllers.LoginController"
             minWidth="640" minHeight="480"
             style="-fx-background-color: #F0EFFF;">
 
-    <!-- Conteneur principal plein écran -->
     <HBox AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
           AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
 
-        <!-- ════════════════════════════════════════
-             PANNEAU GAUCHE — Formulaire de connexion
-             ════════════════════════════════════════ -->
+        <!-- ══════════════════════════════════════
+             PANNEAU GAUCHE — Formulaire
+             ══════════════════════════════════════ -->
         <VBox HBox.hgrow="ALWAYS"
               alignment="CENTER"
               style="-fx-background-color: #F8F7FF;"
               spacing="0">
 
-            <!-- Carte formulaire centrée avec largeur max -->
-            <VBox alignment="TOP_LEFT" spacing="24"
+            <VBox alignment="TOP_LEFT" spacing="16"
                   maxWidth="400" minWidth="300"
                   style="-fx-padding: 48 40 48 40;">
 
@@ -42,7 +35,7 @@
                                   -fx-text-fill: #3730A3; -fx-font-family: 'Segoe UI';"/>
                 </HBox>
 
-                <!-- Titre section -->
+                <!-- Titre -->
                 <VBox spacing="4">
                     <Label text="Connexion à UniMind"
                            style="-fx-font-size: 26px; -fx-font-weight: bold;
@@ -52,12 +45,11 @@
                                   -fx-font-family: 'Segoe UI';" wrapText="true"/>
                 </VBox>
 
-                <!-- Séparateur fin -->
                 <Region prefHeight="1"
-                        style="-fx-background-color: #E5E7EB; -fx-max-width: 400;"/>
+                        style="-fx-background-color: #E5E7EB;"/>
 
-                <!-- Champ Email -->
-                <VBox spacing="6">
+                <!-- ── Champ Email ── -->
+                <VBox spacing="4">
                     <Label text="Adresse email"
                            style="-fx-font-size: 12px; -fx-font-weight: bold;
                                   -fx-text-fill: #374151; -fx-font-family: 'Segoe UI';"/>
@@ -66,20 +58,25 @@
                                style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
                                       -fx-padding: 12 14; -fx-background-radius: 10;
                                       -fx-border-color: #DDD6FE; -fx-border-radius: 10;
-                                      -fx-border-width: 1.5; -fx-background-color: white;
-                                      -fx-effect: dropshadow(gaussian, rgba(124,58,237,0.08), 6, 0, 0, 2);"/>
+                                      -fx-border-width: 1.5; -fx-background-color: white;"/>
+                    <!-- Message erreur email — visible uniquement en cas d'erreur -->
+                    <Label fx:id="erreurEmail"
+                           text=""
+                           wrapText="true"
+                           style="-fx-text-fill: #DC2626; -fx-font-size: 11px;
+                                  -fx-font-family: 'Segoe UI';"
+                           visible="false" managed="false"/>
                 </VBox>
 
-                <!-- Champ Mot de passe -->
-                <VBox spacing="6">
+                <!-- ── Champ Mot de passe ── -->
+                <VBox spacing="4">
                     <Label text="Mot de passe"
                            style="-fx-font-size: 12px; -fx-font-weight: bold;
                                   -fx-text-fill: #374151; -fx-font-family: 'Segoe UI';"/>
-                    <HBox alignment="CENTER_LEFT"
+                    <HBox fx:id="passwordBox" alignment="CENTER_LEFT"
                           style="-fx-background-color: white; -fx-background-radius: 10;
                                  -fx-border-color: #DDD6FE; -fx-border-radius: 10;
-                                 -fx-border-width: 1.5;
-                                 -fx-effect: dropshadow(gaussian, rgba(124,58,237,0.08), 6, 0, 0, 2);">
+                                 -fx-border-width: 1.5;">
                         <PasswordField fx:id="passwordField" promptText="••••••••"
                                        HBox.hgrow="ALWAYS"
                                        style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
@@ -98,6 +95,13 @@
                                        -fx-font-size: 15px; -fx-padding: 10 14;
                                        -fx-border-color: transparent;"/>
                     </HBox>
+                    <!-- Message erreur mot de passe — visible uniquement en cas d'erreur -->
+                    <Label fx:id="erreurPassword"
+                           text=""
+                           wrapText="true"
+                           style="-fx-text-fill: #DC2626; -fx-font-size: 11px;
+                                  -fx-font-family: 'Segoe UI';"
+                           visible="false" managed="false"/>
                 </VBox>
 
                 <!-- Se souvenir de moi + Mot de passe oublié -->
@@ -110,19 +114,20 @@
                             onAction="#allerReinitialisationMdp"
                             style="-fx-background-color: transparent; -fx-cursor: hand;
                                    -fx-font-size: 12px; -fx-text-fill: #7C3AED;
-                                   -fx-font-family: 'Segoe UI';
-                                   -fx-underline: true; -fx-border-color: transparent;
-                                   -fx-padding: 0;"/>
+                                   -fx-font-family: 'Segoe UI'; -fx-underline: true;
+                                   -fx-border-color: transparent; -fx-padding: 0;"/>
                 </HBox>
 
-                <!-- Message d'erreur -->
+                <!-- Message d'erreur global (identifiants incorrects / erreur serveur) -->
                 <Label fx:id="messageErreur"
+                       text=""
+                       wrapText="true"
                        style="-fx-text-fill: #DC2626; -fx-font-size: 12px;
                               -fx-font-family: 'Segoe UI';
                               -fx-background-color: #FEF2F2; -fx-background-radius: 8;
-                              -fx-padding: 8 12; -fx-border-color: #FECACA;
-                              -fx-border-radius: 8;"
-                       wrapText="true" visible="false" managed="false"/>
+                              -fx-padding: 10 14; -fx-border-color: #FECACA;
+                              -fx-border-radius: 8; -fx-border-width: 1;"
+                       visible="false" managed="false"/>
 
                 <!-- Bouton Se connecter -->
                 <Button text="Se connecter  →"
@@ -147,19 +152,17 @@
                                    -fx-font-family: 'Segoe UI'; -fx-underline: true;
                                    -fx-border-color: transparent; -fx-padding: 0;"/>
                 </HBox>
+
             </VBox>
         </VBox>
 
-        <!-- ════════════════════════════════════════
-             PANNEAU DROIT — Visuel / Citation
-             (masqué sur petites fenêtres via minWidth)
-             ════════════════════════════════════════ -->
+        <!-- ══════════════════════════════════════
+             PANNEAU DROIT — Visuel
+             ══════════════════════════════════════ -->
         <StackPane minWidth="340"
                    HBox.hgrow="ALWAYS"
-                   style="-fx-background-color: linear-gradient(to bottom right, #4F46E5, #7C3AED);
-                          -fx-background-radius: 0 0 0 0;">
+                   style="-fx-background-color: linear-gradient(to bottom right, #4F46E5, #7C3AED);">
 
-            <!-- Cercles décoratifs (profondeur) -->
             <Circle radius="260" fill="rgba(255,255,255,0.04)"
                     translateX="120" translateY="-140"/>
             <Circle radius="180" fill="rgba(255,255,255,0.06)"
@@ -167,7 +170,6 @@
             <Circle radius="100" fill="rgba(255,255,255,0.08)"
                     translateX="60" translateY="60"/>
 
-            <!-- Contenu texte centré -->
             <VBox alignment="CENTER" spacing="20"
                   style="-fx-padding: 60 50;">
                 <Label text="🧠"
@@ -175,17 +177,13 @@
                               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 12, 0, 0, 4);"/>
                 <Label text="« La santé mentale n'est pas une destination, mais un voyage »"
                        style="-fx-font-size: 20px; -fx-font-weight: bold;
-                              -fx-text-fill: white; -fx-font-family: 'Segoe UI';
-                              -fx-text-alignment: center; -fx-wrap-text: true;
-                              -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 4, 0, 0, 2);"
+                              -fx-text-fill: white; -fx-font-family: 'Segoe UI';"
                        wrapText="true" maxWidth="320" textAlignment="CENTER"/>
                 <Label text="Prendre soin de son bien-être mental est essentiel pour une vie équilibrée et épanouissante."
                        style="-fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.80);
-                              -fx-font-family: 'Segoe UI'; -fx-text-alignment: center;
-                              -fx-wrap-text: true;"
+                              -fx-font-family: 'Segoe UI';"
                        wrapText="true" maxWidth="300" textAlignment="CENTER"/>
 
-                <!-- Badges features -->
                 <VBox spacing="10" style="-fx-padding: 20 0 0 0;">
                     <HBox spacing="10" alignment="CENTER_LEFT">
                         <Label text="✓"
@@ -217,5 +215,6 @@
                 </VBox>
             </VBox>
         </StackPane>
+
     </HBox>
 </AnchorPane>
