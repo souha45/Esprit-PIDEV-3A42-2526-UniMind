@@ -449,6 +449,7 @@ public class TraitementController implements Initializable {
     private void configurerColonnes() {
         tableViewTraitements.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
+        // Récupérer les colonnes (11 colonnes au total)
         TableColumn<LigneGroupée, String> colEtudiant = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(0);
         TableColumn<LigneGroupée, String> colTitre = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(1);
         TableColumn<LigneGroupée, String> colType = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(2);
@@ -458,22 +459,22 @@ public class TraitementController implements Initializable {
         TableColumn<LigneGroupée, String> colPriorite = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(6);
         TableColumn<LigneGroupée, String> colDateDebut = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(7);
         TableColumn<LigneGroupée, String> colObjectif = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(8);
+        TableColumn<LigneGroupée, String> colSuivis = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(9);
+        // colActions est à l'index 10
 
-        TableColumn<LigneGroupée, String> colSuivis = new TableColumn<>("SUIVIS");
-        tableViewTraitements.getColumns().add(9, colSuivis);
-
+        // Définir les largeurs
         colEtudiant.setPrefWidth(180);
         colTitre.setPrefWidth(180);
         colType.setPrefWidth(120);
-        colCategorie.setPrefWidth(120);
-        colDuree.setPrefWidth(80);
-        colStatut.setPrefWidth(100);
+        colCategorie.setPrefWidth(100);
+        colDuree.setPrefWidth(60);
+        colStatut.setPrefWidth(90);
         colPriorite.setPrefWidth(90);
-        colDateDebut.setPrefWidth(120);
+        colDateDebut.setPrefWidth(100);
         colObjectif.setPrefWidth(200);
-        colSuivis.setPrefWidth(120);
+        colSuivis.setPrefWidth(100);
 
-        // Configuration des cellules (version simplifiée - gardez votre code existant)
+        // ===== COLONNE ÉTUDIANT =====
         colEtudiant.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             if (ligne.isEstLigneSeparateur()) {
@@ -482,6 +483,48 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty(ligne.getTexteAffichageEtudiant());
         });
 
+        colEtudiant.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText("");
+                    setStyle("");
+                    setGraphic(null);
+                } else {
+                    LigneGroupée ligne = getTableRow().getItem();
+                    if (ligne.isEstLigneSeparateur()) {
+                        setText("");
+                        setStyle("-fx-background-color: #f3f4f6; -fx-padding: 2px;");
+                        setGraphic(null);
+                    } else if (ligne.isPremiereLigneDuGroupe()) {
+                        VBox vbox = new VBox();
+                        vbox.setAlignment(Pos.CENTER);
+                        vbox.setSpacing(4);
+
+                        Label nomLabel = new Label(ligne.getNomEtudiant());
+                        nomLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #4f46e5;");
+                        nomLabel.setAlignment(Pos.CENTER);
+
+                        Label countLabel = new Label("(" + ligne.getTailleGroupe() + " traitement" + (ligne.getTailleGroupe() > 1 ? "s" : "") + ")");
+                        countLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #6b7280;");
+                        countLabel.setAlignment(Pos.CENTER);
+
+                        vbox.getChildren().addAll(nomLabel, countLabel);
+                        setGraphic(vbox);
+                        setText(null);
+                        setStyle("-fx-background-color: #f5f3ff; -fx-padding: 12 8;");
+                        setAlignment(Pos.CENTER);
+                    } else {
+                        setText("");
+                        setGraphic(null);
+                        setStyle("-fx-background-color: #f5f3ff; -fx-padding: 12 8;");
+                    }
+                }
+            }
+        });
+
+        // ===== COLONNE TITRE =====
         colTitre.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -491,6 +534,27 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
+        colTitre.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText("");
+                    setStyle("");
+                } else {
+                    LigneGroupée ligne = getTableRow().getItem();
+                    if (ligne.isEstLigneSeparateur()) {
+                        setText("");
+                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
+                    } else {
+                        setText(item);
+                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
+                    }
+                }
+            }
+        });
+
+        // ===== COLONNE TYPE =====
         colType.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -500,15 +564,57 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
+        colType.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText("");
+                    setStyle("");
+                } else {
+                    LigneGroupée ligne = getTableRow().getItem();
+                    if (ligne.isEstLigneSeparateur()) {
+                        setText("");
+                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
+                    } else {
+                        setText(item);
+                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
+                    }
+                }
+            }
+        });
+
+        // ===== COLONNE CATÉGORIE =====
         colCategorie.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
             if (t != null && !ligne.isEstLigneSeparateur()) {
-                return new javafx.beans.property.SimpleStringProperty(t.getCategorie().toString());
+                return new javafx.beans.property.SimpleStringProperty(t.getCategorie().name());
             }
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
+        colCategorie.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText("");
+                    setStyle("");
+                } else {
+                    LigneGroupée ligne = getTableRow().getItem();
+                    if (ligne.isEstLigneSeparateur()) {
+                        setText("");
+                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
+                    } else {
+                        setText(item);
+                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
+                    }
+                }
+            }
+        });
+
+        // ===== COLONNE DURÉE =====
         colDuree.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -518,6 +624,27 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
+        colDuree.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText("");
+                    setStyle("");
+                } else {
+                    LigneGroupée ligne = getTableRow().getItem();
+                    if (ligne.isEstLigneSeparateur()) {
+                        setText("");
+                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
+                    } else {
+                        setText(item);
+                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
+                    }
+                }
+            }
+        });
+
+        // ===== COLONNE STATUT (avec badge) =====
         colStatut.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -527,6 +654,42 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
+        colStatut.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText(null);
+                    setGraphic(null);
+                    setStyle("");
+                } else {
+                    LigneGroupée ligne = getTableRow().getItem();
+                    if (ligne.isEstLigneSeparateur()) {
+                        setText("");
+                        setGraphic(null);
+                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
+                    } else if (item != null && !item.isEmpty()) {
+                        Label badge = new Label(item.equals("EN_COURS") ? "En cours" : item.equals("TERMINE") ? "Terminé" : "Suspendu");
+                        badge.getStyleClass().add("status-badge");
+                        switch(item) {
+                            case "EN_COURS": badge.getStyleClass().add("badge-EN_COURS"); break;
+                            case "TERMINE": badge.getStyleClass().add("badge-TERMINE"); break;
+                            case "SUSPENDU": badge.getStyleClass().add("badge-SUSPENDU"); break;
+                        }
+                        setGraphic(badge);
+                        setText(null);
+                        setAlignment(Pos.CENTER);
+                        setStyle("-fx-background-color: white; -fx-padding: 8px;");
+                    } else {
+                        setText("");
+                        setGraphic(null);
+                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
+                    }
+                }
+            }
+        });
+
+        // ===== COLONNE PRIORITÉ (avec badge) =====
         colPriorite.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -536,6 +699,42 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
+        colPriorite.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText(null);
+                    setGraphic(null);
+                    setStyle("");
+                } else {
+                    LigneGroupée ligne = getTableRow().getItem();
+                    if (ligne.isEstLigneSeparateur()) {
+                        setText("");
+                        setGraphic(null);
+                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
+                    } else if (item != null && !item.isEmpty()) {
+                        Label badge = new Label(item.equals("HAUTE") ? "Haute" : item.equals("MOYENNE") ? "Moyenne" : "Basse");
+                        badge.getStyleClass().add("status-badge");
+                        switch(item) {
+                            case "HAUTE": badge.getStyleClass().add("priority-HAUTE"); break;
+                            case "MOYENNE": badge.getStyleClass().add("priority-MOYENNE"); break;
+                            case "BASSE": badge.getStyleClass().add("priority-BASSE"); break;
+                        }
+                        setGraphic(badge);
+                        setText(null);
+                        setAlignment(Pos.CENTER);
+                        setStyle("-fx-background-color: white; -fx-padding: 8px;");
+                    } else {
+                        setText("");
+                        setGraphic(null);
+                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
+                    }
+                }
+            }
+        });
+
+        // ===== COLONNE DATE DÉBUT =====
         colDateDebut.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -545,6 +744,27 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
+        colDateDebut.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText("");
+                    setStyle("");
+                } else {
+                    LigneGroupée ligne = getTableRow().getItem();
+                    if (ligne.isEstLigneSeparateur()) {
+                        setText("");
+                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
+                    } else {
+                        setText(item);
+                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
+                    }
+                }
+            }
+        });
+
+        // ===== COLONNE OBJECTIF =====
         colObjectif.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -558,6 +778,27 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
+        colObjectif.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText("");
+                    setStyle("");
+                } else {
+                    LigneGroupée ligne = getTableRow().getItem();
+                    if (ligne.isEstLigneSeparateur()) {
+                        setText("");
+                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
+                    } else {
+                        setText(item);
+                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
+                    }
+                }
+            }
+        });
+
+        // ===== COLONNE SUIVIS =====
         colSuivis.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             if (ligne.isEstLigneSeparateur()) {
@@ -566,6 +807,37 @@ public class TraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty(ligne.getIndicateurSuivis());
         });
 
+        colSuivis.setCellFactory(param -> new TableCell<LigneGroupée, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText(null);
+                    setGraphic(null);
+                    setStyle("");
+                } else {
+                    LigneGroupée ligne = getTableRow().getItem();
+                    if (ligne.isEstLigneSeparateur()) {
+                        setText("");
+                        setGraphic(null);
+                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
+                    } else if (item != null && !item.isEmpty()) {
+                        Label indicateur = new Label(item);
+                        indicateur.setStyle(ligne.getStyleIndicateurSuivis());
+                        setGraphic(indicateur);
+                        setText(null);
+                        setAlignment(Pos.CENTER);
+                        setStyle("-fx-background-color: white; -fx-padding: 8px;");
+                    } else {
+                        setText("");
+                        setGraphic(null);
+                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
+                    }
+                }
+            }
+        });
+
+        // ===== CONFIGURER LA COLONNE ACTIONS =====
         configurerColonneActions();
     }
 
@@ -743,7 +1015,7 @@ public class TraitementController implements Initializable {
                 afficherErreur("Accès refusé", "Seul le psychologue peut créer des traitements.");
                 return;
             }
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/traitement-ajout-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-ajout-view.fxml"));
             Parent root = loader.load();
             Stage stage = new Stage();
             stage.setTitle("Ajouter un Traitement");
@@ -756,7 +1028,7 @@ public class TraitementController implements Initializable {
 
     private void ouvrirPageAffichage(Traitement traitement) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/traitement-affichage-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-affichage-view.fxml"));
             Parent root = loader.load();
             TraitementAffichageController controller = loader.getController();
             controller.setTraitement(traitement);
@@ -776,7 +1048,7 @@ public class TraitementController implements Initializable {
                 afficherErreur("Accès refusé", "Seul le psychologue peut modifier des traitements.");
                 return;
             }
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/traitement-modification-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-modification-view.fxml"));
             Parent root = loader.load();
             TraitementModificationController controller = loader.getController();
             controller.setTraitement(traitement);

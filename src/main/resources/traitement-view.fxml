@@ -12,39 +12,64 @@
         <Label text="Gérez les traitements et suivez leur progression" styleClass="page-subtitle"/>
     </VBox>
 
-    <!-- ===== SECTION STATISTIQUES ===== -->
-    <HBox styleClass="stats-container" spacing="15" alignment="CENTER">
+    <!-- ===== SECTION STATISTIQUES (style comme votre collègue) ===== -->
+    <HBox spacing="14" style="-fx-background-color: white; -fx-padding: 20 24; -fx-border-color: #e0e7ff; -fx-border-width: 0 0 1 0;">
+
         <!-- Carte Total -->
-        <VBox styleClass="stat-card">
-            <Label text="Total" styleClass="stat-label"/>
-            <Label fx:id="statTotal" text="0" styleClass="stat-value"/>
+        <VBox spacing="5" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                     -fx-padding: 16 20; -fx-border-color: #a5b4fc; -fx-border-width: 1;
+                     -fx-border-radius: 12;
+                     -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.09), 8, 0, 0, 2);">
+            <Label text="TOTAL" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #a5b4fc; -fx-letter-spacing: 1px;"/>
+            <Label fx:id="statTotal" text="0" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #6366f1;"/>
+            <Label text="traitements" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;"/>
         </VBox>
 
         <!-- Carte En cours -->
-        <VBox styleClass="stat-card stat-card-en-cours">
-            <Label text="En cours" styleClass="stat-label"/>
-            <Label fx:id="statEnCours" text="0" styleClass="stat-value"/>
+        <VBox spacing="5" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #e0f2fe; -fx-background-radius: 12;
+                     -fx-padding: 16 20; -fx-border-color: #7dd3fc; -fx-border-width: 1;
+                     -fx-border-radius: 12;
+                     -fx-effect: dropshadow(gaussian, rgba(14,165,233,0.09), 8, 0, 0, 2);">
+            <Label text="EN COURS" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #38bdf8; -fx-letter-spacing: 1px;"/>
+            <Label fx:id="statEnCours" text="0" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #0ea5e9;"/>
+            <Label text="en traitement" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #7dd3fc;"/>
         </VBox>
 
         <!-- Carte Terminés -->
-        <VBox styleClass="stat-card stat-card-termine">
-            <Label text="Terminés" styleClass="stat-label"/>
-            <Label fx:id="statTermine" text="0" styleClass="stat-value"/>
+        <VBox spacing="5" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #ecfdf5; -fx-background-radius: 12;
+                     -fx-padding: 16 20; -fx-border-color: #6ee7b7; -fx-border-width: 1;
+                     -fx-border-radius: 12;
+                     -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.09), 8, 0, 0, 2);">
+            <Label text="TERMINÉS" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #34d399; -fx-letter-spacing: 1px;"/>
+            <Label fx:id="statTermine" text="0" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #10b981;"/>
+            <Label text="traitements" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #6ee7b7;"/>
         </VBox>
 
         <!-- Carte Suspendus -->
-        <VBox styleClass="stat-card stat-card-suspendu">
-            <Label text="Suspendus" styleClass="stat-label"/>
-            <Label fx:id="statSuspendu" text="0" styleClass="stat-value"/>
+        <VBox spacing="5" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #fef3c7; -fx-background-radius: 12;
+                     -fx-padding: 16 20; -fx-border-color: #fcd34d; -fx-border-width: 1;
+                     -fx-border-radius: 12;
+                     -fx-effect: dropshadow(gaussian, rgba(245,158,11,0.09), 8, 0, 0, 2);">
+            <Label text="SUSPENDUS" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #fbbf24; -fx-letter-spacing: 1px;"/>
+            <Label fx:id="statSuspendu" text="0" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #f59e0b;"/>
+            <Label text="traitements" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #fcd34d;"/>
         </VBox>
 
         <!-- Carte Priorité Haute -->
-        <VBox styleClass="stat-card stat-card-haute">
-            <Label text="Priorité haute" styleClass="stat-label"/>
-            <Label fx:id="statPrioriteHaute" text="0" styleClass="stat-value"/>
+        <VBox spacing="5" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #fef2f2; -fx-background-radius: 12;
+                     -fx-padding: 16 20; -fx-border-color: #fecaca; -fx-border-width: 1;
+                     -fx-border-radius: 12;
+                     -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.09), 8, 0, 0, 2);">
+            <Label text="PRIORITÉ HAUTE" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #f87171; -fx-letter-spacing: 1px;"/>
+            <Label fx:id="statPrioriteHaute" text="0" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #ef4444;"/>
+            <Label text="traitements" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #fecaca;"/>
         </VBox>
 
-        <Region HBox.hgrow="ALWAYS"/>
     </HBox>
 
     <!-- Barre de recherche et filtrage -->
@@ -57,10 +82,8 @@
         <ComboBox fx:id="cmbFiltreStatut" prefWidth="150" promptText="Statut" styleClass="filter-combo"/>
         <ComboBox fx:id="cmbFiltrePriorite" prefWidth="150" promptText="Priorité" styleClass="filter-combo"/>
 
-        <!-- ===== NOUVEAU : Tri ===== -->
-        <ComboBox fx:id="cmbTri" prefWidth="180" promptText="Trier par..." styleClass="filter-combo"/>
+        <ComboBox fx:id="cmbTri" prefWidth="200" promptText="Trier par..." styleClass="filter-combo"/>
 
-        <!-- Boutons d'action des filtres -->
         <Button fx:id="btnAppliquerFiltres" text="Appliquer" onAction="#handleAppliquerFiltres" styleClass="btn-primary-small"/>
         <Button fx:id="btnReinitialiserFiltres" text="Réinitialiser" onAction="#handleReinitialiserFiltres" styleClass="btn-secondary-small"/>
 
@@ -72,8 +95,6 @@
         <Button fx:id="btnAjouter" text="+ Nouveau Traitement" onAction="#handleAjouter" styleClass="btn-primary"/>
         <Button text="⟳ Rafraîchir" onAction="#handleRafraichir" styleClass="btn-secondary"/>
         <Button text="📋 Suivi des Traitements" onAction="#ouvrirSuiviTraitementView" styleClass="btn-info"/>
-
-        <!-- ===== NOUVEAU : Export Excel ===== -->
         <Button text="📎 Exporter Excel" onAction="#handleExporterExcel" styleClass="btn-secondary"/>
 
         <Region HBox.hgrow="ALWAYS"/>
@@ -93,6 +114,7 @@
                 <TableColumn text="PRIORITÉ" />
                 <TableColumn text="DATE DÉBUT" />
                 <TableColumn text="OBJECTIF" />
+                <TableColumn text="SUIVIS" />
                 <TableColumn fx:id="colActions" text="ACTIONS" />
             </columns>
         </TableView>
