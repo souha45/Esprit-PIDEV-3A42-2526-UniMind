@@ -27,7 +27,7 @@
                       spacing="3">
                     <HBox alignment="CENTER_LEFT" spacing="12">
                         <VBox spacing="3" HBox.hgrow="ALWAYS">
-                            <Label text="📝  Historique des consultations"
+                            <Label text="📝  Mes consultations"
                                    style="-fx-font-family: 'Segoe UI'; -fx-font-size: 22px;
                                           -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
                             <Label text="Consultez les avis et notes de vos psychologues"
@@ -46,7 +46,6 @@
                     <!-- ── STAT CARDS ── -->
                     <HBox spacing="14">
 
-                        <!-- Total consultations -->
                         <VBox spacing="5" HBox.hgrow="ALWAYS"
                               style="-fx-background-color: #eef2ff; -fx-background-radius: 12;
                                      -fx-padding: 16 20; -fx-border-color: #a5b4fc; -fx-border-width: 1;
@@ -63,7 +62,6 @@
                                           -fx-text-fill: #a5b4fc;" />
                         </VBox>
 
-                        <!-- Avec note -->
                         <VBox spacing="5" HBox.hgrow="ALWAYS"
                               style="-fx-background-color: #ecfdf5; -fx-background-radius: 12;
                                      -fx-padding: 16 20; -fx-border-color: #6ee7b7; -fx-border-width: 1;
@@ -75,12 +73,11 @@
                             <Label fx:id="lblStatNotees" text="—"
                                    style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px;
                                           -fx-font-weight: bold; -fx-text-fill: #10b981;" />
-                            <Label text="avec avis"
+                            <Label text="avec note"
                                    style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
                                           -fx-text-fill: #6ee7b7;" />
                         </VBox>
 
-                        <!-- Note moyenne -->
                         <VBox spacing="5" HBox.hgrow="ALWAYS"
                               style="-fx-background-color: #fefce8; -fx-background-radius: 12;
                                      -fx-padding: 16 20; -fx-border-color: #fde68a; -fx-border-width: 1;
@@ -97,7 +94,6 @@
                                           -fx-text-fill: #fcd34d;" />
                         </VBox>
 
-                        <!-- Ce mois -->
                         <VBox spacing="5" HBox.hgrow="ALWAYS"
                               style="-fx-background-color: #fef2f2; -fx-background-radius: 12;
                                      -fx-padding: 16 20; -fx-border-color: #fca5a5; -fx-border-width: 1;
@@ -116,23 +112,21 @@
 
                     </HBox>
 
-                    <!-- ── TABLE CONTAINER ── -->
+                    <!-- ── CONTAINER LISTE ── -->
                     <VBox spacing="0"
                           style="-fx-background-color: #ffffff; -fx-background-radius: 14;
                                  -fx-border-color: #e0e7ff; -fx-border-width: 1; -fx-border-radius: 14;
                                  -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 10, 0, 0, 3);">
 
-                        <!-- Toolbar interne -->
+                        <!-- Toolbar -->
                         <HBox alignment="CENTER_LEFT" spacing="10"
                               style="-fx-padding: 16 18 14 18; -fx-border-color: #f3f4f6;
                                      -fx-border-width: 0 0 1 0;">
-
-                            <!-- Recherche -->
                             <HBox alignment="CENTER_LEFT" spacing="6"
                                   style="-fx-background-color: #f5f3ff; -fx-border-color: #c7d2fe;
                                          -fx-border-radius: 10; -fx-background-radius: 10;
                                          -fx-padding: 0 12; -fx-border-width: 1;"
-                                  prefWidth="220">
+                                  prefWidth="240">
                                 <Label text="🔍" style="-fx-font-size: 13px; -fx-text-fill: #a5b4fc;" />
                                 <TextField fx:id="fieldRecherche"
                                            promptText="Rechercher par psy, date..."
@@ -140,12 +134,9 @@
                                                   -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
                                                   -fx-text-fill: #374151; -fx-prompt-text-fill: #c4b5fd;
                                                   -fx-padding: 9 0;"
-                                           prefWidth="180" />
+                                           prefWidth="200" />
                             </HBox>
-
                             <Region HBox.hgrow="ALWAYS" />
-
-                            <!-- Rafraîchir -->
                             <Button fx:id="btnRafraichir" text="🔄"
                                     style="-fx-background-color: #f3f4f6; -fx-text-fill: #6b7280;
                                            -fx-font-size: 14px; -fx-padding: 9 14;
@@ -153,26 +144,19 @@
                                            -fx-border-width: 1; -fx-border-radius: 10; -fx-cursor: hand;" />
                         </HBox>
 
-                        <!-- TableView -->
-                        <TableView fx:id="tableViewConsultations"
-                                   prefHeight="500"
-                                   style="-fx-background-color: transparent; -fx-border-width: 0;
-                                          -fx-table-cell-border-color: #f3f4f6; -fx-padding: 8 0 0 0;">
-                            <columns>
-                                <TableColumn fx:id="colDate"        prefWidth="150" text="📅  Date" />
-                                <TableColumn fx:id="colPsychologue" prefWidth="200" text="👨‍⚕️  Psychologue" />
-                                <TableColumn fx:id="colMotif"       prefWidth="250" text="💬  Avis du psychologue" />
-                                <TableColumn fx:id="colNote"        prefWidth="120" text="⭐  Note" />
-                                <TableColumn fx:id="colActions"     prefWidth="100" text="⚙  Actions" />
-                            </columns>
+                        <!-- ── LISTVIEW ── -->
+                        <ListView fx:id="listViewConsultations"
+                                  prefHeight="500"
+                                  style="-fx-background-color: transparent; -fx-border-width: 0;
+                                         -fx-padding: 8 12;">
                             <placeholder>
                                 <Label text="✨ Aucune consultation trouvée"
                                        style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
                                               -fx-text-fill: #c4b5fd;" />
                             </placeholder>
-                        </TableView>
+                        </ListView>
 
-                        <!-- Bas de table -->
+                        <!-- Bas -->
                         <HBox alignment="CENTER_LEFT" spacing="6"
                               style="-fx-padding: 10 18 14 18; -fx-border-color: #f3f4f6;
                                      -fx-border-width: 1 0 0 0;">

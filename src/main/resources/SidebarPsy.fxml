@@ -19,7 +19,7 @@
     <!-- Brand Header -->
     <VBox alignment="CENTER_LEFT" spacing="2"
           style="-fx-background-color: linear-gradient(to bottom right, #6366f1, #8b5cf6); -fx-padding: 24 18 20 18;">
-        <Label text="🧠 Unimind"
+        <Label text="Unimind"
                style="-fx-font-family: 'Segoe UI'; -fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #ffffff;" />
         <Label text="Espace Psychologue"
                style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: rgba(255,255,255,0.75); -fx-letter-spacing: 1px;" />
