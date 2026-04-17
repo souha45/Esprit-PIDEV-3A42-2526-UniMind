@@ -2,21 +2,87 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
 <VBox spacing="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.SuiviTraitementController" stylesheets="@/css/traitements-suivis.css">
 
+    <!-- En-tête de la page -->
     <VBox styleClass="page-header">
         <Label text="Suivi des Traitements" styleClass="page-title"/>
         <Label text="Suivez la progression des traitements étudiants" styleClass="page-subtitle"/>
     </VBox>
 
+    <!-- ===== SECTION STATISTIQUES ===== -->
+    <HBox spacing="14" style="-fx-background-color: white; -fx-padding: 20 24; -fx-border-color: #e0e7ff; -fx-border-width: 0 0 1 0;">
+
+        <!-- Carte Total suivis -->
+        <VBox spacing="5" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                     -fx-padding: 16 20; -fx-border-color: #a5b4fc; -fx-border-width: 1;
+                     -fx-border-radius: 12;
+                     -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.09), 8, 0, 0, 2);">
+            <Label text="TOTAL SUIVIS" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #a5b4fc; -fx-letter-spacing: 1px;"/>
+            <Label fx:id="statTotal" text="0" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #6366f1;"/>
+            <Label text="suivis" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;"/>
+        </VBox>
+
+        <!-- Carte Ce mois -->
+        <VBox spacing="5" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #e0f2fe; -fx-background-radius: 12;
+                     -fx-padding: 16 20; -fx-border-color: #7dd3fc; -fx-border-width: 1;
+                     -fx-border-radius: 12;
+                     -fx-effect: dropshadow(gaussian, rgba(14,165,233,0.09), 8, 0, 0, 2);">
+            <Label text="CE MOIS" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #38bdf8; -fx-letter-spacing: 1px;"/>
+            <Label fx:id="statCeMois" text="0" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #0ea5e9;"/>
+            <Label text="suivis" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #7dd3fc;"/>
+        </VBox>
+
+        <!-- Carte Cette semaine -->
+        <VBox spacing="5" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #ecfdf5; -fx-background-radius: 12;
+                     -fx-padding: 16 20; -fx-border-color: #6ee7b7; -fx-border-width: 1;
+                     -fx-border-radius: 12;
+                     -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.09), 8, 0, 0, 2);">
+            <Label text="CETTE SEMAINE" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #34d399; -fx-letter-spacing: 1px;"/>
+            <Label fx:id="statCetteSemaine" text="0" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #10b981;"/>
+            <Label text="suivis" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #6ee7b7;"/>
+        </VBox>
+
+        <!-- Carte Aujourd'hui -->
+        <VBox spacing="5" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #fef3c7; -fx-background-radius: 12;
+                     -fx-padding: 16 20; -fx-border-color: #fcd34d; -fx-border-width: 1;
+                     -fx-border-radius: 12;
+                     -fx-effect: dropshadow(gaussian, rgba(245,158,11,0.09), 8, 0, 0, 2);">
+            <Label text="AUJOURD'HUI" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #fbbf24; -fx-letter-spacing: 1px;"/>
+            <Label fx:id="statAujourdhui" text="0" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #f59e0b;"/>
+            <Label text="suivis" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #fcd34d;"/>
+        </VBox>
+
+        <!-- Carte Par étudiant -->
+        <VBox spacing="5" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #fef2f2; -fx-background-radius: 12;
+                     -fx-padding: 16 20; -fx-border-color: #fecaca; -fx-border-width: 1;
+                     -fx-border-radius: 12;
+                     -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.09), 8, 0, 0, 2);">
+            <Label text="PAR ÉTUDIANT" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: #f87171; -fx-letter-spacing: 1px;"/>
+            <Label fx:id="statParEtudiant" text="0" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #ef4444;"/>
+            <Label text="étudiants" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #fecaca;"/>
+        </VBox>
+
+    </HBox>
+
+    <!-- Barre de recherche, filtres et tri -->
     <HBox styleClass="filter-bar" spacing="15" alignment="CENTER_LEFT">
         <HBox styleClass="search-box">
             <Label text="🔍" styleClass="search-icon"/>
-            <TextField fx:id="txtRecherche" promptText="Rechercher par étudiant ou observations..." styleClass="search-field"/>
+            <TextField fx:id="txtRecherche" promptText="Rechercher par étudiant, traitement ou observations..." styleClass="search-field"/>
         </HBox>
 
         <ComboBox fx:id="cmbFiltrePeriode" prefWidth="150" promptText="Période" styleClass="filter-combo"/>
+        <ComboBox fx:id="cmbFiltreSaisiPar" prefWidth="150" promptText="Saisi par" styleClass="filter-combo"/>
+
+        <ComboBox fx:id="cmbTri" prefWidth="200" promptText="Trier par..." styleClass="filter-combo"/>
 
         <Button fx:id="btnAppliquerFiltres" text="Appliquer" onAction="#handleAppliquerFiltres" styleClass="btn-primary-small"/>
         <Button fx:id="btnReinitialiserFiltres" text="Réinitialiser" onAction="#handleReinitialiserFiltres" styleClass="btn-secondary-small"/>
@@ -24,14 +90,18 @@
         <Region HBox.hgrow="ALWAYS"/>
     </HBox>
 
+    <!-- Barre d'actions -->
     <HBox styleClass="action-bar" spacing="15" alignment="CENTER_LEFT">
         <Button fx:id="btnAjouter" text="+ Nouveau Suivi" onAction="#handleAjouter" styleClass="btn-primary"/>
         <Button text="⟳ Rafraîchir" onAction="#handleRafraichir" styleClass="btn-secondary"/>
         <Button text="📊 Voir Traitements" onAction="#ouvrirTraitementView" styleClass="btn-info"/>
+        <Button text="📎 Exporter Excel" onAction="#handleExporterExcel" styleClass="btn-secondary"/>
+
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblCount" styleClass="count-badge"/>
     </HBox>
 
+    <!-- Table principale -->
     <VBox VBox.vgrow="ALWAYS" styleClass="table-container">
         <TableView fx:id="tableViewSuiviTraitements" styleClass="custom-table" VBox.vgrow="ALWAYS">
             <columns>
@@ -43,6 +113,7 @@
         </TableView>
     </VBox>
 
+    <!-- Barre de statut -->
     <HBox styleClass="status-bar">
         <Label fx:id="lblStatus" text="✓ Prêt" styleClass="status-text"/>
     </HBox>

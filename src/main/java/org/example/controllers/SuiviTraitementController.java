@@ -1,10 +1,16 @@
 package org.example.controllers;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -36,22 +42,27 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public class SuiviTraitementController implements Initializable {
 
-    // Classe wrapper pour représenter une ligne groupée
+    // ==================== CLASSE INTERNE ====================
+
     public static class LigneSuiviGroupée {
         private final String nomEtudiant;
         private final String nomTraitement;
         private final List<SuiviTraitement> suivis;
         private final boolean estEnteteEtudiant;
         private final boolean estEnteteTraitement;
+        private final SuiviTraitement suivi; // Pour les lignes de suivi individuelles
 
         public LigneSuiviGroupée(String nomEtudiant, List<SuiviTraitement> suivis) {
             this.nomEtudiant = nomEtudiant;
             this.nomTraitement = null;
             this.suivis = suivis;
+            this.suivi = null;
             this.estEnteteEtudiant = true;
             this.estEnteteTraitement = false;
         }
@@ -60,6 +71,7 @@ public class SuiviTraitementController implements Initializable {
             this.nomEtudiant = nomEtudiant;
             this.nomTraitement = nomTraitement;
             this.suivis = suivis;
+            this.suivi = null;
             this.estEnteteEtudiant = false;
             this.estEnteteTraitement = true;
         }
@@ -67,7 +79,8 @@ public class SuiviTraitementController implements Initializable {
         public LigneSuiviGroupée(SuiviTraitement suivi) {
             this.nomEtudiant = null;
             this.nomTraitement = null;
-            this.suivis = List.of(suivi);
+            this.suivis = null;
+            this.suivi = suivi;
             this.estEnteteEtudiant = false;
             this.estEnteteTraitement = false;
         }
@@ -75,11 +88,15 @@ public class SuiviTraitementController implements Initializable {
         public String getNomEtudiant() { return nomEtudiant; }
         public String getNomTraitement() { return nomTraitement; }
         public List<SuiviTraitement> getSuivis() { return suivis; }
+        public SuiviTraitement getSuivi() { return suivi; }
         public boolean estEnteteEtudiant() { return estEnteteEtudiant; }
         public boolean estEnteteTraitement() { return estEnteteTraitement; }
         public boolean estEntete() { return estEnteteEtudiant || estEnteteTraitement; }
+
         public SuiviTraitement getPremierSuivi() {
-            return suivis.isEmpty() ? null : suivis.get(0);
+            if (suivi != null) return suivi;
+            if (suivis != null && !suivis.isEmpty()) return suivis.get(0);
+            return null;
         }
 
         public String getAffichage() {
@@ -93,9 +110,11 @@ public class SuiviTraitementController implements Initializable {
         }
 
         private int getTotalSuivisEtudiant() {
-            return suivis.size();
+            return suivis != null ? suivis.size() : 0;
         }
     }
+
+    // ==================== COMPOSANTS FXML ====================
 
     @FXML
     private TableView<LigneSuiviGroupée> tableViewSuiviTraitements;
@@ -108,6 +127,10 @@ public class SuiviTraitementController implements Initializable {
     @FXML
     private ComboBox<String> cmbFiltrePeriode;
     @FXML
+    private ComboBox<String> cmbFiltreSaisiPar;
+    @FXML
+    private ComboBox<String> cmbTri;
+    @FXML
     private Button btnAppliquerFiltres;
     @FXML
     private Button btnReinitialiserFiltres;
@@ -116,10 +139,24 @@ public class SuiviTraitementController implements Initializable {
     @FXML
     private TableColumn<LigneSuiviGroupée, Void> colActions;
 
+    // ===== STATISTIQUES =====
+    @FXML private Label statTotal;
+    @FXML private Label statCeMois;
+    @FXML private Label statCetteSemaine;
+    @FXML private Label statAujourdhui;
+    @FXML private Label statParEtudiant;
+
+    // ==================== SERVICES ====================
+
     private SuiviTraitementService suiviTraitementService;
     private TraitementService traitementService;
     private EtudiantService etudiantService;
     private ObservableList<LigneSuiviGroupée> lignesSuivisGroupéesList;
+    private List<SuiviTraitement> tousLesSuivisFiltres;
+    private List<Traitement> tousLesTraitements;
+    private boolean isInitialized = false;
+
+    // ==================== INITIALISATION ====================
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -127,11 +164,14 @@ public class SuiviTraitementController implements Initializable {
             suiviTraitementService = new SuiviTraitementService();
             traitementService = new TraitementService();
             etudiantService = new EtudiantService();
+            tousLesSuivisFiltres = new ArrayList<>();
 
             initialiserFiltres();
+            initialiserTri();
             configurerColonnes();
             chargerDonnees();
 
+            isInitialized = true;
             lblStatus.setText("Interface Suivis Traitements prête");
 
         } catch (Exception e) {
@@ -140,10 +180,53 @@ public class SuiviTraitementController implements Initializable {
         }
     }
 
+    // ==================== INITIALISATION FILTRES ET TRI ====================
+
+    private void initialiserFiltres() {
+        ObservableList<String> periodes = FXCollections.observableArrayList(
+                "Toutes les périodes", "Aujourd'hui", "Cette semaine", "Ce mois"
+        );
+        cmbFiltrePeriode.setItems(periodes);
+        cmbFiltrePeriode.setValue("Toutes les périodes");
+
+        ObservableList<String> saisiPar = FXCollections.observableArrayList(
+                "Tous", "Psychologue", "Étudiant"
+        );
+        cmbFiltreSaisiPar.setItems(saisiPar);
+        cmbFiltreSaisiPar.setValue("Tous");
+
+        txtRecherche.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (isInitialized) appliquerFiltres();
+        });
+        cmbFiltrePeriode.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (isInitialized) appliquerFiltres();
+        });
+        cmbFiltreSaisiPar.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (isInitialized) appliquerFiltres();
+        });
+        cmbTri.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (isInitialized) appliquerFiltres();
+        });
+    }
+
+    private void initialiserTri() {
+        cmbTri.setItems(FXCollections.observableArrayList(
+                "📅 Date (plus récente)",
+                "📅 Date (plus ancienne)",
+                "👤 Étudiant (A-Z)",
+                "👤 Étudiant (Z-A)",
+                "📋 Traitement (A-Z)",
+                "👨‍⚕️ Saisi par (Psychologue → Étudiant)"
+        ));
+        cmbTri.setValue("📅 Date (plus récente)");
+    }
+
+    // ==================== CHARGEMENT DES DONNÉES ====================
+
     private void chargerDonnees() {
         try {
             List<SuiviTraitement> tousLesSuivis = suiviTraitementService.afficher();
-            List<Traitement> tousLesTraitements = traitementService.afficher();
+            tousLesTraitements = traitementService.afficher();
             Map<Integer, Traitement> traitementsMap = new HashMap<>();
             for (Traitement traitement : tousLesTraitements) {
                 traitementsMap.put(traitement.getTraitementId(), traitement);
@@ -159,7 +242,6 @@ public class SuiviTraitementController implements Initializable {
                 int etudiantId = traitementAssocie.getEtudiantId();
 
                 boolean peutVoir = false;
-
                 if (session.estPsychologue()) {
                     peutVoir = true;
                 } else if (session.estEtudiant()) {
@@ -173,6 +255,18 @@ public class SuiviTraitementController implements Initializable {
                 }
             }
 
+            tousLesSuivisFiltres = new ArrayList<>(suivisFiltres);
+
+            // Mettre à jour les statistiques
+            mettreAJourStatistiques(tousLesSuivisFiltres, traitementsMap);
+
+            // Appliquer filtres
+            suivisFiltres = appliquerRechercheEtFiltres(suivisFiltres, traitementsMap);
+
+            // Appliquer tri sur les suivis AVANT le regroupement
+            suivisFiltres = appliquerTri(suivisFiltres, traitementsMap);
+
+            // Créer les lignes groupées avec les suivis triés
             List<LigneSuiviGroupée> lignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
             lignesSuivisGroupéesList = FXCollections.observableArrayList(lignes);
             tableViewSuiviTraitements.setItems(lignesSuivisGroupéesList);
@@ -189,46 +283,209 @@ public class SuiviTraitementController implements Initializable {
         }
     }
 
+    private void mettreAJourStatistiques(List<SuiviTraitement> suivis, Map<Integer, Traitement> traitementsMap) {
+        LocalDate today = LocalDate.now();
+        LocalDate startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
+        LocalDate startOfMonth = today.withDayOfMonth(1);
+
+        long total = suivis.size();
+        long ceMois = suivis.stream().filter(s -> {
+            LocalDate date = s.getDateSuivi().toLocalDate();
+            return date.getMonth() == today.getMonth() && date.getYear() == today.getYear();
+        }).count();
+
+        long cetteSemaine = suivis.stream().filter(s -> {
+            LocalDate date = s.getDateSuivi().toLocalDate();
+            return !date.isBefore(startOfWeek) && !date.isAfter(today);
+        }).count();
+
+        long aujourdhui = suivis.stream().filter(s ->
+                s.getDateSuivi().toLocalDate().equals(today)
+        ).count();
+
+        // Nombre d'étudiants différents ayant des suivis
+        long parEtudiant = suivis.stream()
+                .map(s -> {
+                    Traitement t = traitementsMap.get(s.getTraitementId());
+                    return t != null ? t.getEtudiantId() : null;
+                })
+                .filter(id -> id != null)
+                .distinct()
+                .count();
+
+        statTotal.setText(String.valueOf(total));
+        statCeMois.setText(String.valueOf(ceMois));
+        statCetteSemaine.setText(String.valueOf(cetteSemaine));
+        statAujourdhui.setText(String.valueOf(aujourdhui));
+        statParEtudiant.setText(String.valueOf(parEtudiant));
+    }
+
+    private List<SuiviTraitement> appliquerRechercheEtFiltres(List<SuiviTraitement> suivis, Map<Integer, Traitement> traitementsMap) {
+        String recherche = txtRecherche.getText().toLowerCase().trim();
+        String periodeFiltre = cmbFiltrePeriode.getValue();
+        String saisiParFiltre = cmbFiltreSaisiPar.getValue();
+
+        return suivis.stream()
+                .filter(s -> {
+                    // Filtre de recherche
+                    if (!recherche.isEmpty()) {
+                        Traitement traitement = traitementsMap.get(s.getTraitementId());
+                        if (traitement != null) {
+                            String nomEtudiant = getNomEtudiant(traitement.getEtudiantId()).toLowerCase();
+                            String titreTraitement = traitement.getTitre().toLowerCase();
+                            String observations = s.getObservations() != null ? s.getObservations().toLowerCase() : "";
+
+                            boolean correspondRecherche =
+                                    nomEtudiant.contains(recherche) ||
+                                            titreTraitement.contains(recherche) ||
+                                            observations.contains(recherche);
+
+                            if (!correspondRecherche) return false;
+                        } else {
+                            return false;
+                        }
+                    }
+
+                    // Filtre de période
+                    if (!"Toutes les périodes".equals(periodeFiltre)) {
+                        if (s.getDateSuivi() == null) return false;
+                        if (!estDansPeriode(s.getDateSuivi().toLocalDate(), periodeFiltre)) return false;
+                    }
+
+                    // Filtre par "Saisi par"
+                    if (!"Tous".equals(saisiParFiltre)) {
+                        if ("Psychologue".equals(saisiParFiltre) && s.getSaisiPar() != SaisiPar.PSYCHOLOGUE) return false;
+                        if ("Étudiant".equals(saisiParFiltre) && s.getSaisiPar() != SaisiPar.ETUDIANT) return false;
+                    }
+
+                    return true;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<SuiviTraitement> appliquerTri(List<SuiviTraitement> suivis, Map<Integer, Traitement> traitementsMap) {
+        String tri = cmbTri.getValue();
+        if (tri == null) return suivis;
+
+        List<SuiviTraitement> result = new ArrayList<>(suivis);
+
+        switch (tri) {
+            case "📅 Date (plus récente)":
+                result.sort((s1, s2) -> s2.getDateSuivi().compareTo(s1.getDateSuivi()));
+                break;
+            case "📅 Date (plus ancienne)":
+                result.sort((s1, s2) -> s1.getDateSuivi().compareTo(s2.getDateSuivi()));
+                break;
+            case "👤 Étudiant (A-Z)":
+                result.sort((s1, s2) -> {
+                    Traitement t1 = traitementsMap.get(s1.getTraitementId());
+                    Traitement t2 = traitementsMap.get(s2.getTraitementId());
+                    if (t1 == null || t2 == null) return 0;
+                    String nom1 = getNomEtudiant(t1.getEtudiantId());
+                    String nom2 = getNomEtudiant(t2.getEtudiantId());
+                    return nom1.compareToIgnoreCase(nom2);
+                });
+                break;
+            case "👤 Étudiant (Z-A)":
+                result.sort((s1, s2) -> {
+                    Traitement t1 = traitementsMap.get(s1.getTraitementId());
+                    Traitement t2 = traitementsMap.get(s2.getTraitementId());
+                    if (t1 == null || t2 == null) return 0;
+                    String nom1 = getNomEtudiant(t1.getEtudiantId());
+                    String nom2 = getNomEtudiant(t2.getEtudiantId());
+                    return nom2.compareToIgnoreCase(nom1);
+                });
+                break;
+            case "📋 Traitement (A-Z)":
+                result.sort((s1, s2) -> {
+                    Traitement t1 = traitementsMap.get(s1.getTraitementId());
+                    Traitement t2 = traitementsMap.get(s2.getTraitementId());
+                    if (t1 == null || t2 == null) return 0;
+                    return t1.getTitre().compareToIgnoreCase(t2.getTitre());
+                });
+                break;
+            case "👨‍⚕️ Saisi par (Psychologue → Étudiant)":
+                result.sort((s1, s2) -> {
+                    int p1 = s1.getSaisiPar() == SaisiPar.PSYCHOLOGUE ? 1 : 2;
+                    int p2 = s2.getSaisiPar() == SaisiPar.PSYCHOLOGUE ? 1 : 2;
+                    return Integer.compare(p1, p2);
+                });
+                break;
+        }
+        return result;
+    }
+
+    private boolean estDansPeriode(LocalDate date, String periode) {
+        LocalDate aujourdHui = LocalDate.now();
+        switch (periode) {
+            case "Aujourd'hui":
+                return date.equals(aujourdHui);
+            case "Cette semaine": {
+                int jourSemaine = aujourdHui.getDayOfWeek().getValue();
+                LocalDate debutSemaine = aujourdHui.minusDays(jourSemaine - 1);
+                LocalDate finSemaine = debutSemaine.plusDays(6);
+                return !date.isBefore(debutSemaine) && !date.isAfter(finSemaine);
+            }
+            case "Ce mois":
+                return date.getMonth() == aujourdHui.getMonth() && date.getYear() == aujourdHui.getYear();
+            default:
+                return true;
+        }
+    }
+
+    /**
+     * Crée les lignes groupées avec un ordre correct
+     * Les suivis sont déjà triés selon le critère sélectionné
+     */
     private List<LigneSuiviGroupée> creerLignesSuivisGroupées(List<SuiviTraitement> suivis, Map<Integer, Traitement> traitementsMap) {
         List<LigneSuiviGroupée> lignes = new ArrayList<>();
 
-        Map<Integer, List<SuiviTraitement>> suivisParEtudiant = new HashMap<>();
+        // Grouper les suivis par étudiant (en conservant l'ordre des suivis triés)
+        Map<Integer, List<SuiviTraitement>> suivisParEtudiant = new LinkedHashMap<>();
 
         for (SuiviTraitement suivi : suivis) {
             Traitement traitement = traitementsMap.get(suivi.getTraitementId());
             if (traitement != null) {
-                suivisParEtudiant.computeIfAbsent(traitement.getEtudiantId(), k -> new ArrayList<>()).add(suivi);
+                int etudiantId = traitement.getEtudiantId();
+                suivisParEtudiant.computeIfAbsent(etudiantId, k -> new ArrayList<>()).add(suivi);
             }
         }
 
+        // Pour chaque étudiant, organiser les suivis par traitement
         for (Map.Entry<Integer, List<SuiviTraitement>> entry : suivisParEtudiant.entrySet()) {
             Integer etudiantId = entry.getKey();
             List<SuiviTraitement> suivisEtudiant = entry.getValue();
 
             String nomEtudiant = getNomEtudiant(etudiantId);
 
-            Map<Integer, List<SuiviTraitement>> suivisParTraitement = new HashMap<>();
+            // Regrouper par traitement à l'intérieur de l'étudiant
+            Map<Integer, List<SuiviTraitement>> suivisParTraitement = new LinkedHashMap<>();
             Map<Integer, String> nomsTraitements = new HashMap<>();
 
             for (SuiviTraitement suivi : suivisEtudiant) {
                 Traitement traitement = traitementsMap.get(suivi.getTraitementId());
                 if (traitement != null) {
-                    suivisParTraitement.computeIfAbsent(suivi.getTraitementId(), k -> new ArrayList<>()).add(suivi);
-                    nomsTraitements.put(suivi.getTraitementId(), traitement.getTitre());
+                    int traitementId = suivi.getTraitementId();
+                    suivisParTraitement.computeIfAbsent(traitementId, k -> new ArrayList<>()).add(suivi);
+                    nomsTraitements.put(traitementId, traitement.getTitre());
                 }
             }
 
+            // Ajouter l'en-tête de l'étudiant
             LigneSuiviGroupée ligneEnteteEtudiant = new LigneSuiviGroupée(nomEtudiant, suivisEtudiant);
             lignes.add(ligneEnteteEtudiant);
 
+            // Pour chaque traitement, ajouter les suivis (déjà triés)
             for (Map.Entry<Integer, List<SuiviTraitement>> traitementEntry : suivisParTraitement.entrySet()) {
                 Integer traitementId = traitementEntry.getKey();
                 List<SuiviTraitement> suivisTraitement = traitementEntry.getValue();
                 String nomTraitement = nomsTraitements.getOrDefault(traitementId, "Traitement #" + traitementId);
 
+                // Ajouter l'en-tête du traitement
                 LigneSuiviGroupée ligneEnteteTraitement = new LigneSuiviGroupée(nomEtudiant, nomTraitement, suivisTraitement);
                 lignes.add(ligneEnteteTraitement);
 
+                // Ajouter les suivis individuels
                 for (SuiviTraitement suivi : suivisTraitement) {
                     lignes.add(new LigneSuiviGroupée(suivi));
                 }
@@ -251,6 +508,8 @@ public class SuiviTraitementController implements Initializable {
             return "Erreur #" + etudiantId;
         }
     }
+
+    // ==================== CONFIGURATION DES COLONNES ====================
 
     private void configurerColonnes() {
         tableViewSuiviTraitements.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
@@ -344,12 +603,8 @@ public class SuiviTraitementController implements Initializable {
                     LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
                     SuiviTraitement suivi = ligne.getPremierSuivi();
                     if (suivi != null && !ligne.estEntete()) {
-                        if (session.estEtudiant()) {
-                            if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
-                                ouvrirPageModification(suivi);
-                            } else {
-                                afficherErreur("Accès refusé", "Vous ne pouvez pas modifier le suivi du psychologue.");
-                            }
+                        if (session.estEtudiant() && suivi.getSaisiPar() != SaisiPar.ETUDIANT) {
+                            afficherErreur("Accès refusé", "Vous ne pouvez pas modifier le suivi du psychologue.");
                         } else {
                             ouvrirPageModification(suivi);
                         }
@@ -360,12 +615,8 @@ public class SuiviTraitementController implements Initializable {
                     LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
                     SuiviTraitement suivi = ligne.getPremierSuivi();
                     if (suivi != null && !ligne.estEntete()) {
-                        if (session.estEtudiant()) {
-                            if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
-                                supprimerSuivi(suivi);
-                            } else {
-                                afficherErreur("Accès refusé", "Vous ne pouvez pas supprimer le suivi du psychologue.");
-                            }
+                        if (session.estEtudiant() && suivi.getSaisiPar() != SaisiPar.ETUDIANT) {
+                            afficherErreur("Accès refusé", "Vous ne pouvez pas supprimer le suivi du psychologue.");
                         } else {
                             supprimerSuivi(suivi);
                         }
@@ -379,41 +630,13 @@ public class SuiviTraitementController implements Initializable {
                 if (empty || getTableRow() == null || getTableRow().getItem() == null || getTableRow().getItem().estEntete()) {
                     setGraphic(null);
                 } else {
-                    LigneSuiviGroupée ligne = getTableRow().getItem();
-                    SuiviTraitement suivi = ligne.getPremierSuivi();
-
-                    if (suivi != null) {
-                        if (session.estEtudiant()) {
-                            // L'étudiant voit les boutons Modifier/Supprimer uniquement pour ses propres suivis
-                            if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
-                                setGraphic(container);
-                            } else {
-                                // Pour les suivis du psychologue, seulement le bouton Afficher
-                                setGraphic(btnView);
-                            }
-                        } else {
-                            // Psychologue : tous les boutons
-                            setGraphic(container);
-                        }
-                    } else {
-                        setGraphic(null);
-                    }
+                    setGraphic(container);
                 }
             }
         });
     }
 
-    // FILTRAGE
-    private void initialiserFiltres() {
-        ObservableList<String> periodes = FXCollections.observableArrayList(
-                "Toutes les périodes", "Aujourd'hui", "Cette semaine", "Ce mois"
-        );
-        cmbFiltrePeriode.setItems(periodes);
-        cmbFiltrePeriode.setValue("Toutes les périodes");
-
-        txtRecherche.textProperty().addListener((obs, oldVal, newVal) -> appliquerFiltres());
-        cmbFiltrePeriode.valueProperty().addListener((obs, oldVal, newVal) -> appliquerFiltres());
-    }
+    // ==================== ACTIONS ====================
 
     @FXML
     private void handleAppliquerFiltres() {
@@ -424,43 +647,31 @@ public class SuiviTraitementController implements Initializable {
     private void handleReinitialiserFiltres() {
         txtRecherche.clear();
         cmbFiltrePeriode.setValue("Toutes les périodes");
+        cmbFiltreSaisiPar.setValue("Tous");
+        cmbTri.setValue("📅 Date (plus récente)");
         appliquerFiltres();
     }
 
     private void appliquerFiltres() {
+        if (tousLesSuivisFiltres == null || tousLesSuivisFiltres.isEmpty()) {
+            return;
+        }
+
         try {
-            List<SuiviTraitement> tousLesSuivis = suiviTraitementService.afficher();
-            List<Traitement> tousLesTraitements = traitementService.afficher();
             Map<Integer, Traitement> traitementsMap = new HashMap<>();
             for (Traitement traitement : tousLesTraitements) {
                 traitementsMap.put(traitement.getTraitementId(), traitement);
             }
 
-            SessionManager session = SessionManager.getInstance();
-            List<SuiviTraitement> suivisFiltres = new ArrayList<>();
+            List<SuiviTraitement> suivisFiltres = new ArrayList<>(tousLesSuivisFiltres);
 
-            for (SuiviTraitement suivi : tousLesSuivis) {
-                Traitement traitementAssocie = traitementsMap.get(suivi.getTraitementId());
-                if (traitementAssocie == null) continue;
+            // Appliquer recherche et filtres
+            suivisFiltres = appliquerRechercheEtFiltres(suivisFiltres, traitementsMap);
 
-                int etudiantId = traitementAssocie.getEtudiantId();
+            // Appliquer tri
+            suivisFiltres = appliquerTri(suivisFiltres, traitementsMap);
 
-                boolean peutVoir = false;
-                if (session.estPsychologue()) {
-                    peutVoir = true;
-                } else if (session.estEtudiant()) {
-                    peutVoir = (etudiantId == session.getUtilisateurConnecteId());
-                } else {
-                    peutVoir = true;
-                }
-
-                if (peutVoir) {
-                    suivisFiltres.add(suivi);
-                }
-            }
-
-            suivisFiltres = filtrerSuivis(suivisFiltres, traitementsMap);
-
+            // Créer les lignes groupées
             List<LigneSuiviGroupée> lignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
             lignesSuivisGroupéesList = FXCollections.observableArrayList(lignes);
             tableViewSuiviTraitements.setItems(lignesSuivisGroupéesList);
@@ -468,84 +679,69 @@ public class SuiviTraitementController implements Initializable {
             long totalSuivis = lignes.stream().filter(l -> !l.estEntete()).count();
             lblCount.setText(totalSuivis + " suivi(s)");
 
-        } catch (SQLException e) {
+        } catch (Exception e) {
             afficherErreur("Erreur", "Impossible d'appliquer les filtres: " + e.getMessage());
         }
     }
 
-    private List<SuiviTraitement> filtrerSuivis(List<SuiviTraitement> suivis, Map<Integer, Traitement> traitementsMap) {
-        String recherche = txtRecherche.getText().toLowerCase().trim();
-        String periodeFiltre = cmbFiltrePeriode.getValue();
+    @FXML
+    private void handleExporterExcel() {
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Exporter les suivis");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Fichier CSV", "*.csv")
+            );
+            fileChooser.setInitialFileName("suivis_" + java.time.LocalDate.now() + ".csv");
 
-        return suivis.stream()
-                .filter(s -> {
-                    if (!recherche.isEmpty()) {
-                        Traitement traitement = traitementsMap.get(s.getTraitementId());
-                        if (traitement != null) {
-                            String nomEtudiant = getNomEtudiant(traitement.getEtudiantId()).toLowerCase();
-                            String titreTraitement = traitement.getTitre().toLowerCase();
-                            String observations = s.getObservations() != null ? s.getObservations().toLowerCase() : "";
+            File file = fileChooser.showSaveDialog(tableViewSuiviTraitements.getScene().getWindow());
 
-                            boolean correspondRecherche =
-                                    nomEtudiant.contains(recherche) ||
-                                            titreTraitement.contains(recherche) ||
-                                            observations.contains(recherche);
-
-                            if (!correspondRecherche) return false;
-                        } else {
-                            return false;
-                        }
-                    }
-
-                    if (!"Toutes les périodes".equals(periodeFiltre)) {
-                        if (s.getDateSuivi() == null) return false;
-                        if (!estDansPeriode(s.getDateSuivi().toLocalDate(), periodeFiltre)) return false;
-                    }
-
-                    return true;
-                })
-                .collect(Collectors.toList());
-    }
-
-    private boolean estDansPeriode(LocalDate date, String periode) {
-        LocalDate aujourdHui = LocalDate.now();
-        switch (periode) {
-            case "Aujourd'hui":
-                return date.equals(aujourdHui);
-            case "Cette semaine": {
-                int jourSemaine = aujourdHui.getDayOfWeek().getValue();
-                LocalDate debutSemaine = aujourdHui.minusDays(jourSemaine - 1);
-                LocalDate finSemaine = debutSemaine.plusDays(6);
-                return !date.isBefore(debutSemaine) && !date.isAfter(finSemaine);
+            if (file != null) {
+                exporterVersCSV(file);
+                lblStatus.setText("✓ Export réussi: " + file.getName());
             }
-            case "Ce mois":
-                return date.getMonth() == aujourdHui.getMonth() && date.getYear() == aujourdHui.getYear();
-            default:
-                return true;
+        } catch (Exception e) {
+            afficherErreur("Erreur d'export", e.getMessage());
         }
     }
 
-    // NAVIGATION
-    @FXML
-    private void handleAjouter() {
-        ouvrirPageAjout();
+    private void exporterVersCSV(File file) throws IOException {
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write("Étudiant;Traitement;Date suivi;Saisi par;Observations\n");
+
+            for (LigneSuiviGroupée ligne : lignesSuivisGroupéesList) {
+                if (!ligne.estEntete() && ligne.getPremierSuivi() != null) {
+                    SuiviTraitement s = ligne.getPremierSuivi();
+                    Traitement t = null;
+                    for (Traitement traitement : tousLesTraitements) {
+                        if (traitement.getTraitementId() == s.getTraitementId()) {
+                            t = traitement;
+                            break;
+                        }
+                    }
+                    writer.write(String.format("%s;%s;%s;%s;%s\n",
+                            ligne.getNomEtudiant(),
+                            t != null ? t.getTitre().replace(";", ",") : "",
+                            s.getDateSuivi() != null ? s.getDateSuivi().toString() : "",
+                            s.getSaisiPar() == SaisiPar.PSYCHOLOGUE ? "Psychologue" : "Étudiant",
+                            s.getObservations() != null ? s.getObservations().replace(";", ",") : ""
+                    ));
+                }
+            }
+        }
     }
 
-    @FXML
-    private void handleRafraichir() {
-        chargerDonnees();
-        lblStatus.setText("Liste rafraîchie");
-    }
+    // ==================== NAVIGATION ====================
 
-    @FXML
-    private void ouvrirTraitementView() {
+    @FXML private void handleAjouter() { ouvrirPageAjout(); }
+    @FXML private void handleRafraichir() { chargerDonnees(); }
+
+    @FXML private void ouvrirTraitementView() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-view.fxml"));
             Parent root = loader.load();
             Scene currentScene = tableViewSuiviTraitements.getScene();
-            if (currentScene != null) {
-                currentScene.setRoot(root);
-            }
+            if (currentScene != null) currentScene.setRoot(root);
         } catch (Exception e) {
             afficherErreur("Erreur de navigation", "Impossible d'accéder à la page des traitements: " + e.getMessage());
         }
@@ -553,13 +749,12 @@ public class SuiviTraitementController implements Initializable {
 
     private void ouvrirPageAjout() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-ajout-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-ajout-view.fxml"));
             Parent root = loader.load();
             Stage stage = new Stage();
             stage.setTitle("Ajouter un Suivi");
             stage.setScene(new Scene(root, 800, 650));
             stage.show();
-
             stage.setOnHiding(event -> chargerDonnees());
         } catch (Exception e) {
             afficherErreur("Erreur d'ouverture", "Impossible d'ouvrir la page d'ajout: " + e.getMessage());
@@ -568,7 +763,7 @@ public class SuiviTraitementController implements Initializable {
 
     private void ouvrirPageAffichage(SuiviTraitement suivi) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-affichage-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-affichage-view.fxml"));
             Parent root = loader.load();
             SuiviTraitementAffichageController controller = loader.getController();
             controller.setSuiviTraitement(suivi);
@@ -583,7 +778,7 @@ public class SuiviTraitementController implements Initializable {
 
     private void ouvrirPageModification(SuiviTraitement suivi) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-modification-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-modification-view.fxml"));
             Parent root = loader.load();
             SuiviTraitementModificationController controller = loader.getController();
             controller.setSuiviTraitement(suivi);
@@ -591,7 +786,6 @@ public class SuiviTraitementController implements Initializable {
             stage.setTitle("Modifier un Suivi");
             stage.setScene(new Scene(root, 900, 700));
             stage.show();
-
             stage.setOnHiding(event -> chargerDonnees());
         } catch (Exception e) {
             afficherErreur("Erreur d'ouverture", "Impossible d'ouvrir la page de modification: " + e.getMessage());
@@ -604,7 +798,6 @@ public class SuiviTraitementController implements Initializable {
             confirm.setTitle("Confirmation");
             confirm.setHeaderText("Supprimer le suivi");
             confirm.setContentText("Êtes-vous sûr de vouloir supprimer ce suivi ?");
-
             if (confirm.showAndWait().get() == javafx.scene.control.ButtonType.OK) {
                 suiviTraitementService.supprimer(suivi.getSuivitraitementId());
                 chargerDonnees();
