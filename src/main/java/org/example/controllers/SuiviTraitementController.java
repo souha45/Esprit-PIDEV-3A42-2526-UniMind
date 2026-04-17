@@ -56,7 +56,7 @@ public class SuiviTraitementController implements Initializable {
         private final List<SuiviTraitement> suivis;
         private final boolean estEnteteEtudiant;
         private final boolean estEnteteTraitement;
-        private final SuiviTraitement suivi; // Pour les lignes de suivi individuelles
+        private final SuiviTraitement suivi;
 
         public LigneSuiviGroupée(String nomEtudiant, List<SuiviTraitement> suivis) {
             this.nomEtudiant = nomEtudiant;
@@ -257,16 +257,11 @@ public class SuiviTraitementController implements Initializable {
 
             tousLesSuivisFiltres = new ArrayList<>(suivisFiltres);
 
-            // Mettre à jour les statistiques
             mettreAJourStatistiques(tousLesSuivisFiltres, traitementsMap);
 
-            // Appliquer filtres
             suivisFiltres = appliquerRechercheEtFiltres(suivisFiltres, traitementsMap);
-
-            // Appliquer tri sur les suivis AVANT le regroupement
             suivisFiltres = appliquerTri(suivisFiltres, traitementsMap);
 
-            // Créer les lignes groupées avec les suivis triés
             List<LigneSuiviGroupée> lignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
             lignesSuivisGroupéesList = FXCollections.observableArrayList(lignes);
             tableViewSuiviTraitements.setItems(lignesSuivisGroupéesList);
@@ -303,7 +298,6 @@ public class SuiviTraitementController implements Initializable {
                 s.getDateSuivi().toLocalDate().equals(today)
         ).count();
 
-        // Nombre d'étudiants différents ayant des suivis
         long parEtudiant = suivis.stream()
                 .map(s -> {
                     Traitement t = traitementsMap.get(s.getTraitementId());
@@ -327,7 +321,6 @@ public class SuiviTraitementController implements Initializable {
 
         return suivis.stream()
                 .filter(s -> {
-                    // Filtre de recherche
                     if (!recherche.isEmpty()) {
                         Traitement traitement = traitementsMap.get(s.getTraitementId());
                         if (traitement != null) {
@@ -346,13 +339,11 @@ public class SuiviTraitementController implements Initializable {
                         }
                     }
 
-                    // Filtre de période
                     if (!"Toutes les périodes".equals(periodeFiltre)) {
                         if (s.getDateSuivi() == null) return false;
                         if (!estDansPeriode(s.getDateSuivi().toLocalDate(), periodeFiltre)) return false;
                     }
 
-                    // Filtre par "Saisi par"
                     if (!"Tous".equals(saisiParFiltre)) {
                         if ("Psychologue".equals(saisiParFiltre) && s.getSaisiPar() != SaisiPar.PSYCHOLOGUE) return false;
                         if ("Étudiant".equals(saisiParFiltre) && s.getSaisiPar() != SaisiPar.ETUDIANT) return false;
@@ -433,14 +424,9 @@ public class SuiviTraitementController implements Initializable {
         }
     }
 
-    /**
-     * Crée les lignes groupées avec un ordre correct
-     * Les suivis sont déjà triés selon le critère sélectionné
-     */
     private List<LigneSuiviGroupée> creerLignesSuivisGroupées(List<SuiviTraitement> suivis, Map<Integer, Traitement> traitementsMap) {
         List<LigneSuiviGroupée> lignes = new ArrayList<>();
 
-        // Grouper les suivis par étudiant (en conservant l'ordre des suivis triés)
         Map<Integer, List<SuiviTraitement>> suivisParEtudiant = new LinkedHashMap<>();
 
         for (SuiviTraitement suivi : suivis) {
@@ -451,14 +437,12 @@ public class SuiviTraitementController implements Initializable {
             }
         }
 
-        // Pour chaque étudiant, organiser les suivis par traitement
         for (Map.Entry<Integer, List<SuiviTraitement>> entry : suivisParEtudiant.entrySet()) {
             Integer etudiantId = entry.getKey();
             List<SuiviTraitement> suivisEtudiant = entry.getValue();
 
             String nomEtudiant = getNomEtudiant(etudiantId);
 
-            // Regrouper par traitement à l'intérieur de l'étudiant
             Map<Integer, List<SuiviTraitement>> suivisParTraitement = new LinkedHashMap<>();
             Map<Integer, String> nomsTraitements = new HashMap<>();
 
@@ -471,21 +455,17 @@ public class SuiviTraitementController implements Initializable {
                 }
             }
 
-            // Ajouter l'en-tête de l'étudiant
             LigneSuiviGroupée ligneEnteteEtudiant = new LigneSuiviGroupée(nomEtudiant, suivisEtudiant);
             lignes.add(ligneEnteteEtudiant);
 
-            // Pour chaque traitement, ajouter les suivis (déjà triés)
             for (Map.Entry<Integer, List<SuiviTraitement>> traitementEntry : suivisParTraitement.entrySet()) {
                 Integer traitementId = traitementEntry.getKey();
                 List<SuiviTraitement> suivisTraitement = traitementEntry.getValue();
                 String nomTraitement = nomsTraitements.getOrDefault(traitementId, "Traitement #" + traitementId);
 
-                // Ajouter l'en-tête du traitement
                 LigneSuiviGroupée ligneEnteteTraitement = new LigneSuiviGroupée(nomEtudiant, nomTraitement, suivisTraitement);
                 lignes.add(ligneEnteteTraitement);
 
-                // Ajouter les suivis individuels
                 for (SuiviTraitement suivi : suivisTraitement) {
                     lignes.add(new LigneSuiviGroupée(suivi));
                 }
@@ -516,12 +496,15 @@ public class SuiviTraitementController implements Initializable {
 
         TableColumn<LigneSuiviGroupée, String> colEtudiant = (TableColumn<LigneSuiviGroupée, String>) tableViewSuiviTraitements.getColumns().get(0);
         TableColumn<LigneSuiviGroupée, String> colDateSuivi = (TableColumn<LigneSuiviGroupée, String>) tableViewSuiviTraitements.getColumns().get(1);
-        TableColumn<LigneSuiviGroupée, String> colNotes = (TableColumn<LigneSuiviGroupée, String>) tableViewSuiviTraitements.getColumns().get(2);
+        TableColumn<LigneSuiviGroupée, String> colSaisiPar = (TableColumn<LigneSuiviGroupée, String>) tableViewSuiviTraitements.getColumns().get(2);
+        TableColumn<LigneSuiviGroupée, String> colNotes = (TableColumn<LigneSuiviGroupée, String>) tableViewSuiviTraitements.getColumns().get(3);
 
-        colEtudiant.setPrefWidth(400);
-        colDateSuivi.setPrefWidth(150);
-        colNotes.setPrefWidth(450);
+        colEtudiant.setPrefWidth(350);
+        colDateSuivi.setPrefWidth(120);
+        colSaisiPar.setPrefWidth(120);
+        colNotes.setPrefWidth(400);
 
+        // Colonne Étudiant / Traitement
         colEtudiant.setCellValueFactory(param -> {
             LigneSuiviGroupée ligne = param.getValue();
             return new javafx.beans.property.SimpleStringProperty(ligne.getAffichage());
@@ -548,6 +531,7 @@ public class SuiviTraitementController implements Initializable {
             }
         });
 
+        // Colonne Date Suivi
         colDateSuivi.setCellValueFactory(param -> {
             LigneSuiviGroupée ligne = param.getValue();
             SuiviTraitement suivi = ligne.getPremierSuivi();
@@ -557,6 +541,44 @@ public class SuiviTraitementController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
+        // Colonne Saisi Par
+        colSaisiPar.setCellValueFactory(param -> {
+            LigneSuiviGroupée ligne = param.getValue();
+            SuiviTraitement suivi = ligne.getPremierSuivi();
+            if (suivi != null && !ligne.estEntete()) {
+                String texte = suivi.getSaisiPar() == SaisiPar.PSYCHOLOGUE ? "👨‍⚕️ Psychologue" : "👨‍🎓 Étudiant";
+                return new javafx.beans.property.SimpleStringProperty(texte);
+            }
+            return new javafx.beans.property.SimpleStringProperty("");
+        });
+
+        colSaisiPar.setCellFactory(param -> new TableCell<LigneSuiviGroupée, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText("");
+                    setStyle("");
+                } else {
+                    LigneSuiviGroupée ligne = getTableRow().getItem();
+                    if (ligne.estEntete()) {
+                        setText("");
+                        setStyle("");
+                    } else if (item != null && !item.isEmpty()) {
+                        setText(item);
+                        if (item.contains("Psychologue")) {
+                            setStyle("-fx-text-fill: #4f46e5; -fx-font-weight: bold; -fx-padding: 10 8;");
+                        } else {
+                            setStyle("-fx-text-fill: #15803d; -fx-font-weight: bold; -fx-padding: 10 8;");
+                        }
+                    } else {
+                        setText("");
+                    }
+                }
+            }
+        });
+
+        // Colonne Observations
         colNotes.setCellValueFactory(param -> {
             LigneSuiviGroupée ligne = param.getValue();
             SuiviTraitement suivi = ligne.getPremierSuivi();
@@ -568,6 +590,26 @@ public class SuiviTraitementController implements Initializable {
                 return new javafx.beans.property.SimpleStringProperty(notes != null ? notes : "");
             }
             return new javafx.beans.property.SimpleStringProperty("");
+        });
+
+        colNotes.setCellFactory(param -> new TableCell<LigneSuiviGroupée, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText("");
+                    setStyle("");
+                } else {
+                    LigneSuiviGroupée ligne = getTableRow().getItem();
+                    if (ligne.estEntete()) {
+                        setText("");
+                        setStyle("");
+                    } else {
+                        setText(item);
+                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
+                    }
+                }
+            }
         });
 
         configurerColonneActions();
@@ -665,13 +707,9 @@ public class SuiviTraitementController implements Initializable {
 
             List<SuiviTraitement> suivisFiltres = new ArrayList<>(tousLesSuivisFiltres);
 
-            // Appliquer recherche et filtres
             suivisFiltres = appliquerRechercheEtFiltres(suivisFiltres, traitementsMap);
-
-            // Appliquer tri
             suivisFiltres = appliquerTri(suivisFiltres, traitementsMap);
 
-            // Créer les lignes groupées
             List<LigneSuiviGroupée> lignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
             lignesSuivisGroupéesList = FXCollections.observableArrayList(lignes);
             tableViewSuiviTraitements.setItems(lignesSuivisGroupéesList);
@@ -719,11 +757,12 @@ public class SuiviTraitementController implements Initializable {
                             break;
                         }
                     }
+                    String saisiPar = s.getSaisiPar() == SaisiPar.PSYCHOLOGUE ? "Psychologue" : "Étudiant";
                     writer.write(String.format("%s;%s;%s;%s;%s\n",
                             ligne.getNomEtudiant(),
                             t != null ? t.getTitre().replace(";", ",") : "",
                             s.getDateSuivi() != null ? s.getDateSuivi().toString() : "",
-                            s.getSaisiPar() == SaisiPar.PSYCHOLOGUE ? "Psychologue" : "Étudiant",
+                            saisiPar,
                             s.getObservations() != null ? s.getObservations().replace(";", ",") : ""
                     ));
                 }
@@ -749,7 +788,7 @@ public class SuiviTraitementController implements Initializable {
 
     private void ouvrirPageAjout() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-ajout-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-ajout-view.fxml"));
             Parent root = loader.load();
             Stage stage = new Stage();
             stage.setTitle("Ajouter un Suivi");
@@ -763,7 +802,7 @@ public class SuiviTraitementController implements Initializable {
 
     private void ouvrirPageAffichage(SuiviTraitement suivi) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-affichage-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-affichage-view.fxml"));
             Parent root = loader.load();
             SuiviTraitementAffichageController controller = loader.getController();
             controller.setSuiviTraitement(suivi);
@@ -778,7 +817,7 @@ public class SuiviTraitementController implements Initializable {
 
     private void ouvrirPageModification(SuiviTraitement suivi) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-modification-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-modification-view.fxml"));
             Parent root = loader.load();
             SuiviTraitementModificationController controller = loader.getController();
             controller.setSuiviTraitement(suivi);

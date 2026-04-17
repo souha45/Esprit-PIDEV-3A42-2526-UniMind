@@ -101,12 +101,13 @@
         <Label fx:id="lblCount" styleClass="count-badge"/>
     </HBox>
 
-    <!-- Table principale -->
+    <!-- Table principale avec colonne SAISI PAR -->
     <VBox VBox.vgrow="ALWAYS" styleClass="table-container">
         <TableView fx:id="tableViewSuiviTraitements" styleClass="custom-table" VBox.vgrow="ALWAYS">
             <columns>
                 <TableColumn text="ÉTUDIANT / TRAITEMENT" />
                 <TableColumn text="DATE SUIVI" />
+                <TableColumn text="SAISI PAR" />
                 <TableColumn text="OBSERVATIONS" />
                 <TableColumn fx:id="colActions" text="ACTIONS" />
             </columns>
