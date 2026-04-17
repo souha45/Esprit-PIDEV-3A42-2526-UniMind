@@ -48,6 +48,13 @@ public class TraitementEtudiantController implements Initializable {
     @FXML
     private Label lblAucunResultat;
 
+    // ===== STATISTIQUES =====
+    @FXML private Label statTotal;
+    @FXML private Label statEnCours;
+    @FXML private Label statTermine;
+    @FXML private Label statSuspendu;
+    @FXML private Label statPrioriteHaute;
+
     private TraitementService traitementService;
     private SuiviTraitementService suiviTraitementService;
     private List<Traitement> tousLesTraitements;
@@ -84,7 +91,25 @@ public class TraitementEtudiantController implements Initializable {
 
         tousLesSuivis = suiviTraitementService.afficher();
 
+        // ===== METTRE À JOUR LES STATISTIQUES =====
+        mettreAJourStatistiques(tousLesTraitements);
+
         creerCartesTraitements();
+    }
+
+    // ===== MÉTHODE POUR LES STATISTIQUES =====
+    private void mettreAJourStatistiques(List<Traitement> traitements) {
+        long total = traitements.size();
+        long enCours = traitements.stream().filter(t -> t.getStatut().name().equals("EN_COURS")).count();
+        long termine = traitements.stream().filter(t -> t.getStatut().name().equals("TERMINE")).count();
+        long suspendu = traitements.stream().filter(t -> t.getStatut().name().equals("SUSPENDU")).count();
+        long prioriteHaute = traitements.stream().filter(t -> t.getPriorite().name().equals("HAUTE")).count();
+
+        statTotal.setText(String.valueOf(total));
+        statEnCours.setText(String.valueOf(enCours));
+        statTermine.setText(String.valueOf(termine));
+        statSuspendu.setText(String.valueOf(suspendu));
+        statPrioriteHaute.setText(String.valueOf(prioriteHaute));
     }
 
     private void creerCartesTraitements() {
@@ -267,7 +292,7 @@ public class TraitementEtudiantController implements Initializable {
         notesLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #374151;");
         notesLabel.setWrapText(true);
 
-        // ===== BOUTONS POUR MODIFIER/SUPPRIMER =====
+        // Boutons Modifier/Supprimer pour l'étudiant
         HBox actionsBox = new HBox();
         actionsBox.setSpacing(10);
         actionsBox.setAlignment(Pos.CENTER_RIGHT);
@@ -281,18 +306,8 @@ public class TraitementEtudiantController implements Initializable {
         btnModifier.setPrefWidth(70);
         btnSupprimer.setPrefWidth(70);
 
-        // Vérifier si l'étudiant peut modifier/supprimer ce suivi
-        SessionManager session = SessionManager.getInstance();
-        boolean peutModifier = false;
-
-        if (session.estEtudiant()) {
-            // L'étudiant ne peut modifier/supprimer que ses propres suivis
-            peutModifier = (suivi.getSaisiPar() == SaisiPar.ETUDIANT);
-        } else {
-            peutModifier = true;
-        }
-
-        if (peutModifier) {
+        // L'étudiant ne peut modifier/supprimer que ses propres suivis
+        if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
             btnModifier.setOnAction(e -> ouvrirModificationSuivi(suivi));
             btnSupprimer.setOnAction(e -> supprimerSuivi(suivi));
             actionsBox.getChildren().addAll(btnModifier, btnSupprimer);
@@ -305,7 +320,7 @@ public class TraitementEtudiantController implements Initializable {
 
     private void ouvrirModificationSuivi(SuiviTraitement suivi) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-modification-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-modification-view.fxml"));
             Parent root = loader.load();
 
             SuiviTraitementModificationController controller = loader.getController();
@@ -378,7 +393,7 @@ public class TraitementEtudiantController implements Initializable {
 
     private void ouvrirAjoutSuivi(Traitement traitement) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-ajout-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-ajout-view.fxml"));
             Parent root = loader.load();
 
             SuiviTraitementAjoutController controller = loader.getController();
