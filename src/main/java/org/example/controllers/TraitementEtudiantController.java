@@ -4,6 +4,7 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -27,6 +28,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
@@ -42,13 +44,23 @@ public class TraitementEtudiantController implements Initializable {
     @FXML
     private TextField txtRecherche;
     @FXML
+    private ComboBox<String> cmbFiltreStatut;
+    @FXML
+    private ComboBox<String> cmbFiltrePriorite;
+    @FXML
+    private ComboBox<String> cmbTri;
+    @FXML
+    private Button btnAppliquerFiltres;
+    @FXML
+    private Button btnReinitialiserFiltres;
+    @FXML
     private VBox cardsContainer;
     @FXML
     private Label lblStatus;
     @FXML
     private Label lblAucunResultat;
 
-    // ===== STATISTIQUES =====
+    // Statistiques
     @FXML private Label statTotal;
     @FXML private Label statEnCours;
     @FXML private Label statTermine;
@@ -60,6 +72,7 @@ public class TraitementEtudiantController implements Initializable {
     private List<Traitement> tousLesTraitements;
     private List<SuiviTraitement> tousLesSuivis;
     private List<VBox> toutesLesCartes;
+    private boolean isInitialized = false;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -68,16 +81,57 @@ public class TraitementEtudiantController implements Initializable {
             suiviTraitementService = new SuiviTraitementService();
             toutesLesCartes = new ArrayList<>();
 
+            initialiserFiltres();
+            initialiserTri();
             chargerDonnees();
 
-            txtRecherche.textProperty().addListener((obs, oldVal, newVal) -> filtrerCartes());
-
+            isInitialized = true;
             lblStatus.setText("✓ Bienvenue sur votre espace personnel");
 
         } catch (Exception e) {
             lblStatus.setText("✗ Erreur lors du chargement: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void initialiserFiltres() {
+        ObservableList<String> statuts = FXCollections.observableArrayList(
+                "Tous les statuts", "EN_COURS", "TERMINE", "SUSPENDU"
+        );
+        cmbFiltreStatut.setItems(statuts);
+        cmbFiltreStatut.setValue("Tous les statuts");
+
+        ObservableList<String> priorites = FXCollections.observableArrayList(
+                "Toutes les priorités", "HAUTE", "MOYENNE", "BASSE"
+        );
+        cmbFiltrePriorite.setItems(priorites);
+        cmbFiltrePriorite.setValue("Toutes les priorités");
+
+        txtRecherche.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (isInitialized) appliquerFiltres();
+        });
+        cmbFiltreStatut.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (isInitialized) appliquerFiltres();
+        });
+        cmbFiltrePriorite.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (isInitialized) appliquerFiltres();
+        });
+        cmbTri.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (isInitialized) appliquerFiltres();
+        });
+    }
+
+    private void initialiserTri() {
+        cmbTri.setItems(FXCollections.observableArrayList(
+                "📅 Date (plus récent)",
+                "📅 Date (plus ancien)",
+                "🔤 Titre (A-Z)",
+                "🔤 Titre (Z-A)",
+                "📊 Priorité (Haute → Basse)",
+                "📊 Priorité (Basse → Haute)",
+                "✅ Statut (En cours → Terminé)"
+        ));
+        cmbTri.setValue("📅 Date (plus récent)");
     }
 
     private void chargerDonnees() throws SQLException {
@@ -91,13 +145,10 @@ public class TraitementEtudiantController implements Initializable {
 
         tousLesSuivis = suiviTraitementService.afficher();
 
-        // ===== METTRE À JOUR LES STATISTIQUES =====
         mettreAJourStatistiques(tousLesTraitements);
-
-        creerCartesTraitements();
+        appliquerFiltres();
     }
 
-    // ===== MÉTHODE POUR LES STATISTIQUES =====
     private void mettreAJourStatistiques(List<Traitement> traitements) {
         long total = traitements.size();
         long enCours = traitements.stream().filter(t -> t.getStatut().name().equals("EN_COURS")).count();
@@ -112,13 +163,132 @@ public class TraitementEtudiantController implements Initializable {
         statPrioriteHaute.setText(String.valueOf(prioriteHaute));
     }
 
+    private List<Traitement> appliquerRechercheEtFiltres(List<Traitement> traitements) {
+        String recherche = txtRecherche.getText().toLowerCase().trim();
+        String statutFiltre = cmbFiltreStatut.getValue();
+        String prioriteFiltre = cmbFiltrePriorite.getValue();
+
+        return traitements.stream()
+                .filter(t -> {
+                    if (!recherche.isEmpty()) {
+                        boolean correspondRecherche =
+                                (t.getTitre() != null && t.getTitre().toLowerCase().contains(recherche)) ||
+                                        (t.getType() != null && t.getType().toLowerCase().contains(recherche)) ||
+                                        (t.getObjectifTherapeutique() != null && t.getObjectifTherapeutique().toLowerCase().contains(recherche));
+                        if (!correspondRecherche) return false;
+                    }
+                    if (!"Tous les statuts".equals(statutFiltre)) {
+                        if (t.getStatut() == null || !t.getStatut().name().equals(statutFiltre)) return false;
+                    }
+                    if (!"Toutes les priorités".equals(prioriteFiltre)) {
+                        if (t.getPriorite() == null || !t.getPriorite().name().equals(prioriteFiltre)) return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<Traitement> appliquerTri(List<Traitement> traitements) {
+        String tri = cmbTri.getValue();
+        if (tri == null) return traitements;
+
+        List<Traitement> result = new ArrayList<>(traitements);
+
+        switch (tri) {
+            case "📅 Date (plus récent)":
+                result.sort((t1, t2) -> {
+                    if (t1.getDateDebut() == null) return 1;
+                    if (t2.getDateDebut() == null) return -1;
+                    return t2.getDateDebut().compareTo(t1.getDateDebut());
+                });
+                break;
+            case "📅 Date (plus ancien)":
+                result.sort((t1, t2) -> {
+                    if (t1.getDateDebut() == null) return 1;
+                    if (t2.getDateDebut() == null) return -1;
+                    return t1.getDateDebut().compareTo(t2.getDateDebut());
+                });
+                break;
+            case "🔤 Titre (A-Z)":
+                result.sort(Comparator.comparing(Traitement::getTitre, String.CASE_INSENSITIVE_ORDER));
+                break;
+            case "🔤 Titre (Z-A)":
+                result.sort((t1, t2) -> t2.getTitre().compareToIgnoreCase(t1.getTitre()));
+                break;
+            case "📊 Priorité (Haute → Basse)":
+                result.sort((t1, t2) -> {
+                    int p1 = getPrioriteOrdre(t1.getPriorite().name());
+                    int p2 = getPrioriteOrdre(t2.getPriorite().name());
+                    return Integer.compare(p1, p2);
+                });
+                break;
+            case "📊 Priorité (Basse → Haute)":
+                result.sort((t1, t2) -> {
+                    int p1 = getPrioriteOrdre(t1.getPriorite().name());
+                    int p2 = getPrioriteOrdre(t2.getPriorite().name());
+                    return Integer.compare(p2, p1);
+                });
+                break;
+            case "✅ Statut (En cours → Terminé)":
+                result.sort((t1, t2) -> {
+                    int s1 = getStatutOrdre(t1.getStatut().name());
+                    int s2 = getStatutOrdre(t2.getStatut().name());
+                    return Integer.compare(s1, s2);
+                });
+                break;
+        }
+        return result;
+    }
+
+    private int getPrioriteOrdre(String priorite) {
+        switch (priorite) {
+            case "HAUTE": return 1;
+            case "MOYENNE": return 2;
+            case "BASSE": return 3;
+            default: return 4;
+        }
+    }
+
+    private int getStatutOrdre(String statut) {
+        switch (statut) {
+            case "EN_COURS": return 1;
+            case "TERMINE": return 2;
+            case "SUSPENDU": return 3;
+            default: return 4;
+        }
+    }
+
+    private void appliquerFiltres() {
+        if (tousLesTraitements == null || tousLesTraitements.isEmpty()) {
+            return;
+        }
+
+        List<Traitement> traitementsFiltres = new ArrayList<>(tousLesTraitements);
+
+        // Appliquer recherche et filtres
+        traitementsFiltres = appliquerRechercheEtFiltres(traitementsFiltres);
+
+        // Appliquer tri
+        traitementsFiltres = appliquerTri(traitementsFiltres);
+
+        // Mettre à jour l'affichage des cartes
+        creerCartesTraitements(traitementsFiltres);
+
+        long totalTraitements = traitementsFiltres.size();
+        lblStatus.setText(totalTraitements + " traitement(s) trouvé(s)");
+    }
+
     private void creerCartesTraitements() {
+        creerCartesTraitements(tousLesTraitements);
+    }
+
+    private void creerCartesTraitements(List<Traitement> traitements) {
         cardsContainer.getChildren().clear();
         toutesLesCartes.clear();
 
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-        for (Traitement traitement : tousLesTraitements) {
+        for (Traitement traitement : traitements) {
             List<SuiviTraitement> suivisTraitement = tousLesSuivis.stream()
                     .filter(s -> s.getTraitementId() == traitement.getTraitementId())
                     .sorted((s1, s2) -> {
@@ -132,13 +302,27 @@ public class TraitementEtudiantController implements Initializable {
             cardsContainer.getChildren().add(carte);
         }
 
-        if (tousLesTraitements.isEmpty()) {
+        if (traitements.isEmpty()) {
             lblAucunResultat.setVisible(true);
             lblAucunResultat.setManaged(true);
         } else {
             lblAucunResultat.setVisible(false);
             lblAucunResultat.setManaged(false);
         }
+    }
+
+    @FXML
+    private void handleAppliquerFiltres() {
+        appliquerFiltres();
+    }
+
+    @FXML
+    private void handleReinitialiserFiltres() {
+        txtRecherche.clear();
+        cmbFiltreStatut.setValue("Tous les statuts");
+        cmbFiltrePriorite.setValue("Toutes les priorités");
+        cmbTri.setValue("📅 Date (plus récent)");
+        appliquerFiltres();
     }
 
     private VBox creerCarteTraitement(Traitement traitement, List<SuiviTraitement> suivis, DateTimeFormatter dateFormatter) {
@@ -292,7 +476,7 @@ public class TraitementEtudiantController implements Initializable {
         notesLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #374151;");
         notesLabel.setWrapText(true);
 
-        // Boutons Modifier/Supprimer pour l'étudiant
+        // Boutons Modifier/Supprimer
         HBox actionsBox = new HBox();
         actionsBox.setSpacing(10);
         actionsBox.setAlignment(Pos.CENTER_RIGHT);
@@ -306,7 +490,6 @@ public class TraitementEtudiantController implements Initializable {
         btnModifier.setPrefWidth(70);
         btnSupprimer.setPrefWidth(70);
 
-        // L'étudiant ne peut modifier/supprimer que ses propres suivis
         if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
             btnModifier.setOnAction(e -> ouvrirModificationSuivi(suivi));
             btnSupprimer.setOnAction(e -> supprimerSuivi(suivi));
@@ -359,35 +542,6 @@ public class TraitementEtudiantController implements Initializable {
             } catch (SQLException e) {
                 afficherErreur("Erreur", "Impossible de supprimer le suivi: " + e.getMessage());
             }
-        }
-    }
-
-    private void filtrerCartes() {
-        String recherche = txtRecherche.getText().toLowerCase().trim();
-
-        if (recherche.isEmpty()) {
-            cardsContainer.getChildren().setAll(toutesLesCartes);
-            lblAucunResultat.setVisible(toutesLesCartes.isEmpty());
-            lblAucunResultat.setManaged(toutesLesCartes.isEmpty());
-            return;
-        }
-
-        List<VBox> cartesFiltrees = new ArrayList<>();
-        for (int i = 0; i < tousLesTraitements.size(); i++) {
-            Traitement traitement = tousLesTraitements.get(i);
-            if (traitement.getTitre().toLowerCase().contains(recherche) ||
-                    traitement.getType().toLowerCase().contains(recherche) ||
-                    (traitement.getObjectifTherapeutique() != null && traitement.getObjectifTherapeutique().toLowerCase().contains(recherche))) {
-                cartesFiltrees.add(toutesLesCartes.get(i));
-            }
-        }
-
-        cardsContainer.getChildren().setAll(cartesFiltrees);
-        lblAucunResultat.setVisible(cartesFiltrees.isEmpty());
-        lblAucunResultat.setManaged(cartesFiltrees.isEmpty());
-
-        if (cartesFiltrees.isEmpty()) {
-            lblAucunResultat.setText("Aucun traitement ne correspond à \"" + recherche + "\"");
         }
     }
 

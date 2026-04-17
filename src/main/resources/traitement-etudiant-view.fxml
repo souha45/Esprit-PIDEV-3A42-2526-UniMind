@@ -11,10 +11,9 @@
         <Label text="Consultez vos traitements et suivez votre progression" styleClass="page-subtitle"/>
     </VBox>
 
-    <!-- ===== SECTION STATISTIQUES POUR ÉTUDIANT ===== -->
+    <!-- ===== SECTION STATISTIQUES ===== -->
     <HBox spacing="14" style="-fx-background-color: white; -fx-padding: 20 24; -fx-border-color: #e0e7ff; -fx-border-width: 0 0 1 0;">
 
-        <!-- Carte Total -->
         <VBox spacing="5" HBox.hgrow="ALWAYS"
               style="-fx-background-color: #ffffff; -fx-background-radius: 12;
                      -fx-padding: 16 20; -fx-border-color: #a5b4fc; -fx-border-width: 1;
@@ -25,7 +24,6 @@
             <Label text="traitements" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;"/>
         </VBox>
 
-        <!-- Carte En cours -->
         <VBox spacing="5" HBox.hgrow="ALWAYS"
               style="-fx-background-color: #e0f2fe; -fx-background-radius: 12;
                      -fx-padding: 16 20; -fx-border-color: #7dd3fc; -fx-border-width: 1;
@@ -36,7 +34,6 @@
             <Label text="en progression" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #7dd3fc;"/>
         </VBox>
 
-        <!-- Carte Terminés -->
         <VBox spacing="5" HBox.hgrow="ALWAYS"
               style="-fx-background-color: #ecfdf5; -fx-background-radius: 12;
                      -fx-padding: 16 20; -fx-border-color: #6ee7b7; -fx-border-width: 1;
@@ -47,7 +44,6 @@
             <Label text="traitements" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #6ee7b7;"/>
         </VBox>
 
-        <!-- Carte Suspendus -->
         <VBox spacing="5" HBox.hgrow="ALWAYS"
               style="-fx-background-color: #fef3c7; -fx-background-radius: 12;
                      -fx-padding: 16 20; -fx-border-color: #fcd34d; -fx-border-width: 1;
@@ -58,7 +54,6 @@
             <Label text="traitements" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #fcd34d;"/>
         </VBox>
 
-        <!-- Carte Priorité Haute -->
         <VBox spacing="5" HBox.hgrow="ALWAYS"
               style="-fx-background-color: #fef2f2; -fx-background-radius: 12;
                      -fx-padding: 16 20; -fx-border-color: #fecaca; -fx-border-width: 1;
@@ -71,12 +66,21 @@
 
     </HBox>
 
-    <!-- Barre de recherche -->
+    <!-- ===== BARRE DE RECHERCHE, FILTRES ET TRI ===== -->
     <HBox styleClass="filter-bar" spacing="15" alignment="CENTER_LEFT">
-        <HBox styleClass="search-box" HBox.hgrow="ALWAYS">
+        <HBox styleClass="search-box">
             <Label text="🔍" styleClass="search-icon"/>
-            <TextField fx:id="txtRecherche" promptText="Rechercher un traitement..." styleClass="search-field"/>
+            <TextField fx:id="txtRecherche" promptText="Rechercher par titre, type ou objectif..." styleClass="search-field"/>
         </HBox>
+
+        <ComboBox fx:id="cmbFiltreStatut" prefWidth="150" promptText="Statut" styleClass="filter-combo"/>
+        <ComboBox fx:id="cmbFiltrePriorite" prefWidth="150" promptText="Priorité" styleClass="filter-combo"/>
+
+        <ComboBox fx:id="cmbTri" prefWidth="200" promptText="Trier par..." styleClass="filter-combo"/>
+
+        <Button fx:id="btnAppliquerFiltres" text="Appliquer" onAction="#handleAppliquerFiltres" styleClass="btn-primary-small"/>
+        <Button fx:id="btnReinitialiserFiltres" text="Réinitialiser" onAction="#handleReinitialiserFiltres" styleClass="btn-secondary-small"/>
+
         <Region HBox.hgrow="ALWAYS"/>
     </HBox>
 
