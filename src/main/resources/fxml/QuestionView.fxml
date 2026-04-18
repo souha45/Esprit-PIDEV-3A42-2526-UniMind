@@ -34,25 +34,50 @@
             <Label fx:id="errQuestionnaire" text="" prefHeight="16" maxHeight="16"
                    style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
 
-            <Label text="Options (séparées par virgule)" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
-            <TextField fx:id="tfOptions" promptText="Ex: Jamais,Parfois,Souvent,Toujours"
-                       style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1;
-                              -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+            <Label text="Type Question *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+            <ComboBox fx:id="cbTypeQuestion" promptText="Choisir le type" maxWidth="Infinity"
+                      style="-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1;
+                             -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px;"/>
+            <Label fx:id="errTypeQuestion" text="" prefHeight="16" maxHeight="16"
+                   style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
+
+            <!-- ── AJOUT OPTION + SCORE ── -->
+            <Label text="Ajouter une Option" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+            <HBox spacing="6">
+                <TextField fx:id="tfOptionInput" promptText="Ex: Jamais"
+                           HBox.hgrow="ALWAYS"
+                           style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1;
+                                  -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+                <TextField fx:id="tfScoreInput" promptText="Score"
+                           prefWidth="70"
+                           style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1;
+                                  -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+                <Button text="➕" onAction="#handleAjouterOption"
+                        style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold;
+                               -fx-padding: 7 10; -fx-background-radius: 7; -fx-cursor: hand;"/>
+                <Button text="🗑" onAction="#handleSupprimerOption"
+                        style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold;
+                               -fx-padding: 7 10; -fx-background-radius: 7; -fx-cursor: hand;"/>
+            </HBox>
             <Label fx:id="errOptions" text="" prefHeight="16" maxHeight="16"
                    style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
 
-            <Label text="Scores (séparés par virgule)" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
-            <TextField fx:id="tfScores" promptText="Ex: 0,1,2,3"
-                       style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1;
-                              -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+            <!-- ── LISTE OPTIONS + SCORES CÔTE À CÔTE ── -->
+            <HBox spacing="6">
+                <VBox spacing="2" HBox.hgrow="ALWAYS">
+                    <Label text="Options ajoutées" style="-fx-text-fill: #64748b; -fx-font-size: 11px;"/>
+                    <ListView fx:id="lvOptions" prefHeight="100"
+                              style="-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1;
+                                     -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 12px;"/>
+                </VBox>
+                <VBox spacing="2" prefWidth="80">
+                    <Label text="Scores" style="-fx-text-fill: #64748b; -fx-font-size: 11px;"/>
+                    <ListView fx:id="lvScores" prefHeight="100"
+                              style="-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1;
+                                     -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 12px;"/>
+                </VBox>
+            </HBox>
             <Label fx:id="errScores" text="" prefHeight="16" maxHeight="16"
-                   style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
-
-            <Label text="Type Question *" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
-            <TextField fx:id="tfTypeQuestion" promptText="QCM ou TEXTE"
-                       style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1;
-                              -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
-            <Label fx:id="errTypeQuestion" text="" prefHeight="16" maxHeight="16"
                    style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
 
             <HBox spacing="8"><padding><Insets top="8"/></padding>
