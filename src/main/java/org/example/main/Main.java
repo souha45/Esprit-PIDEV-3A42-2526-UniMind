@@ -1,4 +1,4 @@
-package org.example;
+package org.example.main;
 
 import org.example.entities.*;
 import org.example.services.*;
