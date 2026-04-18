@@ -103,7 +103,7 @@
         <Label text="Liste des Questionnaires"
                style="-fx-text-fill: #64748b; -fx-font-size: 13px; -fx-font-weight: bold;"/>
 
-        <!-- RECHERCHE + FILTRE -->
+        <!-- RECHERCHE + FILTRE + TRI -->
         <HBox spacing="10" alignment="CENTER_LEFT">
             <TextField fx:id="tfSearch"
                        promptText="🔍 Rechercher par nom, code ou type..."
@@ -115,9 +115,14 @@
                       style="-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1;
                              -fx-border-radius: 6; -fx-background-radius: 6;
                              -fx-font-size: 12px; -fx-pref-width: 140px;"/>
+            <ComboBox fx:id="cbTri" promptText="Trier par..."
+                      style="-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1;
+                             -fx-border-radius: 6; -fx-background-radius: 6;
+                             -fx-font-size: 12px; -fx-pref-width: 150px;"/>
             <Button text="✖" onAction="#handleResetFiltre"
                     style="-fx-background-color: #e2e8f0; -fx-text-fill: #64748b;
-                           -fx-font-size: 12px; -fx-padding: 7 10; -fx-background-radius: 6; -fx-cursor: hand;"/>
+                           -fx-font-size: 12px; -fx-padding: 7 10;
+                           -fx-background-radius: 6; -fx-cursor: hand;"/>
         </HBox>
 
         <!-- COMPTEUR -->
