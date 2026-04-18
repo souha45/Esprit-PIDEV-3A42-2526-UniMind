@@ -28,4 +28,14 @@
             <TableColumn fx:id="colDate"   text="Date"        prefWidth="200"/>
         </columns>
     </TableView>
+
+    <!-- BOUTON PDF -->
+    <HBox alignment="CENTER_RIGHT" spacing="10">
+        <padding><Insets top="8"/></padding>
+        <Label fx:id="lblStatus" text="" style="-fx-font-size: 12px;"/>
+        <Button text="📄 Exporter en PDF" onAction="#handleExporterPDF"
+                style="-fx-background-color: #7c3aed; -fx-text-fill: white;
+                       -fx-font-size: 13px; -fx-font-weight: bold;
+                       -fx-padding: 10 24; -fx-background-radius: 8; -fx-cursor: hand;"/>
+    </HBox>
 </VBox>
