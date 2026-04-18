@@ -10,6 +10,7 @@ import org.example.entities.Questionnaire;
 import org.example.entities.Reponsequestionnaire;
 import org.example.services.QuestionServices;
 import org.example.services.ReponseQuestionnaireServices;
+import org.example.utils.SessionManager;
 
 import java.net.URL;
 import java.sql.SQLException;
@@ -24,7 +25,7 @@ public class EtudiantRepondreController implements Initializable {
     private Questionnaire questionnaire;
     private List<Question> questions;
     private final Map<Integer, String> reponsesChoisies = new HashMap<>();
-    private final Map<Integer, Double> scoresChoisis = new HashMap<>();
+    private final Map<Integer, Double> scoresChoisis    = new HashMap<>();
 
     private final QuestionServices questionService        = new QuestionServices();
     private final ReponseQuestionnaireServices repService = new ReponseQuestionnaireServices();
@@ -146,6 +147,9 @@ public class EtudiantRepondreController implements Initializable {
         String niveau         = questionnaire.getNiveauScore((int) scoreTotale);
         String interpretation = questionnaire.interpreterScore((int) scoreTotale);
 
+        // ✅ Récupérer le userId depuis SessionManager
+        int userId = SessionManager.getInstance().getUserId();
+
         Reponsequestionnaire reponse = new Reponsequestionnaire(
                 scoreTotale,
                 jsonReponses.toString(),
@@ -155,13 +159,12 @@ public class EtudiantRepondreController implements Initializable {
                 scoreTotale >= questionnaire.getSeuilSevere(),
                 null,
                 questionnaire.getQuestionnaireId(),
-                null
+                userId  // ✅ userId au lieu de null
         );
 
         try {
             repService.ajouter(reponse);
 
-            // ✅ ALERT avec score et niveau
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("✅ Résultat du Questionnaire");
             alert.setHeaderText("Questionnaire : " + questionnaire.getNom());
@@ -173,7 +176,6 @@ public class EtudiantRepondreController implements Initializable {
             );
             alert.showAndWait();
 
-            // ✅ Rediriger vers "Mes Réponses"
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/fxml/EtudiantMesReponsesView.fxml"));
             Pane view = loader.load();
@@ -182,7 +184,15 @@ public class EtudiantRepondreController implements Initializable {
             contentArea.getChildren().setAll(view);
 
         } catch (Exception e) {
-            setStatus("❌ Erreur soumission : " + e.getMessage(), false);
+            if (e.getMessage() != null && e.getMessage().equals("LIMITE_QUOTIDIENNE")) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Limite atteinte");
+                alert.setHeaderText("🚫 Limite quotidienne atteinte");
+                alert.setContentText("Vous avez déjà passé 2 questionnaires aujourd'hui.\nRevenez demain !");
+                alert.showAndWait();
+            } else {
+                setStatus("❌ Erreur soumission : " + e.getMessage(), false);
+            }
         }
     }
 

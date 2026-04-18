@@ -15,13 +15,31 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
         con = MyDataBase_Unimind.getInstance().getConnection();
     }
 
+    // ══════════════════════════════════════════
+    //  LIMITE 2 QUESTIONNAIRES PAR JOUR
+    // ══════════════════════════════════════════
 
+    public int countPassagesAujourdhui(int userId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM reponse_questionnaire WHERE user_id = ? AND DATE(created_at) = CURDATE()";
+        PreparedStatement ps = con.prepareStatement(sql);
+        ps.setInt(1, userId);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) return rs.getInt(1);
+        return 0;
+    }
+
+    public boolean peutPasser(int userId) throws SQLException {
+        return countPassagesAujourdhui(userId) < 2;
+    }
+
+    // ══════════════════════════════════════════
     //  AJOUTER
+    // ══════════════════════════════════════════
 
     @Override
     public void ajouter(Reponsequestionnaire r) throws SQLException {
 
-        //  Vérifier que le questionnaire existe
+        // Vérifier que le questionnaire existe
         String checkSql = "SELECT COUNT(*) FROM questionnaire WHERE questionnaire_id = ?";
         PreparedStatement checkPst = con.prepareStatement(checkSql);
         checkPst.setInt(1, r.getQuestionnaireId());
@@ -35,7 +53,7 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
             throw new SQLException("Les réponses aux questions ne peuvent pas être vides !");
         }
 
-        //  Vérifier que le niveau n'est pas vide
+        // Vérifier que le niveau n'est pas vide
         if (r.getNiveau() == null || r.getNiveau().trim().isEmpty()) {
             throw new SQLException("Le niveau ne peut pas être vide !");
         }
@@ -50,7 +68,6 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
         pst.setString(2, r.getReponseQuest());
         pst.setString(3, r.getInterpretation());
 
-        // duree_passage NULL possible
         if (r.getDureePassage() != null) {
             pst.setInt(4, r.getDureePassage());
         } else {
@@ -60,7 +77,6 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
         pst.setString(5, r.getNiveau());
         pst.setBoolean(6, r.isaBesoinPsy());
 
-        // commentaire NULL possible
         if (r.getCommentaire() != null) {
             pst.setString(7, r.getCommentaire());
         } else {
@@ -69,7 +85,6 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
 
         pst.setInt(8, r.getQuestionnaireId());
 
-        // user_id NULL possible
         if (r.getUserId() != null) {
             pst.setInt(9, r.getUserId());
         } else {
@@ -80,8 +95,9 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
         System.out.println("Réponse ajoutée avec succès !");
     }
 
-
-    //  AFFICHER (toutes les réponses li Admin)
+    // ══════════════════════════════════════════
+    //  AFFICHER (toutes les réponses — Admin)
+    // ══════════════════════════════════════════
 
     @Override
     public List<Reponsequestionnaire> afficher() throws SQLException {
@@ -94,7 +110,6 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
 
         while (rs.next()) {
             Reponsequestionnaire r = new Reponsequestionnaire();
-
             r.setReponseQuestionnaireId(rs.getInt("reponse_questionnaire_id"));
             r.setScoreTotale(rs.getDouble("score_totale"));
             r.setReponseQuest(rs.getString("reponse_quest"));
@@ -106,11 +121,9 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
             r.setCommentaire(rs.getString("commentaire"));
             r.setQuestionnaireId(rs.getInt("questionnaire_id"));
 
-            // duree_passage NULL possible
             int duree = rs.getInt("duree_passage");
             r.setDureePassage(rs.wasNull() ? null : duree);
 
-            // user_id NULL possible
             int userId = rs.getInt("user_id");
             r.setUserId(rs.wasNull() ? null : userId);
 
@@ -120,8 +133,9 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
         return list;
     }
 
-
-    //  AFFICHER PAR USER (Etudiant voit ses réponses)
+    // ══════════════════════════════════════════
+    //  AFFICHER PAR USER (Etudiant)
+    // ══════════════════════════════════════════
 
     public List<Reponsequestionnaire> afficherParUser(int userId) throws SQLException {
 
@@ -134,7 +148,6 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
 
         while (rs.next()) {
             Reponsequestionnaire r = new Reponsequestionnaire();
-
             r.setReponseQuestionnaireId(rs.getInt("reponse_questionnaire_id"));
             r.setScoreTotale(rs.getDouble("score_totale"));
             r.setReponseQuest(rs.getString("reponse_quest"));
@@ -156,8 +169,9 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
         return list;
     }
 
-
+    // ══════════════════════════════════════════
     //  AFFICHER PAR QUESTIONNAIRE (Admin)
+    // ══════════════════════════════════════════
 
     public List<Reponsequestionnaire> afficherParQuestionnaire(int questionnaireId) throws SQLException {
 
@@ -170,7 +184,6 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
 
         while (rs.next()) {
             Reponsequestionnaire r = new Reponsequestionnaire();
-
             r.setReponseQuestionnaireId(rs.getInt("reponse_questionnaire_id"));
             r.setScoreTotale(rs.getDouble("score_totale"));
             r.setReponseQuest(rs.getString("reponse_quest"));
@@ -194,12 +207,13 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
         return list;
     }
 
+    // ══════════════════════════════════════════
     //  MODIFIER (Admin)
+    // ══════════════════════════════════════════
 
     @Override
     public void modifier(Reponsequestionnaire r) throws SQLException {
 
-        // Vérifier niveau non vide
         if (r.getNiveau() == null || r.getNiveau().trim().isEmpty()) {
             throw new SQLException("Le niveau ne peut pas être vide !");
         }
@@ -231,7 +245,6 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
         pst.setInt(7, r.getReponseQuestionnaireId());
 
         int rows = pst.executeUpdate();
-
         if (rows == 0) {
             throw new SQLException("Aucune réponse trouvée avec l'ID=" + r.getReponseQuestionnaireId());
         }
@@ -239,7 +252,9 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
         System.out.println("Réponse modifiée avec succès !");
     }
 
+    // ══════════════════════════════════════════
     //  SUPPRIMER (Admin)
+    // ══════════════════════════════════════════
 
     @Override
     public void supprimer(int id) throws SQLException {
@@ -249,7 +264,6 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
         pst.setInt(1, id);
 
         int rows = pst.executeUpdate();
-
         if (rows == 0) {
             throw new SQLException("Aucune réponse trouvée avec l'ID=" + id);
         }
