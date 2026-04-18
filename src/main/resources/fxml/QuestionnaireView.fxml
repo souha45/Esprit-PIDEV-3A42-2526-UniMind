@@ -103,8 +103,26 @@
         <Label text="Liste des Questionnaires"
                style="-fx-text-fill: #64748b; -fx-font-size: 13px; -fx-font-weight: bold;"/>
 
-        <TextField fx:id="tfSearch" promptText="🔍 Rechercher par nom, code ou type..."
-                   style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+        <!-- RECHERCHE + FILTRE -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <TextField fx:id="tfSearch"
+                       promptText="🔍 Rechercher par nom, code ou type..."
+                       HBox.hgrow="ALWAYS"
+                       style="-fx-background-color: #f8fafc; -fx-text-fill: #1e293b;
+                              -fx-border-color: #cbd5e1; -fx-border-radius: 6;
+                              -fx-background-radius: 6; -fx-font-size: 13px; -fx-padding: 7;"/>
+            <ComboBox fx:id="cbFiltreType" promptText="Tous les types"
+                      style="-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1;
+                             -fx-border-radius: 6; -fx-background-radius: 6;
+                             -fx-font-size: 12px; -fx-pref-width: 140px;"/>
+            <Button text="✖" onAction="#handleResetFiltre"
+                    style="-fx-background-color: #e2e8f0; -fx-text-fill: #64748b;
+                           -fx-font-size: 12px; -fx-padding: 7 10; -fx-background-radius: 6; -fx-cursor: hand;"/>
+        </HBox>
+
+        <!-- COMPTEUR -->
+        <Label fx:id="lblCompteur" text=""
+               style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;"/>
 
         <ListView fx:id="listQuestionnaire" VBox.vgrow="ALWAYS"
                   style="-fx-background-color: transparent; -fx-border-color: transparent;"/>
