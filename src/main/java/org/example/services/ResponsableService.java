@@ -155,4 +155,12 @@ public class ResponsableService extends UserService {
         r.setEtablissement(rs.getString("etablissement"));
         return r;
     }
+    public boolean cinExiste(String cin) throws SQLException {
+        String query = "SELECT COUNT(*) FROM user WHERE cin = ?";
+        PreparedStatement ps = connection.prepareStatement(query);
+        ps.setString(1, cin);
+        ResultSet rs = ps.executeQuery();
+        rs.next();
+        return rs.getInt(1) > 0;
+    }
 }

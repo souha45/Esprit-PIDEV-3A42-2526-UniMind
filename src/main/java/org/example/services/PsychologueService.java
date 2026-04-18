@@ -158,4 +158,12 @@ public class PsychologueService extends UserService {
         p.setTelephone(rs.getString("telephone"));
         return p;
     }
+    public boolean cinExiste(String cin) throws SQLException {
+        String query = "SELECT COUNT(*) FROM user WHERE cin = ?";
+        PreparedStatement ps = connection.prepareStatement(query);
+        ps.setString(1, cin);
+        ResultSet rs = ps.executeQuery();
+        rs.next();
+        return rs.getInt(1) > 0;
+    }
 }

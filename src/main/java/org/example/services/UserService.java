@@ -74,7 +74,7 @@ public abstract class UserService implements ICrud<User> {
     public abstract void inscrire(User user) throws SQLException;
 
     // EMAIL UNIQUE
-    protected boolean emailExiste(String email) throws SQLException {
+    public boolean emailExiste(String email) throws SQLException {
         String query = "SELECT COUNT(*) FROM user WHERE email = ?";
         PreparedStatement ps = connection.prepareStatement(query);
         ps.setString(1, email);

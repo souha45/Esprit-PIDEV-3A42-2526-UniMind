@@ -157,4 +157,13 @@ public class EtudiantService extends UserService {
         e.setNomEtablissement(rs.getString("nom_etablissement"));
         return e;
     }
+    // UNICITE CIN
+    public boolean cinExiste(String cin) throws SQLException {
+        String query = "SELECT COUNT(*) FROM user WHERE cin = ?";
+        PreparedStatement ps = connection.prepareStatement(query);
+        ps.setString(1, cin);
+        ResultSet rs = ps.executeQuery();
+        rs.next();
+        return rs.getInt(1) > 0;
+    }
 }
