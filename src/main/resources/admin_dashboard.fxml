@@ -3,20 +3,22 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.shape.*?>
+<?import javafx.scene.canvas.*?>
 <?import javafx.geometry.*?>
 
 <!--
-    UniMind Admin Dashboard — Design inspiré Argon Dashboard
-    Sidebar sombre + Contenu clair + Tables modernes avec badge statut
-    Toutes les fonctionnalités originales conservées
+    UniMind Admin Dashboard — avec DashboardAdmin (stats + graphiques)
+    et système de filtrage avancé (rôle, statut, actif/inactif)
 -->
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
 <BorderPane xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.controllers.admin.AdminDashboardController"
             prefWidth="1280" prefHeight="760"
             style="-fx-background-color: #F8F7FF;">
 
     <!-- ══════════════════════════════════════════════════════════════
-         SIDEBAR GAUCHE — Navigation verticale sombre
+         SIDEBAR GAUCHE
          ══════════════════════════════════════════════════════════════ -->
     <left>
         <VBox prefWidth="240" spacing="0"
@@ -24,7 +26,9 @@
 
             <!-- Logo Brand -->
             <HBox alignment="CENTER" spacing="10"
-                  style="-fx-padding: 24 20 20 20; -fx-border-color: transparent transparent #2D2A5E transparent; -fx-border-width: 0 0 1 0;">
+                  style="-fx-padding: 24 20 20 20;
+                         -fx-border-color: transparent transparent #2D2A5E transparent;
+                         -fx-border-width: 0 0 1 0;">
                 <ImageView fitWidth="32" fitHeight="32" preserveRatio="true">
                     <image><Image url="@/images/unimind.png"/></image>
                 </ImageView>
@@ -35,12 +39,13 @@
 
             <!-- Avatar Admin -->
             <VBox alignment="CENTER" spacing="6"
-                  style="-fx-padding: 20 20 16 20; -fx-border-color: transparent transparent #2D2A5E transparent; -fx-border-width: 0 0 1 0;">
+                  style="-fx-padding: 20 20 16 20;
+                         -fx-border-color: transparent transparent #2D2A5E transparent;
+                         -fx-border-width: 0 0 1 0;">
                 <StackPane>
                     <ImageView fx:id="navPhotoAdmin" fitWidth="56" fitHeight="56">
                         <clip><Circle centerX="28" centerY="28" radius="28"/></clip>
                     </ImageView>
-                    <!-- Fallback initiales si pas de photo -->
                     <Label text="A"
                            style="-fx-background-color: #7C3AED; -fx-text-fill: white;
                                   -fx-font-size: 20px; -fx-font-weight: bold;
@@ -61,10 +66,10 @@
                           -fx-text-fill: #6366F1; -fx-font-family: 'Segoe UI';
                           -fx-padding: 16 0 8 20; -fx-letter-spacing: 1px;"/>
 
-            <!-- Boutons navigation -->
-            <Button fx:id="btnGestionUsers"
-                    text="👥   Gestion Utilisateurs"
-                    onAction="#afficherGestion"
+            <!-- ── Bouton Dashboard (nouveau) ─────────────── -->
+            <Button fx:id="btnDashboard"
+                    text="📊   Dashboard"
+                    onAction="#afficherDashboard"
                     maxWidth="Infinity"
                     style="-fx-background-color: #4F46E5; -fx-text-fill: white;
                            -fx-font-size: 13px; -fx-font-family: 'Segoe UI';
@@ -73,6 +78,16 @@
                            -fx-cursor: hand; -fx-background-radius: 0;
                            -fx-border-color: transparent transparent transparent #A78BFA;
                            -fx-border-width: 0 0 0 3;"/>
+
+            <Button fx:id="btnGestionUsers"
+                    text="👥   Gestion Utilisateurs"
+                    onAction="#afficherGestion"
+                    maxWidth="Infinity"
+                    style="-fx-background-color: transparent; -fx-text-fill: #C4B5FD;
+                           -fx-font-size: 13px; -fx-font-family: 'Segoe UI';
+                           -fx-pref-height: 46; -fx-alignment: CENTER_LEFT;
+                           -fx-padding: 0 0 0 23; -fx-cursor: hand;
+                           -fx-background-radius: 0;"/>
 
             <Button fx:id="btnDemandes"
                     text="📋   Demandes en attente"
@@ -95,10 +110,7 @@
                            -fx-background-radius: 0;"/>
 
             <Region VBox.vgrow="ALWAYS"/>
-
-            <!-- Séparateur + Déconnexion -->
-            <Region prefHeight="1"
-                    style="-fx-background-color: #2D2A5E;"/>
+            <Region prefHeight="1" style="-fx-background-color: #2D2A5E;"/>
 
             <Button fx:id="btnDeconnexion"
                     text="🚪   Déconnexion"
@@ -113,7 +125,7 @@
     </left>
 
     <!-- ══════════════════════════════════════════════════════════════
-         TOP — Navbar horizontale
+         TOP — Navbar
          ══════════════════════════════════════════════════════════════ -->
     <top>
         <HBox alignment="CENTER_LEFT" spacing="14" prefHeight="64"
@@ -121,8 +133,6 @@
                      -fx-border-color: transparent transparent #E5E7EB transparent;
                      -fx-border-width: 0 0 1 0;
                      -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 6, 0, 0, 2);">
-
-            <!-- Fil d'Ariane -->
             <VBox spacing="2">
                 <Label text="Pages / Administration"
                        style="-fx-font-size: 10px; -fx-text-fill: #9CA3AF;
@@ -131,11 +141,8 @@
                        style="-fx-font-size: 15px; -fx-font-weight: bold;
                               -fx-text-fill: #1E1B4B; -fx-font-family: 'Segoe UI';"/>
             </VBox>
-
             <Region HBox.hgrow="ALWAYS"/>
-
-            <!-- Barre de recherche -->
-            <HBox alignment="CENTER_LEFT" spacing="8" prefHeight="36" prefWidth="220"
+            <HBox alignment="CENTER_LEFT" spacing="8" prefHeight="36" prefWidth="240"
                   style="-fx-background-color: #F3F0FF; -fx-background-radius: 20;
                          -fx-padding: 0 14; -fx-border-color: #E9D5FF;
                          -fx-border-radius: 20; -fx-border-width: 1;">
@@ -145,10 +152,8 @@
                            style="-fx-background-color: transparent;
                                   -fx-border-color: transparent;
                                   -fx-font-size: 12px; -fx-font-family: 'Segoe UI';"
-                           prefWidth="170"/>
+                           prefWidth="190"/>
             </HBox>
-
-            <!-- Notif -->
             <Button text="🔔"
                     style="-fx-background-color: #F3F0FF; -fx-font-size: 15px;
                            -fx-cursor: hand; -fx-background-radius: 50;
@@ -157,26 +162,211 @@
     </top>
 
     <!-- ══════════════════════════════════════════════════════════════
-         CENTRE — Contenu principal scrollable
+         CENTRE — Contenu
          ══════════════════════════════════════════════════════════════ -->
     <center>
         <ScrollPane fitToWidth="true"
                     style="-fx-background-color: #F8F7FF; -fx-background: #F8F7FF;
                            -fx-border-color: transparent;">
-            <VBox spacing="0" style="-fx-padding: 28 28 28 28;">
+            <VBox spacing="0" style="-fx-padding: 28;">
+
+                <!-- ════════════════════════════════════════════════
+                     PANNEAU DASHBOARD ADMIN — STATISTIQUES
+                     ════════════════════════════════════════════════ -->
+                <VBox fx:id="panneauDashboard" spacing="24">
+
+                    <!-- En-tête -->
+                    <VBox spacing="4">
+                        <Label text="📊  Dashboard Admin"
+                               style="-fx-font-size: 22px; -fx-font-weight: bold;
+                                      -fx-text-fill: #1E1B4B; -fx-font-family: 'Segoe UI';"/>
+                        <Label text="Vue d'ensemble de la plateforme UniMind."
+                               style="-fx-font-size: 12px; -fx-text-fill: #9CA3AF;
+                                      -fx-font-family: 'Segoe UI';"/>
+                    </VBox>
+
+                    <!-- ── Cartes statistiques ────────────────────── -->
+                    <HBox spacing="16">
+
+                        <!-- Total utilisateurs -->
+                        <VBox spacing="8" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white; -fx-padding: 20;
+                                     -fx-background-radius: 14;
+                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14;
+                                     -fx-border-width: 1;
+                                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="👥"
+                                       style="-fx-font-size: 22px;
+                                              -fx-background-color: #EDE9FE;
+                                              -fx-background-radius: 10;
+                                              -fx-padding: 8 10;"/>
+                                <VBox spacing="2">
+                                    <Label text="Total utilisateurs"
+                                           style="-fx-font-size: 11px; -fx-text-fill: #9CA3AF;
+                                                  -fx-font-family: 'Segoe UI';"/>
+                                    <Label fx:id="statTotalUsers" text="0"
+                                           style="-fx-font-size: 28px; -fx-font-weight: bold;
+                                                  -fx-text-fill: #1E1B4B; -fx-font-family: 'Segoe UI';"/>
+                                </VBox>
+                            </HBox>
+                            <Label text="Tous rôles confondus"
+                                   style="-fx-font-size: 10px; -fx-text-fill: #C4B5FD;
+                                          -fx-font-family: 'Segoe UI';"/>
+                        </VBox>
+
+                        <!-- Actifs -->
+                        <VBox spacing="8" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white; -fx-padding: 20;
+                                     -fx-background-radius: 14;
+                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14;
+                                     -fx-border-width: 1;
+                                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="✅"
+                                       style="-fx-font-size: 22px;
+                                              -fx-background-color: #D1FAE5;
+                                              -fx-background-radius: 10;
+                                              -fx-padding: 8 10;"/>
+                                <VBox spacing="2">
+                                    <Label text="Comptes actifs"
+                                           style="-fx-font-size: 11px; -fx-text-fill: #9CA3AF;
+                                                  -fx-font-family: 'Segoe UI';"/>
+                                    <Label fx:id="statActifs" text="0"
+                                           style="-fx-font-size: 28px; -fx-font-weight: bold;
+                                                  -fx-text-fill: #059669; -fx-font-family: 'Segoe UI';"/>
+                                </VBox>
+                            </HBox>
+                            <Label text="Statut actif confirmé"
+                                   style="-fx-font-size: 10px; -fx-text-fill: #6EE7B7;
+                                          -fx-font-family: 'Segoe UI';"/>
+                        </VBox>
+
+                        <!-- En attente -->
+                        <VBox spacing="8" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white; -fx-padding: 20;
+                                     -fx-background-radius: 14;
+                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14;
+                                     -fx-border-width: 1;
+                                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="⏳"
+                                       style="-fx-font-size: 22px;
+                                              -fx-background-color: #FEF9C3;
+                                              -fx-background-radius: 10;
+                                              -fx-padding: 8 10;"/>
+                                <VBox spacing="2">
+                                    <Label text="En attente"
+                                           style="-fx-font-size: 11px; -fx-text-fill: #9CA3AF;
+                                                  -fx-font-family: 'Segoe UI';"/>
+                                    <Label fx:id="statEnAttente" text="0"
+                                           style="-fx-font-size: 28px; -fx-font-weight: bold;
+                                                  -fx-text-fill: #D97706; -fx-font-family: 'Segoe UI';"/>
+                                </VBox>
+                            </HBox>
+                            <Label text="Inscription à valider"
+                                   style="-fx-font-size: 10px; -fx-text-fill: #FDE68A;
+                                          -fx-font-family: 'Segoe UI';"/>
+                        </VBox>
+
+                        <!-- Bloqués -->
+                        <VBox spacing="8" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white; -fx-padding: 20;
+                                     -fx-background-radius: 14;
+                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14;
+                                     -fx-border-width: 1;
+                                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="🔒"
+                                       style="-fx-font-size: 22px;
+                                              -fx-background-color: #FEE2E2;
+                                              -fx-background-radius: 10;
+                                              -fx-padding: 8 10;"/>
+                                <VBox spacing="2">
+                                    <Label text="Comptes bloqués"
+                                           style="-fx-font-size: 11px; -fx-text-fill: #9CA3AF;
+                                                  -fx-font-family: 'Segoe UI';"/>
+                                    <Label fx:id="statBloques" text="0"
+                                           style="-fx-font-size: 28px; -fx-font-weight: bold;
+                                                  -fx-text-fill: #DC2626; -fx-font-family: 'Segoe UI';"/>
+                                </VBox>
+                            </HBox>
+                            <Label text="Accès restreint"
+                                   style="-fx-font-size: 10px; -fx-text-fill: #FCA5A5;
+                                          -fx-font-family: 'Segoe UI';"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- ── Graphiques ligne 1 ─────────────────────── -->
+                    <HBox spacing="16">
+
+                        <!-- Donut — Rôles -->
+                        <VBox spacing="12" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white; -fx-padding: 20;
+                                     -fx-background-radius: 14;
+                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14;
+                                     -fx-border-width: 1;
+                                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT" spacing="8">
+                                <Label text="🎯" style="-fx-font-size: 14px;"/>
+                                <Label text="Répartition par Rôle"
+                                       style="-fx-font-size: 14px; -fx-font-weight: bold;
+                                              -fx-text-fill: #1E1B4B; -fx-font-family: 'Segoe UI';"/>
+                            </HBox>
+                            <Region prefHeight="1" style="-fx-background-color: #F3F4F6;"/>
+                            <Canvas fx:id="canvasRoles" width="480" height="220"/>
+                        </VBox>
+
+                        <!-- Barres — Statuts -->
+                        <VBox spacing="12" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white; -fx-padding: 20;
+                                     -fx-background-radius: 14;
+                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14;
+                                     -fx-border-width: 1;
+                                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT" spacing="8">
+                                <Label text="📊" style="-fx-font-size: 14px;"/>
+                                <Label text="Répartition par Statut"
+                                       style="-fx-font-size: 14px; -fx-font-weight: bold;
+                                              -fx-text-fill: #1E1B4B; -fx-font-family: 'Segoe UI';"/>
+                            </HBox>
+                            <Region prefHeight="1" style="-fx-background-color: #F3F4F6;"/>
+                            <Canvas fx:id="canvasStatuts" width="440" height="220"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- ── Graphique ligne 2 — Évolution ─────────── -->
+                    <VBox spacing="12"
+                          style="-fx-background-color: white; -fx-padding: 20;
+                                 -fx-background-radius: 14;
+                                 -fx-border-color: #E5E7EB; -fx-border-radius: 14;
+                                 -fx-border-width: 1;
+                                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 3);">
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <Label text="📈" style="-fx-font-size: 14px;"/>
+                            <Label text="Évolution des inscriptions (7 derniers jours)"
+                                   style="-fx-font-size: 14px; -fx-font-weight: bold;
+                                          -fx-text-fill: #1E1B4B; -fx-font-family: 'Segoe UI';"/>
+                        </HBox>
+                        <Region prefHeight="1" style="-fx-background-color: #F3F4F6;"/>
+                        <Canvas fx:id="canvasEvolution" width="1100" height="200"/>
+                    </VBox>
+
+                </VBox><!-- fin panneauDashboard -->
 
                 <!-- ════════════════════════════════════════════════
                      PANNEAU GESTION UTILISATEURS
                      ════════════════════════════════════════════════ -->
-                <VBox fx:id="panneauGestion" spacing="20">
+                <VBox fx:id="panneauGestion" spacing="20"
+                      visible="false" managed="false">
 
-                    <!-- En-tête section -->
+                    <!-- En-tête -->
                     <HBox alignment="CENTER_LEFT" spacing="16">
                         <VBox spacing="3">
                             <Label text="Gestion des Utilisateurs"
                                    style="-fx-font-size: 22px; -fx-font-weight: bold;
                                           -fx-text-fill: #1E1B4B; -fx-font-family: 'Segoe UI';"/>
-                            <Label text="Gérez, modifiez et contrôlez tous les comptes de la plateforme."
+                            <Label text="Gérez, modifiez et contrôlez tous les comptes."
                                    style="-fx-font-size: 12px; -fx-text-fill: #9CA3AF;
                                           -fx-font-family: 'Segoe UI';"/>
                         </VBox>
@@ -191,6 +381,159 @@
                                        -fx-effect: dropshadow(gaussian, rgba(79,70,229,0.35), 8, 0, 0, 3);"/>
                     </HBox>
 
+                    <!-- ── Barre de filtres avancés ──────────────── -->
+                    <VBox spacing="12"
+                          style="-fx-background-color: white; -fx-padding: 16 20;
+                                 -fx-background-radius: 12;
+                                 -fx-border-color: #E5E7EB; -fx-border-radius: 12;
+                                 -fx-border-width: 1;
+                                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 8, 0, 0, 2);">
+
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <Label text="🔎" style="-fx-font-size: 13px;"/>
+                            <Label text="Filtres avancés"
+                                   style="-fx-font-size: 13px; -fx-font-weight: bold;
+                                          -fx-text-fill: #374151; -fx-font-family: 'Segoe UI';"/>
+                        </HBox>
+
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+
+                            <!-- Filtre Rôle -->
+                            <VBox spacing="4">
+                                <Label text="Rôle"
+                                       style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                              -fx-text-fill: #6B7280; -fx-font-family: 'Segoe UI';"/>
+                                <ComboBox fx:id="filtreRole"
+                                          style="-fx-background-radius: 8;
+                                                 -fx-border-color: #DDD6FE;
+                                                 -fx-border-radius: 8; -fx-border-width: 1.5;
+                                                 -fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                                                 -fx-pref-width: 175; -fx-pref-height: 34;"
+                                          onAction="#appliquerFiltres">
+                                    <items>
+                                        <FXCollections fx:factory="observableArrayList">
+                                            <String fx:value="Tous les rôles"/>
+                                            <String fx:value="Admin"/>
+                                            <String fx:value="Etudiant"/>
+                                            <String fx:value="Psychologue"/>
+                                            <String fx:value="Responsable Etudiant"/>
+                                        </FXCollections>
+                                    </items>
+                                    <value><String fx:value="Tous les rôles"/></value>
+                                </ComboBox>
+                            </VBox>
+
+                            <!-- Filtre Statut -->
+                            <VBox spacing="4">
+                                <Label text="Statut"
+                                       style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                              -fx-text-fill: #6B7280; -fx-font-family: 'Segoe UI';"/>
+                                <ComboBox fx:id="filtreStatut"
+                                          style="-fx-background-radius: 8;
+                                                 -fx-border-color: #DDD6FE;
+                                                 -fx-border-radius: 8; -fx-border-width: 1.5;
+                                                 -fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                                                 -fx-pref-width: 175; -fx-pref-height: 34;"
+                                          onAction="#appliquerFiltres">
+                                    <items>
+                                        <FXCollections fx:factory="observableArrayList">
+                                            <String fx:value="Tous les statuts"/>
+                                            <String fx:value="actif"/>
+                                            <String fx:value="en_attente"/>
+                                            <String fx:value="bloqué"/>
+                                            <String fx:value="inactif"/>
+                                        </FXCollections>
+                                    </items>
+                                    <value><String fx:value="Tous les statuts"/></value>
+                                </ComboBox>
+                            </VBox>
+
+                            <!-- Filtre Actif/Inactif -->
+                            <VBox spacing="4">
+                                <Label text="Activation"
+                                       style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                              -fx-text-fill: #6B7280; -fx-font-family: 'Segoe UI';"/>
+                                <ComboBox fx:id="filtreActif"
+                                          style="-fx-background-radius: 8;
+                                                 -fx-border-color: #DDD6FE;
+                                                 -fx-border-radius: 8; -fx-border-width: 1.5;
+                                                 -fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                                                 -fx-pref-width: 140; -fx-pref-height: 34;"
+                                          onAction="#appliquerFiltres">
+                                    <items>
+                                        <FXCollections fx:factory="observableArrayList">
+                                            <String fx:value="Tous"/>
+                                            <String fx:value="Actif"/>
+                                            <String fx:value="Inactif"/>
+                                        </FXCollections>
+                                    </items>
+                                    <value><String fx:value="Tous"/></value>
+                                </ComboBox>
+                            </VBox>
+
+                            <Region HBox.hgrow="ALWAYS"/>
+
+                            <!-- Résultats + Réinitialiser -->
+                            <VBox spacing="4" alignment="CENTER_RIGHT">
+                                <Label fx:id="labelNbResultats"
+                                       style="-fx-font-size: 11px; -fx-text-fill: #9CA3AF;
+                                              -fx-font-family: 'Segoe UI';"/>
+                                <Button text="↺  Réinitialiser"
+                                        onAction="#reinitialiserFiltres"
+                                        style="-fx-background-color: #F3F4F6;
+                                               -fx-text-fill: #374151; -fx-cursor: hand;
+                                               -fx-background-radius: 8; -fx-padding: 6 14;
+                                               -fx-font-size: 12px; -fx-font-family: 'Segoe UI';
+                                               -fx-border-color: #D1D5DB; -fx-border-radius: 8;
+                                               -fx-border-width: 1;"/>
+                            </VBox>
+                        </HBox>
+
+                        <!-- Chips de filtres rapides par rôle -->
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Accès rapide :"
+                                   style="-fx-font-size: 11px; -fx-text-fill: #9CA3AF;
+                                          -fx-font-family: 'Segoe UI';"/>
+
+                            <Button text="🟣 Admins"
+                                    style="-fx-background-color: #EDE9FE; -fx-text-fill: #6D28D9;
+                                           -fx-font-size: 11px; -fx-font-weight: bold;
+                                           -fx-cursor: hand; -fx-background-radius: 20;
+                                           -fx-padding: 4 12; -fx-font-family: 'Segoe UI';"
+                                    onAction="#filtrerAdmins"/>
+                            <Button text="🔵 Étudiants"
+                                    style="-fx-background-color: #DBEAFE; -fx-text-fill: #1D4ED8;
+                                           -fx-font-size: 11px; -fx-font-weight: bold;
+                                           -fx-cursor: hand; -fx-background-radius: 20;
+                                           -fx-padding: 4 12; -fx-font-family: 'Segoe UI';"
+                                    onAction="#filtrerEtudiants"/>
+                            <Button text="🟢 Psychologues"
+                                    style="-fx-background-color: #D1FAE5; -fx-text-fill: #065F46;
+                                           -fx-font-size: 11px; -fx-font-weight: bold;
+                                           -fx-cursor: hand; -fx-background-radius: 20;
+                                           -fx-padding: 4 12; -fx-font-family: 'Segoe UI';"
+                                    onAction="#filtrerPsychologues"/>
+                            <Button text="🟠 Responsables"
+                                    style="-fx-background-color: #FFEDD5; -fx-text-fill: #C2410C;
+                                           -fx-font-size: 11px; -fx-font-weight: bold;
+                                           -fx-cursor: hand; -fx-background-radius: 20;
+                                           -fx-padding: 4 12; -fx-font-family: 'Segoe UI';"
+                                    onAction="#filtrerResponsables"/>
+                            <Button text="⛔ Bloqués"
+                                    style="-fx-background-color: #FEE2E2; -fx-text-fill: #991B1B;
+                                           -fx-font-size: 11px; -fx-font-weight: bold;
+                                           -fx-cursor: hand; -fx-background-radius: 20;
+                                           -fx-padding: 4 12; -fx-font-family: 'Segoe UI';"
+                                    onAction="#filtrerBloques"/>
+                            <Button text="⏳ En attente"
+                                    style="-fx-background-color: #FEF9C3; -fx-text-fill: #854D0E;
+                                           -fx-font-size: 11px; -fx-font-weight: bold;
+                                           -fx-cursor: hand; -fx-background-radius: 20;
+                                           -fx-padding: 4 12; -fx-font-family: 'Segoe UI';"
+                                    onAction="#filtrerEnAttente"/>
+                        </HBox>
+                    </VBox>
+
                     <!-- Message statut -->
                     <Label fx:id="messageGestion"
                            style="-fx-font-size: 12px; -fx-font-family: 'Segoe UI';"/>
@@ -201,16 +544,14 @@
                                  -fx-border-color: #E5E7EB; -fx-border-radius: 14;
                                  -fx-border-width: 1;
                                  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 3);">
-
-                        <!-- En-tête carte -->
                         <HBox alignment="CENTER_LEFT" spacing="12"
-                              style="-fx-padding: 16 20; -fx-border-color: transparent transparent #F3F4F6 transparent; -fx-border-width: 0 0 1 0;">
+                              style="-fx-padding: 16 20;
+                                     -fx-border-color: transparent transparent #F3F4F6 transparent;
+                                     -fx-border-width: 0 0 1 0;">
                             <Label text="👥  Liste des utilisateurs"
                                    style="-fx-font-size: 14px; -fx-font-weight: bold;
                                           -fx-text-fill: #374151; -fx-font-family: 'Segoe UI';"/>
                         </HBox>
-
-                        <!-- Table -->
                         <TableView fx:id="tableUtilisateurs"
                                    prefHeight="460"
                                    style="-fx-background-color: transparent;
@@ -218,18 +559,18 @@
                                           -fx-table-cell-border-color: #F9FAFB;
                                           -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;">
                             <columns>
-                                <TableColumn fx:id="colNom"    text="Nom"     prefWidth="130"/>
-                                <TableColumn fx:id="colPrenom" text="Prénom"  prefWidth="130"/>
-                                <TableColumn fx:id="colEmail"  text="Email"   prefWidth="230"/>
-                                <TableColumn fx:id="colRole"   text="Rôle"    prefWidth="130"/>
-                                <TableColumn fx:id="colStatut" text="Statut"  prefWidth="100"/>
-                                <TableColumn fx:id="colActif"  text="Actif"   prefWidth="80"/>
-                                <TableColumn fx:id="colActions" text="Actions" prefWidth="300"/>
+                                <TableColumn fx:id="colNom"     text="Nom"     prefWidth="120"/>
+                                <TableColumn fx:id="colPrenom"  text="Prénom"  prefWidth="120"/>
+                                <TableColumn fx:id="colEmail"   text="Email"   prefWidth="210"/>
+                                <TableColumn fx:id="colRole"    text="Rôle"    prefWidth="130"/>
+                                <TableColumn fx:id="colStatut"  text="Statut"  prefWidth="100"/>
+                                <TableColumn fx:id="colActif"   text="Actif"   prefWidth="80"/>
+                                <TableColumn fx:id="colActions" text="Actions" prefWidth="310"/>
                             </columns>
                             <placeholder>
                                 <VBox alignment="CENTER" spacing="8" style="-fx-padding: 40;">
-                                    <Label text="👥" style="-fx-font-size: 36px;"/>
-                                    <Label text="Aucun utilisateur trouvé"
+                                    <Label text="🔍" style="-fx-font-size: 36px;"/>
+                                    <Label text="Aucun utilisateur ne correspond aux filtres"
                                            style="-fx-font-size: 14px; -fx-text-fill: #9CA3AF;
                                                   -fx-font-family: 'Segoe UI';"/>
                                 </VBox>
@@ -239,15 +580,13 @@
                             </columnResizePolicy>
                         </TableView>
                     </VBox>
-                </VBox>
+                </VBox><!-- fin panneauGestion -->
 
                 <!-- ════════════════════════════════════════════════
-                     PANNEAU DEMANDES EN ATTENTE
+                     PANNEAU DEMANDES
                      ════════════════════════════════════════════════ -->
                 <VBox fx:id="panneauDemandes" spacing="20"
                       visible="false" managed="false">
-
-                    <!-- En-tête section -->
                     <HBox alignment="CENTER_LEFT">
                         <VBox spacing="3">
                             <Label text="Demandes d'inscription"
@@ -258,35 +597,31 @@
                                           -fx-font-family: 'Segoe UI';"/>
                         </VBox>
                     </HBox>
-
                     <Label fx:id="messageDemandes"
                            style="-fx-font-size: 12px; -fx-font-family: 'Segoe UI';"/>
-
-                    <!-- Carte table demandes -->
                     <VBox spacing="0"
                           style="-fx-background-color: white; -fx-background-radius: 14;
                                  -fx-border-color: #E5E7EB; -fx-border-radius: 14;
                                  -fx-border-width: 1;
                                  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 3);">
-
                         <HBox alignment="CENTER_LEFT" spacing="12"
-                              style="-fx-padding: 16 20; -fx-border-color: transparent transparent #F3F4F6 transparent; -fx-border-width: 0 0 1 0;">
+                              style="-fx-padding: 16 20;
+                                     -fx-border-color: transparent transparent #F3F4F6 transparent;
+                                     -fx-border-width: 0 0 1 0;">
                             <Label text="📋  Comptes en attente de validation"
                                    style="-fx-font-size: 14px; -fx-font-weight: bold;
                                           -fx-text-fill: #374151; -fx-font-family: 'Segoe UI';"/>
                         </HBox>
-
-                        <TableView fx:id="tableDemandes"
-                                   prefHeight="380"
+                        <TableView fx:id="tableDemandes" prefHeight="380"
                                    style="-fx-background-color: transparent;
                                           -fx-border-color: transparent;
                                           -fx-table-cell-border-color: #F9FAFB;
                                           -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;">
                             <columns>
-                                <TableColumn fx:id="dColNom"    text="Nom"     prefWidth="200"/>
-                                <TableColumn fx:id="dColPrenom" text="Prénom"  prefWidth="200"/>
-                                <TableColumn fx:id="dColEmail"  text="Email"   prefWidth="320"/>
-                                <TableColumn fx:id="dColRole"   text="Rôle"    prefWidth="200"/>
+                                <TableColumn fx:id="dColNom"    text="Nom"    prefWidth="200"/>
+                                <TableColumn fx:id="dColPrenom" text="Prénom" prefWidth="200"/>
+                                <TableColumn fx:id="dColEmail"  text="Email"  prefWidth="320"/>
+                                <TableColumn fx:id="dColRole"   text="Rôle"   prefWidth="200"/>
                             </columns>
                             <placeholder>
                                 <VBox alignment="CENTER" spacing="8" style="-fx-padding: 40;">
@@ -297,19 +632,17 @@
                                 </VBox>
                             </placeholder>
                         </TableView>
-
-                        <!-- Boutons action -->
                         <HBox spacing="12" alignment="CENTER_RIGHT"
-                              style="-fx-padding: 14 20; -fx-border-color: #F3F4F6 transparent transparent transparent; -fx-border-width: 1 0 0 0;">
-                            <Button text="✅  Accepter la sélection"
-                                    onAction="#accepterDemande"
+                              style="-fx-padding: 14 20;
+                                     -fx-border-color: #F3F4F6 transparent transparent transparent;
+                                     -fx-border-width: 1 0 0 0;">
+                            <Button text="✅  Accepter la sélection" onAction="#accepterDemande"
                                     style="-fx-background-color: #059669; -fx-text-fill: white;
                                            -fx-cursor: hand; -fx-background-radius: 8;
                                            -fx-padding: 10 22; -fx-font-weight: bold;
                                            -fx-font-size: 13px; -fx-font-family: 'Segoe UI';
                                            -fx-effect: dropshadow(gaussian, rgba(5,150,105,0.3), 6, 0, 0, 2);"/>
-                            <Button text="❌  Refuser la sélection"
-                                    onAction="#refuserDemande"
+                            <Button text="❌  Refuser la sélection" onAction="#refuserDemande"
                                     style="-fx-background-color: #DC2626; -fx-text-fill: white;
                                            -fx-cursor: hand; -fx-background-radius: 8;
                                            -fx-padding: 10 22; -fx-font-weight: bold;
@@ -317,14 +650,13 @@
                                            -fx-effect: dropshadow(gaussian, rgba(220,38,38,0.3), 6, 0, 0, 2);"/>
                         </HBox>
                     </VBox>
-                </VBox>
+                </VBox><!-- fin panneauDemandes -->
 
                 <!-- ════════════════════════════════════════════════
-                     PANNEAU PROFIL ADMIN
+                     PANNEAU PROFIL
                      ════════════════════════════════════════════════ -->
                 <VBox fx:id="panneauProfil" spacing="24"
                       visible="false" managed="false">
-
                     <VBox spacing="3">
                         <Label text="Mon Profil"
                                style="-fx-font-size: 22px; -fx-font-weight: bold;
@@ -333,9 +665,7 @@
                                style="-fx-font-size: 12px; -fx-text-fill: #9CA3AF;
                                       -fx-font-family: 'Segoe UI';"/>
                     </VBox>
-
                     <HBox spacing="20" alignment="TOP_LEFT">
-
                         <!-- Colonne photo -->
                         <VBox spacing="14" alignment="CENTER"
                               style="-fx-background-color: white; -fx-padding: 28;
@@ -358,19 +688,16 @@
                                           -fx-font-size: 11px; -fx-font-weight: bold;
                                           -fx-background-radius: 20; -fx-padding: 4 12;
                                           -fx-font-family: 'Segoe UI';"/>
-                            <Button text="📷  Changer la photo"
-                                    onAction="#choisirPhoto"
-                                    style="-fx-background-color: #F3F0FF;
-                                           -fx-text-fill: #7C3AED; -fx-cursor: hand;
-                                           -fx-background-radius: 8; -fx-padding: 8 14;
-                                           -fx-font-size: 11px; -fx-font-family: 'Segoe UI';
+                            <Button text="📷  Changer la photo" onAction="#choisirPhoto"
+                                    style="-fx-background-color: #F3F0FF; -fx-text-fill: #7C3AED;
+                                           -fx-cursor: hand; -fx-background-radius: 8;
+                                           -fx-padding: 8 14; -fx-font-size: 11px;
+                                           -fx-font-family: 'Segoe UI';
                                            -fx-border-color: #DDD6FE; -fx-border-radius: 8;
                                            -fx-border-width: 1;"/>
                         </VBox>
-
                         <!-- Colonne droite -->
                         <VBox spacing="16" HBox.hgrow="ALWAYS">
-
                             <!-- Infos compte -->
                             <VBox spacing="14"
                                   style="-fx-background-color: white; -fx-padding: 20;
@@ -384,8 +711,7 @@
                                            style="-fx-font-size: 14px; -fx-font-weight: bold;
                                                   -fx-text-fill: #1E1B4B; -fx-font-family: 'Segoe UI';"/>
                                 </HBox>
-                                <Region prefHeight="1"
-                                        style="-fx-background-color: #F3F4F6;"/>
+                                <Region prefHeight="1" style="-fx-background-color: #F3F4F6;"/>
                                 <GridPane hgap="20" vgap="10">
                                     <Label text="Email :" GridPane.rowIndex="0" GridPane.columnIndex="0"
                                            style="-fx-font-size: 12px; -fx-font-weight: bold;
@@ -401,7 +727,6 @@
                                                   -fx-font-weight: bold; -fx-font-family: 'Segoe UI';"/>
                                 </GridPane>
                             </VBox>
-
                             <!-- Modifier profil -->
                             <VBox spacing="14"
                                   style="-fx-background-color: white; -fx-padding: 20;
@@ -415,8 +740,7 @@
                                            style="-fx-font-size: 14px; -fx-font-weight: bold;
                                                   -fx-text-fill: #1E1B4B; -fx-font-family: 'Segoe UI';"/>
                                 </HBox>
-                                <Region prefHeight="1"
-                                        style="-fx-background-color: #F3F4F6;"/>
+                                <Region prefHeight="1" style="-fx-background-color: #F3F4F6;"/>
                                 <HBox spacing="16">
                                     <VBox spacing="6" HBox.hgrow="ALWAYS">
                                         <Label text="Bio"
@@ -450,8 +774,7 @@
                                                -fx-font-size: 13px; -fx-font-family: 'Segoe UI';
                                                -fx-effect: dropshadow(gaussian, rgba(5,150,105,0.3), 6, 0, 0, 2);"/>
                             </VBox>
-
-                            <!-- Changer mot de passe -->
+                            <!-- Changer MDP -->
                             <VBox spacing="14"
                                   style="-fx-background-color: white; -fx-padding: 20;
                                          -fx-background-radius: 14;
@@ -464,8 +787,7 @@
                                            style="-fx-font-size: 14px; -fx-font-weight: bold;
                                                   -fx-text-fill: #1E1B4B; -fx-font-family: 'Segoe UI';"/>
                                 </HBox>
-                                <Region prefHeight="1"
-                                        style="-fx-background-color: #F3F4F6;"/>
+                                <Region prefHeight="1" style="-fx-background-color: #F3F4F6;"/>
                                 <HBox spacing="16">
                                     <VBox spacing="6" HBox.hgrow="ALWAYS">
                                         <Label text="Ancien mot de passe"
@@ -511,11 +833,9 @@
                             </VBox>
                         </VBox>
                     </HBox>
-
-                    <!-- Message global profil -->
                     <Label fx:id="pMessageProfil"
                            style="-fx-font-size: 12px; -fx-font-family: 'Segoe UI';"/>
-                </VBox>
+                </VBox><!-- fin panneauProfil -->
 
             </VBox>
         </ScrollPane>
