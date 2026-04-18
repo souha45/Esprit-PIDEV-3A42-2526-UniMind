@@ -1,6 +1,6 @@
 package org.example.main;
 
-import org.example.models.DisponibilitePsy;
+import org.example.entities.DisponibilitePsy;
 import org.example.enums.StatutDisponibilite;
 import org.example.services.DisponibilitePsyService;
 import org.example.services.ConsultationService;

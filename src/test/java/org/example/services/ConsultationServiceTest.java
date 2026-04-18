@@ -1,8 +1,8 @@
 package org.example.services;
 
-import org.example.models.Consultation;
+import org.example.entities.Consultation;
 
-import org.example.models.ConsultationDetail;
+import org.example.entities.ConsultationDetail;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

@@ -5,7 +5,7 @@ import javafx.fxml.FXMLLoader;//Charge les fichiers FXML (interface)
 import javafx.scene.Scene;//Représente la fenêtre (contient tout le contenu)
 import javafx.scene.control.*;//Tous les composants (Button, Label, TextField...)
 import javafx.stage.Stage;//La fenêtre principale de l'application
-import org.example.models.User;
+import org.example.entities.User;
 import org.example.services.UserService;
 
 
@@ -103,7 +103,7 @@ public class LoginController {
             Scene scene = new Scene(loader.load(), 1000, 600);  //  loader.load() : charge le FXML et crée tous les composants   /  new Scene(...) : crée une nouvelle scène avec la largeur 1000 et hauteur 600
 
             // Passer l'utilisateur au contrôleur
-            DashboardPsyController controller = loader.getController(); // loader.getController() : récupère le contrôleur associé au FXML chargé
+            DashboardPsychologueController controller = loader.getController(); // loader.getController() : récupère le contrôleur associé au FXML chargé
             controller.setUtilisateur(user); //passe l'utilisateur connecté au dashboard (transmet l'ID, le nom, etc.)
 
             Stage stage = new Stage();// Crée une nouvelle fenêtre (Stage)
@@ -119,7 +119,7 @@ public class LoginController {
 
     private void ouvrirDashboardEtudiant(User user) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/DashboardEtudiant.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/dashboard_etudiant.fxml"));
             Scene scene = new Scene(loader.load(), 1200, 700);
 
             DashboardEtudiantController controller = loader.getController();

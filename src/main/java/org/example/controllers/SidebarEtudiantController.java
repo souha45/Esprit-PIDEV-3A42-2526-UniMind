@@ -6,7 +6,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
-import org.example.models.User;
+import org.example.entities.User;
 
 import java.io.IOException;
 
@@ -85,7 +85,7 @@ public class SidebarEtudiantController {
 
     @FXML
     public void initialize() {
-        btnDashboard.setOnAction(e -> naviguer("/DashboardEtudiant.fxml", "Dashboard", btnDashboard));
+        btnDashboard.setOnAction(e -> naviguer("/dashboard_etudiant.fxml", "Dashboard", btnDashboard));
         btnMesRendezVous.setOnAction(e -> naviguer("/RendezVousEtudiant.fxml", "Mes Rendez-vous", btnMesRendezVous));
         btnConsultations.setOnAction(e -> naviguer("/ConsultationsEtudiant.fxml", "Consultations", btnConsultations));
         btnTraitements.setOnAction(e -> naviguer("/TraitementsEtudiant.fxml", "Traitements", btnTraitements));
@@ -138,7 +138,7 @@ public class SidebarEtudiantController {
 
     public void setActiveButtonByFxml(String fxmlPath) {
         switch (fxmlPath) {
-            case "/DashboardEtudiant.fxml"       -> setActiveButton(btnDashboard);
+            case "/dashboard_etudiant.fxml" -> setActiveButton(btnDashboard);
             case "/RendezVousEtudiant.fxml"      -> setActiveButton(btnMesRendezVous);
             case "/ConsultationsEtudiant.fxml"   -> setActiveButton(btnConsultations);
             case "/TraitementsEtudiant.fxml"     -> setActiveButton(btnTraitements);
@@ -176,7 +176,7 @@ public class SidebarEtudiantController {
 
     private void deconnecter() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
             Scene scene = new Scene(loader.load(), 500, 400);
             Stage stage = (Stage) btnDeconnexion.getScene().getWindow();
             stage.setScene(scene);

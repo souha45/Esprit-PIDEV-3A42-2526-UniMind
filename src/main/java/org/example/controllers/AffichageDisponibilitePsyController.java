@@ -11,8 +11,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
-import org.example.models.DisponibilitePsy;
-import org.example.models.User;
+import org.example.entities.DisponibilitePsy;
+import org.example.entities.User;
 import org.example.services.DisponibilitePsyService;
 
 import java.io.IOException;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class AffichageDisponibilitePsyController
-        implements SidebarPsyController.PsyPageController {
+        implements SidebarPsychologueController.PsyPageController {
 
     // ── FXML ────────────────────────────────────────────────────────
     @FXML private TableView<DisponibilitePsy>              tableViewDisponibilites;
@@ -51,7 +51,7 @@ public class AffichageDisponibilitePsyController
     @FXML private ComboBox<String> comboFiltreType;
 
     // ── Sidebar ─────────────────────────────────────────────────────
-    @FXML private SidebarPsyController sidebarPsyController;
+    @FXML private SidebarPsychologueController sidebarPsyController;
 
     // ── Données ─────────────────────────────────────────────────────
     private DisponibilitePsyService          disponibiliteService;

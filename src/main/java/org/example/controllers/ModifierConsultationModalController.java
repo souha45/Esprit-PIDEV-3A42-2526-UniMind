@@ -4,9 +4,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
-import org.example.models.Consultation;
-import org.example.models.ConsultationDetail;
-import org.example.models.User;
+import org.example.entities.Consultation;
+import org.example.entities.ConsultationDetail;
+import org.example.entities.User;
 import org.example.services.ConsultationService;
 
 import java.sql.SQLException;

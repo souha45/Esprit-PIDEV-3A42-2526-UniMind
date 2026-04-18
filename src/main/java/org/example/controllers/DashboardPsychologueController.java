@@ -7,7 +7,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
-import org.example.models.User;
+import org.example.entities.User;
 import org.example.utils.MyDataBase_Unimind;
 
 import java.sql.*;
@@ -17,7 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.Locale;
 
-public class DashboardPsyController implements SidebarPsyController.PsyPageController {
+public class DashboardPsychologueController implements SidebarPsychologueController.PsyPageController {
 
     // ── Header ──────────────────────────────────────────────────────
     @FXML private Label lblDate;
@@ -56,7 +56,7 @@ public class DashboardPsyController implements SidebarPsyController.PsyPageContr
     @FXML private VBox  boxNotesDetail;
 
     // ── Sidebar ─────────────────────────────────────────────────────
-    @FXML private SidebarPsyController sidebarPsyController;
+    @FXML private SidebarPsychologueController sidebarPsyController;
 
     private User utilisateur;
     private Timeline clockTimeline;

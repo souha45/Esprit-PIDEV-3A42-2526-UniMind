@@ -1,4 +1,4 @@
-package org.example.models;
+package org.example.entities;
 
 import org.example.enums.StatutParticipation;
 import java.sql.Timestamp;

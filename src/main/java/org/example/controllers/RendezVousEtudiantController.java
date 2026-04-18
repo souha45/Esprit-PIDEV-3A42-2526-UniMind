@@ -12,8 +12,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.example.models.RendezVousDetail;
-import org.example.models.User;
+import org.example.entities.RendezVousDetail;
+import org.example.entities.User;
 import org.example.services.RendezVousService;
 
 import java.io.IOException;

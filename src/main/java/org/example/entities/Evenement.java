@@ -1,4 +1,4 @@
-package org.example.models;
+package org.example.entities;
 
 import org.example.enums.StatutEvenement;
 import org.example.enums.TypeEvenement;

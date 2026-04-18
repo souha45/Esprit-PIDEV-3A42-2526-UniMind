@@ -14,7 +14,7 @@
         style="-fx-background-color: #ffffff; -fx-border-color: #e0e7ff; -fx-border-width: 0 2 0 0; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.10), 16, 0, 2, 0);"
         xmlns="http://javafx.com/javafx/17"
         xmlns:fx="http://javafx.com/fxml/1"
-        fx:controller="org.example.controllers.SidebarPsyController">
+        fx:controller="org.example.controllers.SidebarPsychologueController">
 
     <!-- Brand Header -->
     <VBox alignment="CENTER_LEFT" spacing="2"

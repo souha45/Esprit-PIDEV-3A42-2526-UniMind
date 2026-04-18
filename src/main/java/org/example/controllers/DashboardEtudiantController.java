@@ -10,7 +10,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import org.example.models.User;
+import org.example.entities.User;
 import org.example.utils.MyDataBase_Unimind;
 
 import java.io.IOException;

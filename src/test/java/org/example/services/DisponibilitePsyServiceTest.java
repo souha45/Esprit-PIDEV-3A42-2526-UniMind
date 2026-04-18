@@ -1,7 +1,7 @@
 package org.example.services;
 
 
-import org.example.models.DisponibilitePsy;
+import org.example.entities.DisponibilitePsy;
 import org.example.enums.StatutDisponibilite;
 import org.example.enums.TypeConsultation;
 import org.junit.jupiter.api.*;

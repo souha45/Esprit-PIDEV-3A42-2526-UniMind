@@ -1,9 +1,9 @@
 package org.example.services;
 
-import org.example.models.Consultation;
-import org.example.models.DisponibilitePsy;
-import org.example.models.RendezVous;
-import org.example.models.RendezVousDetail;
+import org.example.entities.Consultation;
+import org.example.entities.DisponibilitePsy;
+import org.example.entities.RendezVous;
+import org.example.entities.RendezVousDetail;
 import org.example.enums.StatutDisponibilite;
 import org.example.enums.StatutRendezVous;
 import org.example.utils.MyDataBase_Unimind;

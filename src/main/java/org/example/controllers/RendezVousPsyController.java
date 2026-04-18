@@ -6,8 +6,8 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import org.example.models.RendezVousDetail;
-import org.example.models.User;
+import org.example.entities.RendezVousDetail;
+import org.example.entities.User;
 import org.example.services.RendezVousService;
 
 import java.sql.SQLException;
@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class RendezVousPsyController implements SidebarPsyController.PsyPageController {
+public class RendezVousPsyController implements SidebarPsychologueController.PsyPageController {
 
     // ========== COMPOSANTS FXML ==========
     @FXML private TableView<RendezVousDetail> tableViewRendezVous;
@@ -38,7 +38,7 @@ public class RendezVousPsyController implements SidebarPsyController.PsyPageCont
     @FXML private Label lblStatEnCours;
 
     // ========== SIDEBAR ==========
-    @FXML private SidebarPsyController sidebarPsyController;
+    @FXML private SidebarPsychologueController sidebarPsyController;
 
     // ========== SERVICES ==========
     private RendezVousService rendezVousService;

@@ -6,11 +6,11 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
-import org.example.models.User;
+import org.example.entities.User;
 
 import java.io.IOException;
 
-public class SidebarPsyController {
+public class SidebarPsychologueController {
 
     @FXML private Label lblInitiales;
     @FXML private Label lblNomComplet;
@@ -166,7 +166,7 @@ public class SidebarPsyController {
 
     private void deconnecter() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
             Scene scene = new Scene(loader.load(), 500, 400);
             Stage stage = (Stage) btnDeconnexion.getScene().getWindow();
             stage.setScene(scene);

@@ -1,7 +1,7 @@
 package org.example.services;
 
-import org.example.models.Consultation;
-import org.example.models.ConsultationDetail;
+import org.example.entities.Consultation;
+import org.example.entities.ConsultationDetail;
 import org.example.utils.MyDataBase_Unimind;
 
 import java.sql.*;

@@ -11,8 +11,8 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import org.example.models.ConsultationDetail;
-import org.example.models.User;
+import org.example.entities.ConsultationDetail;
+import org.example.entities.User;
 import org.example.services.ConsultationService;
 
 import java.sql.SQLException;

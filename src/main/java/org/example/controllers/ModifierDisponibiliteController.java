@@ -5,7 +5,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.example.enums.TypeConsultation;
-import org.example.models.DisponibilitePsy;
+import org.example.entities.DisponibilitePsy;
 import org.example.services.DisponibilitePsyService;
 
 import java.sql.Date;

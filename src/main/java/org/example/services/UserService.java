@@ -1,8 +1,8 @@
 package org.example.services;
 
-import org.example.models.Etudiant;
-import org.example.models.Psychologue;
-import org.example.models.User;
+import org.example.entities.Etudiant;
+import org.example.entities.Psychologue;
+import org.example.entities.User;
 import org.example.utils.BcryptUtil;
 import org.example.utils.MyDataBase_Unimind;
 
