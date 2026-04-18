@@ -1,0 +1,245 @@
+/* =============================================
+   UNIMIND - CSS Design System
+   Theme: Light & Purple
+   ============================================= */
+
+.root {
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-background-color: #f0f4ff;
+}
+
+/* =============================================
+   SIDEBAR
+   ============================================= */
+.sidebar {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 0 2 0 0;
+    -fx-min-width: 260px;
+    -fx-pref-width: 260px;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.10), 16, 0, 2, 0);
+}
+
+.sidebar-brand {
+    -fx-padding: 28 16 20 16;
+    -fx-background-color: linear-gradient(to bottom right, #6366f1, #8b5cf6);
+    -fx-alignment: CENTER;
+}
+
+.brand-name {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+}
+
+.brand-sub {
+    -fx-font-size: 11px;
+    -fx-text-fill: #c4b5fd;
+}
+
+/* Infos utilisateur dans sidebar */
+.user-info {
+    -fx-padding: 18 16 16 16;
+    -fx-background-color: #f5f3ff;
+    -fx-spacing: 4;
+}
+
+.user-avatar {
+    -fx-font-size: 32px;
+    -fx-padding: 0 0 4 0;
+}
+
+.user-role {
+    -fx-font-size: 10px;
+    -fx-text-fill: #a78bfa;
+    -fx-letter-spacing: 1.5px;
+}
+
+.user-name {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #4c1d95;
+}
+
+.sidebar-separator {
+    -fx-background-color: #e0e7ff;
+}
+
+.nav-menu {
+    -fx-padding: 12 8 8 8;
+    -fx-spacing: 4;
+}
+
+.nav-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 12 16 12 16;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-cursor: hand;
+}
+
+.nav-btn:hover {
+    -fx-background-color: #ede9fe;
+    -fx-text-fill: #6366f1;
+}
+
+.nav-btn-active {
+    -fx-background-color: #ede9fe;
+    -fx-text-fill: #6366f1;
+    -fx-font-weight: bold;
+    -fx-border-color: #c4b5fd;
+    -fx-border-width: 0 0 0 3;
+}
+
+.logout-btn {
+    -fx-text-fill: #ef4444;
+}
+
+.logout-btn:hover {
+    -fx-background-color: #fee2e2;
+    -fx-text-fill: #dc2626;
+}
+
+/* =============================================
+   CONTENT AREA
+   ============================================= */
+.content-area {
+    -fx-background-color: #f0f4ff;
+}
+
+.page-container {
+    -fx-background-color: #f0f4ff;
+}
+
+.page-header {
+    -fx-background-color: #ffffff;
+    -fx-padding: 24 28 20 28;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 0 0 2 0;
+    -fx-spacing: 4;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.07), 8, 0, 0, 2);
+}
+
+.page-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3730a3;
+}
+
+.page-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6b7280;
+}
+
+/* =============================================
+   STAT CARDS
+   ============================================= */
+.stat-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 14;
+    -fx-padding: 18 22 18 22;
+    -fx-spacing: 5;
+    -fx-alignment: CENTER_LEFT;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 10, 0, 0, 3);
+}
+
+.stat-number {
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6366f1;
+}
+
+.stat-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #9ca3af;
+}
+
+/* =============================================
+   BUTTONS
+   ============================================= */
+.btn-primary {
+    -fx-background-color: #6366f1;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20 10 20;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover {
+    -fx-background-color: #4f46e5;
+}
+
+/* =============================================
+   TABLE
+   ============================================= */
+.data-table {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+
+.data-table .column-header-background {
+    -fx-background-color: #f5f3ff;
+}
+
+.data-table .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #e0e7ff transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 12 16 12 16;
+}
+
+.data-table .column-header .label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6366f1;
+}
+
+.data-table .table-row-cell {
+    -fx-background-color: #ffffff;
+    -fx-border-color: transparent transparent #f3f4f6 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.data-table .table-row-cell:hover {
+    -fx-background-color: #f5f3ff;
+}
+
+.data-table .table-cell {
+    -fx-text-fill: #374151;
+    -fx-font-size: 13px;
+    -fx-padding: 12 16 12 16;
+}
+
+/* =============================================
+   MODAL
+   ============================================= */
+.modal-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3730a3;
+}
+
+.modal-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6366f1;
+    -fx-font-weight: bold;
+}
+
+.modal-input {
+    -fx-background-color: #f5f3ff;
+    -fx-text-fill: #374151;
+    -fx-font-size: 13px;
+    -fx-padding: 10 14 10 14;
+    -fx-background-radius: 10;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}

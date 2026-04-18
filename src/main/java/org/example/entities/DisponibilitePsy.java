@@ -29,8 +29,7 @@ public class DisponibilitePsy {
     }
 
     // Constructeur sans ID (pour la création)
-    public DisponibilitePsy(int userId, Date dateDispo, Time heureDebut, Time heureFin,
-                            TypeConsultation typeConsult, String lieu) {
+    public DisponibilitePsy(int userId, Date dateDispo, Time heureDebut, Time heureFin, TypeConsultation typeConsult, String lieu) {
         this.userId = userId;
         this.dateDispo = dateDispo;
         this.heureDebut = heureDebut;
@@ -39,6 +38,21 @@ public class DisponibilitePsy {
         this.lieu = lieu;
         this.statut = StatutDisponibilite.disponible;
         this.createdAt = new Timestamp(System.currentTimeMillis());
+    }
+
+
+    // Ajoute ce constructeur dans ta classe DisponibilitePsy
+    public DisponibilitePsy(int dispoId, int userId, Date dateDispo, Time heureDebut,
+                            Time heureFin, TypeConsultation typeConsult, String lieu, StatutDisponibilite statut) {
+        this.dispoId = dispoId;
+        this.userId = userId;
+        this.dateDispo = dateDispo;
+        this.heureDebut = heureDebut;
+        this.heureFin = heureFin;
+        this.typeConsult = typeConsult;
+        this.lieu = lieu;
+        this.statut = statut;
+        this.updatedAt = new Timestamp(System.currentTimeMillis());
     }
 
     // Getters & Setters

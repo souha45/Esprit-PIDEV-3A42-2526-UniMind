@@ -12,9 +12,13 @@ public class MainApp extends Application {
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/login.fxml")
         );
-        Scene scene = new Scene(loader.load(), 500, 400);
-        stage.setTitle("UniMind");
-        stage.setResizable(false);
+
+        // 🔥 Utiliser la taille de login.fxml (qui vient d'Islem)
+        // Le login.fxml d'Islem fait 640x480 (défini dans son AnchorPane)
+        Scene scene = new Scene(loader.load());
+
+        stage.setTitle("UniMind - Plateforme de santé mentale");
+        stage.setResizable(true);  // ← On peut redimensionner
         stage.setScene(scene);
         stage.show();
     }

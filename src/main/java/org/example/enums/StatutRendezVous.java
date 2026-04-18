@@ -1,10 +1,10 @@
 package org.example.enums;
 
 public enum StatutRendezVous {
-    Demande,
-    Confirme,
-    EnCours,
-    Termine,
-    Annule,
-    Absent
+    demande,
+    confirme,
+    Encours,
+    terminé,
+    annulé,
+    absent
 }

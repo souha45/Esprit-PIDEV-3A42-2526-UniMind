@@ -1,7 +1,7 @@
 package org.example.entities;
 
 import org.example.enums.Role;
-import java.sql.Date;
+
 import java.sql.Timestamp;
 
 public class Etudiant extends User {
