@@ -6,7 +6,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.stage.Stage;
 import org.example.utils.NavigationContext;
@@ -17,18 +16,20 @@ import java.io.IOException;
 public class AdminDashboardController {
 
     @FXML
-    private Label lblUserName;
+    private ScrollPane contentScrollPane;
 
     @FXML
-    private ScrollPane contentScrollPane;
+    private org.example.controllers.SidebarAdminController sidebarAdminController;
 
     @FXML
     public void initialize() {
         // Initialiser le contexte de navigation
         NavigationContext.setContentScrollPane(contentScrollPane);
-        
-        // Afficher le nom de l'utilisateur connecté
-        SessionManager.getInstance().getCurrentUserFullName().ifPresent(lblUserName::setText);
+
+        // Initialiser le sidebar controller
+        if (sidebarAdminController != null) {
+            sidebarAdminController.setParentController(this);
+        }
 
         // Charger par défaut la gestion des événements
         try {
@@ -40,24 +41,24 @@ public class AdminDashboardController {
 
 
     @FXML
-    private void gestionEvenements(ActionEvent event) throws IOException {
+    public void gestionEvenements(ActionEvent event) throws IOException {
         chargerContenuDansCentre("/evenement/GestionEvenement.fxml");
     }
 
     @FXML
-    private void gestionSponsors(ActionEvent event) throws IOException {
+    public void gestionSponsors(ActionEvent event) throws IOException {
         chargerContenuDansCentre("/sponsor/GestionSponsor.fxml");
     }
 
     @FXML
-    private void gestionParticipations(ActionEvent event) throws IOException {
+    public void gestionParticipations(ActionEvent event) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/participation/GestionParticipation.fxml"));
         Parent root = loader.load();
         contentScrollPane.setContent(root);
     }
 
     @FXML
-    private void gestionFeedbacks(ActionEvent event) throws IOException {
+    public void gestionFeedbacks(ActionEvent event) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/feedback/FeedbacksAdmin.fxml"));
         Parent root = loader.load();
         contentScrollPane.setContent(root);
@@ -66,7 +67,7 @@ public class AdminDashboardController {
     @FXML
     private void logout(ActionEvent event) throws IOException {
         SessionManager.getInstance().logout();
-        naviguerVersEcran(event, "/auth/Login.fxml", "Connexion");
+        naviguerVersEcran(event, "/Login.fxml", "Connexion");
     }
 
     private void chargerContenuDansCentre(String fxmlPath) throws IOException {

@@ -11,7 +11,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.TilePane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -37,7 +38,7 @@ import java.util.Set;
 public class EvenementsEtudiantController {
 
     @FXML
-    private TilePane tileEvenements;
+    private FlowPane tileEvenements;
 
     @FXML
     private TextField txtRecherche;
@@ -71,6 +72,14 @@ public class EvenementsEtudiantController {
     @FXML
     public void initialize() {
         System.out.println("Initialisation de EvenementsEtudiantController");
+
+        if (tileEvenements != null) {
+            tileEvenements.setMaxWidth(Double.MAX_VALUE);
+            if (tileEvenements.getParent() instanceof Region parentRegion) {
+                tileEvenements.prefWrapLengthProperty().bind(parentRegion.widthProperty());
+            }
+        }
+
         try {
             evenementService = new EvenementService();
             favoriService = new FavoriService();
@@ -309,7 +318,7 @@ public class EvenementsEtudiantController {
                 ex.printStackTrace();
             }
         }
-        System.out.println("Nombre de cartes dans le TilePane: " + tileEvenements.getChildren().size());
+        System.out.println("Nombre de cartes dans le FlowPane: " + tileEvenements.getChildren().size());
     }
 
     private VBox creerCarteEvenement(Evenement evenement) {

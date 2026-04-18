@@ -3,18 +3,80 @@ package org.example.services;
 import org.example.entities.User;
 import org.example.enums.Role;
 import org.example.utils.MyDataBase_Unimind;
+import org.example.utils.PasswordUtils;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserService implements ICrud<User> {
+public abstract class UserService implements ICrud<User> {
 
     private final Connection connection;
 
     public UserService() {
         this.connection = MyDataBase_Unimind.getInstance().getConnection();
     }
+
+    // CONNEXION GENERALE (version simplifiée pour ton projet)
+    // Cette version sera remplacée par la version complète après le merge avec le projet de l'ami
+    public static User connexionGenerale(String email, String plainPassword,
+                                         Connection connection) throws SQLException {
+
+        String query = "SELECT * FROM user WHERE email = ? AND is_active = 1";
+        PreparedStatement ps = connection.prepareStatement(query);
+        ps.setString(1, email);
+        ResultSet rs = ps.executeQuery();
+
+        if (!rs.next()) {
+            System.out.println("✗ Email introuvable ou compte inactif.");
+            return null;
+        }
+
+        String hashedPassword = rs.getString("password");
+
+        if (!PasswordUtils.verifier(plainPassword, hashedPassword)) {
+            System.out.println("✗ Mot de passe incorrect.");
+            return null;
+        }
+
+        // Créer un User à partir du ResultSet
+        User user = new User();
+        user.setUserId(rs.getInt("user_id"));
+        user.setNom(rs.getString("nom"));
+        user.setPrenom(rs.getString("prenom"));
+        user.setEmail(rs.getString("email"));
+        user.setPassword(rs.getString("password"));
+        user.setCin(rs.getString("cin"));
+
+        // Gérer la casse et les espaces pour le rôle
+        String roleStr = rs.getString("role");
+        if (roleStr != null) {
+            String normalizedRole = roleStr.toUpperCase().replace(" ", "_");
+            user.setRole(Role.valueOf(normalizedRole));
+        }
+
+        user.setActive(rs.getBoolean("is_active"));
+        user.setVerified(rs.getBoolean("is_verified"));
+        user.setCreatedAt(rs.getTimestamp("created_at"));
+
+        System.out.println("✓ Connexion réussie : " + user.getPrenom()
+                + " " + user.getNom() + " [" + user.getRole() + "]");
+
+        return user;
+    }
+
+    // EMAIL UNIQUE (du projet de l'ami)
+    public boolean emailExiste(String email) throws SQLException {
+        String query = "SELECT COUNT(*) FROM user WHERE email = ?";
+        PreparedStatement ps = connection.prepareStatement(query);
+        ps.setString(1, email);
+        ResultSet rs = ps.executeQuery();
+        rs.next();
+        return rs.getInt(1) > 0;
+    }
+
+    // MAPPER ABSTAIT (nécessaire pour connexionGenerale)
+    public abstract User mapUser(ResultSet rs) throws SQLException;
 
     @Override
     public void ajouter(User user) throws SQLException {

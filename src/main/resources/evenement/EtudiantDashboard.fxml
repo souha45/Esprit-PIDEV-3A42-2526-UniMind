@@ -3,51 +3,24 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.fxml.FXMLLoader?>
 
-<VBox xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="org.example.controllers.evenement.EtudiantDashboardController"
-      stylesheets="@../styles/etudiant.css"
-      styleClass="etudiant-root"
-      spacing="0">
+<BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.evenement.EtudiantDashboardController"
+            stylesheets="@../styles/EventFont.css">
 
-    <children>
-        <HBox styleClass="etudiant-navbar" alignment="CENTER_LEFT" spacing="0">
+    <left>
+        <fx:include source="/SidebarEtudiant.fxml" fx:id="sidebarEtudiant"/>
+    </left>
+
+    <center>
+        <VBox spacing="0">
             <children>
-                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="navbar-brand">
-                    <children>
-                        <Label text="UniMind" styleClass="navbar-brand-name" />
-                    </children>
-                </HBox>
-
-                <ScrollPane styleClass="navbar-scroll" HBox.hgrow="ALWAYS"
-                            fitToHeight="true" fitToWidth="false"
-                            hbarPolicy="NEVER" vbarPolicy="NEVER">
-                    <content>
-                        <HBox styleClass="navbar-menu" alignment="CENTER_LEFT" spacing="2">
-                            <children>
-                                <Button text="🎪 Événements" styleClass="navbar-btn, navbar-btn-active" onAction="#voirEvenements" />
-                                <Button text="✅ Mes Participations" styleClass="navbar-btn" onAction="#voirParticipations" />
-                                <Button text="⭐ Mes Favoris" styleClass="navbar-btn" onAction="#voirFavoris" />
-                            </children>
-                        </HBox>
-                    </content>
+                <fx:include source="/navbar.fxml"/>
+                <ScrollPane fx:id="contentScrollPane" VBox.vgrow="ALWAYS" fitToWidth="true" styleClass="etudiant-scroll">
                 </ScrollPane>
-
-                <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="navbar-user">
-                    <children>
-                        <Label fx:id="lblUserName" text="Étudiant" styleClass="navbar-username" />
-                        <Button text="🚪" styleClass="navbar-logout-btn" onAction="#logout">
-                            <tooltip>
-                                <Tooltip text="Déconnexion" />
-                            </tooltip>
-                        </Button>
-                    </children>
-                </HBox>
             </children>
-        </HBox>
+        </VBox>
+    </center>
 
-        <ScrollPane fx:id="contentScrollPane" VBox.vgrow="ALWAYS" fitToWidth="true" styleClass="etudiant-scroll">
-        </ScrollPane>
-    </children>
-
-</VBox>
+</BorderPane>

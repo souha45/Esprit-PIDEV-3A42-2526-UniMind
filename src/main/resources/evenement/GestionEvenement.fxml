@@ -6,7 +6,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.controllers.evenement.GestionEvenementController"
-            stylesheets="@../styles/admin.css"
+            stylesheets="@../styles/EventBack.css"
             styleClass="dashboard-bg">
     
     <top>
@@ -116,7 +116,7 @@
     </top>
     
     <center>
-        <TableView fx:id="tableEvenements" prefHeight="500" styleClass="table-view">
+        <TableView fx:id="tableEvenements" prefHeight="500" styleClass="data-table">
             <columns>
                 <TableColumn fx:id="colImage" text="Image" prefWidth="80" sortable="false"/>
                 <TableColumn fx:id="colTitre" text="Titre" prefWidth="200" sortable="true"/>

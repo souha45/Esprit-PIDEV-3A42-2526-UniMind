@@ -6,7 +6,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.controllers.participation.GestionParticipationController"
-            stylesheets="@../styles/admin.css"
+            stylesheets="@../styles/EventBack.css"
             styleClass="dashboard-bg">
 
     <top>
@@ -87,15 +87,15 @@
                         <Label text="Statistiques :" styleClass="stats-label"/>
                         <HBox spacing="4" alignment="CENTER">
                             <Region styleClass="legend-color" style="-fx-background-color: #e8f5e9;"/>
-                            <Label fx:id="lblStatutConfirme" text="0 confirmées" styleClass="stat-badge stat-actif"/>
+                            <Label fx:id="lblStatutConfirme" text="0 confirmées" styleClass="stat-badge stat-confirme"/>
                         </HBox>
                         <HBox spacing="4" alignment="CENTER">
                             <Region styleClass="legend-color" style="-fx-background-color: #fff3e0;"/>
-                            <Label fx:id="lblStatutEnAttente" text="0 en attente" styleClass="stat-badge stat-inactif"/>
+                            <Label fx:id="lblStatutEnAttente" text="0 en attente" styleClass="stat-badge stat-attente"/>
                         </HBox>
                         <HBox spacing="4" alignment="CENTER">
                             <Region styleClass="legend-color" style="-fx-background-color: #ffebee;"/>
-                            <Label fx:id="lblStatutAnnule" text="0 annulées" styleClass="stat-badge stat-refuse"/>
+                            <Label fx:id="lblStatutAnnule" text="0 annulées" styleClass="stat-badge stat-annule"/>
                         </HBox>
                         <Region HBox.hgrow="ALWAYS"/>
                         <Label fx:id="lblTotalParticipations" text="0 participations" styleClass="stat-badge stat-total"/>
@@ -106,7 +106,7 @@
     </top>
 
     <center>
-        <TableView fx:id="tableParticipations" prefHeight="500" styleClass="table-view">
+        <TableView fx:id="tableParticipations" prefHeight="500" styleClass="data-table">
             <columns>
                 <TableColumn fx:id="colEvenement" text="Événement" prefWidth="200" sortable="true"/>
                 <TableColumn fx:id="colEtudiant" text="Étudiant" prefWidth="200" sortable="true"/>

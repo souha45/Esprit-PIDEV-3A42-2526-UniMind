@@ -346,7 +346,6 @@ public class GestionParticipationController {
     private void reinitialiserFiltres(ActionEvent event) {
         comboStatut.setValue(null);
         comboEvenement.setValue("Tous les événements");
-        txtEtudiant.clear();
         dateDu.setValue(null);
         dateAu.setValue(null);
         txtRecherche.clear();

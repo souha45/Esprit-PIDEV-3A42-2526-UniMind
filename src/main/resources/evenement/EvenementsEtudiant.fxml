@@ -7,7 +7,7 @@
 
 <VBox xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="org.example.controllers.evenement.EvenementsEtudiantController"
-      stylesheets="@../styles/etudiant.css"
+      stylesheets="@../styles/EventFont.css"
       spacing="16" styleClass="etudiant-content" maxWidth="Infinity">
 	<padding>
 		<Insets topRightBottomLeft="20"/>
@@ -105,11 +105,7 @@
                                         <Insets topRightBottomLeft="20"/>
                                     </padding>
                                     <children>
-                                        <StackPane maxWidth="Infinity">
-                                            <children>
-                                                <TilePane fx:id="tileEvenements" hgap="30" vgap="30" styleClass="event-tile-pane" prefColumns="3" tileAlignment="TOP_LEFT" maxWidth="Infinity" />
-                                            </children>
-                                        </StackPane>
+                                        <FlowPane fx:id="tileEvenements" hgap="30" vgap="30" styleClass="event-tile-pane" maxWidth="Infinity" />
                                     </children>
                                 </VBox>
                             </content>

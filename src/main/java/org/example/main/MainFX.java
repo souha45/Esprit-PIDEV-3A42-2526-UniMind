@@ -13,7 +13,7 @@ public class MainFX extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException {
         // Charger le fichier FXML de login
-        Parent root = FXMLLoader.load(getClass().getResource("/auth/Login.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/Login.fxml"));
 
         // Configurer la scène
         Scene scene = new Scene(root, 1200, 800);

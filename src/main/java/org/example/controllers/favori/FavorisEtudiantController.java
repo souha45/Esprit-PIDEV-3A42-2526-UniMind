@@ -11,7 +11,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.TilePane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -38,7 +39,7 @@ import java.util.Set;
 public class FavorisEtudiantController {
 
     @FXML
-    private TilePane tileFavoris;
+    private FlowPane tileFavoris;
 
     @FXML
     private Label lblTotal;
@@ -64,6 +65,14 @@ public class FavorisEtudiantController {
     @FXML
     public void initialize() {
         System.out.println("Initialisation de FavorisEtudiantController");
+
+        if (tileFavoris != null) {
+            tileFavoris.setMaxWidth(Double.MAX_VALUE);
+            if (tileFavoris.getParent() instanceof Region parentRegion) {
+                tileFavoris.prefWrapLengthProperty().bind(parentRegion.widthProperty());
+            }
+        }
+
         try {
             favoriService = new FavoriService();
             evenementService = new EvenementService();
@@ -238,7 +247,7 @@ public class FavorisEtudiantController {
                 ex.printStackTrace();
             }
         }
-        System.out.println("Nombre de cartes dans le TilePane: " + tileFavoris.getChildren().size());
+        System.out.println("Nombre de cartes dans le FlowPane: " + tileFavoris.getChildren().size());
     }
 
     private VBox creerCarteFavori(Evenement evenement) {

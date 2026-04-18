@@ -6,7 +6,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.controllers.sponsor.GestionSponsorController"
-            stylesheets="@../styles/admin.css"
+            stylesheets="@../styles/EventBack.css"
             styleClass="dashboard-bg">
 
     <top>
@@ -107,7 +107,7 @@
     </top>
 
     <center>
-        <TableView fx:id="tableSponsors" prefHeight="500" styleClass="table-view">
+        <TableView fx:id="tableSponsors" prefHeight="500" styleClass="data-table">
             <columns>
                 <TableColumn fx:id="colEvenement" text="Événement" prefWidth="200" sortable="true"/>
                 <TableColumn fx:id="colLogo" text="Logo" prefWidth="80" sortable="false"/>

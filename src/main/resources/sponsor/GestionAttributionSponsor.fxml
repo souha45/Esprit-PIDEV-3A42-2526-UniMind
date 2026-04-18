@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 
 <VBox spacing="16" xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
-      stylesheets="@../styles/admin.css"
+      stylesheets="@../styles/EventBack.css"
       styleClass="dashboard-bg"
       fx:controller="org.example.controllers.sponsor.GestionAttributionSponsorController">
 
@@ -106,7 +106,7 @@
         </children>
     </HBox>
 
-    <TableView fx:id="tableAttributions" VBox.vgrow="ALWAYS" styleClass="table-view">
+    <TableView fx:id="tableAttributions" VBox.vgrow="ALWAYS" styleClass="data-table">
         <columns>
             <TableColumn fx:id="colEvenement" text="Événement" prefWidth="300" sortable="true"/>
             <TableColumn fx:id="colSponsor" text="Sponsor" prefWidth="150" sortable="true"/>

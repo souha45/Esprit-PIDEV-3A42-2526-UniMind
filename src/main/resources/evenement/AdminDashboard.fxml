@@ -3,64 +3,21 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.fxml.FXMLLoader?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.controllers.evenement.AdminDashboardController"
-            stylesheets="@../styles/admin.css"
-            styleClass="dashboard-bg">
+            stylesheets="@../styles/EventBack.css">
 
     <left>
-        <VBox spacing="8" styleClass="sidebar">
-            <children>
-                <VBox styleClass="sidebar-brand" alignment="CENTER">
-                    <children>
-                        <Label text="UniMind" styleClass="brand-name" />
-                    </children>
-                </VBox>
-
-                <VBox styleClass="admin-info" alignment="CENTER">
-                    <children>
-                        <Label text="👤" styleClass="admin-avatar" />
-                        <Label text="Administrateur" styleClass="admin-role" />
-                        <Label fx:id="lblUserName" styleClass="admin-name" />
-                    </children>
-                </VBox>
-
-                <Separator styleClass="sidebar-separator" />
-
-                <VBox styleClass="nav-menu" VBox.vgrow="ALWAYS">
-                    <children>
-                        <Label text="NAVIGATION" styleClass="nav-section-label" />
-                        <Button text="🎪  Gestion Événements" onAction="#gestionEvenements" styleClass="nav-btn" maxWidth="Infinity" />
-                        <Button text="🏢  Gestion Sponsors" onAction="#gestionSponsors" styleClass="nav-btn" maxWidth="Infinity" />
-                        <Button text="✅  Gestion Participations" onAction="#gestionParticipations" styleClass="nav-btn" maxWidth="Infinity" />
-                        <Button text="💬  Avis des participants" onAction="#gestionFeedbacks" styleClass="nav-btn" maxWidth="Infinity" />
-                    </children>
-                </VBox>
-
-                <VBox styleClass="sidebar-footer">
-                    <children>
-                        <Separator styleClass="sidebar-separator" />
-                        <Button text="�  Déconnexion" onAction="#logout" styleClass="nav-btn logout-btn" maxWidth="Infinity" />
-                    </children>
-                </VBox>
-            </children>
-        </VBox>
+        <fx:include source="/SidebarAdmin.fxml" fx:id="sidebarAdmin"/>
     </left>
 
     <center>
-        <BorderPane>
-            <top>
-                <HBox spacing="16" alignment="CENTER_LEFT" styleClass="page-header" BorderPane.alignment="CENTER">
-                    <children>
-                        <Label text="ADMIN DASHBOARD" styleClass="page-title" />
-                        <Region HBox.hgrow="ALWAYS" />
-                        <Button text="🚪 Déconnexion" onAction="#logout" styleClass="btn-secondary" />
-                    </children>
-                </HBox>
-            </top>
-            <center>
-                <VBox styleClass="padding-large">
+        <VBox spacing="0">
+            <children>
+                <fx:include source="/navbar.fxml"/>
+                <VBox styleClass="padding-large" VBox.vgrow="ALWAYS">
                     <children>
                         <VBox styleClass="content-shell">
                             <children>
@@ -70,8 +27,8 @@
                         </VBox>
                     </children>
                 </VBox>
-            </center>
-        </BorderPane>
+            </children>
+        </VBox>
     </center>
 
 </BorderPane>

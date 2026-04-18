@@ -6,7 +6,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.stage.Stage;
 import org.example.utils.NavigationContext;
@@ -17,18 +16,20 @@ import java.io.IOException;
 public class EtudiantDashboardController {
 
     @FXML
-    private Label lblUserName;
+    private ScrollPane contentScrollPane;
 
     @FXML
-    private ScrollPane contentScrollPane;
+    private org.example.controllers.SidebarEtudiantController sidebarEtudiantController;
 
     @FXML
     public void initialize() {
         // Initialiser le contexte de navigation
         NavigationContext.setContentScrollPane(contentScrollPane);
-        
-        // Afficher le nom de l'utilisateur connecté
-        SessionManager.getInstance().getCurrentUserFullName().ifPresent(lblUserName::setText);
+
+        // Initialiser le sidebar controller
+        if (sidebarEtudiantController != null) {
+            sidebarEtudiantController.setParentController(this);
+        }
 
         // Charger par défaut les événements
         try {
@@ -49,25 +50,25 @@ public class EtudiantDashboardController {
     }
 
     @FXML
-    private void voirEvenements(ActionEvent event) throws IOException {
+    public void voirEvenements(ActionEvent event) throws IOException {
         // Charger les événements dans le ScrollPane avec la nouvelle interface étudiante
         chargerContenuDansCentre("/evenement/EvenementsEtudiant.fxml");
     }
 
     @FXML
-    private void voirParticipations(ActionEvent event) throws IOException {
+    public void voirParticipations(ActionEvent event) throws IOException {
         chargerContenuDansCentre("/participation/ParticipationsEtudiant.fxml");
     }
 
     @FXML
-    private void voirFavoris(ActionEvent event) throws IOException {
+    public void voirFavoris(ActionEvent event) throws IOException {
         chargerContenuDansCentre("/favori/FavorisEtudiant.fxml");
     }
 
     @FXML
     private void logout(ActionEvent event) throws IOException {
         SessionManager.getInstance().logout();
-        naviguerVersEcran(event, "/auth/Login.fxml", "Connexion");
+        naviguerVersEcran(event, "/Login.fxml", "Connexion");
     }
 
     private void chargerContenuDansCentre(String fxmlPath) throws IOException {

@@ -8,7 +8,8 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.TilePane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -31,7 +32,7 @@ import java.util.List;
 public class ParticipationsEtudiantController {
 
     @FXML
-    private TilePane tileParticipations;
+    private FlowPane tileParticipations;
 
     @FXML
     private Label lblTotal;
@@ -56,6 +57,14 @@ public class ParticipationsEtudiantController {
     @FXML
     public void initialize() {
         System.out.println("Initialisation de ParticipationsEtudiantController");
+
+        if (tileParticipations != null) {
+            tileParticipations.setMaxWidth(Double.MAX_VALUE);
+            if (tileParticipations.getParent() instanceof Region parentRegion) {
+                tileParticipations.prefWrapLengthProperty().bind(parentRegion.widthProperty());
+            }
+        }
+
         try {
             participationService = new ParticipationService();
 
@@ -241,7 +250,7 @@ public class ParticipationsEtudiantController {
                 ex.printStackTrace();
             }
         }
-        System.out.println("Nombre de cartes dans le TilePane: " + tileParticipations.getChildren().size());
+        System.out.println("Nombre de cartes dans le FlowPane: " + tileParticipations.getChildren().size());
     }
 
     private VBox creerCarteParticipation(Participation participation) {
