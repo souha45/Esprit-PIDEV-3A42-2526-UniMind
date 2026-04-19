@@ -212,7 +212,7 @@ public class DashboardEtudiantController extends BaseDashboardController
                         "       d.type_consult, rv.statut " +
                         "FROM rendez_vous rv " +
                         "JOIN disponibilite_psy d ON rv.dispo_id = d.dispo_id " +
-                        "JOIN user u ON rv.psy_id = u.userId " +
+                        "JOIN user u ON rv.psy_id = u.user_id " +
                         "WHERE rv.etudiant_id = ? AND d.date_dispo >= ? " +
                         "AND rv.statut IN ('confirme','Encours','demande') " +
                         "ORDER BY d.date_dispo ASC, d.heure_debut ASC LIMIT 1";
@@ -333,7 +333,7 @@ public class DashboardEtudiantController extends BaseDashboardController
                         "FROM consultation c " +
                         "JOIN rendez_vous rv ON c.rendez_vous_id = rv.rendez_vous_id " +
                         "JOIN disponibilite_psy d ON rv.dispo_id = d.dispo_id " +
-                        "JOIN user u ON c.psy_user_id = u.userId " +
+                        "JOIN user u ON c.psy_user_id = u.user_id " +
                         "WHERE c.etudiant_user_id = ? " +
                         "ORDER BY c.date_redaction DESC LIMIT 3";
 
@@ -401,7 +401,7 @@ public class DashboardEtudiantController extends BaseDashboardController
         String sql =
                 "SELECT u.prenom, u.nom, u.email, COUNT(*) AS nbRdv " +
                         "FROM rendez_vous rv " +
-                        "JOIN user u ON rv.psy_id = u.userId " +
+                        "JOIN user u ON rv.psy_id = u.user_id " +
                         "WHERE rv.etudiant_id = ? " +
                         "GROUP BY rv.psy_id, u.prenom, u.nom, u.email " +
                         "ORDER BY nbRdv DESC LIMIT 1";

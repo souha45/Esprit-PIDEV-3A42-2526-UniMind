@@ -10,12 +10,11 @@ import javafx.scene.image.ImageView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.example.entities.User;
+import org.example.utils.MyDataBase_Unimind;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class SidebarPsychologueController {
 
@@ -194,15 +193,45 @@ public class SidebarPsychologueController {
     }
 
     private String getPhotoChemin(User user) {
-        if (connection == null || user == null) return null;
+        if (user == null) {
+            System.out.println("❌ getPhotoChemin - User is null");
+            return null;
+        }
+
+        System.out.println("🔍 Recherche photo pour user_id: " + user.getUserId());
+
+        // 🔥 FORCER LA CONNEXION DIRECTE
+        Connection conn = null;
+        try {
+            conn = MyDataBase_Unimind.getInstance().getConnection();
+            System.out.println("🔗 Connexion directe obtenue: " + (conn != null ? "OK" : "NULL"));
+        } catch (Exception e) {
+            System.err.println("❌ Impossible d'obtenir la connexion: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+
         String query = "SELECT photo FROM profil WHERE user_id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(query)) {
+        try (PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setInt(1, user.getUserId());
             var rs = ps.executeQuery();
+
             if (rs.next()) {
-                return rs.getString("photo");
+                String photo = rs.getString("photo");
+                System.out.println("📸 Photo trouvée: " + photo);
+                return photo;
+            } else {
+                System.out.println("⚠️ Aucun profil trouvé pour user_id: " + user.getUserId());
+                // 🔥 Afficher tous les profils existants pour debug
+                Statement stmt = conn.createStatement();
+                ResultSet allRs = stmt.executeQuery("SELECT user_id, photo FROM profil");
+                System.out.println("📋 Profils existants dans la BDD:");
+                while (allRs.next()) {
+                    System.out.println("   - user_id: " + allRs.getInt("user_id") + ", photo: " + allRs.getString("photo"));
+                }
             }
         } catch (SQLException e) {
+            System.err.println("❌ Erreur SQL: " + e.getMessage());
             e.printStackTrace();
         }
         return null;

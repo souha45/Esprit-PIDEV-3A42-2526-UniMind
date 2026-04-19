@@ -181,7 +181,7 @@ public class DashboardPsychologueController extends BaseDashboardController impl
                 "SELECT u.prenom, u.nom, d.heure_debut, d.heure_fin, rv.statut, d.type_consult " +
                         "FROM rendez_vous rv " +
                         "JOIN disponibilite_psy d ON rv.dispo_id = d.dispo_id " +
-                        "JOIN user u ON rv.etudiant_id = u.userId " +
+                        "JOIN user u ON rv.etudiant_id = u.user_id " +
                         "WHERE rv.psy_id = ? AND d.date_dispo = ? " +
                         "AND rv.statut IN ('confirme','Encours','demande') " +
                         "ORDER BY d.heure_debut ASC LIMIT 5";

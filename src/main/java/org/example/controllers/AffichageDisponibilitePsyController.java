@@ -94,7 +94,7 @@ public class AffichageDisponibilitePsyController
         comboFiltreStatut.setValue("Tous");
 
         comboFiltreType.setItems(FXCollections.observableArrayList(
-                "Tous", "présentiel", "en ligne"));
+                "Tous", "présentiel", "en_ligne"));
         comboFiltreType.setValue("Tous");
 
         // Listener sur chaque filtre → refiltre

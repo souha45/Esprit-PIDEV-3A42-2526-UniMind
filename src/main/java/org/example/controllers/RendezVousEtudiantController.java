@@ -107,7 +107,7 @@ public class RendezVousEtudiantController
 
     // ── Filtres texte + combo ────────────────────────────────────────
     private void initialiserFiltres() {
-        comboType.setItems(FXCollections.observableArrayList("Tous", "présentiel", "en ligne"));
+        comboType.setItems(FXCollections.observableArrayList("Tous", "présentiel", "en_ligne"));
         comboType.setValue("Tous");
 
         fieldRecherche.textProperty().addListener((o, ov, nv) -> appliquerFiltres());

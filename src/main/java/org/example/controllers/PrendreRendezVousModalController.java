@@ -98,7 +98,7 @@ public class PrendreRendezVousModalController {
 
     // ── Filtres ─────────────────────────────────────────────────────
     private void initialiserFiltres() {
-        comboType.setItems(FXCollections.observableArrayList("Tous", "présentiel", "en ligne"));
+        comboType.setItems(FXCollections.observableArrayList("Tous", "présentiel", "en_ligne"));
         comboType.setValue("Tous");
 
         comboPsy.valueProperty().addListener((o, ov, nv)         -> appliquerFiltres());
