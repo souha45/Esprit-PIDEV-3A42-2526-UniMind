@@ -6,10 +6,10 @@ import org.example.utils.MyDataBase_Unimind;
 
 import java.sql.*;
 
-public class UserServices {
+public class UserService {
     Connection con;
 
-    public UserServices() {
+    public UserService() {
         con = MyDataBase_Unimind.getInstance().getConnection();
     }
 

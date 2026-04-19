@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class EtudiantLayoutController implements Initializable {
+public class SidebarEtudiantController implements Initializable {
 
     @FXML private Label lblUserName;
     @FXML private StackPane contentArea;
@@ -65,7 +65,7 @@ public class EtudiantLayoutController implements Initializable {
     private void onLogout() {
         Session.getInstance().clear();
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/views/Login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
             Scene scene = new Scene(loader.load(), 900, 600);
             scene.getStylesheets().add(getClass().getResource("/css/etudiant.css").toExternalForm());
             Stage stage = (Stage) contentArea.getScene().getWindow();

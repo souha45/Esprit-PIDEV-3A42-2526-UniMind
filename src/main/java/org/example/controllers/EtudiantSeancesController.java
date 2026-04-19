@@ -8,7 +8,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import org.example.entities.*;
 import org.example.services.*;
 import org.example.utils.Session;
@@ -31,7 +30,7 @@ public class EtudiantSeancesController implements Initializable {
     private final SeanceMeditationServices seanceService = new SeanceMeditationServices();
     private final PostServices postService = new PostServices();
     private final CommentaireServices commentaireService = new CommentaireServices();
-    private final UserServices userServices = new UserServices();
+    private final UserService userService = new UserService();
 
     private List<CategorieMeditation> allCategories = new ArrayList<>();
     private List<Post> allPosts = new ArrayList<>();
@@ -225,7 +224,7 @@ public class EtudiantSeancesController implements Initializable {
         String authorName = "Anonyme";
         if (!post.isIsAnonyme()) {
             try {
-                User author = userServices.getUserById(post.getUserId());
+                User author = userService.getUserById(post.getUserId());
                 if (author != null) authorName = author.getPrenom() + " " + author.getNom();
             } catch (SQLException ignored) {}
         }
@@ -370,7 +369,7 @@ public class EtudiantSeancesController implements Initializable {
         String authorName = "Anonyme";
         if (!c.isIsAnonyme()) {
             try {
-                User author = userServices.getUserById(c.getUserId());
+                User author = userService.getUserById(c.getUserId());
                 if (author != null) authorName = author.getPrenom() + " " + author.getNom();
             } catch (SQLException ignored) {}
         }

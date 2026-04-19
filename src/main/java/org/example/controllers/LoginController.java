@@ -9,7 +9,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.example.entities.User;
 import org.example.enums.Role;
-import org.example.services.UserServices;
+import org.example.services.UserService;
 import org.example.utils.Session;
 
 import java.io.IOException;
@@ -21,7 +21,7 @@ public class LoginController {
     @FXML private PasswordField tfPassword;
     @FXML private Label errLogin;
 
-    private final UserServices userServices = new UserServices();
+    private final UserService userService = new UserService();
 
     @FXML
     private void onLogin() {
@@ -34,7 +34,7 @@ public class LoginController {
         }
 
         try {
-            User user = userServices.login(email, password);
+            User user = userService.login(email, password);
             if (user == null) {
                 showErr("Email ou mot de passe incorrect.");
             } else {
@@ -85,7 +85,7 @@ public class LoginController {
     }
 
     private void navigateToStudent() {
-        loadScene("/org/example/views/EtudiantLayout.fxml", 1200, 750);
+        loadScene("/SidebarEtudiant.fxml", 1200, 750);
     }
 
     private void loadScene(String fxml, double w, double h) {
