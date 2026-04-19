@@ -17,48 +17,48 @@ public class AdminController implements Initializable {
     @FXML private Button btnQuestionnaire;
     @FXML private Button btnQuestion;
     @FXML private Button btnReponse;
+    @FXML private Button btnStats;
 
-    private static final String ACTIVE   = "-fx-background-color: #7c8dfc; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;";
-    private static final String INACTIVE = "-fx-background-color: #1e2436; -fx-text-fill: #8892a4; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;";
+    private static final String ACTIVE   = "-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;";
+    private static final String INACTIVE = "-fx-background-color: #e2e8f0; -fx-text-fill: #64748b; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;";
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         showQuestionnaire();
     }
 
-    @FXML
-    public void showQuestionnaire() {
+    @FXML public void showQuestionnaire() {
         loadView("/fxml/QuestionnaireView.fxml");
-        setActive(btnQuestionnaire, btnQuestion, btnReponse);
+        setActive(btnQuestionnaire, btnQuestion, btnReponse, btnStats);
     }
 
-    @FXML
-    public void showQuestion() {
+    @FXML public void showQuestion() {
         loadView("/fxml/QuestionView.fxml");
-        setActive(btnQuestion, btnQuestionnaire, btnReponse);
+        setActive(btnQuestion, btnQuestionnaire, btnReponse, btnStats);
     }
 
-    @FXML
-    public void showReponse() {
+    @FXML public void showReponse() {
         loadView("/fxml/ReponseView.fxml");
-        setActive(btnReponse, btnQuestionnaire, btnQuestion);
+        setActive(btnReponse, btnQuestionnaire, btnQuestion, btnStats);
     }
 
-    @FXML
-    public void goToEtudiant() {
-        try {
-            MainApp.showEtudiantView();
-        } catch (Exception e) {
-            System.out.println("Erreur navigation étudiant: " + e.getMessage());
-        }
+    @FXML public void showStats() {
+        loadView("/fxml/StatistiquesView.fxml");
+        setActive(btnStats, btnQuestionnaire, btnQuestion, btnReponse);
+    }
+
+    @FXML public void goToEtudiant() {
+        try { MainApp.showEtudiantView(); }
+        catch (Exception e) { System.out.println("Erreur navigation: " + e.getMessage()); }
     }
 
     private void loadView(String fxmlPath) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Pane view = loader.load();
+            javafx.scene.Parent view = loader.load();
             contentArea.getChildren().setAll(view);
         } catch (Exception e) {
+            e.printStackTrace();
             System.out.println("Erreur chargement: " + fxmlPath + " → " + e.getMessage());
         }
     }

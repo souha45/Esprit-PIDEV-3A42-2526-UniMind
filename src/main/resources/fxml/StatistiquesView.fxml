@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.geometry.Insets?>
+
+<ScrollPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.example.controllers.StatistiquesController"
+            fitToWidth="true"
+            style="-fx-background-color: #f1f5f9; -fx-background: #f1f5f9;">
+
+    <VBox spacing="20" style="-fx-padding: 10;">
+
+        <Label text="📊 Tableau de Bord — Statistiques"
+               style="-fx-text-fill: #1e293b; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+
+        <!-- CARTES STAT -->
+        <HBox spacing="16">
+            <VBox spacing="6" HBox.hgrow="ALWAYS"
+                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                         -fx-border-color: #e0e7ff; -fx-border-radius: 12; -fx-border-width: 1;
+                         -fx-padding: 18; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 10, 0, 0, 3);">
+                <Label text="📋" style="-fx-font-size: 24px;"/>
+                <Label fx:id="lblTotalQuestionnaires" text="0"
+                       style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #6366f1;"/>
+                <Label text="Questionnaires" style="-fx-font-size: 12px; -fx-text-fill: #9ca3af;"/>
+            </VBox>
+
+            <VBox spacing="6" HBox.hgrow="ALWAYS"
+                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                         -fx-border-color: #d1fae5; -fx-border-radius: 12; -fx-border-width: 1;
+                         -fx-padding: 18; -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.08), 10, 0, 0, 3);">
+                <Label text="❓" style="-fx-font-size: 24px;"/>
+                <Label fx:id="lblTotalQuestions" text="0"
+                       style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #10b981;"/>
+                <Label text="Questions" style="-fx-font-size: 12px; -fx-text-fill: #9ca3af;"/>
+            </VBox>
+
+            <VBox spacing="6" HBox.hgrow="ALWAYS"
+                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                         -fx-border-color: #fde68a; -fx-border-radius: 12; -fx-border-width: 1;
+                         -fx-padding: 18; -fx-effect: dropshadow(gaussian, rgba(245,158,11,0.08), 10, 0, 0, 3);">
+                <Label text="📝" style="-fx-font-size: 24px;"/>
+                <Label fx:id="lblTotalReponses" text="0"
+                       style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #f59e0b;"/>
+                <Label text="Réponses" style="-fx-font-size: 12px; -fx-text-fill: #9ca3af;"/>
+            </VBox>
+
+            <VBox spacing="6" HBox.hgrow="ALWAYS"
+                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                         -fx-border-color: #fecaca; -fx-border-radius: 12; -fx-border-width: 1;
+                         -fx-padding: 18; -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.08), 10, 0, 0, 3);">
+                <Label text="🧑‍⚕️" style="-fx-font-size: 24px;"/>
+                <Label fx:id="lblBesoinPsy" text="0"
+                       style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #ef4444;"/>
+                <Label text="Besoin Suivi Psy" style="-fx-font-size: 12px; -fx-text-fill: #9ca3af;"/>
+            </VBox>
+        </HBox>
+
+        <!-- GRAPHIQUES -->
+        <HBox spacing="16">
+            <VBox spacing="8" HBox.hgrow="ALWAYS"
+                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                         -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-border-width: 1;
+                         -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+                <Label text="🍕 Répartition par Type de Questionnaire"
+                       style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                <PieChart fx:id="pieType" prefHeight="280"
+                          style="-fx-background-color: transparent;"/>
+            </VBox>
+
+            <VBox spacing="8" HBox.hgrow="ALWAYS"
+                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                         -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-border-width: 1;
+                         -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+                <Label text="📊 Réponses par Niveau"
+                       style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                <BarChart fx:id="barNiveau" prefHeight="280"
+                          style="-fx-background-color: transparent;">
+                    <xAxis><CategoryAxis label="Niveau"/></xAxis>
+                    <yAxis><NumberAxis label="Nombre"/></yAxis>
+                </BarChart>
+            </VBox>
+        </HBox>
+
+        <!-- TOP QUESTIONNAIRES -->
+        <VBox spacing="8"
+              style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                     -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-border-width: 1;
+                     -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+            <Label text="🏆 Questionnaires les plus répondus"
+                   style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+            <BarChart fx:id="barTopQuestionnaires" prefHeight="250"
+                      style="-fx-background-color: transparent;">
+                <xAxis><CategoryAxis label="Questionnaire"/></xAxis>
+                <yAxis><NumberAxis label="Nb Réponses"/></yAxis>
+            </BarChart>
+        </VBox>
+
+    </VBox>
+</ScrollPane>
