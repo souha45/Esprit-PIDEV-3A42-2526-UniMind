@@ -1,0 +1,550 @@
+/* =============================================
+   UNIMIND ETUDIANT - CSS
+   Theme: Fresh, Warm & Welcoming
+   ============================================= */
+
+.root {
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* =============================================
+   LOGIN
+   ============================================= */
+.login-root {
+    -fx-background-color: linear-gradient(to bottom right, #ede9fe, #dbeafe, #ecfdf5);
+}
+
+.login-bg {
+    -fx-background-color: transparent;
+    -fx-padding: 40;
+    -fx-alignment: CENTER;
+}
+
+.login-card {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.15), 20, 0, 0, 6);
+    -fx-spacing: 0;
+}
+
+.login-logo-box {
+    -fx-background-color: linear-gradient(to bottom right, #6366f1, #8b5cf6);
+    -fx-padding: 30 40 24 40;
+    -fx-background-radius: 20 20 0 0;
+    -fx-spacing: 6;
+    -fx-alignment: CENTER;
+}
+
+.login-brand {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.login-tagline {
+    -fx-font-size: 12px;
+    -fx-text-fill: #c4b5fd;
+    -fx-alignment: CENTER;
+}
+
+.login-form {
+    -fx-padding: 28 36 32 36;
+    -fx-spacing: 16;
+}
+
+.login-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3730a3;
+}
+
+/* =============================================
+   NAVBAR
+   ============================================= */
+.etudiant-root {
+    -fx-background-color: #f5f3ff;
+}
+
+.etudiant-navbar {
+    -fx-background-color: white;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 0 0 2 0;
+    -fx-pref-height: 60px;
+    -fx-min-height: 60px;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 8, 0, 0, 2);
+}
+
+.navbar-brand {
+    -fx-padding: 0 16 0 16;
+    -fx-min-width: 160px;
+}
+
+.navbar-brand-name {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6366f1;
+}
+
+.navbar-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.navbar-scroll .viewport {
+    -fx-background-color: transparent;
+}
+
+.navbar-menu {
+    -fx-padding: 8 8 8 0;
+}
+
+.navbar-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 12px;
+    -fx-padding: 8 12 8 12;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-white-space: nowrap;
+}
+
+.navbar-btn:hover {
+    -fx-background-color: #ede9fe;
+    -fx-text-fill: #6366f1;
+}
+
+.navbar-btn-active {
+    -fx-background-color: #ede9fe;
+    -fx-text-fill: #6366f1;
+    -fx-font-weight: bold;
+}
+
+.navbar-user {
+    -fx-padding: 0 16 0 8;
+    -fx-min-width: 180px;
+}
+
+.navbar-username {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #374151;
+}
+
+.navbar-logout-btn {
+    -fx-background-color: #fee2e2;
+    -fx-text-fill: #ef4444;
+    -fx-font-size: 14px;
+    -fx-padding: 6 10 6 10;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.navbar-logout-btn:hover {
+    -fx-background-color: #fecaca;
+}
+
+/* =============================================
+   CONTENT
+   ============================================= */
+.etudiant-content {
+    -fx-background-color: #f5f3ff;
+}
+
+.etudiant-scroll {
+    -fx-background-color: #f5f3ff;
+    -fx-background: #f5f3ff;
+    -fx-border-color: transparent;
+}
+
+.etudiant-scroll .viewport {
+    -fx-background-color: #f5f3ff;
+}
+
+.etudiant-page {
+    -fx-background-color: #f5f3ff;
+    -fx-spacing: 0;
+}
+
+/* =============================================
+   HERO SECTION
+   ============================================= */
+.hero-section {
+    -fx-padding: 24 24 0 24;
+}
+
+.hero-card {
+    -fx-background-radius: 16;
+    -fx-padding: 24;
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+    -fx-spacing: 10;
+}
+
+.hero-card-purple {
+    -fx-background-color: linear-gradient(to bottom right, #ede9fe, #f5f3ff);
+    -fx-border-color: #c4b5fd;
+}
+
+.hero-card-teal {
+    -fx-background-color: linear-gradient(to bottom right, #ecfdf5, #f0fdf4);
+    -fx-border-color: #6ee7b7;
+}
+
+.hero-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3730a3;
+}
+
+.hero-subtitle {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6366f1;
+}
+
+.hero-sep {
+    -fx-background-color: #c4b5fd;
+}
+
+.hero-point {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #374151;
+}
+
+.hero-text {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6b7280;
+}
+
+/* =============================================
+   SECTIONS
+   ============================================= */
+.section-container {
+    -fx-padding: 24;
+    -fx-spacing: 16;
+}
+
+.section-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3730a3;
+}
+
+.forum-section {
+    -fx-background-color: white;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* =============================================
+   CATEGORY CARDS
+   ============================================= */
+.cat-card {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 8, 0, 0, 2);
+    -fx-cursor: default;
+}
+
+.cat-card:hover {
+    -fx-border-color: #a5b4fc;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.18), 12, 0, 0, 4);
+}
+
+.cat-name {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3730a3;
+}
+
+.cat-desc {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6b7280;
+}
+
+.btn-explorer {
+    -fx-background-color: #6366f1;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 0 10 0;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+}
+
+.btn-explorer:hover {
+    -fx-background-color: #4f46e5;
+}
+
+/* =============================================
+   SEANCE CARDS
+   ============================================= */
+.seance-card {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-padding: 18;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 8, 0, 0, 2);
+}
+
+.seance-card:hover {
+    -fx-border-color: #a5b4fc;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.15), 12, 0, 0, 4);
+}
+
+/* =============================================
+   FORUM / POSTS
+   ============================================= */
+.post-card {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-padding: 18;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.06), 6, 0, 0, 2);
+}
+
+.btn-toggle-comments {
+    -fx-background-color: #f5f3ff;
+    -fx-text-fill: #6366f1;
+    -fx-font-size: 11px;
+    -fx-padding: 5 12 5 12;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-border-color: #c4b5fd;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+}
+
+.btn-comment {
+    -fx-background-color: #ecfdf5;
+    -fx-text-fill: #15803d;
+    -fx-font-size: 11px;
+    -fx-padding: 5 12 5 12;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-border-color: #86efac;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+}
+
+.btn-load-more {
+    -fx-background-color: white;
+    -fx-text-fill: #6366f1;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 32 12 32;
+    -fx-background-radius: 10;
+    -fx-border-color: #c4b5fd;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+    -fx-cursor: hand;
+}
+
+.btn-load-more:hover {
+    -fx-background-color: #ede9fe;
+}
+
+/* =============================================
+   CONSEILS CARD
+   ============================================= */
+.conseils-card {
+    -fx-background-color: #f0fdf4;
+    -fx-background-radius: 14;
+    -fx-border-color: #86efac;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-padding: 18;
+    -fx-max-height: 300;
+}
+
+.conseils-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #15803d;
+}
+
+.conseils-point {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #374151;
+}
+
+.conseils-text {
+    -fx-font-size: 11px;
+    -fx-text-fill: #6b7280;
+}
+
+/* =============================================
+   SHARED FORM ELEMENTS
+   ============================================= */
+.form-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6366f1;
+}
+
+.form-input {
+    -fx-background-color: #f5f3ff;
+    -fx-text-fill: #374151;
+    -fx-prompt-text-fill: #c4b5fd;
+    -fx-font-size: 13px;
+    -fx-padding: 10 14 10 14;
+    -fx-background-radius: 10;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+
+.form-textarea {
+    -fx-background-color: #f5f3ff;
+    -fx-text-fill: #374151;
+    -fx-prompt-text-fill: #c4b5fd;
+    -fx-font-size: 13px;
+    -fx-background-radius: 10;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+    -fx-control-inner-background: #f5f3ff;
+}
+
+.form-textarea .content {
+    -fx-background-color: #f5f3ff;
+}
+
+.form-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3730a3;
+}
+
+.error-label {
+    -fx-text-fill: #ef4444;
+    -fx-font-size: 11px;
+}
+
+/* =============================================
+   BUTTONS
+   ============================================= */
+.btn-primary {
+    -fx-background-color: #6366f1;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 11 22 11 22;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.3), 8, 0, 0, 2);
+}
+
+.btn-primary:hover {
+    -fx-background-color: #4f46e5;
+}
+
+.btn-secondary {
+    -fx-background-color: #f3f4f6;
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 13px;
+    -fx-padding: 11 22 11 22;
+    -fx-background-radius: 10;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+    -fx-cursor: hand;
+}
+
+.btn-back {
+    -fx-background-color: #ede9fe;
+    -fx-text-fill: #6366f1;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 7 14 7 14;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-border-color: #c4b5fd;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+}
+
+.btn-icon {
+    -fx-background-color: transparent;
+    -fx-font-size: 14px;
+    -fx-padding: 4 8 4 8;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.btn-edit { -fx-text-fill: #6366f1; }
+.btn-edit:hover { -fx-background-color: #ede9fe; }
+.btn-delete { -fx-text-fill: #ef4444; }
+.btn-delete:hover { -fx-background-color: #fee2e2; }
+
+/* =============================================
+   PAGE HEADER
+   ============================================= */
+.page-header {
+    -fx-background-color: white;
+    -fx-padding: 20 24 16 24;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 0 0 1 0;
+    -fx-spacing: 4;
+}
+
+.page-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #374151;
+}
+
+.page-title-accent {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6366f1;
+}
+
+.page-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #9ca3af;
+}
+
+/* Search */
+.search-box {
+    -fx-background-color: white;
+    -fx-border-color: #c7d2fe;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 0 12 0 12;
+    -fx-border-width: 1;
+}
+
+.search-icon { -fx-font-size: 14px; -fx-text-fill: #a5b4fc; }
+
+.search-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: #374151;
+    -fx-prompt-text-fill: #c4b5fd;
+    -fx-font-size: 13px;
+    -fx-padding: 10 0 10 0;
+    -fx-border-width: 0;
+}
+
+/* Filter combo */
+.filter-combo {
+    -fx-background-color: white;
+    -fx-border-color: #c7d2fe;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-border-width: 1;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}

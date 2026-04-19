@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controllers.StatsController"
+      styleClass="page-container"
+      spacing="0">
+
+    <!-- PAGE HEADER -->
+    <VBox styleClass="page-header">
+        <Label text="📊 Statistiques" styleClass="page-title"/>
+        <Label text="Vue d'ensemble de la plateforme Unimind" styleClass="page-subtitle"/>
+    </VBox>
+
+    <!-- KPI CARDS -->
+    <HBox spacing="16">
+        <VBox.margin><Insets top="20" right="24" bottom="0" left="24"/></VBox.margin>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="🌼" styleClass="stat-icon"/>
+            <Label fx:id="lblTotalCategories" text="0" styleClass="stat-number"/>
+            <Label text="Catégories" styleClass="stat-label"/>
+        </VBox>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="🎵" styleClass="stat-icon"/>
+            <Label fx:id="lblTotalSeances" text="0" styleClass="stat-number"/>
+            <Label text="Séances totales" styleClass="stat-label"/>
+        </VBox>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="✅" styleClass="stat-icon"/>
+            <Label fx:id="lblSeancesActives" text="0" styleClass="stat-number"/>
+            <Label text="Séances actives" styleClass="stat-label"/>
+        </VBox>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS"
+              style="-fx-border-color: #fbbf24; -fx-background-color: #fffbeb;">
+            <Label text="🎬" styleClass="stat-icon"/>
+            <Label fx:id="lblSeancesVideo" text="0" styleClass="stat-number"
+                   style="-fx-text-fill: #d97706;"/>
+            <Label text="Séances vidéo" styleClass="stat-label"/>
+        </VBox>
+    </HBox>
+
+    <!-- CHARTS ROW -->
+    <HBox spacing="16" VBox.vgrow="ALWAYS">
+        <VBox.margin><Insets top="20" right="24" bottom="24" left="24"/></VBox.margin>
+
+        <!-- LINE CHART: Evolution mensuelle -->
+        <VBox styleClass="chart-card" HBox.hgrow="ALWAYS">
+            <Label text="📈  Évolution mensuelle des séances" styleClass="chart-title"/>
+            <Label text="Nombre de séances créées par mois" styleClass="chart-subtitle"/>
+            <LineChart fx:id="lineChart" VBox.vgrow="ALWAYS"
+                       styleClass="custom-chart" animated="true"
+                       legendVisible="false">
+                <xAxis>
+                    <CategoryAxis label="" fx:id="xAxis" styleClass="chart-axis"/>
+                </xAxis>
+                <yAxis>
+                    <NumberAxis label="Séances" lowerBound="0" tickUnit="1"
+                                minorTickVisible="false" styleClass="chart-axis"/>
+                </yAxis>
+            </LineChart>
+        </VBox>
+
+        <!-- PIE CHART: Séances par catégorie -->
+        <VBox styleClass="chart-card" prefWidth="380">
+            <Label text="❤  Séances par catégorie" styleClass="chart-title"/>
+            <Label text="Répartition des séances selon les catégories" styleClass="chart-subtitle"/>
+            <PieChart fx:id="pieChart" VBox.vgrow="ALWAYS"
+                      styleClass="custom-chart" animated="true"
+                      labelsVisible="true" legendVisible="true"
+                      legendSide="BOTTOM"/>
+        </VBox>
+
+    </HBox>
+
+</VBox>
