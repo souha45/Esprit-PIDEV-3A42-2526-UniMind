@@ -17,7 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.Locale;
 
-public class DashboardPsychologueController implements SidebarPsychologueController.PsyPageController {
+public class DashboardPsychologueController extends BaseDashboardController implements SidebarPsychologueController.PsyPageController {
 
     // ── Header ──────────────────────────────────────────────────────
     @FXML private Label lblDate;
@@ -84,6 +84,20 @@ public class DashboardPsychologueController implements SidebarPsychologueControl
 
     private void updateHeure() {
         lblHeure.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+    }
+
+    @Override
+    public void setUser(User user) {
+        super.setUser(user);           // stocke dans utilisateurConnecte
+        this.utilisateur = user;       // stocke localement aussi
+
+        if (sidebarPsyController != null) {
+            sidebarPsyController.setUtilisateur(user);
+        }
+        if (user == null) return;
+
+        lblSoustitre.setText("Bonjour, Dr. " + user.getPrenom() + " " + user.getNom() + " 👋");
+        chargerToutesLesStats(user.getUserId());
     }
 
     @Override

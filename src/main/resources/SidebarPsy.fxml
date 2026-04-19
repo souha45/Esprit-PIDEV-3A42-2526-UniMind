@@ -4,19 +4,19 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.shape.Circle?>
 
-<VBox
-        prefWidth="240"
-        spacing="0"
-        style="-fx-background-color: #ffffff; -fx-border-color: #e0e7ff; -fx-border-width: 0 2 0 0; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.10), 16, 0, 2, 0);"
-        xmlns="http://javafx.com/javafx/17"
-        xmlns:fx="http://javafx.com/fxml/1"
-        fx:controller="org.example.controllers.SidebarPsychologueController">
+<VBox prefWidth="280" spacing="0"
+      style="-fx-background-color: #ffffff; -fx-border-color: #e0e7ff; -fx-border-width: 0 2 0 0; -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.10), 16, 0, 2, 0);"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.controllers.SidebarPsychologueController">
 
-    <!-- Brand Header -->
+    <!-- Brand Header (moderne) -->
     <VBox alignment="CENTER_LEFT" spacing="2"
           style="-fx-background-color: linear-gradient(to bottom right, #6366f1, #8b5cf6); -fx-padding: 24 18 20 18;">
         <Label text="Unimind"
@@ -25,24 +25,30 @@
                style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px; -fx-text-fill: rgba(255,255,255,0.75); -fx-letter-spacing: 1px;" />
     </VBox>
 
-    <!-- User Info -->
-    <VBox alignment="CENTER_LEFT" spacing="3"
-          style="-fx-background-color: #f5f3ff; -fx-padding: 16 18 14 18; -fx-border-color: #e0e7ff; -fx-border-width: 0 0 1 0;">
-        <HBox spacing="12" alignment="CENTER_LEFT">
-            <Label fx:id="lblInitiales" text="JD"
-                   style="-fx-background-color: #6366f1; -fx-text-fill: #ffffff; -fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10 12 10 12; -fx-background-radius: 50; -fx-min-width: 42; -fx-min-height: 42; -fx-alignment: CENTER;" />
-            <VBox spacing="2">
-                <Label fx:id="lblNomComplet" text="Dr. Jean Dupont"
-                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
-                <Label fx:id="lblRole" text="PSYCHOLOGUE"
+    <!-- Zone utilisateur : photo + texte (fusion des deux styles) -->
+    <VBox alignment="CENTER_LEFT" spacing="12"
+          style="-fx-background-color: #f5f3ff; -fx-padding: 16 18 16 18; -fx-border-color: #e0e7ff; -fx-border-width: 0 0 1 0;">
+        <HBox spacing="15" alignment="CENTER_LEFT">
+            <!-- Photo de profil circulaire (première version) -->
+            <ImageView fx:id="sidebarPhoto" fitWidth="60" fitHeight="60">
+                <clip>
+                    <Circle centerX="30" centerY="30" radius="30"/>
+                </clip>
+            </ImageView>
+            <!-- Infos texte : nom, prénom, rôle -->
+            <VBox spacing="4">
+                <Label fx:id="sidebarNomLabel"
+                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                <Label fx:id="sidebarPrenomLabel"
+                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px; -fx-text-fill: #6b7280;" />
+                <Label fx:id="sidebarRoleLabel" text="Psychologue"
                        style="-fx-font-family: 'Segoe UI'; -fx-font-size: 9px; -fx-text-fill: #a78bfa; -fx-letter-spacing: 1.5px;" />
             </VBox>
         </HBox>
     </VBox>
 
-    <!-- Navigation Menu -->
-    <VBox spacing="2" style="-fx-padding: 16 10 10 10;" VBox.vgrow="ALWAYS">
-
+    <!-- Menu de navigation -->
+    <VBox spacing="2" style="-fx-padding: 20 12 12 12;" VBox.vgrow="ALWAYS">
         <Label text="NAVIGATION"
                style="-fx-font-family: 'Segoe UI'; -fx-font-size: 9px; -fx-text-fill: #c4b5fd; -fx-padding: 4 8 8 8; -fx-letter-spacing: 2px;" />
 
@@ -66,10 +72,14 @@
                 maxWidth="Infinity"
                 style="-fx-background-color: transparent; -fx-text-fill: #6b7280; -fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-alignment: CENTER_LEFT; -fx-padding: 11 16; -fx-background-radius: 10; -fx-cursor: hand;" />
 
+        <!-- Bouton Mon Profil (ajouté depuis la première version) -->
+        <Button fx:id="btnProfil" text="  👤  Mon Profil"
+                maxWidth="Infinity"
+                style="-fx-background-color: transparent; -fx-text-fill: #6b7280; -fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-alignment: CENTER_LEFT; -fx-padding: 11 16; -fx-background-radius: 10; -fx-cursor: hand;" />
     </VBox>
 
-    <!-- Footer -->
-    <VBox spacing="6" style="-fx-padding: 10 10 18 10; -fx-border-color: #e0e7ff; -fx-border-width: 1 0 0 0;">
+    <!-- Pied de page avec déconnexion -->
+    <VBox spacing="6" style="-fx-padding: 10 12 18 12; -fx-border-color: #e0e7ff; -fx-border-width: 1 0 0 0;">
         <Button fx:id="btnDeconnexion" text="  🚪  Déconnexion"
                 maxWidth="Infinity"
                 style="-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-alignment: CENTER_LEFT; -fx-padding: 11 16; -fx-background-radius: 10; -fx-cursor: hand;" />

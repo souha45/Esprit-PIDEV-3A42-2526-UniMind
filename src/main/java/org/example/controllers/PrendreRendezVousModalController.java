@@ -12,6 +12,7 @@ import org.example.entities.DisponibilitePsy;
 import org.example.entities.Psychologue;
 import org.example.entities.RendezVous;
 import org.example.services.DisponibilitePsyService;
+import org.example.services.PsychologueService;
 import org.example.services.RendezVousService;
 import org.example.services.UserService;
 
@@ -42,7 +43,7 @@ public class PrendreRendezVousModalController {
     // ── Services ────────────────────────────────────────────────────
     private DisponibilitePsyService disponibiliteService;
     private RendezVousService       rendezVousService;
-    private UserService             userService;
+    private PsychologueService psychologueService;
 
     // ── Données ─────────────────────────────────────────────────────
     private ObservableList<DisponibilitePsy> disponibilitesList;
@@ -72,7 +73,7 @@ public class PrendreRendezVousModalController {
     public void initialize() {
         disponibiliteService = new DisponibilitePsyService();
         rendezVousService    = new RendezVousService();
-        userService          = new UserService();
+        psychologueService          = new PsychologueService();
         disponibilitesList   = FXCollections.observableArrayList();
         filteredList         = new FilteredList<>(disponibilitesList, p -> true);
 
@@ -330,9 +331,9 @@ public class PrendreRendezVousModalController {
 
     // ── Helpers ─────────────────────────────────────────────────────
     private String getNomPsy(int userId) {
-        if (userService == null) return "Psy #" + userId;
+        if (psychologueService == null) return "Psy #" + userId;
         try {
-            Psychologue psy = userService.getPsychologueById(userId);
+            Psychologue psy = psychologueService.getPsychologueById(userId);
             if (psy != null)
                 return "Dr. " + psy.getPrenom() + " " + psy.getNom().toUpperCase();
         } catch (Exception e) {

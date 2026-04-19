@@ -4,6 +4,9 @@ import org.example.entities.Profil;
 import org.example.entities.Psychologue;
 import org.example.entities.User;
 import org.example.utils.PasswordUtils;
+import org.example.utils.MyDataBase_Unimind;
+
+import java.sql.Connection;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,7 +14,12 @@ import java.util.List;
 
 public class PsychologueService extends UserService {
 
-    public PsychologueService() { super(); }
+    private Connection con;
+
+
+    public PsychologueService() { super();
+        con = MyDataBase_Unimind.getInstance().getConnection();
+    }
 
     //  INSCRIPTION PSYCHOLOGUE
     @Override
@@ -156,6 +164,7 @@ public class PsychologueService extends UserService {
         p.setSpecialite(rs.getString("specialite"));
         p.setAdresse(rs.getString("adresse"));
         p.setTelephone(rs.getString("telephone"));
+      //  p.setRole(Role.valueOf(rs.getString("psychologue")));
         return p;
     }
     public boolean cinExiste(String cin) throws SQLException {
@@ -165,5 +174,31 @@ public class PsychologueService extends UserService {
         ResultSet rs = ps.executeQuery();
         rs.next();
         return rs.getInt(1) > 0;
+    }
+
+    public Psychologue getPsychologueById(int userId) {
+        String sql = "SELECT * FROM user WHERE user_id = ? AND role = 'psychologue'";
+
+        try {
+            PreparedStatement pst = con.prepareStatement(sql);
+            pst.setInt(1, userId);
+            ResultSet rs = pst.executeQuery();
+
+            if (rs.next()) {
+                Psychologue psy = new Psychologue();
+                psy.setUserId(rs.getInt("user_id"));
+                psy.setNom(rs.getString("nom"));
+                psy.setPrenom(rs.getString("prenom"));
+                psy.setEmail(rs.getString("email"));
+                psy.setCin(rs.getString("cin"));
+                psy.setActive(rs.getBoolean("is_active"));
+                psy.setVerified(rs.getBoolean("is_verified"));
+                return psy;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération du psychologue: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
     }
 }

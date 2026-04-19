@@ -115,4 +115,25 @@ public abstract class BaseDashboardController {
             e.printStackTrace();
         }
     }
+
+    // Méthode utilitaire à ajouter dans BaseDashboardController
+// (réutilisable par tous les controllers)
+    protected Image chargerImageDepuisChemin(String photoPath) {
+        if (photoPath == null || photoPath.isEmpty()) return null;
+
+        // Essai absolu
+        File f1 = new File(photoPath);
+        if (f1.exists()) return new Image(f1.toURI().toString());
+
+        // Essai relatif au user.dir
+        File f2 = new File(System.getProperty("user.dir"), photoPath);
+        if (f2.exists()) return new Image(f2.toURI().toString());
+
+        // Essai nom seul dans uploads/
+        File f3 = new File(System.getProperty("user.dir"),
+                "uploads/" + new File(photoPath).getName());
+        if (f3.exists()) return new Image(f3.toURI().toString());
+
+        return null;
+    }
 }

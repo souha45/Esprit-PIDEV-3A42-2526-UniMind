@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.Locale;
 
-public class DashboardEtudiantController
+public class DashboardEtudiantController extends BaseDashboardController
         implements SidebarEtudiantController.EtudiantPageController {
 
     // ── Sidebar ─────────────────────────────────────────────────────
@@ -114,6 +114,20 @@ public class DashboardEtudiantController
         if (user == null) return;
 
         lblSoustitre.setText("Bonjour, " + user.getPrenom() + " " + user.getNom() + " 👋");
+        chargerTout(user.getUserId());
+    }
+
+    @Override
+    public void setUser(User user) {
+        super.setUser(user);           // stocke dans utilisateurConnecte
+        this.utilisateur = user;       // stocke localement aussi
+
+        if (sidebarEtudiantController != null) {
+            sidebarEtudiantController.setUtilisateur(user);
+        }
+        if (user == null) return;
+
+        lblSoustitre.setText("Bonjour, Dr. " + user.getPrenom() + " " + user.getNom() + " 👋");
         chargerTout(user.getUserId());
     }
 

@@ -5,16 +5,32 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.example.entities.User;
+import org.example.utils.MyDataBase_Unimind;
 
+import java.sql.*;
+
+import java.io.File;
 import java.io.IOException;
 
 public class SidebarEtudiantController {
 
+    // ── FXML — zone utilisateur ────────────────────────────────────
+    @FXML private ImageView sidebarPhoto;
+    @FXML private Label     sidebarNomLabel;
+    @FXML private Label     sidebarPrenomLabel;
+    @FXML private Label     sidebarRoleLabel;
+
+    // Labels initiales (style moderne)
     @FXML private Label lblInitiales;
     @FXML private Label lblNomComplet;
     @FXML private Label lblRole;
+
+    // ── FXML — boutons de navigation ──────────────────────────────
     @FXML private Button btnDashboard;
     @FXML private Button btnMesRendezVous;
     @FXML private Button btnConsultations;
@@ -22,6 +38,7 @@ public class SidebarEtudiantController {
     @FXML private Button btnSuiviTraitements;
     @FXML private Button btnQuestionnaires;
     @FXML private Button btnMesReponses;
+    @FXML private Button btnProfil;
     @FXML private Button btnDeconnexion;
 
     // ── Design tokens ──────────────────────────────────────────────
@@ -78,25 +95,193 @@ public class SidebarEtudiantController {
                     "-fx-padding: 11 16; " +
                     "-fx-background-radius: 10; " +
                     "-fx-cursor: hand;";
-    // ───────────────────────────────────────────────────────────────
 
-    private User utilisateur;
-    private Button activeButton;
+    // ── État interne ───────────────────────────────────────────────
+    private User               utilisateur;
+    private BaseDashboardController parentController;
+    private Connection         connection;
+    private Button             activeButton;
+
+    // ══════════════════════════════════════════════════════════════
+    //  INITIALISATION
+    // ══════════════════════════════════════════════════════════════
 
     @FXML
     public void initialize() {
-        btnDashboard.setOnAction(e -> naviguer("/dashboard_etudiant.fxml", "Dashboard", btnDashboard));
-        btnMesRendezVous.setOnAction(e -> naviguer("/RendezVousEtudiant.fxml", "Mes Rendez-vous", btnMesRendezVous));
-        btnConsultations.setOnAction(e -> naviguer("/ConsultationsEtudiant.fxml", "Consultations", btnConsultations));
-        btnTraitements.setOnAction(e -> naviguer("/TraitementsEtudiant.fxml", "Traitements", btnTraitements));
-        btnSuiviTraitements.setOnAction(e -> naviguer("/SuiviTraitementsEtudiant.fxml", "Suivi Traitements", btnSuiviTraitements));
-        btnQuestionnaires.setOnAction(e -> naviguer("/QuestionnairesEtudiant.fxml", "Questionnaires", btnQuestionnaires));
-        btnMesReponses.setOnAction(e -> naviguer("/MesReponsesEtudiant.fxml", "Mes Réponses", btnMesReponses));
-        btnDeconnexion.setOnAction(e -> deconnecter());
+        // Navigation
+        btnDashboard.setOnAction(e ->
+                naviguer("/dashboard_etudiant.fxml",       "Dashboard",        btnDashboard));
+        btnMesRendezVous.setOnAction(e ->
+                naviguer("/RendezVousEtudiant.fxml",        "Mes Rendez-vous",  btnMesRendezVous));
+        btnConsultations.setOnAction(e ->
+                naviguer("/ConsultationsEtudiant.fxml",     "Consultations",    btnConsultations));
+        btnTraitements.setOnAction(e ->
+                naviguer("/TraitementsEtudiant.fxml",       "Traitements",      btnTraitements));
+        btnSuiviTraitements.setOnAction(e ->
+                naviguer("/SuiviTraitementsEtudiant.fxml",  "Suivi Traitements",btnSuiviTraitements));
+        btnQuestionnaires.setOnAction(e ->
+                naviguer("/QuestionnairesEtudiant.fxml",    "Questionnaires",   btnQuestionnaires));
+        btnMesReponses.setOnAction(e ->
+                naviguer("/MesReponsesEtudiant.fxml",       "Mes Réponses",     btnMesReponses));
+        btnProfil.setOnAction(e -> ouvrirProfil());
+        btnDeconnexion.setOnAction(e -> seDeconnecter());
 
         styliserBoutons();
         setActiveButton(btnDashboard);
     }
+
+    // ══════════════════════════════════════════════════════════════
+    //  SETTERS — deux modes d'alimentation possibles
+    // ══════════════════════════════════════════════════════════════
+
+    /**
+     * Mode 1 — alimentation via le dashboard parent (BaseDashboardController).
+     * Utilisé quand la sidebar est incluse dans un FXML géré par un BaseDashboardController.
+     */
+    public void setParentController(BaseDashboardController controller) {
+        this.parentController = controller;
+        if (controller != null) {
+            this.connection  = controller.getConnection();
+            this.utilisateur = controller.getUtilisateurConnecte();
+            rafraichirAffichage();
+        }
+    }
+
+    /**
+     * Mode 2 — alimentation directe de l'utilisateur.
+     * Utilisé lors de la navigation inter-pages (SidebarEtudiantController passe l'user lui-même).
+     */
+    public void setUtilisateur(User user) {
+        this.utilisateur = user;
+        if (user == null) return;
+        // Si on n'a pas encore de connexion, on en récupère une via le parent si dispo
+        if (connection == null && parentController != null) {
+            this.connection = parentController.getConnection();
+        }
+        rafraichirAffichage();
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  AFFICHAGE
+    // ══════════════════════════════════════════════════════════════
+
+    /** Met à jour tous les widgets de la zone utilisateur. */
+    private void rafraichirAffichage() {
+        afficherInfosSidebar();
+        chargerPhotoSidebar();
+    }
+
+    private void afficherInfosSidebar() {
+        User user = resolveUser();
+        if (user == null) return;
+
+        // ── Labels style "moderne" (initiales + nom complet + rôle) ──
+        if (lblNomComplet != null) {
+            lblNomComplet.setText(user.getPrenom() + " " + user.getNom());
+        }
+        if (lblInitiales != null) {
+            lblInitiales.setText(
+                    String.valueOf(user.getPrenom().charAt(0)).toUpperCase() +
+                            String.valueOf(user.getNom().charAt(0)).toUpperCase());
+        }
+        if (lblRole != null) {
+            lblRole.setText("ÉTUDIANT");
+        }
+
+        // ── Labels style "photo + texte" ──────────────────────────────
+        if (sidebarNomLabel    != null) sidebarNomLabel.setText(user.getNom());
+        if (sidebarPrenomLabel != null) sidebarPrenomLabel.setText(user.getPrenom());
+        if (sidebarRoleLabel   != null) sidebarRoleLabel.setText("Étudiant");
+    }
+
+    private void chargerPhotoSidebar() {
+        if (sidebarPhoto == null) return;
+        User user = resolveUser();
+        if (user == null) {
+            System.out.println("❌ Sidebar - User is null");
+            return;
+        }
+
+        System.out.println("=== SIDEBAR CHARGEMENT PHOTO ===");
+        System.out.println("User ID: " + user.getUserId());
+        System.out.println("User Nom: " + user.getNom());
+
+        String photoPath = getPhotoChemin(user);
+        System.out.println("Photo path from DB: " + photoPath);
+
+        if (photoPath != null && !photoPath.isEmpty()) {
+            File file = new File(photoPath);
+            System.out.println("File exists: " + file.exists());
+            System.out.println("File absolute path: " + file.getAbsolutePath());
+
+            if (file.exists()) {
+                try {
+                    Image img = new Image(file.toURI().toString());
+                    sidebarPhoto.setImage(img);
+                    System.out.println("✅ Photo chargée avec succès");
+                    return;
+                } catch (Exception e) {
+                    System.err.println("❌ Erreur chargement image: " + e.getMessage());
+                }
+            }
+        }
+
+        // Fallback
+        try {
+            sidebarPhoto.setImage(new Image(getClass().getResourceAsStream("/images/default_avatar.png")));
+            System.out.println("📷 Avatar par défaut chargé");
+        } catch (Exception e) {
+            System.err.println("❌ Impossible de charger l'avatar par défaut");
+        }
+    }
+    private String getPhotoChemin(User user) {
+        if (user == null) {
+            System.out.println("❌ getPhotoChemin - User is null");
+            return null;
+        }
+
+        System.out.println("🔍 Recherche photo pour user_id: " + user.getUserId());
+
+        // 🔥 FORCER LA CONNEXION DIRECTE
+        Connection conn = null;
+        try {
+            conn = MyDataBase_Unimind.getInstance().getConnection();
+            System.out.println("🔗 Connexion directe obtenue: " + (conn != null ? "OK" : "NULL"));
+        } catch (Exception e) {
+            System.err.println("❌ Impossible d'obtenir la connexion: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+
+        String query = "SELECT photo FROM profil WHERE user_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, user.getUserId());
+            var rs = ps.executeQuery();
+
+            if (rs.next()) {
+                String photo = rs.getString("photo");
+                System.out.println("📸 Photo trouvée: " + photo);
+                return photo;
+            } else {
+                System.out.println("⚠️ Aucun profil trouvé pour user_id: " + user.getUserId());
+                // 🔥 Afficher tous les profils existants pour debug
+                Statement stmt = conn.createStatement();
+                ResultSet allRs = stmt.executeQuery("SELECT user_id, photo FROM profil");
+                System.out.println("📋 Profils existants dans la BDD:");
+                while (allRs.next()) {
+                    System.out.println("   - user_id: " + allRs.getInt("user_id") + ", photo: " + allRs.getString("photo"));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ Erreur SQL: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  NAVIGATION
+    // ══════════════════════════════════════════════════════════════
 
     private void naviguer(String fxmlPath, String titre, Button boutonActif) {
         try {
@@ -104,86 +289,136 @@ public class SidebarEtudiantController {
             Scene scene = new Scene(loader.load(), 1200, 700);
 
             Object controller = loader.getController();
+            // Passe l'utilisateur à la nouvelle page si elle implémente l'interface
             if (controller instanceof EtudiantPageController) {
-                ((EtudiantPageController) controller).setUtilisateur(utilisateur);
+                ((EtudiantPageController) controller).setUtilisateur(resolveUser());
             }
 
             Stage stage = (Stage) btnDashboard.getScene().getWindow();
             stage.setScene(scene);
-            stage.setTitle("Unimind - " + titre);
+            stage.setTitle("Unimind — " + titre);
             stage.show();
+
+            setActiveButton(boutonActif);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    /** Interface que chaque page-étudiant doit implémenter pour recevoir l'utilisateur. */
     public interface EtudiantPageController {
         void setUtilisateur(User user);
     }
 
-    public void setUtilisateur(User user) {
-        this.utilisateur = user;
-        if (user == null) return;
-
-        String prenom = user.getPrenom();
-        String nom = user.getNom();
-        lblNomComplet.setText(prenom + " " + nom);
-        lblInitiales.setText(
-                String.valueOf(prenom.charAt(0)).toUpperCase() +
-                        String.valueOf(nom.charAt(0)).toUpperCase()
-        );
-        lblRole.setText("ÉTUDIANT");
-    }
+    // ══════════════════════════════════════════════════════════════
+    //  BOUTON ACTIF
+    // ══════════════════════════════════════════════════════════════
 
     public void setActiveButtonByFxml(String fxmlPath) {
         switch (fxmlPath) {
-            case "/dashboard_etudiant.fxml" -> setActiveButton(btnDashboard);
-            case "/RendezVousEtudiant.fxml"      -> setActiveButton(btnMesRendezVous);
-            case "/ConsultationsEtudiant.fxml"   -> setActiveButton(btnConsultations);
-            case "/TraitementsEtudiant.fxml"     -> setActiveButton(btnTraitements);
-            case "/SuiviTraitementsEtudiant.fxml"-> setActiveButton(btnSuiviTraitements);
-            case "/QuestionnairesEtudiant.fxml"  -> setActiveButton(btnQuestionnaires);
-            case "/MesReponsesEtudiant.fxml"     -> setActiveButton(btnMesReponses);
+            case "/dashboard_etudiant.fxml"      -> setActiveButton(btnDashboard);
+            case "/RendezVousEtudiant.fxml"       -> setActiveButton(btnMesRendezVous);
+            case "/ConsultationsEtudiant.fxml"    -> setActiveButton(btnConsultations);
+            case "/TraitementsEtudiant.fxml"      -> setActiveButton(btnTraitements);
+            case "/SuiviTraitementsEtudiant.fxml" -> setActiveButton(btnSuiviTraitements);
+            case "/QuestionnairesEtudiant.fxml"   -> setActiveButton(btnQuestionnaires);
+            case "/MesReponsesEtudiant.fxml"      -> setActiveButton(btnMesReponses);
         }
     }
 
     private void setActiveButton(Button button) {
-        Button[] boutons = {btnDashboard, btnMesRendezVous, btnConsultations,
-                btnTraitements, btnSuiviTraitements, btnQuestionnaires, btnMesReponses};
-        for (Button btn : boutons) {
-            btn.setStyle(STYLE_IDLE);
-        }
+        Button[] boutons = {
+                btnDashboard, btnMesRendezVous, btnConsultations,
+                btnTraitements, btnSuiviTraitements, btnQuestionnaires, btnMesReponses
+        };
+        for (Button btn : boutons) btn.setStyle(STYLE_IDLE);
         button.setStyle(STYLE_ACTIVE);
         activeButton = button;
     }
 
     private void styliserBoutons() {
-        Button[] boutons = {btnDashboard, btnMesRendezVous, btnConsultations,
-                btnTraitements, btnSuiviTraitements, btnQuestionnaires, btnMesReponses};
+        Button[] boutons = {
+                btnDashboard, btnMesRendezVous, btnConsultations,
+                btnTraitements, btnSuiviTraitements, btnQuestionnaires, btnMesReponses
+        };
         for (Button btn : boutons) {
-            btn.setOnMouseEntered(e -> {
-                if (btn != activeButton) btn.setStyle(STYLE_HOVER);
-            });
-            btn.setOnMouseExited(e -> {
-                if (btn != activeButton) btn.setStyle(STYLE_IDLE);
-            });
+            btn.setOnMouseEntered(e -> { if (btn != activeButton) btn.setStyle(STYLE_HOVER); });
+            btn.setOnMouseExited (e -> { if (btn != activeButton) btn.setStyle(STYLE_IDLE);  });
         }
-        // Logout hover
         btnDeconnexion.setOnMouseEntered(e -> btnDeconnexion.setStyle(STYLE_LOGOUT_HOVER));
-        btnDeconnexion.setOnMouseExited(e -> btnDeconnexion.setStyle(STYLE_LOGOUT_IDLE));
+        btnDeconnexion.setOnMouseExited (e -> btnDeconnexion.setStyle(STYLE_LOGOUT_IDLE));
     }
 
-    private void deconnecter() {
+    // ══════════════════════════════════════════════════════════════
+    //  PROFIL
+    // ══════════════════════════════════════════════════════════════
+
+    @FXML
+    public void ouvrirProfil() {
+        User user = resolveUser();
+        if (user == null) {
+            System.err.println("❌ SidebarEtudiant — utilisateur null, impossible d'ouvrir le profil");
+            return;
+        }
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
-            Scene scene = new Scene(loader.load(), 500, 400);
-            Stage stage = (Stage) btnDeconnexion.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Unimind - Connexion");
-            stage.show();
-        } catch (IOException e) {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/profil.fxml"));
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Mon Profil");
+            stage.setScene(new Scene(loader.load()));
+            ProfilController ctrl = loader.getController();
+            ctrl.setUser(user);
+            stage.showAndWait();
+
+            // Rafraîchir la photo après fermeture
+            chargerPhotoSidebar();
+            if (parentController != null) parentController.rafraichirPhotoNavbar();
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  DÉCONNEXION
+    // ══════════════════════════════════════════════════════════════
+
+    @FXML
+    public void seDeconnecter() {
+        if (parentController != null) {
+            // Délègue au parent qui gère la navigation vers login
+            parentController.seDeconnecter();
+        } else {
+            // Déconnexion autonome (pas de parent)
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
+                Scene scene = new Scene(loader.load());
+                Stage stage = (Stage) btnDeconnexion.getScene().getWindow();
+                stage.setScene(scene);
+                stage.setTitle("UniMind — Connexion");
+                stage.show();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  HELPERS PRIVÉS
+    // ══════════════════════════════════════════════════════════════
+
+    /** Résout l'utilisateur : priorité au champ local, sinon on demande au parent. */
+    private User resolveUser() {
+        if (utilisateur != null) return utilisateur;
+        if (parentController != null) return parentController.getUtilisateurConnecte();
+        return null;
+    }
+
+    /** Résout la connexion : champ local en priorité, sinon celle du parent. */
+    private Connection resolveConnection() {
+        if (connection != null) return connection;
+        if (parentController != null) return parentController.getConnection();
+        return null;
     }
 }

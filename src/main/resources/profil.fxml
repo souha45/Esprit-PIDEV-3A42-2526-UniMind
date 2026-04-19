@@ -5,96 +5,213 @@
 <?import javafx.scene.shape.*?>
 <?import javafx.geometry.*?>
 
-<VBox spacing="20" style="-fx-padding: 30; -fx-background-color: #F3F0FF;"
-      prefWidth="700" prefHeight="750"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="org.example.controllers.ProfilController">
+<ScrollPane fitToWidth="true"
+            style="-fx-background-color: #F3F0FF; -fx-background: #F3F0FF;"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.ProfilController"
+            maxHeight="680"
+            prefWidth="760">
 
-    <Label text="Mon Profil" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #4C1D95;"/>
+    <VBox spacing="18" style="-fx-padding: 24 28; -fx-background-color: #F3F0FF;">
 
-    <HBox spacing="30" alignment="TOP_LEFT">
+        <!-- ── Titre ── -->
+        <Label text="Mon Profil"
+               style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #4C1D95;
+                      -fx-font-family: 'Segoe UI';"/>
 
-        <!-- Colonne Photo -->
-        <VBox spacing="15" alignment="CENTER"
-              style="-fx-background-color: white; -fx-padding: 25; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);"
-              prefWidth="220">
-            <ImageView fx:id="photoProfile" fitWidth="120" fitHeight="120">
-                <clip><Circle centerX="60" centerY="60" radius="60"/></clip>
-            </ImageView>
-            <Button text="📷 Changer la photo" onAction="#choisirPhoto"
-                    style="-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 8 16; -fx-font-size: 11;"/>
-        </VBox>
+        <HBox spacing="20" alignment="TOP_LEFT">
 
-        <!-- Colonne Informations -->
-        <VBox spacing="15" HBox.hgrow="ALWAYS">
-
-            <!-- Carte Informations du compte -->
-            <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);">
-                <Label text="Informations du compte" style="-fx-font-weight: bold; -fx-text-fill: #4C1D95; -fx-font-size: 15;"/>
-                <GridPane hgap="15" vgap="10">
-                    <Label text="Nom complet :" GridPane.rowIndex="0" GridPane.columnIndex="0" style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
-                    <Label fx:id="pNomPrenom" GridPane.rowIndex="0" GridPane.columnIndex="1" style="-fx-text-fill: #6B7280;"/>
-                    <Label text="Email :" GridPane.rowIndex="1" GridPane.columnIndex="0" style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
-                    <Label fx:id="pEmail" GridPane.rowIndex="1" GridPane.columnIndex="1" style="-fx-text-fill: #6B7280;"/>
-                    <Label text="Rôle :" GridPane.rowIndex="2" GridPane.columnIndex="0" style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
-                    <Label fx:id="pRole" GridPane.rowIndex="2" GridPane.columnIndex="1" style="-fx-text-fill: #7C3AED; -fx-font-weight: bold;"/>
-                    <Label text="Statut :" GridPane.rowIndex="3" GridPane.columnIndex="0" style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
-                    <Label fx:id="pStatut" GridPane.rowIndex="3" GridPane.columnIndex="1" style="-fx-text-fill: #6B7280;"/>
-                </GridPane>
+            <!-- ── Colonne gauche : Photo ── -->
+            <VBox spacing="12" alignment="CENTER"
+                  style="-fx-background-color: white; -fx-padding: 20;
+                         -fx-background-radius: 14;
+                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);"
+                  prefWidth="180" maxWidth="180">
+                <ImageView fx:id="photoProfile" fitWidth="100" fitHeight="100">
+                    <clip><Circle centerX="50" centerY="50" radius="50"/></clip>
+                </ImageView>
+                <Button text="📷 Changer la photo" onAction="#choisirPhoto"
+                        maxWidth="Infinity"
+                        style="-fx-background-color: #7C3AED; -fx-text-fill: white;
+                               -fx-cursor: hand; -fx-background-radius: 8;
+                               -fx-padding: 7 12; -fx-font-size: 11px;
+                               -fx-font-family: 'Segoe UI';"/>
             </VBox>
 
-            <!-- Carte Informations spécifiques selon le rôle -->
-            <VBox fx:id="sectionSpecifique" spacing="12"
-                  style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);">
-                <Label text="Informations spécifiques" style="-fx-font-weight: bold; -fx-text-fill: #4C1D95; -fx-font-size: 15;"/>
-                <GridPane hgap="15" vgap="10">
-                    <Label fx:id="labelSpecifique1" GridPane.rowIndex="0" GridPane.columnIndex="0" style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
-                    <TextField fx:id="fieldSpecifique1" GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="300"/>
-                    <Label fx:id="labelSpecifique2" GridPane.rowIndex="1" GridPane.columnIndex="0" style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
-                    <TextField fx:id="fieldSpecifique2" GridPane.rowIndex="1" GridPane.columnIndex="1" prefWidth="300"/>
-                </GridPane>
+            <!-- ── Colonne droite : Infos + Formulaires ── -->
+            <VBox spacing="12" HBox.hgrow="ALWAYS">
+
+                <!-- Informations du compte -->
+                <VBox spacing="8"
+                      style="-fx-background-color: white; -fx-padding: 16;
+                             -fx-background-radius: 14;
+                             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);">
+                    <Label text="Informations du compte"
+                           style="-fx-font-weight: bold; -fx-text-fill: #4C1D95;
+                                  -fx-font-size: 13px; -fx-font-family: 'Segoe UI';"/>
+                    <GridPane hgap="12" vgap="7">
+                        <Label text="Nom complet :"
+                               style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"
+                               GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <Label fx:id="pNomPrenom"
+                               style="-fx-text-fill: #6B7280; -fx-font-size: 12px;"
+                               GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                        <Label text="Email :"
+                               style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"
+                               GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <Label fx:id="pEmail"
+                               style="-fx-text-fill: #6B7280; -fx-font-size: 12px;"
+                               GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <Label text="Rôle :"
+                               style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"
+                               GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <Label fx:id="pRole"
+                               style="-fx-text-fill: #7C3AED; -fx-font-weight: bold; -fx-font-size: 12px;"
+                               GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                        <Label text="Statut :"
+                               style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"
+                               GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <Label fx:id="pStatut"
+                               style="-fx-text-fill: #6B7280; -fx-font-size: 12px;"
+                               GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                    </GridPane>
+                </VBox>
+
+                <!-- Infos spécifiques au rôle -->
+                <VBox fx:id="sectionSpecifique" spacing="8"
+                      style="-fx-background-color: white; -fx-padding: 16;
+                             -fx-background-radius: 14;
+                             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);">
+                    <Label text="Informations spécifiques"
+                           style="-fx-font-weight: bold; -fx-text-fill: #4C1D95;
+                                  -fx-font-size: 13px; -fx-font-family: 'Segoe UI';"/>
+                    <GridPane hgap="12" vgap="7">
+                        <Label fx:id="labelSpecifique1"
+                               style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"
+                               GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <TextField fx:id="fieldSpecifique1"
+                                   GridPane.rowIndex="0" GridPane.columnIndex="1"
+                                   prefWidth="240"
+                                   style="-fx-font-size: 12px; -fx-padding: 6 10;
+                                          -fx-background-radius: 7; -fx-border-color: #DDD6FE;
+                                          -fx-border-radius: 7;"/>
+                        <Label fx:id="labelSpecifique2"
+                               style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"
+                               GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="fieldSpecifique2"
+                                   GridPane.rowIndex="1" GridPane.columnIndex="1"
+                                   prefWidth="240"
+                                   style="-fx-font-size: 12px; -fx-padding: 6 10;
+                                          -fx-background-radius: 7; -fx-border-color: #DDD6FE;
+                                          -fx-border-radius: 7;"/>
+                    </GridPane>
+                </VBox>
+
+                <!-- Modifier le profil -->
+                <VBox spacing="8"
+                      style="-fx-background-color: white; -fx-padding: 16;
+                             -fx-background-radius: 14;
+                             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);">
+                    <Label text="Modifier le profil"
+                           style="-fx-font-weight: bold; -fx-text-fill: #4C1D95;
+                                  -fx-font-size: 13px; -fx-font-family: 'Segoe UI';"/>
+                    <GridPane hgap="12" vgap="7">
+                        <Label text="Bio :"
+                               style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"
+                               GridPane.rowIndex="0" GridPane.columnIndex="0" prefWidth="90"/>
+                        <TextField fx:id="pBio" promptText="Parlez de vous..."
+                                   GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="240"
+                                   style="-fx-font-size: 12px; -fx-padding: 6 10;
+                                          -fx-background-radius: 7; -fx-border-color: #DDD6FE;
+                                          -fx-border-radius: 7;"/>
+                        <Label text="Téléphone :"
+                               style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"
+                               GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="pTel" promptText="8 chiffres"
+                                   GridPane.rowIndex="1" GridPane.columnIndex="1"
+                                   style="-fx-font-size: 12px; -fx-padding: 6 10;
+                                          -fx-background-radius: 7; -fx-border-color: #DDD6FE;
+                                          -fx-border-radius: 7;"/>
+                        <Label fx:id="pErrTel"
+                               style="-fx-text-fill: #DC2626; -fx-font-size: 10px;"
+                               GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                        <Label text="Pseudo :"
+                               style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"
+                               GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <TextField fx:id="pPseudo" promptText="Pseudo"
+                                   GridPane.rowIndex="2" GridPane.columnIndex="1"
+                                   style="-fx-font-size: 12px; -fx-padding: 6 10;
+                                          -fx-background-radius: 7; -fx-border-color: #DDD6FE;
+                                          -fx-border-radius: 7;"/>
+                    </GridPane>
+                    <Button text="💾 Sauvegarder" onAction="#sauvegarderProfil"
+                            style="-fx-background-color: #059669; -fx-text-fill: white;
+                                   -fx-cursor: hand; -fx-background-radius: 8;
+                                   -fx-padding: 8 18; -fx-font-weight: bold;
+                                   -fx-font-size: 12px; -fx-font-family: 'Segoe UI';"/>
+                </VBox>
+
+                <!-- Changer le mot de passe -->
+                <VBox spacing="8"
+                      style="-fx-background-color: white; -fx-padding: 16;
+                             -fx-background-radius: 14;
+                             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);">
+                    <Label text="Changer le mot de passe"
+                           style="-fx-font-weight: bold; -fx-text-fill: #4C1D95;
+                                  -fx-font-size: 13px; -fx-font-family: 'Segoe UI';"/>
+                    <GridPane hgap="12" vgap="7">
+                        <Label text="Ancien :"
+                               style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"
+                               GridPane.rowIndex="0" GridPane.columnIndex="0" prefWidth="90"/>
+                        <PasswordField fx:id="pAncienMdp"
+                                       GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="240"
+                                       style="-fx-font-size: 12px; -fx-padding: 6 10;
+                                              -fx-background-radius: 7; -fx-border-color: #DDD6FE;
+                                              -fx-border-radius: 7;"/>
+                        <Label text="Nouveau :"
+                               style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"
+                               GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <PasswordField fx:id="pNouveauMdp"
+                                       GridPane.rowIndex="1" GridPane.columnIndex="1"
+                                       style="-fx-font-size: 12px; -fx-padding: 6 10;
+                                              -fx-background-radius: 7; -fx-border-color: #DDD6FE;
+                                              -fx-border-radius: 7;"/>
+                        <Label text="Confirmer :"
+                               style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 12px;"
+                               GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <PasswordField fx:id="pConfirmMdp"
+                                       GridPane.rowIndex="2" GridPane.columnIndex="1"
+                                       style="-fx-font-size: 12px; -fx-padding: 6 10;
+                                              -fx-background-radius: 7; -fx-border-color: #DDD6FE;
+                                              -fx-border-radius: 7;"/>
+                    </GridPane>
+                    <Label fx:id="pErrMdp"
+                           style="-fx-text-fill: #DC2626; -fx-font-size: 11px;"/>
+                    <Button text="🔑 Changer le mot de passe" onAction="#changerMotDePasse"
+                            style="-fx-background-color: #D97706; -fx-text-fill: white;
+                                   -fx-cursor: hand; -fx-background-radius: 8;
+                                   -fx-padding: 8 18; -fx-font-weight: bold;
+                                   -fx-font-size: 12px; -fx-font-family: 'Segoe UI';"/>
+                </VBox>
+
             </VBox>
+        </HBox>
 
-            <!-- Carte Modifier le profil -->
-            <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);">
-                <Label text="Modifier le profil" style="-fx-font-weight: bold; -fx-text-fill: #4C1D95; -fx-font-size: 15;"/>
-                <GridPane hgap="15" vgap="10">
-                    <Label text="Bio :" GridPane.rowIndex="0" GridPane.columnIndex="0" prefWidth="80"/>
-                    <TextField fx:id="pBio" promptText="Parlez de vous..." GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="300"/>
-                    <Label text="Téléphone :" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                    <TextField fx:id="pTel" promptText="8 chiffres" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                    <Label text="Pseudo :" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                    <TextField fx:id="pPseudo" promptText="Pseudo" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-                    <Label fx:id="pErrTel" style="-fx-text-fill: #DC2626; -fx-font-size: 10;" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
-                </GridPane>
-                <Button text="💾 Sauvegarder les modifications" onAction="#sauvegarderProfil"
-                        style="-fx-background-color: #059669; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 10 20; -fx-font-weight: bold;"/>
-            </VBox>
+        <!-- ── Message global ── -->
+        <Label fx:id="pMessageProfil"
+               style="-fx-font-size: 12px; -fx-font-family: 'Segoe UI';"/>
 
-            <!-- Carte Changer le mot de passe -->
-            <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);">
-                <Label text="Changer le mot de passe" style="-fx-font-weight: bold; -fx-text-fill: #4C1D95; -fx-font-size: 15;"/>
-                <GridPane hgap="15" vgap="10">
-                    <Label text="Ancien mot de passe :" GridPane.rowIndex="0" GridPane.columnIndex="0" prefWidth="140"/>
-                    <PasswordField fx:id="pAncienMdp" prefWidth="260" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                    <Label text="Nouveau mot de passe :" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                    <PasswordField fx:id="pNouveauMdp" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                    <Label text="Confirmer :" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                    <PasswordField fx:id="pConfirmMdp" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-                </GridPane>
-                <Label fx:id="pErrMdp" style="-fx-text-fill: #DC2626; -fx-font-size: 11;"/>
-                <Button text="🔑 Changer le mot de passe" onAction="#changerMotDePasse"
-                        style="-fx-background-color: #D97706; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 10 20; -fx-font-weight: bold;"/>
-            </VBox>
-        </VBox>
-    </HBox>
+        <!-- ── Boutons bas ── -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Button fx:id="btnRetour" text="← Retour" onAction="#retour"
+                    style="-fx-background-color: #6B7280; -fx-text-fill: white;
+                           -fx-cursor: hand; -fx-background-radius: 8;
+                           -fx-padding: 8 18; -fx-font-family: 'Segoe UI';"/>
+            <Button text="Se déconnecter" onAction="#seDeconnecter"
+                    style="-fx-background-color: #DC2626; -fx-text-fill: white;
+                           -fx-cursor: hand; -fx-background-radius: 8;
+                           -fx-padding: 8 18; -fx-font-family: 'Segoe UI';"/>
+        </HBox>
 
-    <Label fx:id="pMessageProfil" style="-fx-font-size: 13;"/>
-
-    <HBox spacing="10">
-        <Button text="← Retour" onAction="#retour"
-                style="-fx-background-color: #6B7280; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 8 20;"/>
-        <Button text="Se déconnecter" onAction="#seDeconnecter"
-                style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 8 20;"/>
-    </HBox>
-</VBox>
+    </VBox>
+</ScrollPane>
