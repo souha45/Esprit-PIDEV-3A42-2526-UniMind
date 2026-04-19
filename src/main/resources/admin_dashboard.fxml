@@ -71,6 +71,16 @@
                     onAction="#afficherDemandes"
                     style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
 
+            <Button fx:id="btnSeances" text="❤  Séances Méditation"
+                    onAction="#showSeances"
+                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+
+            <Button fx:id="btnStats" text="📊  Statistiques"
+                    onAction="#showStats"
+                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+
+
+
             <Button fx:id="btnProfil" text="👤  Mon Profil"
                     onAction="#afficherProfil"
                     style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
@@ -227,5 +237,10 @@
                 </VBox>
             </VBox>
         </ScrollPane>
+
+            <StackPane fx:id="contentArea" styleClass="content-area">
+                <!-- Content will be loaded dynamically -->
+            </StackPane>
+
     </center>
 </BorderPane>

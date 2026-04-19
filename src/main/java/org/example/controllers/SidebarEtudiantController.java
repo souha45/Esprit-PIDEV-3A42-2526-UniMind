@@ -2,15 +2,18 @@ package org.example.controllers;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.example.entities.User;
 import org.example.utils.MyDataBase_Unimind;
+
 
 import java.sql.*;
 
@@ -40,6 +43,28 @@ public class SidebarEtudiantController {
     @FXML private Button btnMesReponses;
     @FXML private Button btnProfil;
     @FXML private Button btnDeconnexion;
+    @FXML private Button btnSeances;
+    @FXML private StackPane contentArea;
+
+    private void loadPage(String fxmlPath) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Node page = loader.load();
+            contentArea.getChildren().setAll(page);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Erreur chargement: " + fxmlPath);
+        }
+    }
+
+    @FXML public void showSeancesMeditation() {
+        loadPage("/org/example/views/EtudiantSeances.fxml");
+    }
+
+    @FXML public void showMesFavoris() {
+        loadPage("/org/example/views/MesFavorisSeances.fxml");
+    }
+
 
     // ── Design tokens ──────────────────────────────────────────────
     private static final String STYLE_ACTIVE =

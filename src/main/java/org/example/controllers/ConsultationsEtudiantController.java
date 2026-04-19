@@ -40,7 +40,6 @@ public class ConsultationsEtudiantController
 
     // ── Filtres ─────────────────────────────────────────────────────
     @FXML private TextField fieldRecherche;
-    @FXML private Button    btnRafraichir;
     @FXML private Label     lblStatut;
 
     // ── ListView ─────────────────────────────────────────────────────
@@ -70,7 +69,7 @@ public class ConsultationsEtudiantController
         listViewConsultations.setFixedCellSize(-1); // hauteur auto
 
         fieldRecherche.textProperty().addListener((o, ov, nv) -> appliquerFiltres());
-        btnRafraichir.setOnAction(e -> chargerConsultations());
+
     }
 
     // ── ListView custom cell ─────────────────────────────────────────

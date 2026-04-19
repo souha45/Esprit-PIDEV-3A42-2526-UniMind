@@ -6,6 +6,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -43,6 +44,9 @@ public class AdminDashboardController {
     @FXML private Button btnDemandes;
     @FXML private Button btnProfil;
     @FXML private Button btnDeconnexion;
+    @FXML private Button btnStats;
+    @FXML private Button btnSeances;
+    @FXML private StackPane contentArea;
 
     //  CONTENU PRINCIPAL
     @FXML private VBox panneauGestion;
@@ -80,6 +84,37 @@ public class AdminDashboardController {
     private ObservableList<User> tousLesUsers = FXCollections.observableArrayList();
     private Stage modalStage;
     private String currentPhotoPath = null;
+    private void loadPage(String fxmlPath) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Node page = loader.load();
+            contentArea.getChildren().setAll(page);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Erreur chargement page: " + fxmlPath);
+        }
+    }
+
+    private void setActiveButton(Button active) {
+        Button[] allButtons = {btnStats, btnSeances};
+        for (Button btn : allButtons) {
+            btn.getStyleClass().remove("nav-btn-active");
+        }
+        if (!active.getStyleClass().contains("nav-btn-active")) {
+            active.getStyleClass().add("nav-btn-active");
+        }
+    }
+    @FXML
+    public void showSeances() {
+        setActiveButton(btnSeances);
+        loadPage("/org/example/views/CategorieMeditation.fxml");
+    }
+
+    @FXML
+    private void showStats() {
+        setActiveButton(btnStats);
+        loadPage("/org/example/views/Stats.fxml");
+    }
 
 
     // INITIALISATION
