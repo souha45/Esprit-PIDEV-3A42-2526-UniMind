@@ -1,5 +1,6 @@
 package org.example.controllers;
 
+import javafx.animation.FadeTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -11,6 +12,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Duration;
 import org.example.entities.ConsultationDetail;
 import org.example.entities.User;
 import org.example.services.ConsultationService;
@@ -42,10 +44,12 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
 
     // ── Toolbar ─────────────────────────────────────────────────────
     @FXML private TextField fieldRecherche;
-    @FXML private Button    btnRafraichir;
 
     // ── ListView ────────────────────────────────────────────────────
     @FXML private ListView<ConsultationDetail> listViewConsultations;
+
+    // ── Toast overlay ───────────────────────────────────────────────
+    @FXML private StackPane toastContainer;
 
     // ── Données ─────────────────────────────────────────────────────
     private User                               utilisateur;
@@ -53,13 +57,14 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
     private ObservableList<ConsultationDetail> consultationsList;
     private ObservableList<ConsultationDetail> filteredList;
 
-    // ────────────────────────────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════════
+    //  INIT
+    // ════════════════════════════════════════════════════════════════
     @FXML
     public void initialize() {
-        // Date lisible
         LocalDate today = LocalDate.now();
         String jour = today.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.FRENCH);
-        lblDate.setText(jour.substring(0,1).toUpperCase() + jour.substring(1)
+        lblDate.setText(jour.substring(0, 1).toUpperCase() + jour.substring(1)
                 + " " + today.format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH)));
 
         consultationService = new ConsultationService();
@@ -67,9 +72,7 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
         filteredList        = FXCollections.observableArrayList();
 
         configurerListView();
-
         fieldRecherche.textProperty().addListener((o, ov, nv) -> appliquerFiltres());
-        btnRafraichir.setOnAction(e -> chargerConsultations());
     }
 
     // ── Interface ────────────────────────────────────────────────────
@@ -83,7 +86,9 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
         chargerConsultations();
     }
 
-    // ── ListView custom cell ─────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════════
+    //  LISTVIEW CUSTOM CELL
+    // ════════════════════════════════════════════════════════════════
     private void configurerListView() {
         listViewConsultations.setCellFactory(lv -> new ListCell<>() {
             @Override
@@ -101,8 +106,6 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
     }
 
     private VBox construireCarte(ConsultationDetail c) {
-
-        // ── Conteneur carte ──────────────────────────────────────────
         VBox carte = new VBox(12);
         carte.setStyle("-fx-background-color: #ffffff; -fx-background-radius: 14; " +
                 "-fx-border-color: #ede9fe; -fx-border-width: 1; -fx-border-radius: 14; " +
@@ -113,7 +116,6 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
         HBox ligne1 = new HBox(14);
         ligne1.setAlignment(Pos.CENTER_LEFT);
 
-        // Avatar initiales
         String initiales = String.valueOf(c.getEtudiantPrenom().charAt(0)).toUpperCase()
                 + String.valueOf(c.getEtudiantNom().charAt(0)).toUpperCase();
         Label avatar = new Label(initiales);
@@ -122,7 +124,6 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
                 "-fx-min-width: 44; -fx-min-height: 44; -fx-alignment: CENTER; " +
                 "-fx-background-radius: 50; -fx-padding: 8;");
 
-        // Infos patient
         VBox patientBox = new VBox(3);
         HBox.setHgrow(patientBox, Priority.ALWAYS);
         Label nomPatient = new Label(c.getEtudiantPrenom() + " " + c.getEtudiantNom());
@@ -132,7 +133,6 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
         emailPatient.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;");
         patientBox.getChildren().addAll(nomPatient, emailPatient);
 
-        // Date + horaire (droite)
         VBox dateBox = new VBox(3);
         dateBox.setAlignment(Pos.CENTER_RIGHT);
         LocalDate date  = c.getDateDispo().toLocalDate();
@@ -153,16 +153,16 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
         sep.setMinHeight(1); sep.setMaxHeight(1);
         sep.setStyle("-fx-background-color: #f5f3ff;");
 
-        // ── Ligne 2 : Note étoiles ────────────────────────────────────
+        // ── Ligne 2 : Note + Actions ──────────────────────────────────
         HBox ligne2 = new HBox(10);
         ligne2.setAlignment(Pos.CENTER_LEFT);
 
         int note = c.getNoteSatisfaction();
         Label etoilesLabel;
         if (note > 0 && note <= 5) {
-            String etoiles  = buildEtoiles(note);
-            String couleur  = note <= 2 ? "#ef4444" : note <= 4 ? "#d97706" : "#10b981";
-            String bgColor  = note <= 2 ? "#fee2e2" : note <= 4 ? "#fef3c7" : "#dcfce7";
+            String etoiles = buildEtoiles(note);
+            String couleur = note <= 2 ? "#ef4444" : note <= 4 ? "#d97706" : "#10b981";
+            String bgColor = note <= 2 ? "#fee2e2" : note <= 4 ? "#fef3c7" : "#dcfce7";
             etoilesLabel = new Label(etoiles + "  " + note + " / 5");
             etoilesLabel.setStyle("-fx-background-color: " + bgColor + "; -fx-text-fill: " + couleur + "; " +
                     "-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-font-weight: bold; " +
@@ -177,26 +177,25 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Boutons actions
         Button btnVoir = new Button("👁  Détails");
         btnVoir.setStyle("-fx-background-color: #ede9fe; -fx-text-fill: #7c3aed; " +
                 "-fx-font-family: 'Segoe UI'; -fx-font-size: 12px; -fx-font-weight: bold; " +
                 "-fx-padding: 7 16; -fx-background-radius: 20; -fx-cursor: hand;");
-        btnVoir.setOnMouseEntered(e -> btnVoir.setStyle(btnVoir.getStyle().replace("#ede9fe","#ddd6fe")));
-        btnVoir.setOnMouseExited(e  -> btnVoir.setStyle(btnVoir.getStyle().replace("#ddd6fe","#ede9fe")));
+        btnVoir.setOnMouseEntered(e -> btnVoir.setStyle(btnVoir.getStyle().replace("#ede9fe", "#ddd6fe")));
+        btnVoir.setOnMouseExited(e  -> btnVoir.setStyle(btnVoir.getStyle().replace("#ddd6fe", "#ede9fe")));
         btnVoir.setOnAction(e -> ouvrirModalDetails(c));
 
         Button btnModifier = new Button("✏  Modifier");
         btnModifier.setStyle("-fx-background-color: #fef3c7; -fx-text-fill: #d97706; " +
                 "-fx-font-family: 'Segoe UI'; -fx-font-size: 12px; -fx-font-weight: bold; " +
                 "-fx-padding: 7 16; -fx-background-radius: 20; -fx-cursor: hand;");
-        btnModifier.setOnMouseEntered(e -> btnModifier.setStyle(btnModifier.getStyle().replace("#fef3c7","#fde68a")));
-        btnModifier.setOnMouseExited(e  -> btnModifier.setStyle(btnModifier.getStyle().replace("#fde68a","#fef3c7")));
+        btnModifier.setOnMouseEntered(e -> btnModifier.setStyle(btnModifier.getStyle().replace("#fef3c7", "#fde68a")));
+        btnModifier.setOnMouseExited(e  -> btnModifier.setStyle(btnModifier.getStyle().replace("#fde68a", "#fef3c7")));
         btnModifier.setOnAction(e -> modifierConsultation(c));
 
         ligne2.getChildren().addAll(etoilesLabel, spacer, btnVoir, btnModifier);
 
-        // ── Ligne 3 : Aperçu avis (tronqué) ──────────────────────────
+        // ── Aperçu avis ───────────────────────────────────────────────
         String avisTexte = nettoyerAvis(c.getAvisPsy());
         if (!avisTexte.equals("Aucun avis rédigé.")) {
             String apercu = avisTexte.length() > 90 ? avisTexte.substring(0, 90) + "…" : avisTexte;
@@ -212,7 +211,9 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
         return carte;
     }
 
-    // ── Modal détails moderne (style psy = violet foncé) ────────────
+    // ════════════════════════════════════════════════════════════════
+    //  MODAL DÉTAILS
+    // ════════════════════════════════════════════════════════════════
     private void ouvrirModalDetails(ConsultationDetail c) {
         Stage modal = new Stage();
         modal.initModality(Modality.APPLICATION_MODAL);
@@ -224,16 +225,16 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
         root.setStyle("-fx-background-color: #f8f7ff; -fx-background-radius: 16; " +
                 "-fx-effect: dropshadow(gaussian, rgba(109,40,217,0.30), 28, 0, 0, 8);");
 
-        // ── Header ──────────────────────────────────────────────────
+        // Header
         VBox header = new VBox(4);
         header.setStyle("-fx-background-color: linear-gradient(to bottom right, #4c1d95, #7c3aed); " +
                 "-fx-padding: 22 24 18 24; -fx-background-radius: 16 16 0 0;");
         HBox hdrTop = new HBox();
         hdrTop.setAlignment(Pos.CENTER_LEFT);
 
-        LocalDate date  = c.getDateDispo().toLocalDate();
-        String dateStr  = date.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.FRENCH);
-        dateStr = dateStr.substring(0,1).toUpperCase() + dateStr.substring(1)
+        LocalDate date = c.getDateDispo().toLocalDate();
+        String dateStr = date.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.FRENCH);
+        dateStr = dateStr.substring(0, 1).toUpperCase() + dateStr.substring(1)
                 + " " + date.format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH));
 
         VBox hdrInfo = new VBox(3);
@@ -249,13 +250,13 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
                 "-fx-font-size: 13px; -fx-padding: 5 10; -fx-background-radius: 8; " +
                 "-fx-cursor: hand; -fx-border-width: 0;");
         btnClose.setOnAction(e -> modal.close());
-        btnClose.setOnMouseEntered(e -> btnClose.setStyle(btnClose.getStyle().replace("0.15","0.28")));
-        btnClose.setOnMouseExited(e  -> btnClose.setStyle(btnClose.getStyle().replace("0.28","0.15")));
+        btnClose.setOnMouseEntered(e -> btnClose.setStyle(btnClose.getStyle().replace("0.15", "0.28")));
+        btnClose.setOnMouseExited(e  -> btnClose.setStyle(btnClose.getStyle().replace("0.28", "0.15")));
 
         hdrTop.getChildren().addAll(hdrInfo, btnClose);
         header.getChildren().add(hdrTop);
 
-        // ── Body ────────────────────────────────────────────────────
+        // Body
         VBox body = new VBox(12);
         body.setStyle("-fx-padding: 20 24 8 24;");
 
@@ -266,8 +267,6 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
         VBox cartePatient = new VBox(10);
         cartePatient.setStyle("-fx-background-color: #ffffff; -fx-background-radius: 12; " +
                 "-fx-padding: 14 18; -fx-border-color: #ede9fe; -fx-border-width: 1; -fx-border-radius: 12;");
-
-        // Ligne avatar + infos
         HBox patientRow = new HBox(12);
         patientRow.setAlignment(Pos.CENTER_LEFT);
         String initiales = String.valueOf(c.getEtudiantPrenom().charAt(0)).toUpperCase()
@@ -285,13 +284,9 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
         patEmail.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;");
         patInfo.getChildren().addAll(patNom, patEmail);
         patientRow.getChildren().addAll(avt, patInfo);
-
-        cartePatient.getChildren().addAll(
-                patientRow,
-                separateurFin(),
+        cartePatient.getChildren().addAll(patientRow, separateurFin(),
                 ligneDetail("⏰  Horaire", hDebut + " – " + hFin),
-                ligneDetail("📅  Rédigé le", formaterDate(c.getDateRedaction()))
-        );
+                ligneDetail("📅  Rédigé le", formaterDate(c.getDateRedaction())));
 
         // Carte note
         VBox carteNote = new VBox(8);
@@ -299,7 +294,6 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
                 "-fx-padding: 14 18; -fx-border-color: #fde68a; -fx-border-width: 1; -fx-border-radius: 12;");
         Label titreNote = new Label("⭐  Satisfaction du patient");
         titreNote.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #92400e;");
-
         int note = c.getNoteSatisfaction();
         HBox noteRow = new HBox(12);
         noteRow.setAlignment(Pos.CENTER_LEFT);
@@ -324,7 +318,6 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
                 "-fx-padding: 14 18; -fx-border-color: #ddd6fe; -fx-border-width: 1; -fx-border-radius: 12;");
         Label titreAvis = new Label("💬  Mon avis sur cette consultation");
         titreAvis.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #7c3aed;");
-
         String avisTexte = nettoyerAvis(c.getAvisPsy());
         Label avisLbl = new Label(avisTexte);
         avisLbl.setWrapText(true);
@@ -336,7 +329,7 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
 
         body.getChildren().addAll(cartePatient, carteNote, carteAvis);
 
-        // ── Footer ──────────────────────────────────────────────────
+        // Footer
         HBox footer = new HBox(10);
         footer.setAlignment(Pos.CENTER_RIGHT);
         footer.setStyle("-fx-padding: 14 24 18 24;");
@@ -353,11 +346,10 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
                 "-fx-padding: 10 28; -fx-background-radius: 10; -fx-cursor: hand; " +
                 "-fx-effect: dropshadow(gaussian, rgba(124,58,237,0.35), 8, 0, 0, 2);");
         btnFermer.setOnAction(e -> modal.close());
-        btnFermer.setOnMouseEntered(e -> btnFermer.setStyle(btnFermer.getStyle().replace("#7c3aed","#6d28d9")));
-        btnFermer.setOnMouseExited(e  -> btnFermer.setStyle(btnFermer.getStyle().replace("#6d28d9","#7c3aed")));
+        btnFermer.setOnMouseEntered(e -> btnFermer.setStyle(btnFermer.getStyle().replace("#7c3aed", "#6d28d9")));
+        btnFermer.setOnMouseExited(e  -> btnFermer.setStyle(btnFermer.getStyle().replace("#6d28d9", "#7c3aed")));
 
         footer.getChildren().addAll(btnModifier, btnFermer);
-
         root.getChildren().addAll(header, body, footer);
 
         Scene scene = new Scene(root);
@@ -366,7 +358,9 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
         modal.showAndWait();
     }
 
-    // ── Modifier consultation (logique inchangée) ────────────────────
+    // ════════════════════════════════════════════════════════════════
+    //  MODIFIER — ouvre le modal et affiche un toast après fermeture
+    // ════════════════════════════════════════════════════════════════
     private void modifierConsultation(ConsultationDetail c) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/ModifierConsultationModal.fxml"));
@@ -384,18 +378,65 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
             controller.setUtilisateur(utilisateur);
             controller.setModalStage(modalStage);
 
+            // Callback appelé par le modal quand l'enregistrement réussit
+            controller.setOnSucces(() -> {
+                chargerConsultations();
+                showToast("✓  Avis et note enregistrés avec succès !", true);
+            });
+
             modalStage.showAndWait();
-            chargerConsultations();
 
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le formulaire de modification");
+            showToast("✗  Impossible d'ouvrir le formulaire de modification.", false);
         }
     }
 
-    // ── Chargement (logique inchangée) ───────────────────────────────
+    // ════════════════════════════════════════════════════════════════
+    //  TOAST
+    // ════════════════════════════════════════════════════════════════
+    private void showToast(String message, boolean success) {
+        Label pill = new Label(message);
+        pill.setWrapText(true);
+        pill.setMaxWidth(500);
+        pill.setStyle(
+                "-fx-background-color:" + (success ? "#10b981" : "#ef4444") + ";" +
+                        "-fx-text-fill:white;" +
+                        "-fx-font-family:'Segoe UI';-fx-font-size:13px;-fx-font-weight:bold;" +
+                        "-fx-padding:12 22;-fx-background-radius:30;" +
+                        "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.20),12,0,0,4);");
+
+        toastContainer.getChildren().add(pill);
+        toastContainer.setVisible(true);
+        toastContainer.setManaged(true);
+        StackPane.setAlignment(pill, Pos.BOTTOM_CENTER);
+
+        FadeTransition fadeIn  = new FadeTransition(Duration.millis(200), pill);
+        fadeIn.setFromValue(0); fadeIn.setToValue(1);
+
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(400), pill);
+        fadeOut.setDelay(Duration.seconds(2.5));
+        fadeOut.setFromValue(1); fadeOut.setToValue(0);
+        fadeOut.setOnFinished(e -> {
+            toastContainer.getChildren().remove(pill);
+            if (toastContainer.getChildren().isEmpty()) {
+                toastContainer.setVisible(false);
+                toastContainer.setManaged(false);
+            }
+        });
+
+        fadeIn.play();
+        fadeOut.play();
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  CHARGEMENT
+    // ════════════════════════════════════════════════════════════════
     private void chargerConsultations() {
-        if (utilisateur == null) { showAlert(Alert.AlertType.ERROR, "Erreur", "Utilisateur non connecté"); return; }
+        if (utilisateur == null) {
+            showToast("✗  Utilisateur non connecté.", false);
+            return;
+        }
         try {
             lblStatut.setText("Chargement…");
             List<ConsultationDetail> liste =
@@ -404,35 +445,36 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
             majStatistiques(liste);
             appliquerFiltres();
         } catch (SQLException e) {
-            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur de chargement : " + e.getMessage());
+            showToast("✗  Erreur de chargement : " + e.getMessage(), false);
             e.printStackTrace();
         }
     }
 
     private void appliquerFiltres() {
         if (consultationsList == null) return;
-        String recherche = fieldRecherche.getText() == null ? "" : fieldRecherche.getText().toLowerCase().trim();
+        String recherche = fieldRecherche.getText() == null ? ""
+                : fieldRecherche.getText().toLowerCase().trim();
         List<ConsultationDetail> filtered = consultationsList.stream()
                 .filter(c -> {
                     if (recherche.isEmpty()) return true;
-                    String info = (c.getEtudiantPrenom() + " " + c.getEtudiantNom() + " " + c.getEtudiantEmail()).toLowerCase();
+                    String info = (c.getEtudiantPrenom() + " " + c.getEtudiantNom()
+                            + " " + c.getEtudiantEmail()).toLowerCase();
                     return info.contains(recherche);
                 })
                 .collect(Collectors.toList());
-
         filteredList.setAll(filtered);
         listViewConsultations.setItems(filteredList);
-        lblStatut.setText(filteredList.size() + " consultation(s) affichée(s) sur " + consultationsList.size());
+        lblStatut.setText(filteredList.size() + " consultation(s) affichée(s) sur "
+                + consultationsList.size());
     }
 
     private void majStatistiques(List<ConsultationDetail> liste) {
-        int total     = liste.size();
-        long notees   = liste.stream().filter(c -> c.getNoteSatisfaction() > 0).count();
+        int    total  = liste.size();
+        long   notees = liste.stream().filter(c -> c.getNoteSatisfaction() > 0).count();
         double moy    = liste.stream().filter(c -> c.getNoteSatisfaction() > 0)
-                .mapToInt(ConsultationDetail::getNoteSatisfaction)
-                .average().orElse(0);
-        LocalDate now = LocalDate.now();
-        long ceMois   = liste.stream().filter(c ->
+                .mapToInt(ConsultationDetail::getNoteSatisfaction).average().orElse(0);
+        LocalDate now   = LocalDate.now();
+        long   ceMois = liste.stream().filter(c ->
                 c.getDateDispo().toLocalDate().getYear()  == now.getYear() &&
                         c.getDateDispo().toLocalDate().getMonth() == now.getMonth()).count();
 
@@ -442,28 +484,20 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
         lblStatCeMois.setText(String.valueOf(ceMois));
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────
-    /**
-     * Nettoie le préfixe automatique "Consultation terminée/créée le ..." de l'avis.
-     * Si l'avis ne contient que ce préfixe, retourne "Aucun avis rédigé."
-     */
+    // ════════════════════════════════════════════════════════════════
+    //  HELPERS
+    // ════════════════════════════════════════════════════════════════
     private String nettoyerAvis(String avis) {
         if (avis == null || avis.trim().isEmpty()) return "Aucun avis rédigé.";
         String a = avis.trim();
-        String[] prefixes = {
-                "Consultation terminée le",
-                "Consultation crée le",
-                "Consultation créée le",
-                "Consultation créé le"
-        };
-        for (String prefix : prefixes) {
-            if (a.toLowerCase().startsWith(prefix.toLowerCase())) {
-                int newline = a.indexOf('\n');
-                a = (newline > 0) ? a.substring(newline + 1).trim() : "";
+        for (String p : new String[]{"Consultation terminée le","Consultation crée le",
+                "Consultation créée le","Consultation créé le"}) {
+            if (a.toLowerCase().startsWith(p.toLowerCase())) {
+                int nl = a.indexOf('\n');
+                a = (nl > 0) ? a.substring(nl + 1).trim() : "";
                 break;
             }
         }
-        // Aussi gérer le cas regex (ancienne forme sans saut de ligne)
         a = a.replaceFirst("(?i)Consultation (terminée|crée|créée|créé) le\\s*\\d{4}-\\d{2}-\\d{2}[\\s\\d:.]*", "").trim();
         return a.isEmpty() ? "Aucun avis rédigé." : a;
     }
@@ -476,7 +510,8 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
 
     private String formaterDate(Timestamp ts) {
         if (ts == null) return "—";
-        return ts.toLocalDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy  HH:mm", Locale.FRENCH));
+        return ts.toLocalDateTime().format(
+                DateTimeFormatter.ofPattern("dd/MM/yyyy  HH:mm", Locale.FRENCH));
     }
 
     private HBox ligneDetail(String label, String valeur) {
@@ -484,9 +519,9 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
         row.setAlignment(Pos.CENTER_LEFT);
         Label lbl = new Label(label);
         lbl.setMinWidth(120);
-        lbl.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;");
+        lbl.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:11px;-fx-text-fill:#9ca3af;");
         Label val = new Label(valeur);
-        val.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-text-fill: #374151;");
+        val.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:13px;-fx-text-fill:#374151;");
         row.getChildren().addAll(lbl, val);
         return row;
     }
@@ -496,13 +531,5 @@ public class ConsultationsPsyController implements SidebarPsychologueController.
         r.setMinHeight(1); r.setMaxHeight(1);
         r.setStyle("-fx-background-color: #f5f3ff;");
         return r;
-    }
-
-    private void showAlert(Alert.AlertType type, String titre, String message) {
-        Alert alert = new Alert(type);
-        alert.setTitle(titre);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
     }
 }

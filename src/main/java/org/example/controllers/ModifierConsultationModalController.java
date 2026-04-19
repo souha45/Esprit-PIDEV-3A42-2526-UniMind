@@ -1,9 +1,14 @@
 package org.example.controllers;
 
+import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import org.example.entities.Consultation;
 import org.example.entities.ConsultationDetail;
 import org.example.entities.User;
@@ -14,70 +19,68 @@ import java.sql.SQLException;
 public class ModifierConsultationModalController {
 
     // ========== COMPOSANTS FXML ==========
-    @FXML private TextArea txtAvis;
-    @FXML private HBox etoilesContainer;
-    @FXML private Label lblNoteValue;
-    @FXML private Button btnFermer;
-    @FXML private Button btnAnnuler;
-    @FXML private Button btnEnregistrer;
-    @FXML private Button btnEffacer;
+    @FXML private TextArea  txtAvis;
+    @FXML private HBox      etoilesContainer;
+    @FXML private Label     lblNoteValue;
+    @FXML private Button    btnFermer;
+    @FXML private Button    btnAnnuler;
+    @FXML private Button    btnEnregistrer;
+    @FXML private Button    btnEffacer;
+
+    // Toast overlay injecté depuis le FXML
+    @FXML private StackPane toastContainer;
 
     // ========== VARIABLES ==========
-    private Button[] etoiles = new Button[5];
-    private ConsultationService consultationService;
-    private ConsultationDetail consultationDetail;
-    private User utilisateur;
-    private Stage modalStage;
-    private int noteActuelle = 0;
+    private final Button[]  etoiles = new Button[5];
+    private ConsultationService  consultationService;
+    private ConsultationDetail   consultationDetail;
+    private User                 utilisateur;
+    private Stage                modalStage;
+    private int                  noteActuelle = 0;
 
-    // ========== DÉTECTION OS POUR POLICE EMOJI ==========
+    // ========== EMOJI FONT ==========
     private static final String EMOJI_FONT;
     static {
         String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win"))         EMOJI_FONT = "'Segoe UI Emoji'";
-        else if (os.contains("mac"))    EMOJI_FONT = "'Apple Color Emoji'";
-        else                            EMOJI_FONT = "'Noto Color Emoji'";
+        EMOJI_FONT = os.contains("win") ? "'Segoe UI Emoji'"
+                : os.contains("mac") ? "'Apple Color Emoji'"
+                : "'Noto Color Emoji'";
     }
 
-    // ========== INITIALISATION ==========
+    // ══════════════════════════════════════════════════════════════
+    //  INIT
+    // ══════════════════════════════════════════════════════════════
     @FXML
     public void initialize() {
         consultationService = new ConsultationService();
         creerEtoiles();
-        btnEnregistrer.setOnAction(event -> enregistrerModification());
-        btnAnnuler.setOnAction(event -> fermerModal());
-        btnFermer.setOnAction(event -> fermerModal());
-        if (btnEffacer != null) {
-            btnEffacer.setOnAction(event -> effacerNote());
-        }
+        btnEnregistrer.setOnAction(e -> enregistrerModification());
+        btnAnnuler.setOnAction(e -> fermerModal());
+        btnFermer.setOnAction(e -> fermerModal());
+        if (btnEffacer != null) btnEffacer.setOnAction(e -> effacerNote());
     }
 
-    // ========== STYLE HELPER ==========
+    // ══════════════════════════════════════════════════════════════
+    //  ÉTOILES
+    // ══════════════════════════════════════════════════════════════
     private String styleEtoile(String couleur) {
-        return "-fx-font-size: 40px; " +
-                "-fx-font-family: " + EMOJI_FONT + "; " +
-                "-fx-text-fill: " + couleur + "; " +
-                "-fx-background-color: transparent; " +
-                "-fx-cursor: hand; " +
-                "-fx-padding: 0;";
+        return "-fx-font-size:40px;-fx-font-family:" + EMOJI_FONT + ";" +
+                "-fx-text-fill:" + couleur + ";-fx-background-color:transparent;" +
+                "-fx-cursor:hand;-fx-padding:0;";
     }
 
-    // ========== CRÉATION DES ÉTOILES ==========
     private void creerEtoiles() {
         for (int i = 0; i < 5; i++) {
-            final int note = i + 1;
-            Button etoile = new Button("☆");
-            etoile.setStyle(styleEtoile("#bdc3c7"));
-            etoile.setPrefSize(60, 60);
-
-            etoile.setOnAction(event -> definirNote(note));
-
+            final int note  = i + 1;
             final int index = i;
-            etoile.setOnMouseEntered(e -> survolEtoiles(index));
-            etoile.setOnMouseExited(e -> restaurerEtoiles());
-
-            etoiles[i] = etoile;
-            etoilesContainer.getChildren().add(etoile);
+            Button e = new Button("☆");
+            e.setStyle(styleEtoile("#bdc3c7"));
+            e.setPrefSize(60, 60);
+            e.setOnAction(ev      -> definirNote(note));
+            e.setOnMouseEntered(ev -> survolEtoiles(index));
+            e.setOnMouseExited(ev  -> restaurerEtoiles());
+            etoiles[i] = e;
+            etoilesContainer.getChildren().add(e);
         }
     }
 
@@ -94,94 +97,134 @@ public class ModifierConsultationModalController {
     }
 
     private void updateNoteLabel() {
-        if (noteActuelle > 0) {
-            lblNoteValue.setText(noteActuelle + "/5");
-        } else {
-            lblNoteValue.setText("0/5");
-        }
+        lblNoteValue.setText(noteActuelle > 0 ? noteActuelle + "/5" : "0/5");
     }
 
     private void mettreAJourAffichageEtoiles() {
         for (int i = 0; i < 5; i++) {
-            if (i < noteActuelle) {
-                etoiles[i].setText("★");
-                etoiles[i].setStyle(styleEtoile("#f1c40f"));
-            } else {
-                etoiles[i].setText("☆");
-                etoiles[i].setStyle(styleEtoile("#bdc3c7"));
-            }
+            boolean filled = i < noteActuelle;
+            etoiles[i].setText(filled ? "★" : "☆");
+            etoiles[i].setStyle(styleEtoile(filled ? "#f1c40f" : "#bdc3c7"));
         }
     }
 
     private void survolEtoiles(int index) {
-        for (int i = 0; i <= index; i++) {
-            etoiles[i].setText("★");
-            etoiles[i].setStyle(styleEtoile("#f1c40f"));
-        }
-        for (int i = index + 1; i < 5; i++) {
-            etoiles[i].setText("☆");
-            etoiles[i].setStyle(styleEtoile("#bdc3c7"));
+        for (int i = 0; i < 5; i++) {
+            boolean filled = i <= index;
+            etoiles[i].setText(filled ? "★" : "☆");
+            etoiles[i].setStyle(styleEtoile(filled ? "#f1c40f" : "#bdc3c7"));
         }
     }
 
-    private void restaurerEtoiles() {
-        mettreAJourAffichageEtoiles();
+    private void restaurerEtoiles() { mettreAJourAffichageEtoiles(); }
+
+    // ══════════════════════════════════════════════════════════════
+    //  ENREGISTREMENT
+    // ══════════════════════════════════════════════════════════════
+
+
+
+    // Ajouter ce champ et ce setter dans ModifierConsultationModalController
+
+    private Runnable onSucces;
+
+    public void setOnSucces(Runnable callback) {
+        this.onSucces = callback;
     }
 
-    // ========== ENREGISTREMENT ==========
+    // Puis dans enregistrerModification(), remplacer l'Alert et le fermerModal() par :
     private void enregistrerModification() {
+        String avis = txtAvis.getText().trim();
+        if (avis.isEmpty()) {
+            showToast("⚠  Veuillez saisir un avis avant d'enregistrer.", ToastType.WARNING);
+            return;
+        }
+        if (noteActuelle == 0) {
+            showToast("⚠  Veuillez sélectionner une note (1 à 5 étoiles).", ToastType.WARNING);
+            return;
+        }
         try {
-            String avis = txtAvis.getText().trim();
-            if (avis.isEmpty()) {
-                afficherAlerte(Alert.AlertType.WARNING, "Champ manquant",
-                        "Veuillez saisir un avis.");
-                return;
-            }
-            if (noteActuelle == 0) {
-                afficherAlerte(Alert.AlertType.WARNING, "Note manquante",
-                        "Veuillez sélectionner une note (1 à 5 étoiles).");
-                return;
-            }
+            Consultation entity = new Consultation();
+            entity.setConsultationId(consultationDetail.getConsultationId());
+            entity.setAvisPsy(avis);
+            entity.setNoteSatisfaction((short) noteActuelle);
+            entity.setRendezVousId(consultationDetail.getRendezVousId());
+            entity.setPsyUserId(utilisateur.getUserId());
+            entity.setEtudiantUserId(consultationDetail.getEtudiantId());
+            entity.setDateModification(new java.sql.Timestamp(System.currentTimeMillis()));
 
-            Consultation consultationEntity = new Consultation();
-            consultationEntity.setConsultationId(consultationDetail.getConsultationId());
-            consultationEntity.setAvisPsy(avis);
-            consultationEntity.setNoteSatisfaction((short) noteActuelle);
-            consultationEntity.setRendezVousId(consultationDetail.getRendezVousId());
-            consultationEntity.setPsyUserId(utilisateur.getUserId());
-            consultationEntity.setEtudiantUserId(consultationDetail.getEtudiantId());
-            consultationEntity.setDateModification(new java.sql.Timestamp(System.currentTimeMillis()));
+            consultationService.modifier(entity);
 
-            consultationService.modifier(consultationEntity);
-
-            afficherAlerte(Alert.AlertType.INFORMATION, "Succès",
-                    "✅ Avis et note enregistrés avec succès !\n\n⭐ Note: " + noteActuelle + "/5");
+            // Ferme le modal, puis déclenche le toast dans la page parente
             fermerModal();
+            if (onSucces != null) onSucces.run();
 
         } catch (SQLException e) {
-            afficherAlerte(Alert.AlertType.ERROR, "Erreur", "❌ Erreur: " + e.getMessage());
+            showToast("✗  Erreur : " + e.getMessage(), ToastType.ERROR);
             e.printStackTrace();
         }
     }
+    // ══════════════════════════════════════════════════════════════
+    //  TOAST
+    // ══════════════════════════════════════════════════════════════
+    private enum ToastType { SUCCESS, WARNING, ERROR }
 
-    // ========== UTILITAIRES ==========
-    private void afficherAlerte(Alert.AlertType type, String titre, String message) {
-        Alert alert = new Alert(type);
-        alert.setTitle(titre);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private void showToast(String message, ToastType type) {
+        String bg = switch (type) {
+            case SUCCESS -> "#10b981";
+            case WARNING -> "#f59e0b";
+            case ERROR   -> "#ef4444";
+        };
+
+        // ── Pill label ─────────────────────────────────────────
+        Label pill = new Label(message);
+        pill.setWrapText(true);
+        pill.setMaxWidth(460);
+        pill.setStyle(
+                "-fx-background-color:" + bg + ";" +
+                        "-fx-text-fill:white;" +
+                        "-fx-font-family:'Segoe UI';-fx-font-size:13px;-fx-font-weight:bold;" +
+                        "-fx-padding:12 22;-fx-background-radius:30;" +
+                        "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.20),12,0,0,4);");
+
+        toastContainer.getChildren().add(pill);
+        toastContainer.setVisible(true);
+        toastContainer.setManaged(true);
+        StackPane.setAlignment(pill, Pos.BOTTOM_CENTER);
+
+        // Fade-in
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(200), pill);
+        fadeIn.setFromValue(0); fadeIn.setToValue(1);
+
+        // Fade-out après 2,2 s
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(400), pill);
+        fadeOut.setDelay(Duration.seconds(type == ToastType.SUCCESS ? 1.2 : 2.2));
+        fadeOut.setFromValue(1); fadeOut.setToValue(0);
+        fadeOut.setOnFinished(e -> {
+            toastContainer.getChildren().remove(pill);
+            if (toastContainer.getChildren().isEmpty()) {
+                toastContainer.setVisible(false);
+                toastContainer.setManaged(false);
+            }
+        });
+
+        fadeIn.play();
+        fadeOut.play();
     }
 
+    // ══════════════════════════════════════════════════════════════
+    //  UTILITAIRES
+    // ══════════════════════════════════════════════════════════════
     private void fermerModal() {
         if (modalStage != null) modalStage.close();
     }
 
-    // ========== MÉTHODES EXTERNES ==========
+    // ══════════════════════════════════════════════════════════════
+    //  SETTERS
+    // ══════════════════════════════════════════════════════════════
     public void setConsultation(ConsultationDetail consultation) {
         this.consultationDetail = consultation;
 
-        // Remplir l'avis
         String avisExistant = consultation.getAvisPsy();
         if (avisExistant != null && !avisExistant.isEmpty()
                 && !avisExistant.equals("Aucun avis")
@@ -189,28 +232,12 @@ public class ModifierConsultationModalController {
             txtAvis.setText(avisExistant);
         }
 
-        // ✅ Remplir la note et mettre à jour l'affichage
         short noteExistante = consultation.getNoteSatisfaction();
-        if (noteExistante > 0) {
-            this.noteActuelle = noteExistante;
-        } else {
-            this.noteActuelle = 0;
-        }
-
-        // ✅ Mettre à jour l'affichage des étoiles ET le label
+        this.noteActuelle   = noteExistante > 0 ? noteExistante : 0;
         mettreAJourAffichageEtoiles();
-        if (noteExistante > 0) {
-            lblNoteValue.setText(noteActuelle + "/5");
-        } else {
-            lblNoteValue.setText("0/5");
-        }
+        lblNoteValue.setText(noteActuelle > 0 ? noteActuelle + "/5" : "0/5");
     }
 
-    public void setUtilisateur(User user) {
-        this.utilisateur = user;
-    }
-
-    public void setModalStage(Stage stage) {
-        this.modalStage = stage;
-    }
+    public void setUtilisateur(User user) { this.utilisateur = user; }
+    public void setModalStage(Stage stage) { this.modalStage = stage; }
 }
