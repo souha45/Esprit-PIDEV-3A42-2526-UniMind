@@ -28,11 +28,16 @@ public class EtudiantSeancesCategorieController implements Initializable {
     @FXML private Label lblNomCategorie;
     @FXML private Label lblDescCategorie;
     @FXML private FlowPane seancesGrid;
+    private User currentUser;
 
     private final SeanceMeditationServices seanceService = new SeanceMeditationServices();
     private final FavoriSeanceServices favoriService = new FavoriSeanceServices();
     private CategorieMeditation categorie;
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+    public void setUtilisateur(User user) {
+        this.currentUser = user;
+    }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {}
@@ -117,8 +122,7 @@ public class EtudiantSeancesCategorieController implements Initializable {
 
         // Favori button
         boolean[] isFav = {false};
-        int currentUserId = Session.getInstance().isLoggedIn()
-                ? Session.getInstance().getCurrentUser().getUserId() : -1;
+        int currentUserId = (currentUser != null) ? currentUser.getUserId() : -1;
 
         try {
             if (currentUserId > 0) isFav[0] = favoriService.isFavori(currentUserId, seance.getSeanceId());
@@ -281,9 +285,14 @@ public class EtudiantSeancesCategorieController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/views/EtudiantSeances.fxml"));
             Node page = loader.load();
-            StackPane contentArea = (StackPane) seancesGrid.getScene().lookup("#contentArea");
-            if (contentArea != null) contentArea.getChildren().setAll(page);
-        } catch (IOException e) { e.printStackTrace(); }
+
+            BorderPane mainLayout = (BorderPane) seancesGrid.getScene().lookup("#mainLayout");
+            if (mainLayout != null) {
+                mainLayout.setCenter(page);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // ==================== HELPERS ====================

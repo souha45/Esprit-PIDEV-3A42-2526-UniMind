@@ -104,7 +104,7 @@
                        -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
                        -fx-background-radius: 10; -fx-cursor: hand;"  onAction="#showSeancesMeditation" />
 
-        <Button  text="  ❤ Mes Favoris Séances" maxWidth="Infinity"
+        <Button fx:id="btnFavoris" text="  ❤ Mes Favoris Séances" maxWidth="Infinity"
                 style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
                        -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
                        -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
@@ -126,6 +126,5 @@
                        -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
                        -fx-background-radius: 10; -fx-cursor: hand;" />
     </VBox>
-    <StackPane fx:id="contentArea" VBox.vgrow="ALWAYS" styleClass="etudiant-content"/>
 
 </VBox>

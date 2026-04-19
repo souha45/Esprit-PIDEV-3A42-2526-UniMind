@@ -44,6 +44,7 @@ public class SidebarEtudiantController {
     @FXML private Button btnProfil;
     @FXML private Button btnDeconnexion;
     @FXML private Button btnSeances;
+    @FXML private Button btnFavoris;
     @FXML private StackPane contentArea;
 
     private void loadPage(String fxmlPath) {
@@ -57,12 +58,14 @@ public class SidebarEtudiantController {
         }
     }
 
-    @FXML public void showSeancesMeditation() {
-        loadPage("/org/example/views/EtudiantSeances.fxml");
+    @FXML
+    public void showSeancesMeditation() {
+        naviguer("/org/example/views/EtudiantSeances.fxml", "Séances de méditation", btnSeances);
     }
 
-    @FXML public void showMesFavoris() {
-        loadPage("/org/example/views/MesFavorisSeances.fxml");
+    @FXML
+    public void showMesFavoris() {
+        naviguer("/org/example/views/MesFavorisSeances.fxml", "Mes favoris", null);
     }
 
 
@@ -150,6 +153,8 @@ public class SidebarEtudiantController {
                 naviguer("/MesReponsesEtudiant.fxml",       "Mes Réponses",     btnMesReponses));
         btnProfil.setOnAction(e -> ouvrirProfil());
         btnDeconnexion.setOnAction(e -> seDeconnecter());
+        btnSeances.setOnAction(e ->
+                naviguer("/org/example/views/EtudiantSeances.fxml", "Séances de méditation", btnSeances));
 
         styliserBoutons();
         setActiveButton(btnDashboard);
@@ -349,13 +354,15 @@ public class SidebarEtudiantController {
             case "/SuiviTraitementsEtudiant.fxml" -> setActiveButton(btnSuiviTraitements);
             case "/QuestionnairesEtudiant.fxml"   -> setActiveButton(btnQuestionnaires);
             case "/MesReponsesEtudiant.fxml"      -> setActiveButton(btnMesReponses);
+            case "/org/example/views/EtudiantSeances.fxml" -> setActiveButton(btnSeances);
+            case "/org/example/views/MesFavorisSeances.fxml" -> setActiveButton(btnFavoris);
         }
     }
 
     private void setActiveButton(Button button) {
         Button[] boutons = {
                 btnDashboard, btnMesRendezVous, btnConsultations,
-                btnTraitements, btnSuiviTraitements, btnQuestionnaires, btnMesReponses
+                btnTraitements, btnSuiviTraitements, btnQuestionnaires, btnMesReponses, btnSeances, btnFavoris
         };
         for (Button btn : boutons) btn.setStyle(STYLE_IDLE);
         button.setStyle(STYLE_ACTIVE);
@@ -365,7 +372,7 @@ public class SidebarEtudiantController {
     private void styliserBoutons() {
         Button[] boutons = {
                 btnDashboard, btnMesRendezVous, btnConsultations,
-                btnTraitements, btnSuiviTraitements, btnQuestionnaires, btnMesReponses
+                btnTraitements, btnSuiviTraitements, btnQuestionnaires, btnMesReponses, btnSeances
         };
         for (Button btn : boutons) {
             btn.setOnMouseEntered(e -> { if (btn != activeButton) btn.setStyle(STYLE_HOVER); });

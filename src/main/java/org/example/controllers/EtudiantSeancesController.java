@@ -19,18 +19,21 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class EtudiantSeancesController implements Initializable {
+public class EtudiantSeancesController implements Initializable, SidebarEtudiantController.EtudiantPageController {
 
+    @FXML private SidebarEtudiantController sidebarEtudiantController;
     @FXML private FlowPane categoriesGrid;
     @FXML private TextField tfSearchCat;
     @FXML private VBox postsContainer;
     @FXML private Button btnLoadMore;
+    @FXML private BorderPane mainLayout;
 
     private final CategorieMeditationServices catService = new CategorieMeditationServices();
     private final SeanceMeditationServices seanceService = new SeanceMeditationServices();
     private final PostServices postService = new PostServices();
     private final CommentaireServices commentaireService = new CommentaireServices();
     private final EtudiantService etudiantService = new EtudiantService();
+    private User currentUser;
 
     private List<CategorieMeditation> allCategories = new ArrayList<>();
     private List<Post> allPosts = new ArrayList<>();
@@ -38,8 +41,21 @@ public class EtudiantSeancesController implements Initializable {
     private static final int POSTS_PER_PAGE = 5;
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // Ne rien charger ici, l'utilisateur n'est pas encore connu.
+        // L'initialisation des listeners peut être faite ici si nécessaire.
+    }
+
+    @Override
+    public void setUtilisateur(User user) {
+        this.currentUser = user;
+        if (sidebarEtudiantController != null) {
+            sidebarEtudiantController.setUtilisateur(user);
+            sidebarEtudiantController.setActiveButtonByFxml("/org/example/views/EtudiantSeances.fxml");
+        }
+        // Chargement des données après réception de l'utilisateur
         loadCategories();
         loadPosts();
     }
@@ -72,7 +88,7 @@ public class EtudiantSeancesController implements Initializable {
         card.getStyleClass().add("cat-card");
         card.setPrefWidth(280);
         card.setMaxWidth(280);
-// Icon
+
         StackPane iconContainer = new StackPane();
         iconContainer.setAlignment(Pos.CENTER);
         iconContainer.setPrefHeight(70);
@@ -83,7 +99,6 @@ public class EtudiantSeancesController implements Initializable {
                 javafx.scene.image.Image image = new javafx.scene.image.Image(
                         cat.getIconUrl(), 60, 60, true, true, true);
 
-                // Si l'image charge avec erreur, afficher emoji à la place
                 image.errorProperty().addListener((obs, oldVal, hasError) -> {
                     if (hasError) {
                         Label fallback = new Label("🌸");
@@ -110,19 +125,16 @@ public class EtudiantSeancesController implements Initializable {
             iconContainer.getChildren().add(emoji);
         }
 
-        // Name
         Label nom = new Label(cat.getNom());
         nom.getStyleClass().add("cat-name");
         nom.setWrapText(true);
 
-        // Description
         String descText = cat.getDescription() != null && !cat.getDescription().isBlank()
                 ? cat.getDescription() : "Aucune description";
         Label desc = new Label(descText.length() > 80 ? descText.substring(0, 80) + "..." : descText);
         desc.getStyleClass().add("cat-desc");
         desc.setWrapText(true);
 
-        // Stats row
         int nbSeances = 0;
         int nbPosts = 0;
         try {
@@ -142,7 +154,6 @@ public class EtudiantSeancesController implements Initializable {
         postsLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #10b981; -fx-font-weight: bold;");
         stats.getChildren().addAll(seancesLbl, postsLbl);
 
-        // Explorer button
         Button btnExplorer = new Button("🔍  Explorer");
         btnExplorer.getStyleClass().add("btn-explorer");
         btnExplorer.setMaxWidth(Double.MAX_VALUE);
@@ -170,10 +181,20 @@ public class EtudiantSeancesController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/views/EtudiantSeancesCategorie.fxml"));
             Node page = loader.load();
+
             EtudiantSeancesCategorieController ctrl = loader.getController();
+            ctrl.setUtilisateur(currentUser);
             ctrl.initWithCategorie(cat);
-            StackPane contentArea = (StackPane) categoriesGrid.getScene().lookup("#contentArea");
-            if (contentArea != null) contentArea.getChildren().setAll(page);
+
+            BorderPane mainLayout = (BorderPane) categoriesGrid.getScene().lookup("#mainLayout");
+            if (mainLayout != null) {
+                mainLayout.setCenter(page);
+            } else {
+                mainLayout = (BorderPane) categoriesGrid.getScene().getRoot();
+                if (mainLayout instanceof BorderPane) {
+                    mainLayout.setCenter(page);
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -210,14 +231,13 @@ public class EtudiantSeancesController implements Initializable {
     }
 
     private VBox buildPostCard(Post post) {
-        int currentUserId = Session.getInstance().isLoggedIn()
-                ? Session.getInstance().getCurrentUser().getUserId() : -1;
+        // Utiliser currentUser au lieu de Session
+        int currentUserId = (currentUser != null) ? currentUser.getUserId() : -1;
         boolean isMyPost = post.getUserId() == currentUserId;
 
         VBox card = new VBox(10);
         card.getStyleClass().add("post-card");
 
-        // Header
         HBox header = new HBox(10);
         header.setAlignment(Pos.CENTER_LEFT);
 
@@ -274,21 +294,17 @@ public class EtudiantSeancesController implements Initializable {
 
         header.getChildren().addAll(avatar, authorInfo, spacer, actions);
 
-        // Title
         Label title = new Label(post.getTitre());
         title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #3730a3;");
         title.setWrapText(true);
 
-        // Content
         Label content = new Label(post.getContenu());
         content.setStyle("-fx-font-size: 13px; -fx-text-fill: #4b5563;");
         content.setWrapText(true);
 
-        // Comments section
         VBox commentsSection = new VBox(8);
         commentsSection.setStyle("-fx-padding: 10 0 0 0;");
 
-        // Comments count + toggle
         int[] nbComments = {0};
         try { nbComments[0] = commentaireService.getCommentairesByPost(post.getPostId()).size(); }
         catch (SQLException ignored) {}
@@ -333,8 +349,6 @@ public class EtudiantSeancesController implements Initializable {
 
     private void loadComments(Post post, VBox commentsBody, Label nbCommLbl) {
         commentsBody.getChildren().clear();
-        int currentUserId = Session.getInstance().isLoggedIn()
-                ? Session.getInstance().getCurrentUser().getUserId() : -1;
         try {
             List<Commentaire> comments = commentaireService.getCommentairesByPost(post.getPostId());
             nbCommLbl.setText("💬 " + comments.size() + " commentaire(s)");
@@ -352,8 +366,7 @@ public class EtudiantSeancesController implements Initializable {
     }
 
     private HBox buildCommentCard(Commentaire c, Post post, VBox commentsBody, Label nbCommLbl) {
-        int currentUserId = Session.getInstance().isLoggedIn()
-                ? Session.getInstance().getCurrentUser().getUserId() : -1;
+        int currentUserId = (currentUser != null) ? currentUser.getUserId() : -1;
         boolean isMyComment = c.getUserId() == currentUserId;
 
         HBox row = new HBox(10);
@@ -500,7 +513,13 @@ public class EtudiantSeancesController implements Initializable {
                 post.setContenu(taContenu.getText().trim());
                 post.setIsAnonyme(cbAnonyme.isSelected());
                 post.setCategorieId(catMap.get(cbCategorie.getValue()));
-                post.setUserId(Session.getInstance().getCurrentUser().getUserId());
+                // Utiliser currentUser au lieu de Session
+                if (currentUser != null) {
+                    post.setUserId(currentUser.getUserId());
+                } else {
+                    // fallback
+                    post.setUserId(Session.getInstance().getCurrentUser().getUserId());
+                }
 
                 if (isEdit) {
                     postService.modifier(post);
@@ -580,7 +599,11 @@ public class EtudiantSeancesController implements Initializable {
                     c.setContenu(taComment.getText().trim());
                     c.setIsAnonyme(cbAnonyme.isSelected());
                     c.setPostId(post.getPostId());
-                    c.setUserId(Session.getInstance().getCurrentUser().getUserId());
+                    if (currentUser != null) {
+                        c.setUserId(currentUser.getUserId());
+                    } else {
+                        c.setUserId(Session.getInstance().getCurrentUser().getUserId());
+                    }
                     commentaireService.ajouter(c);
                     commentsBody.setVisible(true);
                     commentsBody.setManaged(true);

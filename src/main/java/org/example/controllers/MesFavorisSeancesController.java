@@ -22,22 +22,34 @@ import javafx.geometry.Insets;
 import javafx.scene.media.*;
 import java.io.File;
 
-public class MesFavorisSeancesController implements Initializable {
+public class MesFavorisSeancesController implements SidebarEtudiantController.EtudiantPageController {
 
     @FXML private FlowPane favorisGrid;
+    @FXML private SidebarEtudiantController sidebarEtudiantController;
 
     private final FavoriSeanceServices favoriService = new FavoriSeanceServices();
     private final SeanceMeditationServices seanceService = new SeanceMeditationServices();
 
+    private User currentUser;
+
     @Override
+    public void setUtilisateur(User user) {
+        this.currentUser = user;
+        if (sidebarEtudiantController != null) {
+            sidebarEtudiantController.setUtilisateur(user);
+            sidebarEtudiantController.setActiveButtonByFxml("/org/example/views/MesFavorisSeances.fxml");
+        }
+        loadFavoris();  // utilise currentUser au lieu de Session
+    }
+
+    @FXML
     public void initialize(URL url, ResourceBundle rb) {
-        loadFavoris();
     }
 
     private void loadFavoris() {
         favorisGrid.getChildren().clear();
-        int userId = Session.getInstance().isLoggedIn()
-                ? Session.getInstance().getCurrentUser().getUserId() : -1;
+        if (currentUser == null) return;
+        int userId = currentUser.getUserId();
         if (userId < 0) return;
 
         try {
@@ -52,7 +64,7 @@ public class MesFavorisSeancesController implements Initializable {
                 VBox empty = new VBox(12);
                 empty.setAlignment(Pos.CENTER);
                 empty.setStyle("-fx-padding: 60;");
-                Label icon = new Label("🤍");
+                Label icon = new Label("\uD83C\uDF38");
                 icon.setStyle("-fx-font-size: 48px;");
                 Label msg = new Label("Aucune séance favorite pour l'instant.");
                 msg.setStyle("-fx-font-size: 15px; -fx-text-fill: #9ca3af;");
@@ -264,8 +276,11 @@ public class MesFavorisSeancesController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/views/EtudiantSeances.fxml"));
             Node page = loader.load();
-            StackPane contentArea = (StackPane) favorisGrid.getScene().lookup("#contentArea");
-            if (contentArea != null) contentArea.getChildren().setAll(page);
+            // Récupérer le BorderPane parent (mainLayout) et remplacer le centre
+            BorderPane mainLayout = (BorderPane) favorisGrid.getScene().lookup("#mainLayout");
+            if (mainLayout != null) {
+                mainLayout.setCenter(page);
+            }
         } catch (IOException e) { e.printStackTrace(); }
     }
 }

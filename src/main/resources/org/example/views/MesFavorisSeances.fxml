@@ -1,28 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.geometry.Insets?>
 
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.geometry.*?>
-
-<ScrollPane xmlns="http://javafx.com/javafx"
+<BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="org.example.controllers.MesFavorisSeancesController"
-            styleClass="etudiant-scroll"
-            stylesheets="/css/etudiant.css"
-            fitToWidth="true" hbarPolicy="NEVER">
+            fx:controller="org.example.controllers.MesFavorisSeancesController">
 
-    <VBox styleClass="etudiant-page" spacing="0">
+    <!-- Sidebar à gauche -->
+    <left>
+        <fx:include source="/SidebarEtudiant.fxml" fx:id="sidebarEtudiant"/>
+    </left>
 
-        <VBox styleClass="page-header">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Button text="← Retour" styleClass="btn-back" onAction="#retour"/>
-                <Label text="❤️ Mes Séances Favorites" styleClass="page-title"/>
-            </HBox>
-            <Label text="Retrouvez toutes vos séances de méditation favorites" styleClass="page-subtitle"/>
-        </VBox>
-
-        <VBox styleClass="section-container" spacing="16">
-            <FlowPane fx:id="favorisGrid" hgap="16" vgap="16"/>
-        </VBox>
-    </VBox>
-</ScrollPane>
+    <!-- Contenu central (ancien ScrollPane) -->
+    <center>
+        <ScrollPane styleClass="etudiant-scroll"
+                    stylesheets="/css/etudiant.css"
+                    fitToWidth="true" hbarPolicy="NEVER">
+            <VBox styleClass="etudiant-page" spacing="0">
+                <VBox styleClass="page-header">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="❤ Mes Séances Favorites" styleClass="page-title"/>
+                    </HBox>
+                    <Label text="Retrouvez toutes vos séances de méditation favorites" styleClass="page-subtitle"/>
+                </VBox>
+                <VBox styleClass="section-container" spacing="16">
+                    <FlowPane fx:id="favorisGrid" hgap="16" vgap="16"/>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>

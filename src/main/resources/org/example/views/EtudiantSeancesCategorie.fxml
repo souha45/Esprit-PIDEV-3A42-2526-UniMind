@@ -16,7 +16,6 @@
         <!-- HEADER -->
         <VBox styleClass="page-header">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <Button text="← Retour" styleClass="btn-back" onAction="#retourCategories"/>
                 <Label text="🌸 Séances  ›" styleClass="page-title"/>
                 <Label fx:id="lblNomCategorie" text="" styleClass="page-title-accent"/>
             </HBox>

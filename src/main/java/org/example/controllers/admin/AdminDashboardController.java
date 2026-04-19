@@ -46,9 +46,11 @@ public class AdminDashboardController {
     @FXML private Button btnDeconnexion;
     @FXML private Button btnStats;
     @FXML private Button btnSeances;
+
+    // CONTENU PRINCIPAL (StackPane)
     @FXML private StackPane contentArea;
 
-    //  CONTENU PRINCIPAL
+    // PANNEAUX FIXES (à l'intérieur du StackPane)
     @FXML private VBox panneauGestion;
     @FXML private VBox panneauDemandes;
     @FXML private VBox panneauProfil;
@@ -84,49 +86,20 @@ public class AdminDashboardController {
     private ObservableList<User> tousLesUsers = FXCollections.observableArrayList();
     private Stage modalStage;
     private String currentPhotoPath = null;
-    private void loadPage(String fxmlPath) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Node page = loader.load();
-            contentArea.getChildren().setAll(page);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("Erreur chargement page: " + fxmlPath);
-        }
-    }
-
-    private void setActiveButton(Button active) {
-        Button[] allButtons = {btnStats, btnSeances};
-        for (Button btn : allButtons) {
-            btn.getStyleClass().remove("nav-btn-active");
-        }
-        if (!active.getStyleClass().contains("nav-btn-active")) {
-            active.getStyleClass().add("nav-btn-active");
-        }
-    }
-    @FXML
-    public void showSeances() {
-        setActiveButton(btnSeances);
-        loadPage("/org/example/views/CategorieMeditation.fxml");
-    }
-
-    @FXML
-    private void showStats() {
-        setActiveButton(btnStats);
-        loadPage("/org/example/views/Stats.fxml");
-    }
-
 
     // INITIALISATION
-
     @FXML
     public void initialize() {
         configurerTable();
         configurerTableDemandes();
         chargerUtilisateurs();
-        afficherPanneau("gestion");
 
-        // Recherche navbar temps réel
+        // Retirer les trois VBox du StackPane (elles ne seront plus dans l'arbre)
+        contentArea.getChildren().removeAll(panneauGestion, panneauDemandes, panneauProfil);
+
+        // Afficher le panneau Gestion par défaut
+        afficherGestion();
+
         navRechercheField.textProperty().addListener((obs, o, n) -> filtrer(n));
 
         modalStage = new Stage();
@@ -144,49 +117,81 @@ public class AdminDashboardController {
         chargerPhotoProfile(user);
     }
 
-    // NAVIGATION SIDEBAR
-    @FXML public void afficherGestion() {
-        afficherPanneau("gestion");
+    // ==================== NAVIGATION (affichage des panneaux) ====================
+
+    @FXML
+    public void afficherGestion() {
+        // S'assurer que la VBox est visible et gérée
+        panneauGestion.setVisible(true);
+        panneauGestion.setManaged(true);
+        contentArea.getChildren().setAll(panneauGestion);
+        setActiveSidebarButton(btnGestionUsers);
         chargerUtilisateurs();
     }
-    @FXML public void afficherDemandes() {
-        afficherPanneau("demandes");
+
+    @FXML
+    public void afficherDemandes() {
+        panneauDemandes.setVisible(true);
+        panneauDemandes.setManaged(true);
+        contentArea.getChildren().setAll(panneauDemandes);
+        setActiveSidebarButton(btnDemandes);
         chargerDemandes();
     }
-    @FXML public void afficherProfil() { afficherPanneau("profil"); }
 
-    private void afficherPanneau(String nom) {
-        panneauGestion.setVisible(false); panneauGestion.setManaged(false);
-        panneauDemandes.setVisible(false); panneauDemandes.setManaged(false);
-        panneauProfil.setVisible(false);   panneauProfil.setManaged(false);
-
-        btnGestionUsers.setStyle(sidebarBtnStyle(false));
-        btnDemandes.setStyle(sidebarBtnStyle(false));
-        btnProfil.setStyle(sidebarBtnStyle(false));
-
-        switch (nom) {
-            case "gestion" -> {
-                panneauGestion.setVisible(true); panneauGestion.setManaged(true);
-                btnGestionUsers.setStyle(sidebarBtnStyle(true));
-            }
-            case "demandes" -> {
-                panneauDemandes.setVisible(true); panneauDemandes.setManaged(true);
-                btnDemandes.setStyle(sidebarBtnStyle(true));
-            }
-            case "profil" -> {
-                panneauProfil.setVisible(true); panneauProfil.setManaged(true);
-                btnProfil.setStyle(sidebarBtnStyle(true));
-            }
+    @FXML
+    public void afficherProfil() {
+        panneauProfil.setVisible(true);
+        panneauProfil.setManaged(true);
+        contentArea.getChildren().setAll(panneauProfil);
+        setActiveSidebarButton(btnProfil);
+        // Recharger les informations du profil (au cas où)
+        if (adminConnecte != null) {
+            pNomPrenom.setText(adminConnecte.getPrenom() + " " + adminConnecte.getNom());
+            pEmail.setText(adminConnecte.getEmail());
+            pRole.setText(adminConnecte.getRole().toString());
+            pStatut.setText(adminConnecte.getStatut());
         }
     }
 
-    private String sidebarBtnStyle(boolean actif) {
-        if (actif)
-            return "-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 200; -fx-pref-height: 40; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 0;";
-        return "-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 200; -fx-pref-height: 40; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 0;";
+    @FXML
+    public void showSeances() {
+        loadPage("/org/example/views/CategorieMeditation.fxml");
+        setActiveSidebarButton(btnSeances);
     }
 
-    // TABLE UTILISATEURS
+    @FXML
+    public void showStats() {
+        loadPage("/org/example/views/Stats.fxml");
+        setActiveSidebarButton(btnStats);
+    }
+
+    private void loadPage(String fxmlPath) {
+        try {
+            Node page = FXMLLoader.load(getClass().getResource(fxmlPath));
+            contentArea.getChildren().setAll(page);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Gestion du style des boutons de la sidebar
+    private void setActiveSidebarButton(Button active) {
+        Button[] allButtons = {btnGestionUsers, btnDemandes, btnProfil, btnStats, btnSeances};
+        for (Button btn : allButtons) {
+            btn.setStyle(sidebarBtnStyle(false));
+        }
+        active.setStyle(sidebarBtnStyle(true));
+    }
+
+    private String sidebarBtnStyle(boolean actif) {
+        if (actif) {
+            return "-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;";
+        } else {
+            return "-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;";
+        }
+    }
+
+    // ==================== GESTION UTILISATEURS ====================
 
     private void configurerTable() {
         colNom.setCellValueFactory(new PropertyValueFactory<>("nom"));
@@ -207,7 +212,6 @@ public class AdminDashboardController {
             }
         });
 
-        // Colonne des actions avec icônes
         colActions.setCellFactory(col -> new TableCell<>() {
             private final Button btnModifier = createIconButton("✏", "#2563EB");
             private final Button btnSupprimer = createIconButton("🗑", "#DC2626");
@@ -263,7 +267,7 @@ public class AdminDashboardController {
                         u.getEmail().toLowerCase().contains(r)
         ));
     }
-    // MODAL FORMULAIRE (Ajouter / Modifier)
+
     @FXML
     public void ouvrirModalAjout() {
         ouvrirModal(null);
@@ -274,7 +278,6 @@ public class AdminDashboardController {
     }
 
     private void ouvrirModal(User user) {
-        // Créer le contenu du modal
         VBox modalContent = new VBox(15);
         modalContent.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 5);");
         modalContent.setMaxWidth(450);
@@ -282,7 +285,6 @@ public class AdminDashboardController {
         Label titre = new Label(user == null ? "➕ Ajouter un utilisateur" : "✏ Modifier " + user.getPrenom() + " " + user.getNom());
         titre.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #4C1D95;");
 
-        // Champs du formulaire
         TextField nomField = new TextField();
         nomField.setPromptText("Nom *");
         nomField.setStyle("-fx-padding: 10; -fx-background-radius: 6; -fx-border-color: #E5E7EB; -fx-border-radius: 6;");
@@ -311,7 +313,6 @@ public class AdminDashboardController {
         Label messageLabel = new Label();
         messageLabel.setStyle("-fx-font-size: 12;");
 
-        // Remplir si modification
         if (user != null) {
             nomField.setText(user.getNom());
             prenomField.setText(user.getPrenom());
@@ -322,7 +323,6 @@ public class AdminDashboardController {
             passwordField.setManaged(false);
         }
 
-        // Boutons
         Button btnSave = new Button("💾 Sauvegarder");
         btnSave.setStyle("-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-cursor: hand; -fx-padding: 10 20; -fx-background-radius: 6;");
 
@@ -334,7 +334,6 @@ public class AdminDashboardController {
 
         modalContent.getChildren().addAll(titre, nomField, prenomField, emailField, cinField, roleCombo, passwordField, messageLabel, btnBox);
 
-        // Scene et Stage
         Scene scene = new Scene(modalContent);
         scene.setFill(Color.TRANSPARENT);
 
@@ -343,7 +342,6 @@ public class AdminDashboardController {
         stage.initStyle(StageStyle.TRANSPARENT);
         stage.setScene(scene);
 
-        // Actions
         btnSave.setOnAction(e -> {
             String nom = nomField.getText().trim();
             String prenom = prenomField.getText().trim();
@@ -392,11 +390,8 @@ public class AdminDashboardController {
         });
 
         btnAnnuler.setOnAction(e -> stage.close());
-
         stage.showAndWait();
     }
-
-    // ACTIONS CRUD (appelées depuis les boutons du tableau)
 
     private void supprimerUtilisateur(User user) {
         Alert c = new Alert(Alert.AlertType.CONFIRMATION,
@@ -455,7 +450,7 @@ public class AdminDashboardController {
         }
     }
 
-    // DEMANDES EN ATTENTE
+    // ==================== DEMANDES EN ATTENTE ====================
 
     private void configurerTableDemandes() {
         dColNom.setCellValueFactory(new PropertyValueFactory<>("nom"));
@@ -521,7 +516,7 @@ public class AdminDashboardController {
         }
     }
 
-    // PROFIL ADMIN
+    // ==================== PROFIL ADMIN ====================
 
     @FXML
     public void choisirPhoto() {
@@ -533,7 +528,6 @@ public class AdminDashboardController {
 
         if (fichier != null) {
             try {
-                // Copier dans le dossier uploads
                 String projectPath = System.getProperty("user.dir");
                 java.nio.file.Path uploadDir = java.nio.file.Paths.get(projectPath, "uploads");
 
@@ -551,9 +545,7 @@ public class AdminDashboardController {
                 java.nio.file.Files.copy(fichier.toPath(), destination,
                         StandardCopyOption.REPLACE_EXISTING);
 
-                // Stocker le chemin absolu
                 currentPhotoPath = nomFichier;
-                // Afficher l'aperçu
                 Image img = new Image(fichier.toURI().toString());
                 photoProfile.setImage(img);
                 navPhotoAdmin.setImage(img);
@@ -583,7 +575,6 @@ public class AdminDashboardController {
         }
 
         try {
-            //Vérifier si le profil existe déjà
             var conn = org.example.utils.MyDataBase_Unimind.getInstance().getConnection();
             java.sql.PreparedStatement check = conn.prepareStatement(
                     "SELECT COUNT(*) FROM profil WHERE user_id = ?");
@@ -597,7 +588,7 @@ public class AdminDashboardController {
                 java.sql.PreparedStatement ps = conn.prepareStatement(sql);
                 ps.setString(1, bio);
                 ps.setString(2, tel);
-                ps.setString(3, currentPhotoPath); // photo incluse
+                ps.setString(3, currentPhotoPath);
                 ps.setInt(4, adminConnecte.getUserId());
                 ps.executeUpdate();
             } else {
@@ -606,7 +597,7 @@ public class AdminDashboardController {
                 ps.setInt(1, adminConnecte.getUserId());
                 ps.setString(2, bio);
                 ps.setString(3, tel);
-                ps.setString(4, currentPhotoPath); //  photo incluse
+                ps.setString(4, currentPhotoPath);
                 ps.executeUpdate();
             }
 
@@ -619,7 +610,7 @@ public class AdminDashboardController {
             e.printStackTrace();
         }
     }
-    //changer mdp
+
     @FXML
     public void changerMotDePasse() {
         pErrMdp.setText(""); pMessageProfil.setText("");
@@ -650,7 +641,7 @@ public class AdminDashboardController {
         }
     }
 
-    // DÉCONNEXION
+    // ==================== DÉCONNEXION ====================
 
     @FXML
     public void seDeconnecter() {
@@ -665,8 +656,7 @@ public class AdminDashboardController {
         } catch (Exception e) { e.printStackTrace(); }
     }
 
-    // UTILITAIRES
-
+    // ==================== UTILITAIRES ====================
 
     private void chargerPhotoProfile(User user) {
         try {
@@ -685,15 +675,13 @@ public class AdminDashboardController {
                         Image img = new Image(f.toURI().toString());
                         photoProfile.setImage(img);
                         navPhotoAdmin.setImage(img);
-                        currentPhotoPath = photoPath; // restaurer le chemin
+                        currentPhotoPath = photoPath;
                         return;
                     }
                 }
             }
-            // Pas de photo → laisser vide
             photoProfile.setImage(null);
             navPhotoAdmin.setImage(null);
-
         } catch (java.sql.SQLException e) {
             e.printStackTrace();
         }
