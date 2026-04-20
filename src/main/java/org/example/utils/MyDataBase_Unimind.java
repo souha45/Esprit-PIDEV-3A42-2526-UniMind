@@ -34,6 +34,15 @@ public class MyDataBase_Unimind {
     }
 
     public Connection getConnection() {
+
+        try {
+            if (connection == null || connection.isClosed()) {
+                connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+                System.out.println("Connection re-established");
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur de reconnexion: " + e.getMessage());
+        }
         return connection;
     }
 }

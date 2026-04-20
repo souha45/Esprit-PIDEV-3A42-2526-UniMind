@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.SuiviTraitementModificationController" stylesheets="@/css/traitements-suivis.css">
+
+    <VBox styleClass="page-header">
+        <Label text="Modifier un Suivi de Traitement" styleClass="page-title"/>
+        <Label text="Modifiez les informations du suivi" styleClass="page-subtitle"/>
+    </VBox>
+
+    <VBox styleClass="form-container" spacing="20">
+        <padding>
+            <Insets top="20" right="30" bottom="20" left="30"/>
+        </padding>
+
+        <GridPane hgap="20" vgap="5" styleClass="form-grid">
+
+            <!-- Ligne 1 : Date Suivi -->
+            <Label text="Date Suivi" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <VBox GridPane.rowIndex="0" GridPane.columnIndex="1">
+                <DatePicker fx:id="dpDateSuivi" styleClass="form-datepicker" promptText="jj/mm/aaaa"/>
+                <Label fx:id="lblErreurDate" styleClass="error-label" text="" visible="false" managed="false"/>
+            </VBox>
+
+            <!-- Ligne 1 : Traitement -->
+            <Label text="Traitement" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+            <VBox GridPane.rowIndex="0" GridPane.columnIndex="3">
+                <ComboBox fx:id="cmbTraitement" promptText="Sélectionnez un traitement" styleClass="form-combo"/>
+                <Label fx:id="lblErreurTraitement" styleClass="error-label" text="" visible="false" managed="false"/>
+            </VBox>
+
+            <!-- Ligne 2 : Étudiant (visible uniquement pour psychologue) -->
+            <Label fx:id="lblEtudiant" text="Étudiant" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <VBox GridPane.rowIndex="1" GridPane.columnIndex="1">
+                <ComboBox fx:id="cmbEtudiant" promptText="Sélectionnez un étudiant" styleClass="form-combo"/>
+                <Label fx:id="lblErreurEtudiant" styleClass="error-label" text="" visible="false" managed="false"/>
+            </VBox>
+
+            <Label fx:id="lblPsychologue" text="Psychologue" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+            <VBox GridPane.rowIndex="1" GridPane.columnIndex="3">
+                <TextField fx:id="txtPsychologue" styleClass="form-field-readonly" editable="false"/>
+            </VBox>
+
+            <!-- Ligne 3 : Notes (pleine largeur) -->
+            <Label text="Notes / Observations" styleClass="form-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <VBox GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.columnSpan="3">
+                <TextArea fx:id="txtNotes" promptText="Saisissez vos observations ici..." styleClass="form-textarea" prefHeight="120"/>
+                <Label fx:id="lblErreurNotes" styleClass="error-label" text="" visible="false" managed="false"/>
+            </VBox>
+
+        </GridPane>
+
+        <Separator styleClass="form-separator"/>
+
+        <HBox spacing="15" alignment="CENTER" styleClass="form-buttons">
+            <Button text="Enregistrer" onAction="#handleEnregistrer" styleClass="btn-primary"/>
+            <Button text="Réinitialiser" onAction="#handleReinitialiser" styleClass="btn-secondary"/>
+            <Button text="Annuler" onAction="#handleAnnuler" styleClass="btn-danger"/>
+        </HBox>
+
+        <HBox styleClass="status-bar">
+            <Label fx:id="lblStatus" text="✓ Prêt à modifier le suivi" styleClass="status-text"/>
+        </HBox>
+    </VBox>
+</VBox>

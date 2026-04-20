@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.SuiviTraitementAjoutController" stylesheets="@/css/traitements-suivis.css">
+
+    <VBox styleClass="page-header">
+        <Label text="Ajouter un Suivi" styleClass="page-title"/>
+        <Label text="Ajoutez votre suivi pour ce traitement" styleClass="page-subtitle"/>
+    </VBox>
+
+    <VBox styleClass="form-container" spacing="20">
+        <padding>
+            <Insets top="20" right="30" bottom="20" left="30"/>
+        </padding>
+
+        <GridPane hgap="20" vgap="5" styleClass="form-grid">
+
+            <!-- Ligne 1 : Date Suivi (cachée pour étudiant) -->
+            <Label fx:id="lblDate" text="Date Suivi" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <VBox GridPane.rowIndex="0" GridPane.columnIndex="1">
+                <DatePicker fx:id="dpDateSuivi" styleClass="form-datepicker" promptText="jj/mm/aaaa"/>
+                <Label fx:id="lblErreurDate" styleClass="error-label" text="" visible="false" managed="false"/>
+            </VBox>
+
+            <!-- Ligne 1 : Traitement (cachée pour étudiant) -->
+            <Label fx:id="lblTraitementLabel" text="Traitement" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+            <VBox GridPane.rowIndex="0" GridPane.columnIndex="3">
+                <ComboBox fx:id="cmbTraitement" promptText="Sélectionnez un traitement" styleClass="form-combo"/>
+                <Label fx:id="lblErreurTraitement" styleClass="error-label" text="" visible="false" managed="false"/>
+            </VBox>
+
+            <!-- Ligne 2 : Étudiant (visible uniquement pour psychologue) -->
+            <Label fx:id="lblEtudiant" text="Étudiant" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <VBox GridPane.rowIndex="1" GridPane.columnIndex="1">
+                <ComboBox fx:id="cmbEtudiant" promptText="Sélectionnez un étudiant" styleClass="form-combo"/>
+                <Label fx:id="lblErreurEtudiant" styleClass="error-label" text="" visible="false" managed="false"/>
+            </VBox>
+
+            <Label fx:id="lblPsychologue" text="Psychologue" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+            <VBox GridPane.rowIndex="1" GridPane.columnIndex="3">
+                <TextField fx:id="txtPsychologue" styleClass="form-field-readonly" editable="false"/>
+            </VBox>
+
+            <!-- Ligne 3 : Notes (pleine largeur) -->
+            <Label text="Vos observations" styleClass="form-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <VBox GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.columnSpan="3">
+                <TextArea fx:id="txtNotes" promptText="Décrivez votre progression, vos ressentis, vos difficultés..." styleClass="form-textarea" prefHeight="150"/>
+                <Label fx:id="lblErreurNotes" styleClass="error-label" text="" visible="false" managed="false"/>
+            </VBox>
+
+            <!-- Information sur le traitement sélectionné (pour étudiant) -->
+            <VBox fx:id="infoTraitementContainer" styleClass="info-traitement-container" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.columnSpan="3" visible="false" managed="false">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="📋" style="-fx-font-size: 14px;"/>
+                    <Label fx:id="lblInfoTraitement" text="" style="-fx-text-fill: #4f46e5; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+                </HBox>
+            </VBox>
+
+        </GridPane>
+
+        <Separator styleClass="form-separator"/>
+
+        <HBox spacing="15" alignment="CENTER" styleClass="form-buttons">
+            <Button text="Enregistrer" onAction="#handleEnregistrer" styleClass="btn-primary"/>
+            <Button text="Annuler" onAction="#handleAnnuler" styleClass="btn-danger"/>
+        </HBox>
+
+        <HBox styleClass="status-bar">
+            <Label fx:id="lblStatus" text="✓ Prêt à ajouter votre suivi" styleClass="status-text"/>
+        </HBox>
+    </VBox>
+</VBox>
