@@ -9,7 +9,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 
-public class UnimindApp extends Application {
+public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
