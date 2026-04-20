@@ -2,6 +2,7 @@ package org.example.controllers;
 
 import java.net.URL;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -11,11 +12,13 @@ import java.util.stream.Collectors;
 
 import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
+import org.example.entities.User;
 import org.example.enums.SaisiPar;
 import org.example.services.SuiviTraitementService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
 
+import javafx.animation.FadeTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -30,14 +33,14 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class TraitementEtudiantController implements Initializable {
 
@@ -59,6 +62,8 @@ public class TraitementEtudiantController implements Initializable {
     private Label lblStatus;
     @FXML
     private Label lblAucunResultat;
+    @FXML
+    private Label lblDate;
 
     // Statistiques
     @FXML private Label statTotal;
@@ -66,6 +71,10 @@ public class TraitementEtudiantController implements Initializable {
     @FXML private Label statTermine;
     @FXML private Label statSuspendu;
     @FXML private Label statPrioriteHaute;
+
+    // Sidebar (injecté comme VBox, pas comme contrôleur)
+    @FXML private VBox sidebarEtudiantController;
+    @FXML private StackPane toastContainer;
 
     private TraitementService traitementService;
     private SuiviTraitementService suiviTraitementService;
@@ -76,6 +85,10 @@ public class TraitementEtudiantController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        if (lblDate != null) {
+            lblDate.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        }
+
         try {
             traitementService = new TraitementService();
             suiviTraitementService = new SuiviTraitementService();
@@ -83,13 +96,19 @@ public class TraitementEtudiantController implements Initializable {
 
             initialiserFiltres();
             initialiserTri();
-            chargerDonnees();
 
             isInitialized = true;
-            lblStatus.setText("✓ Bienvenue sur votre espace personnel");
+            if (lblStatus != null) {
+                lblStatus.setText("✓ Bienvenue sur votre espace personnel");
+            }
+
+            // Charger les données via SessionManager
+            chargerDonneesAvecSession();
 
         } catch (Exception e) {
-            lblStatus.setText("✗ Erreur lors du chargement: " + e.getMessage());
+            if (lblStatus != null) {
+                lblStatus.setText("✗ Erreur lors du chargement: " + e.getMessage());
+            }
             e.printStackTrace();
         }
     }
@@ -134,19 +153,42 @@ public class TraitementEtudiantController implements Initializable {
         cmbTri.setValue("📅 Date (plus récent)");
     }
 
-    private void chargerDonnees() throws SQLException {
+    private void chargerDonneesAvecSession() {
         SessionManager session = SessionManager.getInstance();
-        int etudiantId = session.getUtilisateurConnecteId();
 
-        List<Traitement> tousTraitements = traitementService.afficher();
-        tousLesTraitements = tousTraitements.stream()
-                .filter(t -> t.getEtudiantId() == etudiantId)
-                .collect(Collectors.toList());
+        if (!session.estConnecte()) {
+            if (lblStatus != null) lblStatus.setText("✗ Erreur: utilisateur non connecté");
+            return;
+        }
 
-        tousLesSuivis = suiviTraitementService.afficher();
+        if (!session.estEtudiant()) {
+            if (lblStatus != null) lblStatus.setText("✗ Accès réservé aux étudiants");
+            return;
+        }
 
-        mettreAJourStatistiques(tousLesTraitements);
-        appliquerFiltres();
+        try {
+            if (lblStatus != null) lblStatus.setText("Chargement en cours...");
+            int etudiantId = session.getUtilisateurConnecteId();
+
+            List<Traitement> tousTraitements = traitementService.afficher();
+            tousLesTraitements = tousTraitements.stream()
+                    .filter(t -> t.getEtudiantId() == etudiantId)
+                    .collect(Collectors.toList());
+
+            tousLesSuivis = suiviTraitementService.afficher();
+
+            mettreAJourStatistiques(tousLesTraitements);
+            appliquerFiltres();
+
+            if (lblStatus != null) {
+                lblStatus.setText(tousLesTraitements.size() + " traitement(s) trouvé(s)");
+            }
+
+        } catch (SQLException e) {
+            if (lblStatus != null) lblStatus.setText("✗ Erreur: " + e.getMessage());
+            afficherToast("✗ Erreur de chargement: " + e.getMessage(), false);
+            e.printStackTrace();
+        }
     }
 
     private void mettreAJourStatistiques(List<Traitement> traitements) {
@@ -156,11 +198,11 @@ public class TraitementEtudiantController implements Initializable {
         long suspendu = traitements.stream().filter(t -> t.getStatut().name().equals("SUSPENDU")).count();
         long prioriteHaute = traitements.stream().filter(t -> t.getPriorite().name().equals("HAUTE")).count();
 
-        statTotal.setText(String.valueOf(total));
-        statEnCours.setText(String.valueOf(enCours));
-        statTermine.setText(String.valueOf(termine));
-        statSuspendu.setText(String.valueOf(suspendu));
-        statPrioriteHaute.setText(String.valueOf(prioriteHaute));
+        if (statTotal != null) statTotal.setText(String.valueOf(total));
+        if (statEnCours != null) statEnCours.setText(String.valueOf(enCours));
+        if (statTermine != null) statTermine.setText(String.valueOf(termine));
+        if (statSuspendu != null) statSuspendu.setText(String.valueOf(suspendu));
+        if (statPrioriteHaute != null) statPrioriteHaute.setText(String.valueOf(prioriteHaute));
     }
 
     private List<Traitement> appliquerRechercheEtFiltres(List<Traitement> traitements) {
@@ -264,25 +306,19 @@ public class TraitementEtudiantController implements Initializable {
         }
 
         List<Traitement> traitementsFiltres = new ArrayList<>(tousLesTraitements);
-
-        // Appliquer recherche et filtres
         traitementsFiltres = appliquerRechercheEtFiltres(traitementsFiltres);
-
-        // Appliquer tri
         traitementsFiltres = appliquerTri(traitementsFiltres);
-
-        // Mettre à jour l'affichage des cartes
         creerCartesTraitements(traitementsFiltres);
 
         long totalTraitements = traitementsFiltres.size();
-        lblStatus.setText(totalTraitements + " traitement(s) trouvé(s)");
-    }
-
-    private void creerCartesTraitements() {
-        creerCartesTraitements(tousLesTraitements);
+        if (lblStatus != null) {
+            lblStatus.setText(totalTraitements + " traitement(s) trouvé(s)");
+        }
     }
 
     private void creerCartesTraitements(List<Traitement> traitements) {
+        if (cardsContainer == null) return;
+
         cardsContainer.getChildren().clear();
         toutesLesCartes.clear();
 
@@ -303,11 +339,15 @@ public class TraitementEtudiantController implements Initializable {
         }
 
         if (traitements.isEmpty()) {
-            lblAucunResultat.setVisible(true);
-            lblAucunResultat.setManaged(true);
+            if (lblAucunResultat != null) {
+                lblAucunResultat.setVisible(true);
+                lblAucunResultat.setManaged(true);
+            }
         } else {
-            lblAucunResultat.setVisible(false);
-            lblAucunResultat.setManaged(false);
+            if (lblAucunResultat != null) {
+                lblAucunResultat.setVisible(false);
+                lblAucunResultat.setManaged(false);
+            }
         }
     }
 
@@ -503,7 +543,7 @@ public class TraitementEtudiantController implements Initializable {
 
     private void ouvrirModificationSuivi(SuiviTraitement suivi) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-modification-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-modification-view.fxml"));
             Parent root = loader.load();
 
             SuiviTraitementModificationController controller = loader.getController();
@@ -514,17 +554,12 @@ public class TraitementEtudiantController implements Initializable {
             stage.setScene(new Scene(root, 800, 650));
             stage.show();
 
-            stage.setOnHiding(event -> {
-                try {
-                    chargerDonnees();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            });
+            stage.setOnHiding(event -> chargerDonneesAvecSession());
 
         } catch (Exception e) {
             e.printStackTrace();
-            lblStatus.setText("✗ Erreur: Impossible d'ouvrir la page de modification");
+            if (lblStatus != null) lblStatus.setText("✗ Erreur: Impossible d'ouvrir la page de modification");
+            afficherToast("✗ Impossible d'ouvrir la page de modification", false);
         }
     }
 
@@ -537,17 +572,17 @@ public class TraitementEtudiantController implements Initializable {
         if (confirm.showAndWait().get() == ButtonType.OK) {
             try {
                 suiviTraitementService.supprimer(suivi.getSuivitraitementId());
-                chargerDonnees();
-                lblStatus.setText("✓ Suivi supprimé avec succès");
+                chargerDonneesAvecSession();
+                afficherToast("✓ Suivi supprimé avec succès", true);
             } catch (SQLException e) {
-                afficherErreur("Erreur", "Impossible de supprimer le suivi: " + e.getMessage());
+                afficherToast("✗ Impossible de supprimer le suivi: " + e.getMessage(), false);
             }
         }
     }
 
     private void ouvrirAjoutSuivi(Traitement traitement) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/suivi-traitement-ajout-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-ajout-view.fxml"));
             Parent root = loader.load();
 
             SuiviTraitementAjoutController controller = loader.getController();
@@ -558,25 +593,50 @@ public class TraitementEtudiantController implements Initializable {
             stage.setScene(new Scene(root, 800, 650));
             stage.show();
 
-            stage.setOnHiding(event -> {
-                try {
-                    chargerDonnees();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            });
+            stage.setOnHiding(event -> chargerDonneesAvecSession());
 
         } catch (Exception e) {
             e.printStackTrace();
-            lblStatus.setText("✗ Erreur: Impossible d'ouvrir la page d'ajout");
+            if (lblStatus != null) lblStatus.setText("✗ Erreur: Impossible d'ouvrir la page d'ajout");
+            afficherToast("✗ Impossible d'ouvrir la page d'ajout", false);
         }
     }
 
-    private void afficherErreur(String titre, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(titre);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    // ==================== TOAST NOTIFICATION ====================
+
+    private void afficherToast(String message, boolean success) {
+        if (toastContainer == null) return;
+
+        Label toast = new Label(message);
+        toast.setStyle(
+                "-fx-background-color:" + (success ? "#10b981" : "#ef4444") + ";" +
+                        "-fx-text-fill:white;" +
+                        "-fx-font-family:'Segoe UI';-fx-font-size:13px;-fx-font-weight:bold;" +
+                        "-fx-padding:12 22;-fx-background-radius:30;" +
+                        "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.18),12,0,0,4);");
+
+        toastContainer.getChildren().add(toast);
+        toastContainer.setVisible(true);
+        toastContainer.setManaged(true);
+        StackPane.setAlignment(toast, Pos.BOTTOM_CENTER);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(200), toast);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(400), toast);
+        fadeOut.setFromValue(1);
+        fadeOut.setToValue(0);
+        fadeOut.setDelay(Duration.seconds(2.2));
+        fadeOut.setOnFinished(e -> {
+            toastContainer.getChildren().remove(toast);
+            if (toastContainer.getChildren().isEmpty()) {
+                toastContainer.setVisible(false);
+                toastContainer.setManaged(false);
+            }
+        });
+
+        fadeIn.play();
+        fadeOut.play();
     }
 }

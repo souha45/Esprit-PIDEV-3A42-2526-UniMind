@@ -1,5 +1,16 @@
 package org.example.controllers;
 
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import org.example.entities.User;
+import org.example.utils.MyDataBase_Unimind;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -11,14 +22,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.example.entities.User;
-import org.example.utils.MyDataBase_Unimind;
-
-
-import java.sql.*;
-
-import java.io.File;
-import java.io.IOException;
 
 public class SidebarEtudiantController {
 
@@ -38,7 +41,6 @@ public class SidebarEtudiantController {
     @FXML private Button btnMesRendezVous;
     @FXML private Button btnConsultations;
     @FXML private Button btnTraitements;
-    @FXML private Button btnSuiviTraitements;
     @FXML private Button btnQuestionnaires;
     @FXML private Button btnMesReponses;
     @FXML private Button btnProfil;
@@ -144,9 +146,7 @@ public class SidebarEtudiantController {
         btnConsultations.setOnAction(e ->
                 naviguer("/ConsultationsEtudiant.fxml",     "Consultations",    btnConsultations));
         btnTraitements.setOnAction(e ->
-                naviguer("/TraitementsEtudiant.fxml",       "Traitements",      btnTraitements));
-        btnSuiviTraitements.setOnAction(e ->
-                naviguer("/SuiviTraitementsEtudiant.fxml",  "Suivi Traitements",btnSuiviTraitements));
+                naviguer("/traitement-etudiant-view.fxml",       "Traitements",      btnTraitements));
         btnQuestionnaires.setOnAction(e ->
                 naviguer("/QuestionnairesEtudiant.fxml",    "Questionnaires",   btnQuestionnaires));
         btnMesReponses.setOnAction(e ->
@@ -361,7 +361,7 @@ public class SidebarEtudiantController {
     private void setActiveButton(Button button) {
         Button[] boutons = {
                 btnDashboard, btnMesRendezVous, btnConsultations,
-                btnTraitements, btnSuiviTraitements, btnQuestionnaires, btnMesReponses, btnSeances, btnFavoris
+                btnTraitements, btnQuestionnaires, btnMesReponses, btnSeances, btnFavoris
         };
         for (Button btn : boutons) btn.setStyle(STYLE_IDLE);
         button.setStyle(STYLE_ACTIVE);
@@ -371,7 +371,7 @@ public class SidebarEtudiantController {
     private void styliserBoutons() {
         Button[] boutons = {
                 btnDashboard, btnMesRendezVous, btnConsultations,
-                btnTraitements, btnSuiviTraitements, btnQuestionnaires, btnMesReponses, btnSeances
+                btnTraitements, btnQuestionnaires, btnMesReponses, btnSeances
         };
         for (Button btn : boutons) {
             btn.setOnMouseEntered(e -> { if (btn != activeButton) btn.setStyle(STYLE_HOVER); });

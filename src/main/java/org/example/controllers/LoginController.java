@@ -14,6 +14,7 @@ import org.example.entities.User;
 import org.example.services.*;
 import org.example.utils.MyDataBase_Unimind;
 import org.example.utils.ValidationUtils;
+import org.example.utils.SessionManager;
 
 public class LoginController {
 
@@ -197,6 +198,12 @@ public class LoginController {
                 markBoxError(passwordBox);
                 return;
             }
+
+            // ============================================================
+            // 🔥  LIGNE ICI ajouteé pour session de traitement🔥
+            // ============================================================
+            SessionManager.getInstance().initSession(user);
+            // ============================================================
 
             // ── Redirection selon le rôle ─────────────────────────────
             Stage currentStage = (Stage) emailField.getScene().getWindow();

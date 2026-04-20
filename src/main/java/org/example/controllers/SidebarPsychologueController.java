@@ -1,5 +1,16 @@
 package org.example.controllers;
 
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import org.example.entities.User;
+import org.example.utils.MyDataBase_Unimind;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -9,12 +20,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.example.entities.User;
-import org.example.utils.MyDataBase_Unimind;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.*;
 
 public class SidebarPsychologueController {
 
@@ -115,7 +120,7 @@ public class SidebarPsychologueController {
         btnDisponibilites.setOnAction(e -> naviguer("/AfficheDisponibilitesPsy.fxml", "Disponibilités", btnDisponibilites));
         btnRendezVous.setOnAction(e -> naviguer("/RendezVousPsy.fxml", "Rendez-vous", btnRendezVous));
         btnConsultations.setOnAction(e -> naviguer("/ConsultationsPsy.fxml", "Consultations", btnConsultations));
-        btnConsultations.setOnAction(e -> naviguer("/traitement-view.fxml", "Traitements", btnTraitements));
+        btnTraitements.setOnAction(e -> naviguer("/traitement-view.fxml", "Traitements", btnTraitements));
         btnPatients.setOnAction(e -> naviguer("/Patients.fxml", "Patients", btnPatients));
         btnProfil.setOnAction(e -> ouvrirProfil());
         btnDeconnexion.setOnAction(e -> seDeconnecter());
@@ -283,7 +288,7 @@ public class SidebarPsychologueController {
     }
 
     private void setActiveButton(Button button) {
-        Button[] boutons = {btnDashboard, btnDisponibilites, btnRendezVous, btnConsultations, btnPatients};
+        Button[] boutons = {btnDashboard, btnDisponibilites, btnRendezVous, btnConsultations, btnTraitements, btnPatients};
         for (Button btn : boutons) {
             btn.setStyle(STYLE_IDLE);
         }
@@ -292,7 +297,7 @@ public class SidebarPsychologueController {
     }
 
     private void styliserBoutons() {
-        Button[] boutons = {btnDashboard, btnDisponibilites, btnRendezVous, btnConsultations, btnPatients};
+        Button[] boutons = {btnDashboard, btnDisponibilites, btnRendezVous, btnConsultations, btnTraitements , btnPatients};
         for (Button btn : boutons) {
             btn.setOnMouseEntered(e -> {
                 if (btn != activeButton) btn.setStyle(STYLE_HOVER);

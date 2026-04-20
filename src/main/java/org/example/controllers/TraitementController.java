@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -17,11 +18,13 @@ import java.util.stream.Collectors;
 import org.example.entities.Etudiant;
 import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
+import org.example.entities.User;
 import org.example.services.EtudiantTraitementService;
 import org.example.services.SuiviTraitementService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
 
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -40,11 +43,13 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
-public class TraitementController implements Initializable {
+public class TraitementController implements Initializable, SidebarPsychologueController.PsyPageController {
 
     @FXML
     private TableView<LigneGroupée> tableViewTraitements;
@@ -52,6 +57,8 @@ public class TraitementController implements Initializable {
     private Label lblStatus;
     @FXML
     private Label lblCount;
+    @FXML
+    private Label lblDate;
     @FXML
     private TextField txtRecherche;
     @FXML
@@ -76,6 +83,10 @@ public class TraitementController implements Initializable {
     @FXML private Label statSuspendu;
     @FXML private Label statPrioriteHaute;
 
+    // Sidebar et Toast
+    @FXML private SidebarPsychologueController sidebarPsyController;
+    @FXML private StackPane toastContainer;
+
     private TraitementService traitementService;
     private EtudiantTraitementService etudiantTraitementService;
     private SuiviTraitementService suiviTraitementService;
@@ -83,6 +94,8 @@ public class TraitementController implements Initializable {
     private Map<Integer, Integer> cacheNbSuivis;
     private List<Traitement> tousLesTraitementsFiltres;
     private boolean isInitialized = false;
+    private User utilisateur;
+    private Map<Integer, String> cacheNomsEtudiants;
 
     // ==================== CLASSE INTERNE ====================
 
@@ -152,6 +165,10 @@ public class TraitementController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        if (lblDate != null) {
+            lblDate.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        }
+
         SessionManager session = SessionManager.getInstance();
 
         if (session.estEtudiant()) {
@@ -165,20 +182,69 @@ public class TraitementController implements Initializable {
             suiviTraitementService = new SuiviTraitementService();
             cacheNbSuivis = new HashMap<>();
             tousLesTraitementsFiltres = new ArrayList<>();
+            cacheNomsEtudiants = new HashMap<>();
 
             initialiserFiltres();
             initialiserTri();
             configurerColonnes();
 
-            // Charger les données
-            chargerDonnees();
-
             isInitialized = true;
-            lblStatus.setText("Interface Traitements - Mode psychologue");
+            if (lblStatus != null) {
+                lblStatus.setText("Interface Traitements - Mode psychologue");
+            }
+
+            prechargerNomsEtudiants();
+            chargerDonneesAvecSession();
+
+            // 🔥 Activation du bouton Traitements dans le sidebar
+            Platform.runLater(() -> {
+                javafx.animation.Timeline timeline = new javafx.animation.Timeline(
+                    new javafx.animation.KeyFrame(javafx.util.Duration.millis(200), e -> {
+                        if (sidebarPsyController != null) {
+                            System.out.println("🔥 Activation du bouton traitements pour psychologue");
+                            sidebarPsyController.setActiveButtonByFxml("/traitement-view.fxml");
+                        }
+                    })
+                );
+                timeline.play();
+            });
 
         } catch (Exception e) {
-            lblStatus.setText("Erreur lors du chargement: " + e.getMessage());
+            if (lblStatus != null) {
+                lblStatus.setText("Erreur lors du chargement: " + e.getMessage());
+            }
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void setUtilisateur(User user) {
+        this.utilisateur = user;
+        if (sidebarPsyController != null) {
+            sidebarPsyController.setUtilisateur(user);
+            // 🔥 Activation du bouton Traitements
+            Platform.runLater(() -> {
+                javafx.animation.Timeline timeline = new javafx.animation.Timeline(
+                    new javafx.animation.KeyFrame(javafx.util.Duration.millis(200), e -> {
+                        System.out.println("🔥 Activation du bouton traitements pour psychologue (setUtilisateur)");
+                        sidebarPsyController.setActiveButtonByFxml("/traitement-view.fxml");
+                    })
+                );
+                timeline.play();
+            });
+        }
+        chargerDonnees();
+    }
+
+    private void prechargerNomsEtudiants() {
+        try {
+            List<Etudiant> etudiants = etudiantTraitementService.afficher();
+            for (Etudiant e : etudiants) {
+                cacheNomsEtudiants.put(e.getUserId(), e.getNom() + " " + e.getPrenom());
+            }
+            System.out.println("✅ " + cacheNomsEtudiants.size() + " étudiants chargés en cache");
+        } catch (SQLException e) {
+            System.err.println("Erreur chargement cache étudiants: " + e.getMessage());
         }
     }
 
@@ -210,7 +276,6 @@ public class TraitementController implements Initializable {
         cmbFiltrePriorite.setItems(priorites);
         cmbFiltrePriorite.setValue("Toutes les priorités");
 
-        // Ajouter les listeners APRÈS l'initialisation des valeurs
         txtRecherche.textProperty().addListener((obs, oldVal, newVal) -> {
             if (isInitialized) appliquerFiltres();
         });
@@ -241,8 +306,14 @@ public class TraitementController implements Initializable {
 
     // ==================== CHARGEMENT DES DONNÉES ====================
 
-    private void chargerDonnees() throws SQLException {
+    private void chargerDonnees() {
+        if (utilisateur == null) {
+            chargerDonneesAvecSession();
+            return;
+        }
+
         try {
+            if (lblStatus != null) lblStatus.setText("Chargement en cours...");
             List<Traitement> traitements = traitementService.afficher();
             List<SuiviTraitement> tousLesSuivis = suiviTraitementService.afficher();
 
@@ -252,22 +323,18 @@ public class TraitementController implements Initializable {
                 cacheNbSuivis.put(traitementId, cacheNbSuivis.getOrDefault(traitementId, 0) + 1);
             }
 
-            SessionManager session = SessionManager.getInstance();
+            int utilisateurId = utilisateur.getUserId();
             List<Traitement> traitementsFiltres = new ArrayList<>();
 
             for (Traitement traitement : traitements) {
-                if (session.peutVoirTraitement(traitement.getEtudiantId(), traitement.getPsychologueId())) {
+                if (traitement.getPsychologueId() == utilisateurId) {
                     traitementsFiltres.add(traitement);
                 }
             }
 
             tousLesTraitementsFiltres = new ArrayList<>(traitementsFiltres);
-
-            // Appliquer recherche, filtres et tri
             traitementsFiltres = appliquerRechercheEtFiltres(traitementsFiltres);
             traitementsFiltres = appliquerTri(traitementsFiltres);
-
-            // Mettre à jour les statistiques
             mettreAJourStatistiques(tousLesTraitementsFiltres);
 
             List<LigneGroupée> lignes = creerLignesGroupées(traitementsFiltres);
@@ -275,11 +342,66 @@ public class TraitementController implements Initializable {
             tableViewTraitements.setItems(lignesGroupéesList);
 
             long totalTraitements = lignes.stream().filter(l -> l.getTraitement() != null).count();
-            lblCount.setText(totalTraitements + " traitement(s)");
+            if (lblCount != null) lblCount.setText(totalTraitements + " traitement(s)");
+            if (lblStatus != null) lblStatus.setText(totalTraitements + " traitement(s) affiché(s)");
 
         } catch (Exception e) {
             System.err.println("Erreur: " + e.getMessage());
-            afficherErreur("Erreur de chargement", e.getMessage());
+            if (lblStatus != null) lblStatus.setText("Erreur: " + e.getMessage());
+            afficherToast("✗ Erreur de chargement: " + e.getMessage(), false);
+        }
+    }
+
+    private void chargerDonneesAvecSession() {
+        SessionManager session = SessionManager.getInstance();
+
+        if (!session.estConnecte()) {
+            if (lblStatus != null) lblStatus.setText("Erreur: utilisateur non connecté");
+            return;
+        }
+
+        if (session.estEtudiant()) {
+            Platform.runLater(() -> ouvrirInterfaceEtudiant());
+            return;
+        }
+
+        try {
+            if (lblStatus != null) lblStatus.setText("Chargement en cours...");
+            List<Traitement> traitements = traitementService.afficher();
+            List<SuiviTraitement> tousLesSuivis = suiviTraitementService.afficher();
+
+            cacheNbSuivis.clear();
+            for (SuiviTraitement suivi : tousLesSuivis) {
+                int traitementId = suivi.getTraitementId();
+                cacheNbSuivis.put(traitementId, cacheNbSuivis.getOrDefault(traitementId, 0) + 1);
+            }
+
+            int utilisateurId = session.getUtilisateurConnecteId();
+            List<Traitement> traitementsFiltres = new ArrayList<>();
+
+            for (Traitement traitement : traitements) {
+                if (traitement.getPsychologueId() == utilisateurId) {
+                    traitementsFiltres.add(traitement);
+                }
+            }
+
+            tousLesTraitementsFiltres = new ArrayList<>(traitementsFiltres);
+            traitementsFiltres = appliquerRechercheEtFiltres(traitementsFiltres);
+            traitementsFiltres = appliquerTri(traitementsFiltres);
+            mettreAJourStatistiques(tousLesTraitementsFiltres);
+
+            List<LigneGroupée> lignes = creerLignesGroupées(traitementsFiltres);
+            lignesGroupéesList = FXCollections.observableArrayList(lignes);
+            tableViewTraitements.setItems(lignesGroupéesList);
+
+            long totalTraitements = lignes.stream().filter(l -> l.getTraitement() != null).count();
+            if (lblCount != null) lblCount.setText(totalTraitements + " traitement(s)");
+            if (lblStatus != null) lblStatus.setText(totalTraitements + " traitement(s) affiché(s)");
+
+        } catch (Exception e) {
+            System.err.println("Erreur: " + e.getMessage());
+            if (lblStatus != null) lblStatus.setText("Erreur: " + e.getMessage());
+            afficherToast("✗ Erreur de chargement: " + e.getMessage(), false);
         }
     }
 
@@ -392,11 +514,11 @@ public class TraitementController implements Initializable {
         long suspendu = traitements.stream().filter(t -> t.getStatut().name().equals("SUSPENDU")).count();
         long prioriteHaute = traitements.stream().filter(t -> t.getPriorite().name().equals("HAUTE")).count();
 
-        statTotal.setText(String.valueOf(total));
-        statEnCours.setText(String.valueOf(enCours));
-        statTermine.setText(String.valueOf(termine));
-        statSuspendu.setText(String.valueOf(suspendu));
-        statPrioriteHaute.setText(String.valueOf(prioriteHaute));
+        if (statTotal != null) statTotal.setText(String.valueOf(total));
+        if (statEnCours != null) statEnCours.setText(String.valueOf(enCours));
+        if (statTermine != null) statTermine.setText(String.valueOf(termine));
+        if (statSuspendu != null) statSuspendu.setText(String.valueOf(suspendu));
+        if (statPrioriteHaute != null) statPrioriteHaute.setText(String.valueOf(prioriteHaute));
     }
 
     private List<LigneGroupée> creerLignesGroupées(List<Traitement> traitements) throws SQLException {
@@ -429,18 +551,26 @@ public class TraitementController implements Initializable {
     }
 
     private String getNomEtudiant(Integer etudiantId) {
-        try {
-            if (etudiantId == null || etudiantId == 0) return "Non assigné";
-            List<Etudiant> etudiants = etudiantTraitementService.afficher();
-            for (Etudiant etudiant : etudiants) {
-                if (etudiant.getUserId() == etudiantId) {
-                    return etudiant.getNom() + " " + etudiant.getPrenom();
-                }
-            }
-            return "Étudiant #" + etudiantId;
-        } catch (Exception e) {
-            return "Erreur #" + etudiantId;
+        if (etudiantId == null || etudiantId == 0) return "Non assigné";
+
+        if (cacheNomsEtudiants != null && cacheNomsEtudiants.containsKey(etudiantId)) {
+            return cacheNomsEtudiants.get(etudiantId);
         }
+
+        try {
+            Etudiant etudiant = etudiantTraitementService.trouverParId(etudiantId);
+            if (etudiant != null) {
+                String nomComplet = etudiant.getNom() + " " + etudiant.getPrenom();
+                if (cacheNomsEtudiants != null) {
+                    cacheNomsEtudiants.put(etudiantId, nomComplet);
+                }
+                return nomComplet;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur getNomEtudiant pour ID " + etudiantId + ": " + e.getMessage());
+        }
+
+        return "Étudiant #" + etudiantId;
     }
 
     // ==================== CONFIGURATION DES COLONNES ====================
@@ -449,7 +579,6 @@ public class TraitementController implements Initializable {
     private void configurerColonnes() {
         tableViewTraitements.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
-        // Récupérer les colonnes (11 colonnes au total)
         TableColumn<LigneGroupée, String> colEtudiant = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(0);
         TableColumn<LigneGroupée, String> colTitre = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(1);
         TableColumn<LigneGroupée, String> colType = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(2);
@@ -460,9 +589,7 @@ public class TraitementController implements Initializable {
         TableColumn<LigneGroupée, String> colDateDebut = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(7);
         TableColumn<LigneGroupée, String> colObjectif = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(8);
         TableColumn<LigneGroupée, String> colSuivis = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(9);
-        // colActions est à l'index 10
 
-        // Définir les largeurs
         colEtudiant.setPrefWidth(180);
         colTitre.setPrefWidth(180);
         colType.setPrefWidth(120);
@@ -474,7 +601,6 @@ public class TraitementController implements Initializable {
         colObjectif.setPrefWidth(200);
         colSuivis.setPrefWidth(100);
 
-        // ===== COLONNE ÉTUDIANT =====
         colEtudiant.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             if (ligne.isEstLigneSeparateur()) {
@@ -524,7 +650,6 @@ public class TraitementController implements Initializable {
             }
         });
 
-        // ===== COLONNE TITRE =====
         colTitre.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -554,7 +679,6 @@ public class TraitementController implements Initializable {
             }
         });
 
-        // ===== COLONNE TYPE =====
         colType.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -584,7 +708,6 @@ public class TraitementController implements Initializable {
             }
         });
 
-        // ===== COLONNE CATÉGORIE =====
         colCategorie.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -614,7 +737,6 @@ public class TraitementController implements Initializable {
             }
         });
 
-        // ===== COLONNE DURÉE =====
         colDuree.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -644,7 +766,6 @@ public class TraitementController implements Initializable {
             }
         });
 
-        // ===== COLONNE STATUT (avec badge) =====
         colStatut.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -689,7 +810,6 @@ public class TraitementController implements Initializable {
             }
         });
 
-        // ===== COLONNE PRIORITÉ (avec badge) =====
         colPriorite.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -734,7 +854,6 @@ public class TraitementController implements Initializable {
             }
         });
 
-        // ===== COLONNE DATE DÉBUT =====
         colDateDebut.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -764,7 +883,6 @@ public class TraitementController implements Initializable {
             }
         });
 
-        // ===== COLONNE OBJECTIF =====
         colObjectif.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -798,7 +916,6 @@ public class TraitementController implements Initializable {
             }
         });
 
-        // ===== COLONNE SUIVIS =====
         colSuivis.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             if (ligne.isEstLigneSeparateur()) {
@@ -837,7 +954,6 @@ public class TraitementController implements Initializable {
             }
         });
 
-        // ===== CONFIGURER LA COLONNE ACTIONS =====
         configurerColonneActions();
     }
 
@@ -928,11 +1044,7 @@ public class TraitementController implements Initializable {
 
         try {
             List<Traitement> traitementsFiltres = new ArrayList<>(tousLesTraitementsFiltres);
-
-            // Appliquer recherche et filtres
             traitementsFiltres = appliquerRechercheEtFiltres(traitementsFiltres);
-
-            // Appliquer tri
             traitementsFiltres = appliquerTri(traitementsFiltres);
 
             List<LigneGroupée> lignes = creerLignesGroupées(traitementsFiltres);
@@ -940,10 +1052,11 @@ public class TraitementController implements Initializable {
             tableViewTraitements.setItems(lignesGroupéesList);
 
             long totalTraitements = lignes.stream().filter(l -> l.getTraitement() != null).count();
-            lblCount.setText(totalTraitements + " traitement(s)");
+            if (lblCount != null) lblCount.setText(totalTraitements + " traitement(s)");
+            if (lblStatus != null) lblStatus.setText(totalTraitements + " traitement(s) affiché(s)");
 
         } catch (SQLException e) {
-            afficherErreur("Erreur", "Impossible d'appliquer les filtres: " + e.getMessage());
+            afficherToast("✗ Erreur: " + e.getMessage(), false);
         }
     }
 
@@ -961,10 +1074,11 @@ public class TraitementController implements Initializable {
 
             if (file != null) {
                 exporterVersCSV(file);
-                lblStatus.setText("✓ Export réussi: " + file.getName());
+                if (lblStatus != null) lblStatus.setText("✓ Export réussi: " + file.getName());
+                afficherToast("✓ Export réussi: " + file.getName(), true);
             }
         } catch (Exception e) {
-            afficherErreur("Erreur d'export", e.getMessage());
+            afficherToast("✗ Erreur d'export: " + e.getMessage(), false);
         }
     }
 
@@ -995,34 +1109,57 @@ public class TraitementController implements Initializable {
     // ==================== NAVIGATION ====================
 
     @FXML private void handleAjouter() { ouvrirPageAjout(); }
-    @FXML private void handleRafraichir() { try { chargerDonnees(); } catch (Exception e) { afficherErreur("Erreur", e.getMessage()); } }
+    @FXML private void handleRafraichir() {
+        prechargerNomsEtudiants();
+        if (utilisateur != null) {
+            chargerDonnees();
+        } else {
+            chargerDonneesAvecSession();
+        }
+    }
 
     @FXML private void ouvrirSuiviTraitementView() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/suivi-traitement-view.fxml"));
             Parent root = loader.load();
+
+            SuiviTraitementController controller = loader.getController();
+            if (controller != null) {
+                if (utilisateur != null) {
+                    controller.setUtilisateur(utilisateur);
+                } else {
+                    SessionManager session = SessionManager.getInstance();
+                    if (session.estConnecte()) {
+                        controller.setUtilisateur(session.getCurrentUser());
+                    }
+                }
+            }
+
             Scene currentScene = tableViewTraitements.getScene();
             if (currentScene != null) currentScene.setRoot(root);
         } catch (Exception e) {
-            afficherErreur("Erreur de navigation", "Impossible d'accéder à la page des suivis: " + e.getMessage());
+            afficherToast("✗ Erreur de navigation: " + e.getMessage(), false);
         }
     }
 
     private void ouvrirPageAjout() {
         try {
-            SessionManager session = SessionManager.getInstance();
-            if (!session.peutCreerTraitement()) {
-                afficherErreur("Accès refusé", "Seul le psychologue peut créer des traitements.");
-                return;
-            }
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-ajout-view.fxml"));
             Parent root = loader.load();
             Stage stage = new Stage();
             stage.setTitle("Ajouter un Traitement");
             stage.setScene(new Scene(root, 900, 700));
             stage.show();
+            stage.setOnHiding(event -> {
+                prechargerNomsEtudiants();
+                if (utilisateur != null) {
+                    chargerDonnees();
+                } else {
+                    chargerDonneesAvecSession();
+                }
+            });
         } catch (Exception e) {
-            afficherErreur("Erreur d'ouverture", "Impossible d'ouvrir la page d'ajout: " + e.getMessage());
+            afficherToast("✗ Erreur d'ouverture: " + e.getMessage(), false);
         }
     }
 
@@ -1037,17 +1174,12 @@ public class TraitementController implements Initializable {
             stage.setScene(new Scene(root, 900, 700));
             stage.show();
         } catch (Exception e) {
-            afficherErreur("Erreur d'ouverture", "Impossible d'ouvrir la page d'affichage: " + e.getMessage());
+            afficherToast("✗ Erreur d'ouverture: " + e.getMessage(), false);
         }
     }
 
     private void ouvrirPageModification(Traitement traitement) {
         try {
-            SessionManager session = SessionManager.getInstance();
-            if (!session.peutModifierTraitement()) {
-                afficherErreur("Accès refusé", "Seul le psychologue peut modifier des traitements.");
-                return;
-            }
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-modification-view.fxml"));
             Parent root = loader.load();
             TraitementModificationController controller = loader.getController();
@@ -1056,37 +1188,75 @@ public class TraitementController implements Initializable {
             stage.setTitle("Modifier un Traitement");
             stage.setScene(new Scene(root, 900, 700));
             stage.show();
+            stage.setOnHiding(event -> {
+                prechargerNomsEtudiants();
+                if (utilisateur != null) {
+                    chargerDonnees();
+                } else {
+                    chargerDonneesAvecSession();
+                }
+            });
         } catch (Exception e) {
-            afficherErreur("Erreur d'ouverture", "Impossible d'ouvrir la page de modification: " + e.getMessage());
+            afficherToast("✗ Erreur d'ouverture: " + e.getMessage(), false);
         }
     }
 
     private void supprimerTraitement(Traitement traitement) {
-        try {
-            SessionManager session = SessionManager.getInstance();
-            if (!session.peutSupprimerTraitement()) {
-                afficherErreur("Accès refusé", "Seul le psychologue peut supprimer des traitements.");
-                return;
-            }
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-            confirm.setTitle("Confirmation");
-            confirm.setHeaderText("Supprimer le traitement");
-            confirm.setContentText("Êtes-vous sûr de vouloir supprimer le traitement \"" + traitement.getTitre() + "\" ?\n\n⚠️ Tous les suivis associés seront également supprimés !");
-            if (confirm.showAndWait().get() == javafx.scene.control.ButtonType.OK) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirmation");
+        confirm.setHeaderText("Supprimer le traitement");
+        confirm.setContentText("Êtes-vous sûr de vouloir supprimer le traitement \"" + traitement.getTitre() + "\" ?\n\n⚠️ Tous les suivis associés seront également supprimés !");
+        if (confirm.showAndWait().get() == javafx.scene.control.ButtonType.OK) {
+            try {
                 traitementService.supprimer(traitement.getTraitementId());
-                chargerDonnees();
-                lblStatus.setText("Traitement et ses suivis supprimés avec succès");
+                prechargerNomsEtudiants();
+                if (utilisateur != null) {
+                    chargerDonnees();
+                } else {
+                    chargerDonneesAvecSession();
+                }
+                afficherToast("✓ Traitement et ses suivis supprimés avec succès", true);
+            } catch (Exception e) {
+                afficherToast("✗ Erreur de suppression: " + e.getMessage(), false);
             }
-        } catch (Exception e) {
-            afficherErreur("Erreur de suppression", e.getMessage());
         }
     }
 
-    private void afficherErreur(String titre, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(titre);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    // ==================== TOAST NOTIFICATION ====================
+
+    private void afficherToast(String message, boolean success) {
+        if (toastContainer == null) return;
+
+        Label toast = new Label(message);
+        toast.setStyle(
+                "-fx-background-color:" + (success ? "#10b981" : "#ef4444") + ";" +
+                        "-fx-text-fill:white;" +
+                        "-fx-font-family:'Segoe UI';-fx-font-size:13px;-fx-font-weight:bold;" +
+                        "-fx-padding:12 22;-fx-background-radius:30;" +
+                        "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.18),12,0,0,4);");
+
+        toastContainer.getChildren().add(toast);
+        toastContainer.setVisible(true);
+        toastContainer.setManaged(true);
+        StackPane.setAlignment(toast, Pos.BOTTOM_CENTER);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(200), toast);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(400), toast);
+        fadeOut.setFromValue(1);
+        fadeOut.setToValue(0);
+        fadeOut.setDelay(Duration.seconds(2.2));
+        fadeOut.setOnFinished(e -> {
+            toastContainer.getChildren().remove(toast);
+            if (toastContainer.getChildren().isEmpty()) {
+                toastContainer.setVisible(false);
+                toastContainer.setManaged(false);
+            }
+        });
+
+        fadeIn.play();
+        fadeOut.play();
     }
 }

@@ -19,12 +19,14 @@ import java.util.stream.Collectors;
 import org.example.entities.Etudiant;
 import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
+import org.example.entities.User;
 import org.example.enums.SaisiPar;
 import org.example.services.EtudiantTraitementService;
 import org.example.services.SuiviTraitementService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
 
+import javafx.animation.FadeTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -35,6 +37,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -42,11 +45,13 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
-public class SuiviTraitementController implements Initializable {
+public class SuiviTraitementController implements Initializable, SidebarPsychologueController.PsyPageController {
 
     // ==================== CLASSE INTERNE ====================
 
@@ -123,6 +128,8 @@ public class SuiviTraitementController implements Initializable {
     @FXML
     private Label lblCount;
     @FXML
+    private Label lblDate;
+    @FXML
     private TextField txtRecherche;
     @FXML
     private ComboBox<String> cmbFiltrePeriode;
@@ -146,6 +153,10 @@ public class SuiviTraitementController implements Initializable {
     @FXML private Label statAujourdhui;
     @FXML private Label statParEtudiant;
 
+    // Sidebar et Toast
+    @FXML private SidebarPsychologueController sidebarPsyController;
+    @FXML private StackPane toastContainer;
+
     // ==================== SERVICES ====================
 
     private SuiviTraitementService suiviTraitementService;
@@ -155,11 +166,14 @@ public class SuiviTraitementController implements Initializable {
     private List<SuiviTraitement> tousLesSuivisFiltres;
     private List<Traitement> tousLesTraitements;
     private boolean isInitialized = false;
+    private User utilisateur;
 
     // ==================== INITIALISATION ====================
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        lblDate.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
         try {
             suiviTraitementService = new SuiviTraitementService();
             traitementService = new TraitementService();
@@ -169,7 +183,6 @@ public class SuiviTraitementController implements Initializable {
             initialiserFiltres();
             initialiserTri();
             configurerColonnes();
-            chargerDonnees();
 
             isInitialized = true;
             lblStatus.setText("Interface Suivis Traitements prête");
@@ -178,6 +191,16 @@ public class SuiviTraitementController implements Initializable {
             lblStatus.setText("Erreur lors du chargement: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void setUtilisateur(User user) {
+        this.utilisateur = user;
+        if (sidebarPsyController != null) {
+            sidebarPsyController.setUtilisateur(user);
+            sidebarPsyController.setActiveButtonByFxml("/suivi-traitement-view.fxml");
+        }
+        chargerDonnees();
     }
 
     // ==================== INITIALISATION FILTRES ET TRI ====================
@@ -224,7 +247,13 @@ public class SuiviTraitementController implements Initializable {
     // ==================== CHARGEMENT DES DONNÉES ====================
 
     private void chargerDonnees() {
+        if (utilisateur == null) {
+            lblStatus.setText("✗ Erreur: utilisateur non connecté");
+            return;
+        }
+
         try {
+            lblStatus.setText("Chargement en cours...");
             List<SuiviTraitement> tousLesSuivis = suiviTraitementService.afficher();
             tousLesTraitements = traitementService.afficher();
             Map<Integer, Traitement> traitementsMap = new HashMap<>();
@@ -232,7 +261,7 @@ public class SuiviTraitementController implements Initializable {
                 traitementsMap.put(traitement.getTraitementId(), traitement);
             }
 
-            SessionManager session = SessionManager.getInstance();
+            int utilisateurId = utilisateur.getUserId();
             List<SuiviTraitement> suivisFiltres = new ArrayList<>();
 
             for (SuiviTraitement suivi : tousLesSuivis) {
@@ -243,12 +272,12 @@ public class SuiviTraitementController implements Initializable {
 
                 boolean peutVoir = false;
 
-                if (session.estPsychologue()) {
-                    // CORRECTION : Le psychologue ne voit que les suivis de SES traitements
-                    peutVoir = (psychologueId == session.getUtilisateurConnecteId());
-                } else if (session.estEtudiant()) {
+                // Utiliser l'utilisateur connecté au lieu de SessionManager
+                if (utilisateur.getRole().equals("PSYCHOLOGUE")) {
+                    peutVoir = (psychologueId == utilisateurId);
+                } else if (utilisateur.getRole().equals("ETUDIANT")) {
                     int etudiantId = traitementAssocie.getEtudiantId();
-                    peutVoir = (etudiantId == session.getUtilisateurConnecteId());
+                    peutVoir = (etudiantId == utilisateurId);
                 } else {
                     peutVoir = true;
                 }
@@ -276,13 +305,16 @@ public class SuiviTraitementController implements Initializable {
 
             long totalSuivis = lignes.stream().filter(l -> !l.estEntete()).count();
             lblCount.setText(totalSuivis + " suivi(s)");
+            lblStatus.setText(totalSuivis + " suivi(s) affiché(s)");
 
         } catch (SQLException e) {
             System.err.println("Erreur SQL: " + e.getMessage());
-            afficherErreur("Erreur de chargement", "Erreur base de données: " + e.getMessage());
+            lblStatus.setText("✗ Erreur: " + e.getMessage());
+            afficherToast("✗ Erreur de chargement: " + e.getMessage(), false);
         } catch (Exception e) {
             System.err.println("Erreur: " + e.getMessage());
-            afficherErreur("Erreur de chargement", e.getMessage());
+            lblStatus.setText("✗ Erreur: " + e.getMessage());
+            afficherToast("✗ Erreur de chargement: " + e.getMessage(), false);
         }
     }
 
@@ -634,8 +666,6 @@ public class SuiviTraitementController implements Initializable {
     }
 
     private void configurerColonneActions() {
-        SessionManager session = SessionManager.getInstance();
-
         colActions.setCellFactory(param -> new TableCell<LigneSuiviGroupée, Void>() {
             private final Button btnView = new Button("Afficher");
             private final Button btnEdit = new Button("Modifier");
@@ -663,8 +693,8 @@ public class SuiviTraitementController implements Initializable {
                     LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
                     SuiviTraitement suivi = ligne.getPremierSuivi();
                     if (suivi != null && !ligne.estEntete()) {
-                        if (session.estEtudiant() && suivi.getSaisiPar() != SaisiPar.ETUDIANT) {
-                            afficherErreur("Accès refusé", "Vous ne pouvez pas modifier le suivi du psychologue.");
+                        if (utilisateur != null && utilisateur.getRole().equals("ETUDIANT") && suivi.getSaisiPar() != SaisiPar.ETUDIANT) {
+                            afficherToast("✗ Vous ne pouvez pas modifier le suivi du psychologue", false);
                         } else {
                             ouvrirPageModification(suivi);
                         }
@@ -675,8 +705,8 @@ public class SuiviTraitementController implements Initializable {
                     LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
                     SuiviTraitement suivi = ligne.getPremierSuivi();
                     if (suivi != null && !ligne.estEntete()) {
-                        if (session.estEtudiant() && suivi.getSaisiPar() != SaisiPar.ETUDIANT) {
-                            afficherErreur("Accès refusé", "Vous ne pouvez pas supprimer le suivi du psychologue.");
+                        if (utilisateur != null && utilisateur.getRole().equals("ETUDIANT") && suivi.getSaisiPar() != SaisiPar.ETUDIANT) {
+                            afficherToast("✗ Vous ne pouvez pas supprimer le suivi du psychologue", false);
                         } else {
                             supprimerSuivi(suivi);
                         }
@@ -734,9 +764,10 @@ public class SuiviTraitementController implements Initializable {
 
             long totalSuivis = lignes.stream().filter(l -> !l.estEntete()).count();
             lblCount.setText(totalSuivis + " suivi(s)");
+            lblStatus.setText(totalSuivis + " suivi(s) affiché(s)");
 
         } catch (Exception e) {
-            afficherErreur("Erreur", "Impossible d'appliquer les filtres: " + e.getMessage());
+            afficherToast("✗ Erreur: " + e.getMessage(), false);
         }
     }
 
@@ -755,9 +786,10 @@ public class SuiviTraitementController implements Initializable {
             if (file != null) {
                 exporterVersCSV(file);
                 lblStatus.setText("✓ Export réussi: " + file.getName());
+                afficherToast("✓ Export réussi: " + file.getName(), true);
             }
         } catch (Exception e) {
-            afficherErreur("Erreur d'export", e.getMessage());
+            afficherToast("✗ Erreur d'export: " + e.getMessage(), false);
         }
     }
 
@@ -797,10 +829,15 @@ public class SuiviTraitementController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-view.fxml"));
             Parent root = loader.load();
+
+            // Passer l'utilisateur au nouveau controller
+            TraitementController controller = loader.getController();
+            controller.setUtilisateur(utilisateur);
+
             Scene currentScene = tableViewSuiviTraitements.getScene();
             if (currentScene != null) currentScene.setRoot(root);
         } catch (Exception e) {
-            afficherErreur("Erreur de navigation", "Impossible d'accéder à la page des traitements: " + e.getMessage());
+            afficherToast("✗ Erreur de navigation: " + e.getMessage(), false);
         }
     }
 
@@ -814,7 +851,7 @@ public class SuiviTraitementController implements Initializable {
             stage.show();
             stage.setOnHiding(event -> chargerDonnees());
         } catch (Exception e) {
-            afficherErreur("Erreur d'ouverture", "Impossible d'ouvrir la page d'ajout: " + e.getMessage());
+            afficherToast("✗ Erreur d'ouverture: " + e.getMessage(), false);
         }
     }
 
@@ -829,7 +866,7 @@ public class SuiviTraitementController implements Initializable {
             stage.setScene(new Scene(root, 900, 700));
             stage.show();
         } catch (Exception e) {
-            afficherErreur("Erreur d'ouverture", "Impossible d'ouvrir la page d'affichage: " + e.getMessage());
+            afficherToast("✗ Erreur d'ouverture: " + e.getMessage(), false);
         }
     }
 
@@ -845,33 +882,61 @@ public class SuiviTraitementController implements Initializable {
             stage.show();
             stage.setOnHiding(event -> chargerDonnees());
         } catch (Exception e) {
-            afficherErreur("Erreur d'ouverture", "Impossible d'ouvrir la page de modification: " + e.getMessage());
+            afficherToast("✗ Erreur d'ouverture: " + e.getMessage(), false);
         }
     }
 
     private void supprimerSuivi(SuiviTraitement suivi) {
-        try {
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-            confirm.setTitle("Confirmation");
-            confirm.setHeaderText("Supprimer le suivi");
-            confirm.setContentText("Êtes-vous sûr de vouloir supprimer ce suivi ?");
-            if (confirm.showAndWait().get() == javafx.scene.control.ButtonType.OK) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirmation");
+        confirm.setHeaderText("Supprimer le suivi");
+        confirm.setContentText("Êtes-vous sûr de vouloir supprimer ce suivi ?");
+        if (confirm.showAndWait().get() == ButtonType.OK) {
+            try {
                 suiviTraitementService.supprimer(suivi.getSuivitraitementId());
                 chargerDonnees();
-                lblStatus.setText("Suivi supprimé avec succès");
+                afficherToast("✓ Suivi supprimé avec succès", true);
+            } catch (SQLException e) {
+                afficherToast("✗ Erreur de suppression: " + e.getMessage(), false);
             }
-        } catch (SQLException e) {
-            afficherErreur("Erreur de suppression", "Erreur base de données: " + e.getMessage());
-        } catch (Exception e) {
-            afficherErreur("Erreur de suppression", e.getMessage());
         }
     }
 
-    private void afficherErreur(String titre, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(titre);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    // ==================== TOAST NOTIFICATION ====================
+
+    private void afficherToast(String message, boolean success) {
+        if (toastContainer == null) return;
+
+        Label toast = new Label(message);
+        toast.setStyle(
+                "-fx-background-color:" + (success ? "#10b981" : "#ef4444") + ";" +
+                        "-fx-text-fill:white;" +
+                        "-fx-font-family:'Segoe UI';-fx-font-size:13px;-fx-font-weight:bold;" +
+                        "-fx-padding:12 22;-fx-background-radius:30;" +
+                        "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.18),12,0,0,4);");
+
+        toastContainer.getChildren().add(toast);
+        toastContainer.setVisible(true);
+        toastContainer.setManaged(true);
+        StackPane.setAlignment(toast, Pos.BOTTOM_CENTER);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(200), toast);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(400), toast);
+        fadeOut.setFromValue(1);
+        fadeOut.setToValue(0);
+        fadeOut.setDelay(Duration.seconds(2.2));
+        fadeOut.setOnFinished(e -> {
+            toastContainer.getChildren().remove(toast);
+            if (toastContainer.getChildren().isEmpty()) {
+                toastContainer.setVisible(false);
+                toastContainer.setManaged(false);
+            }
+        });
+
+        fadeIn.play();
+        fadeOut.play();
     }
 }
