@@ -12,7 +12,7 @@ import org.example.entities.Etudiant;
 import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
 import org.example.enums.SaisiPar;
-import org.example.services.EtudiantService;
+import org.example.services.EtudiantTraitementService;
 import org.example.services.SuiviTraitementService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
@@ -47,7 +47,7 @@ public class SuiviTraitementModificationController implements Initializable {
 
     private SuiviTraitementService suiviTraitementService;
     private TraitementService traitementService;
-    private EtudiantService etudiantService;
+    private EtudiantTraitementService etudiantTraitementService;
     private ObservableList<Traitement> traitementsList;
     private ObservableList<Etudiant> etudiantsList;
     private SuiviTraitement suiviSelectionne;
@@ -57,7 +57,7 @@ public class SuiviTraitementModificationController implements Initializable {
         try {
             suiviTraitementService = new SuiviTraitementService();
             traitementService = new TraitementService();
-            etudiantService = new EtudiantService();
+            etudiantTraitementService = new EtudiantTraitementService();
 
             chargerTraitements();
             chargerEtudiants();
@@ -215,7 +215,7 @@ public class SuiviTraitementModificationController implements Initializable {
     }
 
     private void chargerEtudiants() throws SQLException {
-        List<Etudiant> etudiants = etudiantService.afficher();
+        List<Etudiant> etudiants = etudiantTraitementService.afficher();
         etudiantsList = FXCollections.observableArrayList(etudiants);
         cmbEtudiant.setItems(etudiantsList);
     }

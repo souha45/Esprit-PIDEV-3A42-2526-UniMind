@@ -6,7 +6,7 @@ import java.util.ResourceBundle;
 
 import org.example.entities.Etudiant;
 import org.example.entities.Traitement;
-import org.example.services.EtudiantService;
+import org.example.services.EtudiantTraitementService;
 import org.example.utils.SessionManager;
 
 import javafx.fxml.FXML;
@@ -30,13 +30,13 @@ public class TraitementAffichageController implements Initializable {
     @FXML private Label lblDescription;
     @FXML private Label lblStatus;
 
-    private EtudiantService etudiantService;
+    private EtudiantTraitementService etudiantTraitementService;
     private Traitement traitementAffiche;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-            etudiantService = new EtudiantService();
+            etudiantTraitementService = new EtudiantTraitementService();
         } catch (Exception e) {
             lblStatus.setText("Erreur lors du chargement: " + e.getMessage());
         }
@@ -110,7 +110,7 @@ public class TraitementAffichageController implements Initializable {
     private void chargerEtudiant(int etudiantId) {
         try {
             if (etudiantId > 0) {
-                var etudiants = etudiantService.afficher();
+                var etudiants = etudiantTraitementService.afficher();
                 Etudiant etudiantTrouve = null;
                 for (Etudiant etudiant : etudiants) {
                     if (etudiant.getUserId() == etudiantId) {

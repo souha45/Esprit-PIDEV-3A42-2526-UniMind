@@ -350,8 +350,7 @@ public class SidebarEtudiantController {
             case "/dashboard_etudiant.fxml"      -> setActiveButton(btnDashboard);
             case "/RendezVousEtudiant.fxml"       -> setActiveButton(btnMesRendezVous);
             case "/ConsultationsEtudiant.fxml"    -> setActiveButton(btnConsultations);
-            case "/TraitementsEtudiant.fxml"      -> setActiveButton(btnTraitements);
-            case "/SuiviTraitementsEtudiant.fxml" -> setActiveButton(btnSuiviTraitements);
+            case "/traitement-etudiant-view.fxml"      -> setActiveButton(btnTraitements);
             case "/QuestionnairesEtudiant.fxml"   -> setActiveButton(btnQuestionnaires);
             case "/MesReponsesEtudiant.fxml"      -> setActiveButton(btnMesReponses);
             case "/org/example/views/EtudiantSeances.fxml" -> setActiveButton(btnSeances);

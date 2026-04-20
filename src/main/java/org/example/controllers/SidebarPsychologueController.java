@@ -37,6 +37,8 @@ public class SidebarPsychologueController {
     @FXML private Button btnConsultations;
     @FXML private Button btnPatients;
     @FXML private Button btnDeconnexion;
+    @FXML private Button btnTraitements;
+
 
     // ============================================================
     // Styles (version moderne)
@@ -113,6 +115,7 @@ public class SidebarPsychologueController {
         btnDisponibilites.setOnAction(e -> naviguer("/AfficheDisponibilitesPsy.fxml", "Disponibilités", btnDisponibilites));
         btnRendezVous.setOnAction(e -> naviguer("/RendezVousPsy.fxml", "Rendez-vous", btnRendezVous));
         btnConsultations.setOnAction(e -> naviguer("/ConsultationsPsy.fxml", "Consultations", btnConsultations));
+        btnConsultations.setOnAction(e -> naviguer("/traitement-view.fxml", "Traitements", btnTraitements));
         btnPatients.setOnAction(e -> naviguer("/Patients.fxml", "Patients", btnPatients));
         btnProfil.setOnAction(e -> ouvrirProfil());
         btnDeconnexion.setOnAction(e -> seDeconnecter());
@@ -274,6 +277,7 @@ public class SidebarPsychologueController {
             case "/AfficheDisponibilitesPsy.fxml"  -> setActiveButton(btnDisponibilites);
             case "/RendezVousPsy.fxml"             -> setActiveButton(btnRendezVous);
             case "/ConsultationsPsy.fxml"          -> setActiveButton(btnConsultations);
+            case "/traitement-view.fxml"      -> setActiveButton(btnTraitements);
             case "/Patients.fxml"                  -> setActiveButton(btnPatients);
         }
     }

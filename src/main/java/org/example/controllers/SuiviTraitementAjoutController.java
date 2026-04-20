@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import org.example.entities.Etudiant;
 import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
-import org.example.services.EtudiantService;
+import org.example.services.EtudiantTraitementService;
 import org.example.services.SuiviTraitementService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
@@ -52,7 +52,7 @@ public class SuiviTraitementAjoutController implements Initializable {
 
     private SuiviTraitementService suiviTraitementService;
     private TraitementService traitementService;
-    private EtudiantService etudiantService;
+    private EtudiantTraitementService etudiantTraitementService;
     private ObservableList<Traitement> traitementsList;
     private ObservableList<Etudiant> etudiantsList;
     private Traitement traitementPreSelectionne;
@@ -64,7 +64,7 @@ public class SuiviTraitementAjoutController implements Initializable {
         try {
             suiviTraitementService = new SuiviTraitementService();
             traitementService = new TraitementService();
-            etudiantService = new EtudiantService();
+            etudiantTraitementService = new EtudiantTraitementService();
 
             chargerTraitements();
             chargerEtudiants();
@@ -195,7 +195,7 @@ public class SuiviTraitementAjoutController implements Initializable {
     }
 
     private void chargerEtudiants() throws SQLException {
-        List<Etudiant> etudiants = etudiantService.afficher();
+        List<Etudiant> etudiants = etudiantTraitementService.afficher();
         etudiantsList = FXCollections.observableArrayList(etudiants);
         if (cmbEtudiant != null) {
             cmbEtudiant.setItems(etudiantsList);

@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import org.example.entities.Etudiant;
 import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
-import org.example.services.EtudiantService;
+import org.example.services.EtudiantTraitementService;
 import org.example.services.SuiviTraitementService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
@@ -77,7 +77,7 @@ public class TraitementController implements Initializable {
     @FXML private Label statPrioriteHaute;
 
     private TraitementService traitementService;
-    private EtudiantService etudiantService;
+    private EtudiantTraitementService etudiantTraitementService;
     private SuiviTraitementService suiviTraitementService;
     private ObservableList<LigneGroupée> lignesGroupéesList;
     private Map<Integer, Integer> cacheNbSuivis;
@@ -161,7 +161,7 @@ public class TraitementController implements Initializable {
 
         try {
             traitementService = new TraitementService();
-            etudiantService = new EtudiantService();
+            etudiantTraitementService = new EtudiantTraitementService();
             suiviTraitementService = new SuiviTraitementService();
             cacheNbSuivis = new HashMap<>();
             tousLesTraitementsFiltres = new ArrayList<>();
@@ -431,7 +431,7 @@ public class TraitementController implements Initializable {
     private String getNomEtudiant(Integer etudiantId) {
         try {
             if (etudiantId == null || etudiantId == 0) return "Non assigné";
-            List<Etudiant> etudiants = etudiantService.afficher();
+            List<Etudiant> etudiants = etudiantTraitementService.afficher();
             for (Etudiant etudiant : etudiants) {
                 if (etudiant.getUserId() == etudiantId) {
                     return etudiant.getNom() + " " + etudiant.getPrenom();

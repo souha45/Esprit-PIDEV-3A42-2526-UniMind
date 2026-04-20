@@ -11,7 +11,7 @@ import org.example.entities.Traitement;
 import org.example.enums.CategorieTraitement;
 import org.example.enums.PrioriteTraitement;
 import org.example.enums.StatutTraitement;
-import org.example.services.EtudiantService;
+import org.example.services.EtudiantTraitementService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
 
@@ -64,7 +64,7 @@ public class TraitementModificationController implements Initializable {
     @FXML private Label lblErreurDescription;
 
     private TraitementService traitementService;
-    private EtudiantService etudiantService;
+    private EtudiantTraitementService etudiantTraitementService;
     private ObservableList<Etudiant> etudiantsList;
     private Traitement traitementSelectionne;
 
@@ -109,9 +109,9 @@ public class TraitementModificationController implements Initializable {
 
         try {
             traitementService = new TraitementService();
-            etudiantService = new EtudiantService();
+            etudiantTraitementService = new EtudiantTraitementService();
 
-            List<Etudiant> etudiants = etudiantService.afficher();
+            List<Etudiant> etudiants = etudiantTraitementService.afficher();
             etudiantsList = FXCollections.observableArrayList(etudiants);
             cmbEtudiant.setItems(etudiantsList);
             configurerComboBoxEtudiant();

@@ -9,7 +9,7 @@ import org.example.entities.Etudiant;
 import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
 import org.example.enums.SaisiPar;
-import org.example.services.EtudiantService;
+import org.example.services.EtudiantTraitementService;
 import org.example.services.SuiviTraitementService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
@@ -29,7 +29,7 @@ public class SuiviTraitementAffichageController implements Initializable {
     @FXML private Label lblNotes;
     @FXML private Label lblStatus;
 
-    private EtudiantService etudiantService;
+    private EtudiantTraitementService etudiantTraitementService;
     private TraitementService traitementService;
     private SuiviTraitementService suiviTraitementService;
     private SuiviTraitement suiviAffiche;
@@ -37,7 +37,7 @@ public class SuiviTraitementAffichageController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-            etudiantService = new EtudiantService();
+            etudiantTraitementService = new EtudiantTraitementService();
             traitementService = new TraitementService();
             suiviTraitementService = new SuiviTraitementService();
             lblStatus.setText("✓ Prêt à afficher les détails");
@@ -113,7 +113,7 @@ public class SuiviTraitementAffichageController implements Initializable {
     private void chargerEtudiant(int etudiantId) {
         try {
             if (etudiantId > 0) {
-                List<Etudiant> etudiants = etudiantService.afficher();
+                List<Etudiant> etudiants = etudiantTraitementService.afficher();
                 Etudiant etudiantTrouve = null;
                 for (Etudiant etudiant : etudiants) {
                     if (etudiant.getUserId() == etudiantId) {
