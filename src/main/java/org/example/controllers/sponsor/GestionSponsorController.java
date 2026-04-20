@@ -140,7 +140,7 @@ public class GestionSponsorController {
 
     private void naviguerVersRetour() {
         try {
-            NavigationContext.loadContentInCenter("/evenement/AdminDashboard.fxml");
+            NavigationContext.loadContentInCenter("/admin_dashboard.fxml");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -461,7 +461,7 @@ public class GestionSponsorController {
     @FXML
     private void retourAccueil(ActionEvent event) throws IOException {
         // Recharger le dashboard Admin (qui affichera les statistiques par défaut)
-        NavigationContext.loadContentInCenter("/evenement/AdminDashboard.fxml");
+        NavigationContext.loadContentInCenter("/admin_dashboard.fxml");
     }
 
     private void afficherAlerte(String type, String message) {

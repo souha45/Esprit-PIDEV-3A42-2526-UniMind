@@ -242,7 +242,7 @@ public class FeedbacksAdminController {
 
     @FXML
     private void retour() throws IOException {
-        NavigationContext.loadContentInCenter("/evenement/AdminDashboard.fxml");
+        NavigationContext.loadContentInCenter("/admin_dashboard.fxml");
     }
 
     private void afficherAucunFeedback() {

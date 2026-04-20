@@ -1,4 +1,4 @@
-package org.example.controllers.evenement;
+package org.example.controllers;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -13,13 +13,13 @@ import org.example.utils.SessionManager;
 
 import java.io.IOException;
 
-public class AdminDashboardController {
+public class DashboardResponsableController {
 
     @FXML
     private ScrollPane contentScrollPane;
 
     @FXML
-    private org.example.controllers.SidebarAdminController sidebarAdminController;
+    private SidebarResponsableController sidebarResponsableController;
 
     @FXML
     public void initialize() {
@@ -27,8 +27,8 @@ public class AdminDashboardController {
         NavigationContext.setContentScrollPane(contentScrollPane);
 
         // Initialiser le sidebar controller
-        if (sidebarAdminController != null) {
-            sidebarAdminController.setParentController(this);
+        if (sidebarResponsableController != null) {
+            sidebarResponsableController.setParentController(this);
         }
 
         // Charger par défaut la gestion des événements
@@ -39,6 +39,15 @@ public class AdminDashboardController {
         }
     }
 
+    @FXML
+    private void vueDensemble(ActionEvent event) throws IOException {
+        // Cette méthode n'est plus utilisée mais gardée pour compatibilité
+        try {
+            gestionEvenements(new ActionEvent());
+        } catch (IOException e) {
+            System.err.println("Erreur: " + e.getMessage());
+        }
+    }
 
     @FXML
     public void gestionEvenements(ActionEvent event) throws IOException {
@@ -46,28 +55,24 @@ public class AdminDashboardController {
     }
 
     @FXML
-    public void gestionSponsors(ActionEvent event) throws IOException {
-        chargerContenuDansCentre("/sponsor/GestionSponsor.fxml");
+    public void gestionParticipations(ActionEvent event) throws IOException {
+        chargerContenuDansCentre("/participation/GestionParticipation.fxml");
     }
 
     @FXML
-    public void gestionParticipations(ActionEvent event) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/participation/GestionParticipation.fxml"));
-        Parent root = loader.load();
-        contentScrollPane.setContent(root);
+    public void attributionSponsors(ActionEvent event) throws IOException {
+        chargerContenuDansCentre("/sponsor/GestionAttributionSponsor.fxml");
     }
 
     @FXML
     public void gestionFeedbacks(ActionEvent event) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/feedback/FeedbacksAdmin.fxml"));
-        Parent root = loader.load();
-        contentScrollPane.setContent(root);
+        chargerContenuDansCentre("/feedback/FeedbacksAdmin.fxml");
     }
 
     @FXML
     private void logout(ActionEvent event) throws IOException {
         SessionManager.getInstance().logout();
-        naviguerVersEcran(event, "/Login.fxml", "Connexion");
+        naviguerVersEcran(event, "/login.fxml", "Connexion");
     }
 
     private void chargerContenuDansCentre(String fxmlPath) throws IOException {

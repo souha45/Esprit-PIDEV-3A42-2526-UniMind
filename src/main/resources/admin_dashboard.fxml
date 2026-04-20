@@ -6,8 +6,8 @@
 <?import javafx.fxml.FXMLLoader?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="org.example.controllers.evenement.AdminDashboardController"
-            stylesheets="@../styles/EventBack.css">
+            fx:controller="org.example.controllers.admin.AdminDashboardController"
+            stylesheets="@css/EventBack.css">
 
     <left>
         <fx:include source="/SidebarAdmin.fxml" fx:id="sidebarAdmin"/>

@@ -61,9 +61,9 @@ public class SidebarResponsableController {
 
     @FXML
     public void gestionEvenements() {
-        if (parentController instanceof org.example.controllers.evenement.ResponsableDashboardController) {
+        if (parentController instanceof DashboardResponsableController) {
             try {
-                ((org.example.controllers.evenement.ResponsableDashboardController) parentController).gestionEvenements(new javafx.event.ActionEvent());
+                ((DashboardResponsableController) parentController).gestionEvenements(new javafx.event.ActionEvent());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -72,9 +72,9 @@ public class SidebarResponsableController {
 
     @FXML
     public void gestionParticipations() {
-        if (parentController instanceof org.example.controllers.evenement.ResponsableDashboardController) {
+        if (parentController instanceof DashboardResponsableController) {
             try {
-                ((org.example.controllers.evenement.ResponsableDashboardController) parentController).gestionParticipations(new javafx.event.ActionEvent());
+                ((DashboardResponsableController) parentController).gestionParticipations(new javafx.event.ActionEvent());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -83,9 +83,9 @@ public class SidebarResponsableController {
 
     @FXML
     public void attributionSponsors() {
-        if (parentController instanceof org.example.controllers.evenement.ResponsableDashboardController) {
+        if (parentController instanceof DashboardResponsableController) {
             try {
-                ((org.example.controllers.evenement.ResponsableDashboardController) parentController).attributionSponsors(new javafx.event.ActionEvent());
+                ((DashboardResponsableController) parentController).attributionSponsors(new javafx.event.ActionEvent());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -94,9 +94,9 @@ public class SidebarResponsableController {
 
     @FXML
     public void gestionFeedbacks() {
-        if (parentController instanceof org.example.controllers.evenement.ResponsableDashboardController) {
+        if (parentController instanceof DashboardResponsableController) {
             try {
-                ((org.example.controllers.evenement.ResponsableDashboardController) parentController).gestionFeedbacks(new javafx.event.ActionEvent());
+                ((DashboardResponsableController) parentController).gestionFeedbacks(new javafx.event.ActionEvent());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -123,7 +123,7 @@ public class SidebarResponsableController {
     public void seDeconnecter() {
         SessionManager.getInstance().logout();
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
             Stage stage = new Stage();
             stage.setTitle("Connexion - Unimind");
             stage.setScene(new Scene(loader.load(), 1200, 800));

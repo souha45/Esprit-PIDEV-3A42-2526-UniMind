@@ -6,11 +6,11 @@
 <?import javafx.fxml.FXMLLoader?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="org.example.controllers.evenement.ResponsableDashboardController"
-            stylesheets="@../styles/EventFont.css">
+            fx:controller="org.example.controllers.DashboardEtudiantController"
+            stylesheets="@css/EventFont.css">
 
     <left>
-        <fx:include source="/SidebarResponsable.fxml" fx:id="sidebarResponsable"/>
+        <fx:include source="/SidebarEtudiant.fxml" fx:id="sidebarEtudiant"/>
     </left>
 
     <center>

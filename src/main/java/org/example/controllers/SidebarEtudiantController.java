@@ -60,9 +60,9 @@ public class SidebarEtudiantController {
 
     @FXML
     public void voirEvenements() {
-        if (parentController instanceof org.example.controllers.evenement.EtudiantDashboardController) {
+        if (parentController instanceof DashboardEtudiantController) {
             try {
-                ((org.example.controllers.evenement.EtudiantDashboardController) parentController).voirEvenements(new javafx.event.ActionEvent());
+                ((DashboardEtudiantController) parentController).voirEvenements(new javafx.event.ActionEvent());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -71,9 +71,9 @@ public class SidebarEtudiantController {
 
     @FXML
     public void voirParticipations() {
-        if (parentController instanceof org.example.controllers.evenement.EtudiantDashboardController) {
+        if (parentController instanceof DashboardEtudiantController) {
             try {
-                ((org.example.controllers.evenement.EtudiantDashboardController) parentController).voirParticipations(new javafx.event.ActionEvent());
+                ((DashboardEtudiantController) parentController).voirParticipations(new javafx.event.ActionEvent());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -82,9 +82,9 @@ public class SidebarEtudiantController {
 
     @FXML
     public void voirFavoris() {
-        if (parentController instanceof org.example.controllers.evenement.EtudiantDashboardController) {
+        if (parentController instanceof DashboardEtudiantController) {
             try {
-                ((org.example.controllers.evenement.EtudiantDashboardController) parentController).voirFavoris(new javafx.event.ActionEvent());
+                ((DashboardEtudiantController) parentController).voirFavoris(new javafx.event.ActionEvent());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -111,7 +111,7 @@ public class SidebarEtudiantController {
     public void seDeconnecter() {
         SessionManager.getInstance().logout();
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
             Stage stage = new Stage();
             stage.setTitle("Connexion - Unimind");
             stage.setScene(new Scene(loader.load(), 1200, 800));

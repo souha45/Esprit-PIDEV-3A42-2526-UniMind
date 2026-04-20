@@ -393,9 +393,9 @@ public class GestionAttributionSponsorController {
     private void retour(ActionEvent event) throws IOException {
         Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ADMIN);
         if (role == Role.ADMIN) {
-            NavigationContext.loadContentInCenter("/evenement/AdminDashboard.fxml");
+            NavigationContext.loadContentInCenter("/admin_dashboard.fxml");
         } else {
-            NavigationContext.loadContentInCenter("/evenement/ResponsableDashboard.fxml");
+            NavigationContext.loadContentInCenter("/dashboard_responsable.fxml");
         }
     }
 

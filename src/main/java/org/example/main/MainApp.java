@@ -8,12 +8,12 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-public class MainFX extends Application {
+public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
         // Charger le fichier FXML de login
-        Parent root = FXMLLoader.load(getClass().getResource("/Login.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/login.fxml"));
 
         // Configurer la scène
         Scene scene = new Scene(root, 1200, 800);

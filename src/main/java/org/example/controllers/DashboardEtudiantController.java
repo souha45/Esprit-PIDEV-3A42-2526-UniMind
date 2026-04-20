@@ -1,4 +1,4 @@
-package org.example.controllers.evenement;
+package org.example.controllers;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -13,13 +13,13 @@ import org.example.utils.SessionManager;
 
 import java.io.IOException;
 
-public class EtudiantDashboardController {
+public class DashboardEtudiantController {
 
     @FXML
     private ScrollPane contentScrollPane;
 
     @FXML
-    private org.example.controllers.SidebarEtudiantController sidebarEtudiantController;
+    private SidebarEtudiantController sidebarEtudiantController;
 
     @FXML
     public void initialize() {
@@ -68,7 +68,7 @@ public class EtudiantDashboardController {
     @FXML
     private void logout(ActionEvent event) throws IOException {
         SessionManager.getInstance().logout();
-        naviguerVersEcran(event, "/Login.fxml", "Connexion");
+        naviguerVersEcran(event, "/login.fxml", "Connexion");
     }
 
     private void chargerContenuDansCentre(String fxmlPath) throws IOException {

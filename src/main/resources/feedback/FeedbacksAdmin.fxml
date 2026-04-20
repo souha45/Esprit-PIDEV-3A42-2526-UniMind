@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox spacing="20" style="-fx-padding: 20; -fx-background-color: #f5f6fa;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.feedback.FeedbacksAdminController" stylesheets="@../styles/EventBack.css">
+<VBox spacing="20" style="-fx-padding: 20; -fx-background-color: #f5f6fa;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.feedback.FeedbacksAdminController" stylesheets="@../css/EventBack.css">
     <children>
         <!-- En-tête -->
         <HBox spacing="16" alignment="CENTER_LEFT">

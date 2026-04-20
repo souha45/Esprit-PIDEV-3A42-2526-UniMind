@@ -405,13 +405,13 @@ public class GestionParticipationController {
 
         switch (role) {
             case ADMIN:
-                fxmlPath = "/evenement/AdminDashboard.fxml";
+                fxmlPath = "/admin_dashboard.fxml";
                 break;
             case RESPONSABLE_ETUDIANT:
-                fxmlPath = "/evenement/ResponsableDashboard.fxml";
+                fxmlPath = "/dashboard_responsable.fxml";
                 break;
             case ETUDIANT:
-                fxmlPath = "/evenement/EtudiantDashboard.fxml";
+                fxmlPath = "/dashboard_etudiant.fxml";
                 break;
             default:
                 fxmlPath = "/evenement/AccueilEvenement.fxml";

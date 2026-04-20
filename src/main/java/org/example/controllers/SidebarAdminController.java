@@ -58,9 +58,9 @@ public class SidebarAdminController {
 
     @FXML
     public void gestionEvenements() {
-        if (parentController instanceof org.example.controllers.evenement.AdminDashboardController) {
+        if (parentController instanceof org.example.controllers.admin.AdminDashboardController) {
             try {
-                ((org.example.controllers.evenement.AdminDashboardController) parentController).gestionEvenements(new javafx.event.ActionEvent());
+                ((org.example.controllers.admin.AdminDashboardController) parentController).gestionEvenements(new javafx.event.ActionEvent());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -69,9 +69,9 @@ public class SidebarAdminController {
 
     @FXML
     public void gestionSponsors() {
-        if (parentController instanceof org.example.controllers.evenement.AdminDashboardController) {
+        if (parentController instanceof org.example.controllers.admin.AdminDashboardController) {
             try {
-                ((org.example.controllers.evenement.AdminDashboardController) parentController).gestionSponsors(new javafx.event.ActionEvent());
+                ((org.example.controllers.admin.AdminDashboardController) parentController).gestionSponsors(new javafx.event.ActionEvent());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -80,9 +80,9 @@ public class SidebarAdminController {
 
     @FXML
     public void gestionParticipations() {
-        if (parentController instanceof org.example.controllers.evenement.AdminDashboardController) {
+        if (parentController instanceof org.example.controllers.admin.AdminDashboardController) {
             try {
-                ((org.example.controllers.evenement.AdminDashboardController) parentController).gestionParticipations(new javafx.event.ActionEvent());
+                ((org.example.controllers.admin.AdminDashboardController) parentController).gestionParticipations(new javafx.event.ActionEvent());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -91,9 +91,9 @@ public class SidebarAdminController {
 
     @FXML
     public void gestionFeedbacks() {
-        if (parentController instanceof org.example.controllers.evenement.AdminDashboardController) {
+        if (parentController instanceof org.example.controllers.admin.AdminDashboardController) {
             try {
-                ((org.example.controllers.evenement.AdminDashboardController) parentController).gestionFeedbacks(new javafx.event.ActionEvent());
+                ((org.example.controllers.admin.AdminDashboardController) parentController).gestionFeedbacks(new javafx.event.ActionEvent());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -114,7 +114,7 @@ public class SidebarAdminController {
     public void seDeconnecter() {
         SessionManager.getInstance().logout();
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
             Stage stage = new Stage();
             stage.setTitle("Connexion - Unimind");
             stage.setScene(new Scene(loader.load(), 1200, 800));

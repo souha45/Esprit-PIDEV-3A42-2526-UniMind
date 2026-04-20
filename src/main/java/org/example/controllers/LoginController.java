@@ -202,11 +202,11 @@ public class LoginController {
 
         switch (role) {
             case ADMIN -> {
-                fxmlPath = "/evenement/AdminDashboard.fxml";
+                fxmlPath = "/admin_dashboard.fxml";
                 titre = "UniMind — Administration";
             }
             case ETUDIANT -> {
-                fxmlPath = "/evenement/EtudiantDashboard.fxml";
+                fxmlPath = "/dashboard_etudiant.fxml";
                 titre = "UniMind — Espace Étudiant";
             }
             case PSYCHOLOGUE -> {
@@ -219,7 +219,7 @@ public class LoginController {
                 return;
             }
             case RESPONSABLE_ETUDIANT -> {
-                fxmlPath = "/evenement/ResponsableDashboard.fxml";
+                fxmlPath = "/dashboard_responsable.fxml";
                 titre = "UniMind — Espace Responsable";
             }
             default -> {

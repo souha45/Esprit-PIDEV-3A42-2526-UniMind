@@ -7,7 +7,7 @@
 <VBox spacing="15" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="org.example.controllers.sponsor.AjoutAttributionSponsorController"
-      stylesheets="@../styles/EventBack.css"
+      stylesheets="@../css/EventBack.css"
       styleClass="dashboard-bg">
 
     <padding>
