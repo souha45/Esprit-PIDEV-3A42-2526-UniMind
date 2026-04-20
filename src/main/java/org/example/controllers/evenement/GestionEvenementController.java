@@ -556,7 +556,7 @@ public class GestionEvenementController {
                 fxmlPath = "/dashboard_etudiant.fxml";
                 break;
             default:
-                fxmlPath = "/evenement/AccueilEvenement.fxml";
+                fxmlPath = "/admin_dashboard.fxml";
                 break;
         }
 
