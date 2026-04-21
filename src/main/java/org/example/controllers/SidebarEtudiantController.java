@@ -48,6 +48,7 @@ public class SidebarEtudiantController {
     @FXML private Button btnSeances;
     @FXML private Button btnFavoris;
     @FXML private StackPane contentArea;
+    //vérification
 
     private void loadPage(String fxmlPath) {
         try {
