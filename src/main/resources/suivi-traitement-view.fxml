@@ -10,7 +10,7 @@
 
     <!-- Sidebar gauche (pour psychologue) -->
     <left>
-        <fx:include fx:id="sidebarPsychologueController" source="/SidebarPsy.fxml"/>
+        <fx:include fx:id="sidebarPsy" source="/SidebarPsy.fxml"/>
     </left>
 
     <!-- Contenu principal -->

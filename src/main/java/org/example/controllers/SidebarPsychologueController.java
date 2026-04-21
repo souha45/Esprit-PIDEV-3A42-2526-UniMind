@@ -116,7 +116,7 @@ public class SidebarPsychologueController {
     @FXML
     public void initialize() {
         // Navigation
-        btnDashboard.setOnAction(e -> naviguer("/DashboardPsy.fxml", "Dashboard", btnDashboard));
+        btnDashboard.setOnAction(e -> naviguer("/dashboard_psychologue.fxml", "Dashboard", btnDashboard));
         btnDisponibilites.setOnAction(e -> naviguer("/AfficheDisponibilitesPsy.fxml", "Disponibilités", btnDisponibilites));
         btnRendezVous.setOnAction(e -> naviguer("/RendezVousPsy.fxml", "Rendez-vous", btnRendezVous));
         btnConsultations.setOnAction(e -> naviguer("/ConsultationsPsy.fxml", "Consultations", btnConsultations));
@@ -283,6 +283,7 @@ public class SidebarPsychologueController {
             case "/RendezVousPsy.fxml"             -> setActiveButton(btnRendezVous);
             case "/ConsultationsPsy.fxml"          -> setActiveButton(btnConsultations);
             case "/traitement-view.fxml"      -> setActiveButton(btnTraitements);
+            case "/suivi-traitement-view.fxml" -> setActiveButton(btnTraitements);
             case "/Patients.fxml"                  -> setActiveButton(btnPatients);
         }
     }

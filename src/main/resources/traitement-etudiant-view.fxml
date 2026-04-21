@@ -10,7 +10,7 @@
 
     <!-- Sidebar gauche - injecté comme VBox -->
     <left>
-        <fx:include fx:id="sidebarEtudiantController" source="/SidebarEtudiant.fxml"/>
+        <fx:include source="/SidebarEtudiant.fxml" fx:id="sidebarEtudiant"/>
     </left>
 
     <!-- Contenu principal -->

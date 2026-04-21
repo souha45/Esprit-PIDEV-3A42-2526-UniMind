@@ -42,7 +42,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-public class TraitementEtudiantController implements Initializable {
+public class TraitementEtudiantController implements Initializable, SidebarEtudiantController.EtudiantPageController {
 
     @FXML
     private TextField txtRecherche;
@@ -73,7 +73,7 @@ public class TraitementEtudiantController implements Initializable {
     @FXML private Label statPrioriteHaute;
 
     // Sidebar (injecté comme VBox, pas comme contrôleur)
-    @FXML private VBox sidebarEtudiantController;
+    @FXML private SidebarEtudiantController sidebarEtudiantController;
     @FXML private StackPane toastContainer;
 
     private TraitementService traitementService;
@@ -82,6 +82,7 @@ public class TraitementEtudiantController implements Initializable {
     private List<SuiviTraitement> tousLesSuivis;
     private List<VBox> toutesLesCartes;
     private boolean isInitialized = false;
+    private User currentUser;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -103,7 +104,7 @@ public class TraitementEtudiantController implements Initializable {
             }
 
             // Charger les données via SessionManager
-            chargerDonneesAvecSession();
+            //chargerDonneesAvecSession();
 
         } catch (Exception e) {
             if (lblStatus != null) {
@@ -112,6 +113,47 @@ public class TraitementEtudiantController implements Initializable {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public void setUtilisateur(User user) {
+        this.currentUser = user;
+        if (sidebarEtudiantController != null) {
+            sidebarEtudiantController.setUtilisateur(user);
+            sidebarEtudiantController.setActiveButtonByFxml("/traitement-etudiant-view.fxml");
+        }
+        chargerDonnees();  // charge les données avec currentUser
+    }
+
+    private void chargerDonnees() {
+        if (currentUser == null) {
+            if (lblStatus != null) lblStatus.setText("✗ Utilisateur non connecté");
+            return;
+        }
+        try {
+            if (lblStatus != null) lblStatus.setText("Chargement en cours...");
+            int etudiantId = currentUser.getUserId();
+
+            List<Traitement> tousTraitements = traitementService.afficher().stream()
+                    .filter(t -> t.getEtudiantId() == etudiantId)
+                    .collect(Collectors.toList());
+
+            tousLesSuivis = suiviTraitementService.afficher();
+
+            mettreAJourStatistiques(tousTraitements);
+            tousLesTraitements = tousTraitements;
+            appliquerFiltres();
+
+            if (lblStatus != null) {
+                lblStatus.setText(tousLesTraitements.size() + " traitement(s) trouvé(s)");
+            }
+
+        } catch (SQLException e) {
+            if (lblStatus != null) lblStatus.setText("✗ Erreur: " + e.getMessage());
+            afficherToast("✗ Erreur de chargement: " + e.getMessage(), false);
+            e.printStackTrace();
+        }
+    }
+
 
     private void initialiserFiltres() {
         ObservableList<String> statuts = FXCollections.observableArrayList(
@@ -301,7 +343,17 @@ public class TraitementEtudiantController implements Initializable {
     }
 
     private void appliquerFiltres() {
-        if (tousLesTraitements == null || tousLesTraitements.isEmpty()) {
+        if (tousLesTraitements == null) {
+            return; // pas encore chargé
+        }
+        if (tousLesTraitements.isEmpty()) {
+            cardsContainer.getChildren().clear();
+            if (lblAucunResultat != null) {
+                lblAucunResultat.setVisible(true);
+                lblAucunResultat.setManaged(true);
+                lblAucunResultat.setText("Aucun traitement trouvé.");
+            }
+            if (lblStatus != null) lblStatus.setText("0 traitement trouvé");
             return;
         }
 
@@ -310,44 +362,42 @@ public class TraitementEtudiantController implements Initializable {
         traitementsFiltres = appliquerTri(traitementsFiltres);
         creerCartesTraitements(traitementsFiltres);
 
-        long totalTraitements = traitementsFiltres.size();
-        if (lblStatus != null) {
-            lblStatus.setText(totalTraitements + " traitement(s) trouvé(s)");
-        }
+        long total = traitementsFiltres.size();
+        if (lblStatus != null) lblStatus.setText(total + " traitement(s) trouvé(s)");
     }
 
     private void creerCartesTraitements(List<Traitement> traitements) {
         if (cardsContainer == null) return;
-
         cardsContainer.getChildren().clear();
         toutesLesCartes.clear();
 
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        if (traitements.isEmpty()) {
+            if (lblAucunResultat != null) {
+                lblAucunResultat.setVisible(true);
+                lblAucunResultat.setManaged(true);
+                lblAucunResultat.setText("Aucun traitement ne correspond aux filtres.");
+            }
+            return;
+        }
 
+        // Il y a des traitements → cacher le message
+        if (lblAucunResultat != null) {
+            lblAucunResultat.setVisible(false);
+            lblAucunResultat.setManaged(false);
+        }
+
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         for (Traitement traitement : traitements) {
-            List<SuiviTraitement> suivisTraitement = tousLesSuivis.stream()
+            List<SuiviTraitement> suivis = tousLesSuivis.stream()
                     .filter(s -> s.getTraitementId() == traitement.getTraitementId())
                     .sorted((s1, s2) -> {
                         if (s1.getDateSuivi() == null || s2.getDateSuivi() == null) return 0;
                         return s2.getDateSuivi().compareTo(s1.getDateSuivi());
                     })
                     .collect(Collectors.toList());
-
-            VBox carte = creerCarteTraitement(traitement, suivisTraitement, dateFormatter);
+            VBox carte = creerCarteTraitement(traitement, suivis, dateFormatter);
             toutesLesCartes.add(carte);
             cardsContainer.getChildren().add(carte);
-        }
-
-        if (traitements.isEmpty()) {
-            if (lblAucunResultat != null) {
-                lblAucunResultat.setVisible(true);
-                lblAucunResultat.setManaged(true);
-            }
-        } else {
-            if (lblAucunResultat != null) {
-                lblAucunResultat.setVisible(false);
-                lblAucunResultat.setManaged(false);
-            }
         }
     }
 
@@ -554,7 +604,7 @@ public class TraitementEtudiantController implements Initializable {
             stage.setScene(new Scene(root, 800, 650));
             stage.show();
 
-            stage.setOnHiding(event -> chargerDonneesAvecSession());
+            stage.setOnHiding(event -> chargerDonnees());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -572,7 +622,7 @@ public class TraitementEtudiantController implements Initializable {
         if (confirm.showAndWait().get() == ButtonType.OK) {
             try {
                 suiviTraitementService.supprimer(suivi.getSuivitraitementId());
-                chargerDonneesAvecSession();
+                chargerDonnees();
                 afficherToast("✓ Suivi supprimé avec succès", true);
             } catch (SQLException e) {
                 afficherToast("✗ Impossible de supprimer le suivi: " + e.getMessage(), false);
@@ -593,7 +643,7 @@ public class TraitementEtudiantController implements Initializable {
             stage.setScene(new Scene(root, 800, 650));
             stage.show();
 
-            stage.setOnHiding(event -> chargerDonneesAvecSession());
+            stage.setOnHiding(event -> chargerDonnees());
 
         } catch (Exception e) {
             e.printStackTrace();

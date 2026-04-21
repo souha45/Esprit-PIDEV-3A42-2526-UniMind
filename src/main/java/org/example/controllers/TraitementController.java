@@ -171,6 +171,13 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
 
         SessionManager session = SessionManager.getInstance();
 
+        if (!session.estConnecte()) {
+            if (lblStatus != null) {
+                lblStatus.setText("Erreur: utilisateur non connecté");
+            }
+            return;
+        }
+
         if (session.estEtudiant()) {
             Platform.runLater(() -> ouvrirInterfaceEtudiant());
             return;
@@ -196,19 +203,6 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             prechargerNomsEtudiants();
             chargerDonneesAvecSession();
 
-            // 🔥 Activation du bouton Traitements dans le sidebar
-            Platform.runLater(() -> {
-                javafx.animation.Timeline timeline = new javafx.animation.Timeline(
-                    new javafx.animation.KeyFrame(javafx.util.Duration.millis(200), e -> {
-                        if (sidebarPsyController != null) {
-                            System.out.println("🔥 Activation du bouton traitements pour psychologue");
-                            sidebarPsyController.setActiveButtonByFxml("/traitement-view.fxml");
-                        }
-                    })
-                );
-                timeline.play();
-            });
-
         } catch (Exception e) {
             if (lblStatus != null) {
                 lblStatus.setText("Erreur lors du chargement: " + e.getMessage());
@@ -222,16 +216,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
         this.utilisateur = user;
         if (sidebarPsyController != null) {
             sidebarPsyController.setUtilisateur(user);
-            // 🔥 Activation du bouton Traitements
-            Platform.runLater(() -> {
-                javafx.animation.Timeline timeline = new javafx.animation.Timeline(
-                    new javafx.animation.KeyFrame(javafx.util.Duration.millis(200), e -> {
-                        System.out.println("🔥 Activation du bouton traitements pour psychologue (setUtilisateur)");
-                        sidebarPsyController.setActiveButtonByFxml("/traitement-view.fxml");
-                    })
-                );
-                timeline.play();
-            });
+            sidebarPsyController.setActiveButtonByFxml("/traitement-view.fxml");
         }
         chargerDonnees();
     }
@@ -1125,20 +1110,29 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
 
             SuiviTraitementController controller = loader.getController();
             if (controller != null) {
-                if (utilisateur != null) {
-                    controller.setUtilisateur(utilisateur);
-                } else {
+                // Utiliser l'utilisateur existant ou celui de SessionManager
+                User userToPass = utilisateur;
+                if (userToPass == null) {
                     SessionManager session = SessionManager.getInstance();
                     if (session.estConnecte()) {
-                        controller.setUtilisateur(session.getCurrentUser());
+                        userToPass = session.getCurrentUser();
                     }
+                }
+                if (userToPass != null) {
+                    controller.setUtilisateur(userToPass);
+                    System.out.println("✅ Utilisateur passé à SuiviTraitementController: " + userToPass.getNom());
+                } else {
+                    System.out.println("⚠️ Aucun utilisateur disponible pour SuiviTraitementController");
                 }
             }
 
             Scene currentScene = tableViewTraitements.getScene();
-            if (currentScene != null) currentScene.setRoot(root);
+            if (currentScene != null) {
+                currentScene.setRoot(root);
+            }
         } catch (Exception e) {
             afficherToast("✗ Erreur de navigation: " + e.getMessage(), false);
+            e.printStackTrace();
         }
     }
 
