@@ -21,6 +21,18 @@
     <Separator style="-fx-background-color: #7C3AED;"/>
 
     <VBox spacing="5" style="-fx-padding: 10 0 0 0;">
+        <Label text="NAVIGATION" style="-fx-text-fill: #A78BFA; -fx-font-size: 11; -fx-padding: 0 0 0 20;"/>
+        <Button fx:id="btnEvenements" text="🎪  Gestion Événements" onAction="#gestionEvenements"
+                style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 200; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+        <Button fx:id="btnParticipations" text="✅  Gestion Participations" onAction="#gestionParticipations"
+                style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 200; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+        <Button fx:id="btnAttributionSponsors" text="🏢  Attribution Sponsors" onAction="#attributionSponsors"
+                style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 200; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+        <Button fx:id="btnFeedbacks" text="💬  Avis des participants" onAction="#gestionFeedbacks"
+                style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 200; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+
+        <Separator style="-fx-background-color: #7C3AED; -fx-padding: 10 0 0 0;"/>
+
         <Button fx:id="btnProfil" text="👤  Mon Profil" onAction="#ouvrirProfil"
                 style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 200; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
 

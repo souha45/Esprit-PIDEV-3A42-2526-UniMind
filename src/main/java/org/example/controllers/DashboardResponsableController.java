@@ -1,51 +1,101 @@
 package org.example.controllers;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
-import org.example.entities.ResponsableEtudiant;
-import org.example.entities.User;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.ScrollPane;
+import javafx.stage.Stage;
+import org.example.utils.NavigationContext;
+import org.example.utils.SessionManager;
 
-public class DashboardResponsableController extends BaseDashboardController {
+import java.io.IOException;
 
-    @FXML private Label posteLabel;
-    @FXML private Label etablissementLabel;
+public class DashboardResponsableController {
 
-    @FXML private VBox sidebarContainer;
+    @FXML
+    private ScrollPane contentScrollPane;
 
-    private SidebarResponsableController sidebarController;
+    @FXML
+    private SidebarResponsableController sidebarResponsableController;
 
     @FXML
     public void initialize() {
+        // Initialiser le contexte de navigation
+        NavigationContext.setContentScrollPane(contentScrollPane);
+
+        // Initialiser le sidebar controller
+        if (sidebarResponsableController != null) {
+            sidebarResponsableController.setParentController(this);
+        }
+
+        // Charger par défaut la gestion des événements
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/SidebarResponsable.fxml"));
-            VBox sidebar = loader.load();
-
-            sidebarController = loader.getController();
-            sidebarContainer.getChildren().add(sidebar);
-
-            System.out.println("✅ Sidebar Responsable chargé");
-
-        } catch (Exception e) {
-            e.printStackTrace();
+            gestionEvenements(new ActionEvent());
+        } catch (IOException e) {
+            System.err.println("Erreur lors du chargement initial: " + e.getMessage());
         }
     }
 
-    @Override
-    public void setUser(User user) {
-        super.setUser(user);
+    @FXML
+    private void vueDensemble(ActionEvent event) throws IOException {
+        // Cette méthode n'est plus utilisée mais gardée pour compatibilité
+        try {
+            gestionEvenements(new ActionEvent());
+        } catch (IOException e) {
+            System.err.println("Erreur: " + e.getMessage());
+        }
+    }
 
-        if (sidebarController != null) {
-            sidebarController.setParentController(this);
-            System.out.println("✅ Sidebar Responsable connecté");
-        } else {
-            System.err.println("❌ Sidebar Responsable NULL");
+    @FXML
+    public void gestionEvenements(ActionEvent event) throws IOException {
+        chargerContenuDansCentre("/evenement/GestionEvenement.fxml");
+    }
+
+    @FXML
+    public void gestionParticipations(ActionEvent event) throws IOException {
+        chargerContenuDansCentre("/participation/GestionParticipation.fxml");
+    }
+
+    @FXML
+    public void attributionSponsors(ActionEvent event) throws IOException {
+        chargerContenuDansCentre("/sponsor/GestionAttributionSponsor.fxml");
+    }
+
+    @FXML
+    public void gestionFeedbacks(ActionEvent event) throws IOException {
+        chargerContenuDansCentre("/feedback/FeedbacksAdmin.fxml");
+    }
+
+    @FXML
+    private void logout(ActionEvent event) throws IOException {
+        SessionManager.getInstance().logout();
+        naviguerVersEcran(event, "/login.fxml", "Connexion");
+    }
+
+    private void chargerContenuDansCentre(String fxmlPath) throws IOException {
+        var resource = getClass().getResource(fxmlPath);
+        if (resource == null) {
+            throw new IOException("Fichier FXML non trouvé: " + fxmlPath);
         }
 
-        if (user instanceof ResponsableEtudiant r) {
-            posteLabel.setText(r.getPoste());
-            etablissementLabel.setText(r.getEtablissement());
+        FXMLLoader loader = new FXMLLoader(resource);
+        Parent content = loader.load();
+        contentScrollPane.setContent(content);
+    }
+
+    private void naviguerVersEcran(ActionEvent event, String fxmlPath, String titre) throws IOException {
+        var resource = getClass().getResource(fxmlPath);
+        if (resource == null) {
+            throw new IOException("Fichier FXML non trouvé: " + fxmlPath);
         }
+        Parent root = FXMLLoader.load(resource);
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        Scene scene = new Scene(root, 1200, 800);
+        stage.setScene(scene);
+        stage.setTitle(titre);
+        stage.show();
     }
 }
