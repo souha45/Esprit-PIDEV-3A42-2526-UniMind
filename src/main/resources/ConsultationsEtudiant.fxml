@@ -127,7 +127,7 @@
                                          -fx-border-radius: 10; -fx-background-radius: 10;
                                          -fx-padding: 0 12; -fx-border-width: 1;"
                                   prefWidth="240">
-                                <Label text="🔍" style="-fx-font-size: 13px; -fx-text-fill: #a5b4fc;" />
+                                <Label text="🔍" styleClass="search-icon" style="-fx-font-size: 13px; -fx-text-fill: #a5b4fc;" />
                                 <TextField fx:id="fieldRecherche"
                                            promptText="Rechercher par psy, date..."
                                            style="-fx-background-color: transparent; -fx-border-width: 0;

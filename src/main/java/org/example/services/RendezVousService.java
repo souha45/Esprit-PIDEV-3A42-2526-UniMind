@@ -297,17 +297,6 @@ public class RendezVousService implements ICrud<RendezVous>{
         updatePst.setInt(3, rendezVousId);
         updatePst.executeUpdate();
 
-        // ÉTAPE 4 : Si le rendez-vous est annulé, remettre la disponibilité à DISPONIBLE
-        if ("annulé".equals(nouveauStatut)) {
-            String updateDispo = "UPDATE disponibilite_psy SET statut = ?, updated_at = ? WHERE dispo_id = ?";
-            PreparedStatement dispoPst = con.prepareStatement(updateDispo);
-            dispoPst.setString(1, "disponible");
-            dispoPst.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
-            dispoPst.setInt(3, disponibiliteId);
-            dispoPst.executeUpdate();
-            System.out.println("✓ La disponibilité est maintenant libre");
-        }
-
         // ÉTAPE 5 : Si le rendez-vous passe de "encours" à "termine", créer une consultation
         if ("en-cours".equals(statutActuel) && "terminé".equals(nouveauStatut)) {
             Consultation consultation = new Consultation(rendezVousId, psyUserId, etudiantId);
