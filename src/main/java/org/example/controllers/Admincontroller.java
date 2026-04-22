@@ -10,7 +10,7 @@ import org.example.main.MainApp;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class AdminController implements Initializable {
+public class Admincontroller implements Initializable {
 
     @FXML private StackPane contentArea;
     @FXML private Button btnQuestionnaire;
