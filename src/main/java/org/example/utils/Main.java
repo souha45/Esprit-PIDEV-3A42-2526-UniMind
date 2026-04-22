@@ -1,11 +1,6 @@
-package org.example;
+package org.example.utils;
 
-import org.example.entities.Question;
-import org.example.entities.Questionnaire;
-import org.example.services.QuestionServices;
 import org.example.services.QuestionnaireServices;
-import org.example.utils.MyDataBase_Unimind;
-import org.example.enums.TypeQuestionnaire;
 
 import java.sql.SQLException;
 
