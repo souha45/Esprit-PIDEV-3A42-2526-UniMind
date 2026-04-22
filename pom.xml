@@ -13,13 +13,11 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <javafx.path>C:\Users\Asus\Downloads\openjfx-17.0.18_windows-x64_bin-sdk\javafx-sdk-17.0.18\lib</javafx.path>
+        <javafx.version>21.0.10</javafx.version>
     </properties>
 
     <dependencies>
         <!-- MySQL Connector -->
-
-        <!-- MySQL -->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -33,57 +31,31 @@
             <version>0.10.2</version>
         </dependency>
 
-        <!-- JUnit API -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>6.0.3</version>
-            <scope>test</scope>
-        </dependency>
-
         <!-- JUnit Jupiter -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.10.1</version>
             <scope>test</scope>
-        <!-- JavaFX Base -->
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-base</artifactId>
-            <version>17.0.18</version>
-            <scope>system</scope>
-            <systemPath>${javafx.path}\javafx.base.jar</systemPath>
         </dependency>
 
-        <!-- JavaFX Controls -->
+        <!-- JavaFX Modules -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>17.0.18</version>
-            <scope>system</scope>
-            <systemPath>${javafx.path}\javafx.controls.jar</systemPath>
+            <version>${javafx.version}</version>
         </dependency>
 
-        <!-- JavaFX FXML -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>21.0.10</version>
+            <version>${javafx.version}</version>
         </dependency>
 
-        <!-- JavaFX Controls -->
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-controls</artifactId>
-            <version>21.0.10</version>
-        </dependency>
-
-        <!-- JavaFX Media -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-media</artifactId>
-            <version>21.0.10</version>
+            <version>${javafx.version}</version>
         </dependency>
 
         <!-- Spring Security Crypto -->
@@ -99,27 +71,6 @@
             <artifactId>commons-logging</artifactId>
             <version>1.2</version>
         </dependency>
-            <version>17.0.18</version>
-            <scope>system</scope>
-            <systemPath>${javafx.path}\javafx.fxml.jar</systemPath>
-        </dependency>
-
-        <!-- JavaFX Graphics -->
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-graphics</artifactId>
-            <version>17.0.18</version>
-            <scope>system</scope>
-            <systemPath>${javafx.path}\javafx.graphics.jar</systemPath>
-        </dependency>
-
-        <!-- JUnit 5 -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.10.0</version>
-            <scope>test</scope>
-        </dependency>
 
         <!-- PDFBox -->
         <dependency>
@@ -127,24 +78,21 @@
             <artifactId>pdfbox</artifactId>
             <version>3.0.1</version>
         </dependency>
-
     </dependencies>
 
     <build>
         <plugins>
+            <!-- Maven Compiler Plugin -->
             <plugin>
-                <groupId>org.openjfx</groupId>
-                <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.8</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
                 <configuration>
-                    <mainClass>org.example.main.MainApp</mainClass>
+                    <source>17</source>
+                    <target>17</target>
                 </configuration>
             </plugin>
-        </plugins>
-    </build>
 
-    <build>
-        <plugins>
             <!-- Surefire pour JUnit 5 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -158,7 +106,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>org.example.main.MainApp</mainClass>
+                    <mainClass>org.example.main.MainGUI</mainClass>
                 </configuration>
             </plugin>
         </plugins>
