@@ -92,6 +92,9 @@ public class AdminDashboardController {
     @FXML private Label pErrTel, pErrMdp, pMessageProfil;
     @FXML private ImageView photoProfile;
 
+    @FXML private Button btnQuestionnaires;
+    @FXML private Button btnQuestions;
+
     private AdminService adminService = new AdminService();
     private User adminConnecte;
     private ObservableList<User> tousLesUsers = FXCollections.observableArrayList();
@@ -226,6 +229,18 @@ public class AdminDashboardController {
         setActiveSidebarButton(btnFeedbacks);
     }
 
+    @FXML
+    public void showQuestionnaires() {
+        loadPage("/fxml/QuestionnaireView.fxml");
+        setActiveSidebarButton(btnQuestionnaires);
+    }
+
+    @FXML
+    public void showQuestions() {
+        loadPage("/fxml/QuestionView.fxml");
+        setActiveSidebarButton(btnQuestions);
+    }
+
     private void loadPage(String fxmlPath) {
         try {
             Node page = FXMLLoader.load(getClass().getResource(fxmlPath));
@@ -237,7 +252,7 @@ public class AdminDashboardController {
 
     // Gestion du style des boutons de la sidebar
     private void setActiveSidebarButton(Button active) {
-        Button[] allButtons = {btnGestionUsers, btnDemandes, btnProfil, btnStats, btnSeances, btnEvenements, btnParticipations, btnSponsors, btnFeedbacks};
+        Button[] allButtons = {btnGestionUsers, btnDemandes, btnProfil, btnStats, btnSeances, btnEvenements, btnParticipations, btnSponsors, btnFeedbacks, btnQuestionnaires, btnQuestions};
         for (Button btn : allButtons) {
             btn.setStyle(sidebarBtnStyle(false));
         }

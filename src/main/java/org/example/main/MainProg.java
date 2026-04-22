@@ -7,6 +7,7 @@ import org.example.services.ConsultationService;
 import org.example.enums.TypeConsultation;
 import org.example.services.RendezVousService;
 import org.example.utils.MyDataBase_Unimind;
+import org.example.utils.PasswordUtils;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -25,12 +26,17 @@ public class MainProg {
             System.out.println("✗ Échec de la connexion à la base de données.");
         }
 
+        // ─── GÉNÉRER HASH BCRYPT ───
+        String hash = PasswordUtils.hasher("Nermine123!");
+        System.out.println("HASH: " + hash);
+        // ──────────────────────────
+
         DisponibilitePsyService dpService = new DisponibilitePsyService();
 
         try {
-       //     *********************** TEST CRUD DISPONIBILITEDISPO *************************
+            //     *********************** TEST CRUD DISPONIBILITEDISPO *************************
 
-        //Test ajout dispo
+            //Test ajout dispo
 
             DisponibilitePsy disponibilite = new DisponibilitePsy(
                     4,                                          // userId
@@ -38,14 +44,14 @@ public class MainProg {
                     Time.valueOf(LocalTime.of(12, 0)),         // heureDebut (12:00)
                     Time.valueOf(LocalTime.of(19, 0)),         // heureFin (17:00)
                     TypeConsultation.en_ligne,               // typeConsult
-                   "sfax"// lieu
-                    );
+                    "sfax"// lieu
+            );
 
             // Ajouter à la base
             dpService.ajouter(disponibilite);
 
 
-        //Test Modifier dispo
+            //Test Modifier dispo
             DisponibilitePsy disponibiliteModifiee = new DisponibilitePsy(
                     3,                          // dispoId (l'ID à modifier)
                     5,                          // userId
@@ -57,16 +63,15 @@ public class MainProg {
                     StatutDisponibilite.disponible             // statut
             );
 
+            dpService.modifier(disponibiliteModifiee);
 
-                    dpService.modifier(disponibiliteModifiee);
-
-        //Test supprimer dispo
+            //Test supprimer dispo
             // dpService.supprimer(4);
 
-        //Test Affiche dispo
-           // System.out.println(dpService.afficher());
+            //Test Affiche dispo
+            // System.out.println(dpService.afficher());
 
-        //Test Afficher disponibilité dispo uniquement
+            //Test Afficher disponibilité dispo uniquement
             System.out.println(dpService.afficherDisponibilitesDisponibles());
 
             //Test Afficher disponibilité d'un psy connecté uniquement
@@ -78,8 +83,6 @@ public class MainProg {
 
         RendezVousService rdService = new RendezVousService();
         //     *********************** TEST CRUD RENDEZVOUS *************************
-
-
 
         try {
 
@@ -93,43 +96,37 @@ public class MainProg {
 
             //rdService.ajouter(rdvajout);
 
-
             //Test Affiche RendezVous par étudiant
             System.out.println(rdService.afficherRendezVousDetailsByEtudiant(3));
 
             //Test Affiche rdv spécifique
-           // System.out.println(rdService.afficherRendezVousById(3, 14));
-
+            // System.out.println(rdService.afficherRendezVousById(3, 14));
 
             //Test l'annulation d'un rdv et Test création automatique de consultation
-            rdService.modifierStatutRendezVous(14, 3,4, "terminé");
+            rdService.modifierStatutRendezVous(14, 3, 4, "terminé");
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
 
         //     *********************** TEST CRUD CONSULTATION *************************
 
-        //Tetst modification consultation
         ConsultationService cService = new ConsultationService();
-        try{
+        try {
             //Consultation consultationModifié = new Consultation(
             //        1,
-             //       2,
-             //       4,
-              //      3,
-              //      "problème bizarre",
-               //     (short) 10
+            //        2,
+            //        4,
+            //        3,
+            //        "problème bizarre",
+            //        (short) 10
             //);
-
 
             //cService.modifier(consultationModifié);
 
             //Test afficher liste consultation by etudiant
-           System.out.println(cService.getConsultationsDetailByPsy(4));
+            System.out.println(cService.getConsultationsDetailByPsy(4));
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-
-
     }
 }

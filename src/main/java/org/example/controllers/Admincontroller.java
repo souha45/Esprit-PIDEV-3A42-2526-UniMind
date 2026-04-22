@@ -47,8 +47,14 @@ public class AdminController implements Initializable {
     }
 
     @FXML public void goToEtudiant() {
-        try { MainApp.showEtudiantView(); }
-        catch (Exception e) { System.out.println("Erreur navigation: " + e.getMessage()); }
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/EtudiantView.fxml"));
+            javafx.scene.Parent view = loader.load();
+            javafx.scene.Scene scene = contentArea.getScene();
+            scene.setRoot(view);
+        } catch (Exception e) {
+            System.out.println("Erreur navigation: " + e.getMessage());
+        }
     }
 
     private void loadView(String fxmlPath) {

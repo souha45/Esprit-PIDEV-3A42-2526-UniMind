@@ -167,9 +167,9 @@ public class SidebarEtudiantController {
         btnTraitements.setOnAction(e ->
                 naviguer("/traitement-etudiant-view.fxml",       "Traitements",      btnTraitements));
         btnQuestionnaires.setOnAction(e ->
-                naviguer("/QuestionnairesEtudiant.fxml",    "Questionnaires",   btnQuestionnaires));
+                naviguer("/fxml/EtudiantQuestionnairesView.fxml", "Questionnaires", btnQuestionnaires));
         btnMesReponses.setOnAction(e ->
-                naviguer("/MesReponsesEtudiant.fxml",       "Mes Réponses",     btnMesReponses));
+                naviguer("/fxml/EtudiantMesReponsesView.fxml", "Mes Réponses", btnMesReponses));
         btnProfil.setOnAction(e -> ouvrirProfil());
         btnDeconnexion.setOnAction(e -> seDeconnecter());
         btnSeances.setOnAction(e ->
@@ -370,8 +370,8 @@ public class SidebarEtudiantController {
             case "/RendezVousEtudiant.fxml"       -> setActiveButton(btnMesRendezVous);
             case "/ConsultationsEtudiant.fxml"    -> setActiveButton(btnConsultations);
             case "/traitement-etudiant-view.fxml"      -> setActiveButton(btnTraitements);
-            case "/QuestionnairesEtudiant.fxml"   -> setActiveButton(btnQuestionnaires);
-            case "/MesReponsesEtudiant.fxml"      -> setActiveButton(btnMesReponses);
+            case "/fxml/EtudiantQuestionnairesView.fxml" -> setActiveButton(btnQuestionnaires);
+            case "/fxml/EtudiantMesReponsesView.fxml"    -> setActiveButton(btnMesReponses);
             case "/org/example/views/EtudiantSeances.fxml" -> setActiveButton(btnSeances);
             case "/org/example/views/MesFavorisSeances.fxml" -> setActiveButton(btnFavoris);
             case "/evenement/EvenementsEtudiant.fxml" -> setActiveButton(btnEvenements);

@@ -4,11 +4,14 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.scene.Parent;
 
 public class MainApp extends Application {
+    private static Stage primaryStage;
 
     @Override
     public void start(Stage stage) throws Exception {
+        primaryStage = stage;
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/login.fxml")
         );
@@ -24,6 +27,17 @@ public class MainApp extends Application {
         stage.setResizable(true);  // ← On peut redimensionner
         stage.setScene(scene);
         stage.show();
+    }
+    public static void showAdminView() throws Exception {
+        Parent view = FXMLLoader.load(MainApp.class.getResource("/fxml/AdminView.fxml"));
+        primaryStage.getScene().setRoot(view);
+        primaryStage.setTitle("UniMind — Interface Admin");
+    }
+
+    public static void showEtudiantView() throws Exception {
+        Parent view = FXMLLoader.load(MainApp.class.getResource("/fxml/EtudiantView.fxml"));
+        primaryStage.getScene().setRoot(view);
+        primaryStage.setTitle("UniMind — Espace Étudiant");
     }
 
     public static void main(String[] args) {

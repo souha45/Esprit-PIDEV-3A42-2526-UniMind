@@ -147,7 +147,7 @@ public class EtudiantRepondreController implements Initializable {
         String niveau         = questionnaire.getNiveauScore((int) scoreTotale);
         String interpretation = questionnaire.interpreterScore((int) scoreTotale);
 
-        // ✅ Récupérer le userId depuis SessionManager
+        // ✅ Récupérer le userId depuis limitequestionnaire
         int userId = LimiteQuestionnaire.getInstance().getUserId();
 
         Reponsequestionnaire reponse = new Reponsequestionnaire(

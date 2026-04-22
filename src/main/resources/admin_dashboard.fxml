@@ -81,6 +81,13 @@
             <Button fx:id="btnStats" text="📊  Statistiques"
                     onAction="#showStats"
                     style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+            <Button fx:id="btnQuestionnaires" text="📋  Questionnaires"
+                    onAction="#showQuestionnaires"
+                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+
+            <Button fx:id="btnQuestions" text="❓  Questions"
+                    onAction="#showQuestions"
+                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
 
             <Button fx:id="btnProfil" text="👤  Mon Profil"
                     onAction="#afficherProfil"
@@ -211,6 +218,17 @@
                     </VBox>
                 </HBox>
                 <Label fx:id="pMessageProfil" style="-fx-font-size: 13;"/>
+            </VBox>
+            <!-- PANNEAU QUESTIONNAIRES -->
+            <VBox fx:id="panneauQuestionnaires" spacing="15" visible="false" managed="false"
+                  style="-fx-padding: 0;">
+                <fx:include source="/fxml/QuestionnaireView.fxml"/>
+            </VBox>
+
+            <!-- PANNEAU QUESTIONS -->
+            <VBox fx:id="panneauQuestions" spacing="15" visible="false" managed="false"
+                  style="-fx-padding: 0;">
+                <fx:include source="/fxml/QuestionView.fxml"/>
             </VBox>
         </StackPane>
     </center>
