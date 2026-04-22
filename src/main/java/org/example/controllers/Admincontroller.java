@@ -5,7 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
-import org.example.utils.MainApp;
+import org.example.main.MainApp;
 
 import java.net.URL;
 import java.util.ResourceBundle;

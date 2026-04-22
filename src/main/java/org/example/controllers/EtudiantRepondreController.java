@@ -10,7 +10,7 @@ import org.example.entities.Questionnaire;
 import org.example.entities.Reponsequestionnaire;
 import org.example.services.QuestionServices;
 import org.example.services.ReponseQuestionnaireServices;
-import org.example.utils.SessionManager;
+import org.example.utils.LimiteQuestionnaire;
 
 import java.net.URL;
 import java.sql.SQLException;
@@ -148,7 +148,7 @@ public class EtudiantRepondreController implements Initializable {
         String interpretation = questionnaire.interpreterScore((int) scoreTotale);
 
         // ✅ Récupérer le userId depuis SessionManager
-        int userId = SessionManager.getInstance().getUserId();
+        int userId = LimiteQuestionnaire.getInstance().getUserId();
 
         Reponsequestionnaire reponse = new Reponsequestionnaire(
                 scoreTotale,

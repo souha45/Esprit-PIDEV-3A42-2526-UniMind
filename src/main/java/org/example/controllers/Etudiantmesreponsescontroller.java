@@ -15,7 +15,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.example.entities.Reponsequestionnaire;
 import org.example.services.ReponseQuestionnaireServices;
-import org.example.utils.SessionManager;
+import org.example.utils.LimiteQuestionnaire;
 
 import java.io.File;
 import java.net.URL;
@@ -235,7 +235,7 @@ public class EtudiantMesReponsesController implements Initializable {
 
     private void loadData() {
         try {
-            int userId = SessionManager.getInstance().getUserId();
+            int userId = LimiteQuestionnaire.getInstance().getUserId();
             List<Reponsequestionnaire> list = service.afficherParUser(userId);
             data.setAll(list);
         } catch (SQLException e) {

@@ -1,15 +1,15 @@
 package org.example.utils;
 
-public class SessionManager {
+public class LimiteQuestionnaire {
 
-    private static SessionManager instance;
+    private static LimiteQuestionnaire instance;
     private int userId = 1; // temporaire jusqu'à intégration login
 
-    private SessionManager() {}
+    private LimiteQuestionnaire() {}
 
-    public static SessionManager getInstance() {
+    public static LimiteQuestionnaire getInstance() {
         if (instance == null) {
-            instance = new SessionManager();
+            instance = new LimiteQuestionnaire();
         }
         return instance;
     }

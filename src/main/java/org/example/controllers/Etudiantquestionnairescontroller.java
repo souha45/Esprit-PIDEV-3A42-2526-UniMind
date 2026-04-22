@@ -15,7 +15,7 @@ import javafx.scene.shape.Circle;
 import org.example.entities.Questionnaire;
 import org.example.services.QuestionnaireServices;
 import org.example.services.ReponseQuestionnaireServices;
-import org.example.utils.SessionManager;
+import org.example.utils.LimiteQuestionnaire;
 
 import java.net.URL;
 import java.sql.SQLException;
@@ -94,7 +94,7 @@ public class EtudiantQuestionnairesController implements Initializable {
 
         // ✅ Vérifier la limite AVANT de naviguer
         try {
-            int userId = SessionManager.getInstance().getUserId();
+            int userId = LimiteQuestionnaire.getInstance().getUserId();
             if (!reponseService.peutPasser(userId)) {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Limite atteinte");
