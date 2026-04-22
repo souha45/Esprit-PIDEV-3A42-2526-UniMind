@@ -14,7 +14,6 @@ import org.example.enums.Role;
 import org.example.enums.TypeSponsor;
 import org.example.enums.StatutSponsor;
 import org.example.services.SponsorService;
-import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
 import java.io.IOException;
@@ -87,7 +86,6 @@ public class GestionSponsorController {
 
         if (!isAdmin) {
             afficherAlerte("Accès refusé", "L'accès à la gestion des sponsors est réservé à l'administrateur. Les responsables gèrent les attributions de sponsors aux événements via le menu 'Attributions'.");
-            naviguerVersRetour();
             return;
         }
 
@@ -136,14 +134,6 @@ public class GestionSponsorController {
                 setText(empty || item == null ? "Tous" : item.name());
             }
         });
-    }
-
-    private void naviguerVersRetour() {
-        try {
-            NavigationContext.loadContentInCenter("/admin_dashboard.fxml");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private void configurerColonnes() {
@@ -203,19 +193,19 @@ public class GestionSponsorController {
                     setGraphic(null);
                 } else {
                     // Créer le bouton Voir
-                    Button btnVoir = new Button("voir");
-                    btnVoir.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-min-width: 60px;");
+                    Button btnVoir = new Button("👁");
+                    btnVoir.setStyle("-fx-background-color: #6366f1; -fx-text-fill: white; -fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16px; -fx-min-width: 40px; -fx-min-height: 40px; -fx-background-radius: 8; -fx-cursor: hand;");
                     btnVoir.setOnAction(event -> voirSponsor(getTableView().getItems().get(getIndex())));
 
-                    Button btnModifier = new Button("modifier");
-                    btnModifier.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-min-width: 60px;");
+                    Button btnModifier = new Button("✏");
+                    btnModifier.setStyle("-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16px; -fx-min-width: 40px; -fx-min-height: 40px; -fx-background-radius: 8; -fx-cursor: hand;");
                     btnModifier.setOnAction(event -> modifierSponsor(getTableView().getItems().get(getIndex())));
 
-                    Button btnSupprimer = new Button("supprimer");
-                    btnSupprimer.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-min-width: 80px;");
+                    Button btnSupprimer = new Button("🗑");
+                    btnSupprimer.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16px; -fx-min-width: 40px; -fx-min-height: 40px; -fx-background-radius: 8; -fx-cursor: hand;");
                     btnSupprimer.setOnAction(event -> supprimerSponsor(getTableView().getItems().get(getIndex())));
 
-                    HBox hbox = new HBox(5, btnVoir, btnModifier, btnSupprimer);
+                    HBox hbox = new HBox(8, btnVoir, btnModifier, btnSupprimer);
                     setGraphic(hbox);
                 }
             }
@@ -317,7 +307,7 @@ public class GestionSponsorController {
 
     @FXML
     private void ajouterSponsor(ActionEvent event) throws IOException {
-        NavigationContext.loadContentInCenter("/sponsor/AjoutSponsor.fxml");
+        org.example.controllers.admin.AdminDashboardController.loadContent("/sponsor/AjoutSponsor.fxml");
     }
 
     @FXML
@@ -410,8 +400,8 @@ public class GestionSponsorController {
             Parent root = loader.load();
             VoirSponsorController controller = loader.getController();
             controller.setSponsor(sponsorComplete);
-            
-            NavigationContext.loadContentInCenter((javafx.scene.Parent) root);
+
+            org.example.controllers.admin.AdminDashboardController.loadContent(root);
         } catch (IOException e) {
             afficherAlerte("Erreur", "Impossible d'ouvrir l'écran de détails: " + e.getMessage());
         } catch (SQLException e) {
@@ -430,8 +420,8 @@ public class GestionSponsorController {
             Parent root = loader.load();
             ModificationSponsorController controller = loader.getController();
             controller.setSponsor(sponsorComplete);
-            
-            NavigationContext.loadContentInCenter((javafx.scene.Parent) root);
+
+            org.example.controllers.admin.AdminDashboardController.loadContent(root);
         } catch (IOException e) {
             afficherAlerte("Erreur", "Impossible d'ouvrir l'écran de modification: " + e.getMessage());
         } catch (SQLException e) {
@@ -459,9 +449,8 @@ public class GestionSponsorController {
     }
 
     @FXML
-    private void retourAccueil(ActionEvent event) throws IOException {
-        // Recharger le dashboard Admin (qui affichera les statistiques par défaut)
-        NavigationContext.loadContentInCenter("/admin_dashboard.fxml");
+    public void retourAccueil(ActionEvent event) throws IOException {
+        org.example.controllers.admin.AdminDashboardController.loadContent("/sponsor/GestionSponsor.fxml");
     }
 
     private void afficherAlerte(String type, String message) {

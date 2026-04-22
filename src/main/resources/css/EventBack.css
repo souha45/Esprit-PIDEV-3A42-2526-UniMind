@@ -119,6 +119,17 @@
     -fx-background-color: #f0f4ff;
 }
 
+/* =============================================
+   UTILITIES
+   ============================================= */
+.padding-large {
+    -fx-padding: 40 40 40 40;
+}
+
+.padding-medium {
+    -fx-padding: 20 20 20 20;
+}
+
 .page-header {
     -fx-background-color: #ffffff;
     -fx-padding: 24 28 20 28;
@@ -687,4 +698,41 @@
 .legend-text {
     -fx-font-size: 12px;
     -fx-text-fill: #495057;
+}
+
+/* =============================================
+   PAGE HEADER TITLE - Design amélioré
+   ============================================= */
+.label-subtitle {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3730a3;
+    -fx-padding: 8 0 8 0;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.15), 4, 0, 0, 1);
+}
+
+.page-header-title {
+    -fx-font-size: 26px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #6366f1;
+}
+
+.page-header-container {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 12;
+    -fx-padding: 16 24 16 24;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 2;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.15), 8, 0, 2, 4);
+    -fx-alignment: CENTER_LEFT;
+    -fx-max-width: INFINITY;
+    -fx-fill-width: true;
+}
+
+.page-header-subtitle {
+    -fx-font-size: 14px;
+    -fx-font-weight: normal;
+    -fx-text-fill: #6b7280;
+    -fx-padding: 4 0 0 0;
 }

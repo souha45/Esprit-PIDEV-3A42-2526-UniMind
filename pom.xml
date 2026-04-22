@@ -26,7 +26,6 @@
             <version>8.0.33</version>
         </dependency>
 
-        <!-- BCrypt -->
         <!-- BCrypt - pour le hashage des mots de passe -->
         <dependency>
             <groupId>at.favre.lib</groupId>
@@ -74,8 +73,6 @@
         </dependency>
 
         <!-- JavaFX Controls -->
-            <scope>compile</scope>
-        </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -101,7 +98,6 @@
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
             <version>1.2</version>
-            <scope>compile</scope>
         </dependency>
             <version>17.0.18</version>
             <scope>system</scope>
@@ -133,18 +129,6 @@
         </dependency>
 
     </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.openjfx</groupId>
-                <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.8</version>
-                <configuration>
-                    <mainClass>org.example.main.MainApp</mainClass>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 
     <build>
         <plugins>

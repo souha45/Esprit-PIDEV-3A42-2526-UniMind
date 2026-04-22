@@ -5,7 +5,7 @@
 <?import javafx.scene.shape.*?>
 <?import javafx.geometry.*?>
 
-<VBox prefWidth="260" spacing="0"
+<VBox prefWidth="260" spacing="0" prefHeight="700"
       style="-fx-background-color: #ffffff;
              -fx-border-color: #e0e7ff; -fx-border-width: 0 2 0 0;
              -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.10), 16, 0, 2, 0);"
@@ -30,11 +30,9 @@
           style="-fx-background-color: #f5f3ff; -fx-padding: 16 18 16 18;
                  -fx-border-color: #e0e7ff; -fx-border-width: 0 0 1 0;">
         <HBox spacing="14" alignment="CENTER_LEFT">
-            <!-- Photo circulaire -->
             <ImageView fx:id="sidebarPhoto" fitWidth="54" fitHeight="54">
                 <clip><Circle centerX="27" centerY="27" radius="27"/></clip>
             </ImageView>
-            <!-- Texte -->
             <VBox spacing="3">
                 <Label fx:id="sidebarNomLabel"
                        style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
@@ -49,70 +47,99 @@
         </HBox>
     </VBox>
 
-    <!-- ── Menu principal ─────────────────────────────────────── -->
-    <VBox spacing="2" style="-fx-padding: 20 12 12 12;" VBox.vgrow="ALWAYS">
-        <Label text="NAVIGATION"
-               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 9px; -fx-text-fill: #c4b5fd;
-                      -fx-padding: 4 8 8 8; -fx-letter-spacing: 2px;" />
+    <!-- ── Menu principal (SCROLLABLE) ─────────────────────────── -->
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                style="-fx-background-color: transparent; -fx-background: transparent;
+                       -fx-border-width: 0; -fx-padding: 0;">
 
-        <Button fx:id="btnDashboard" text="  📊  Dashboard" maxWidth="Infinity"
-                style="-fx-background-color: #ede9fe; -fx-text-fill: #6366f1;
-                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-font-weight: bold;
-                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16; -fx-background-radius: 10;
-                       -fx-border-color: #c4b5fd; -fx-border-width: 0 0 0 3;
-                       -fx-border-radius: 10; -fx-cursor: hand;" />
+        <VBox spacing="2" style="-fx-padding: 20 12 12 12;">
 
-        <Button fx:id="btnMesRendezVous" text="  📅  Mes rendez-vous" maxWidth="Infinity"
-                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
-                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
-                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
-                       -fx-background-radius: 10; -fx-cursor: hand;" />
+            <Label text="NAVIGATION"
+                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 9px; -fx-text-fill: #c4b5fd;
+                          -fx-padding: 4 8 8 8; -fx-letter-spacing: 2px;" />
 
-        <Button fx:id="btnConsultations" text="  📝  Consultations" maxWidth="Infinity"
-                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
-                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
-                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
-                       -fx-background-radius: 10; -fx-cursor: hand;" />
+            <Button fx:id="btnDashboard" text="  📊  Dashboard" maxWidth="Infinity"
+                    style="-fx-background-color: #ede9fe; -fx-text-fill: #6366f1;
+                           -fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-font-weight: bold;
+                           -fx-alignment: CENTER_LEFT; -fx-padding: 11 16; -fx-background-radius: 10;
+                           -fx-border-color: #c4b5fd; -fx-border-width: 0 0 0 3;
+                           -fx-border-radius: 10; -fx-cursor: hand;" />
 
-        <Button fx:id="btnTraitements" text="  💊  Traitements" maxWidth="Infinity"
-                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
-                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
-                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
-                       -fx-background-radius: 10; -fx-cursor: hand;" />
+            <Button fx:id="btnMesRendezVous" text="  📅  Mes rendez-vous" maxWidth="Infinity"
+                    style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                           -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                           -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                           -fx-background-radius: 10; -fx-cursor: hand;" />
 
+            <Button fx:id="btnConsultations" text="  📝  Consultations" maxWidth="Infinity"
+                    style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                           -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                           -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                           -fx-background-radius: 10; -fx-cursor: hand;" />
 
-        <Button fx:id="btnQuestionnaires" text="  📋  Questionnaires" maxWidth="Infinity"
-                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
-                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
-                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
-                       -fx-background-radius: 10; -fx-cursor: hand;" />
+            <Button fx:id="btnTraitements" text="  💊  Traitements" maxWidth="Infinity"
+                    style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                           -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                           -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                           -fx-background-radius: 10; -fx-cursor: hand;" />
 
-        <Button fx:id="btnMesReponses" text="  💬  Mes réponses" maxWidth="Infinity"
-                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
-                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
-                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
-                       -fx-background-radius: 10; -fx-cursor: hand;" />
+            <Button fx:id="btnQuestionnaires" text="  📋  Questionnaires" maxWidth="Infinity"
+                    style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                           -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                           -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                           -fx-background-radius: 10; -fx-cursor: hand;" />
 
-        <Button fx:id="btnSeances" text="  🌸 Séances Méditation" maxWidth="Infinity"
-                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
-                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
-                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
-                       -fx-background-radius: 10; -fx-cursor: hand;"  onAction="#showSeancesMeditation" />
+            <Button fx:id="btnMesReponses" text="  💬  Mes réponses" maxWidth="Infinity"
+                    style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                           -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                           -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                           -fx-background-radius: 10; -fx-cursor: hand;" />
 
-        <Button fx:id="btnFavoris" text="  ❤ Mes Favoris Séances" maxWidth="Infinity"
-                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
-                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
-                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
-                       -fx-background-radius: 10; -fx-cursor: hand;"  onAction="#showMesFavoris" />
+            <Button fx:id="btnSeances" text="  🌸 Séances Méditation" maxWidth="Infinity"
+                    style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                           -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                           -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                           -fx-background-radius: 10; -fx-cursor: hand;"
+                    onAction="#showSeancesMeditation" />
 
-        <Button fx:id="btnProfil" text="  👤  Mon profil" maxWidth="Infinity"
-                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
-                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
-                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
-                       -fx-background-radius: 10; -fx-cursor: hand;" />
-    </VBox>
+            <Button fx:id="btnFavoris" text="  ❤ Mes Favoris Séances" maxWidth="Infinity"
+                    style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                           -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                           -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                           -fx-background-radius: 10; -fx-cursor: hand;"
+                    onAction="#showMesFavoris" />
 
-    <!-- ── Pied : déconnexion ─────────────────────────────────── -->
+            <Button fx:id="btnEvenements" text="  🎪 Événements" maxWidth="Infinity"
+                    style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                           -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                           -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                           -fx-background-radius: 10; -fx-cursor: hand;"
+                    onAction="#showEvenements" />
+
+            <Button fx:id="btnMesParticipations" text="  ✅ Mes Participations" maxWidth="Infinity"
+                    style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                           -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                           -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                           -fx-background-radius: 10; -fx-cursor: hand;"
+                    onAction="#showMesParticipations" />
+
+            <Button fx:id="btnFavorisEvenements" text="  ❤ Favoris Événements" maxWidth="Infinity"
+                    style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                           -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                           -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                           -fx-background-radius: 10; -fx-cursor: hand;"
+                    onAction="#showFavorisEvenements" />
+
+            <Button fx:id="btnProfil" text="  👤  Mon profil" maxWidth="Infinity"
+                    style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                           -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                           -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                           -fx-background-radius: 10; -fx-cursor: hand;" />
+
+        </VBox>
+    </ScrollPane>
+
+    <!-- ── Pied : déconnexion (fixe en bas) ─────────────────────── -->
     <VBox spacing="6"
           style="-fx-padding: 10 12 18 12; -fx-border-color: #e0e7ff; -fx-border-width: 1 0 0 0;">
         <Button fx:id="btnDeconnexion" text="  🚪  Déconnexion" maxWidth="Infinity"

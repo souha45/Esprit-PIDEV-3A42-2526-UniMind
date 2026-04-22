@@ -47,6 +47,9 @@ public class SidebarEtudiantController {
     @FXML private Button btnDeconnexion;
     @FXML private Button btnSeances;
     @FXML private Button btnFavoris;
+    @FXML private Button btnEvenements;
+    @FXML private Button btnMesParticipations;
+    @FXML private Button btnFavorisEvenements;
     @FXML private StackPane contentArea;
     //vérification
 
@@ -69,6 +72,21 @@ public class SidebarEtudiantController {
     @FXML
     public void showMesFavoris() {
         naviguer("/org/example/views/MesFavorisSeances.fxml", "Mes favoris", null);
+    }
+
+    @FXML
+    public void showEvenements() {
+        naviguer("/evenement/EvenementsEtudiant.fxml", "Événements", btnEvenements);
+    }
+
+    @FXML
+    public void showMesParticipations() {
+        naviguer("/participation/ParticipationsEtudiant.fxml", "Mes Participations", btnMesParticipations);
+    }
+
+    @FXML
+    public void showFavorisEvenements() {
+        naviguer("/favori/FavorisEtudiant.fxml", "Favoris Événements", btnFavorisEvenements);
     }
 
 
@@ -156,6 +174,9 @@ public class SidebarEtudiantController {
         btnDeconnexion.setOnAction(e -> seDeconnecter());
         btnSeances.setOnAction(e ->
                 naviguer("/org/example/views/EtudiantSeances.fxml", "Séances de méditation", btnSeances));
+        btnEvenements.setOnAction(e -> showEvenements());
+        btnMesParticipations.setOnAction(e -> showMesParticipations());
+        btnFavorisEvenements.setOnAction(e -> showFavorisEvenements());
 
         styliserBoutons();
         setActiveButton(btnDashboard);
@@ -317,7 +338,7 @@ public class SidebarEtudiantController {
     private void naviguer(String fxmlPath, String titre, Button boutonActif) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Scene scene = new Scene(loader.load(), 1200, 700);
+            javafx.scene.Parent content = loader.load();
 
             Object controller = loader.getController();
             // Passe l'utilisateur à la nouvelle page si elle implémente l'interface
@@ -325,10 +346,7 @@ public class SidebarEtudiantController {
                 ((EtudiantPageController) controller).setUtilisateur(resolveUser());
             }
 
-            Stage stage = (Stage) btnDashboard.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Unimind — " + titre);
-            stage.show();
+            org.example.utils.NavigationContext.loadContentInCenter(content);
 
             setActiveButton(boutonActif);
 
@@ -356,13 +374,17 @@ public class SidebarEtudiantController {
             case "/MesReponsesEtudiant.fxml"      -> setActiveButton(btnMesReponses);
             case "/org/example/views/EtudiantSeances.fxml" -> setActiveButton(btnSeances);
             case "/org/example/views/MesFavorisSeances.fxml" -> setActiveButton(btnFavoris);
+            case "/evenement/EvenementsEtudiant.fxml" -> setActiveButton(btnEvenements);
+            case "/participation/ParticipationsEtudiant.fxml" -> setActiveButton(btnMesParticipations);
+            case "/favori/FavorisEtudiant.fxml" -> setActiveButton(btnFavorisEvenements);
         }
     }
 
     private void setActiveButton(Button button) {
         Button[] boutons = {
                 btnDashboard, btnMesRendezVous, btnConsultations,
-                btnTraitements, btnQuestionnaires, btnMesReponses, btnSeances, btnFavoris
+                btnTraitements, btnQuestionnaires, btnMesReponses, btnSeances, btnFavoris,
+                btnEvenements, btnMesParticipations, btnFavorisEvenements
         };
         for (Button btn : boutons) btn.setStyle(STYLE_IDLE);
         button.setStyle(STYLE_ACTIVE);
@@ -372,7 +394,8 @@ public class SidebarEtudiantController {
     private void styliserBoutons() {
         Button[] boutons = {
                 btnDashboard, btnMesRendezVous, btnConsultations,
-                btnTraitements, btnQuestionnaires, btnMesReponses, btnSeances
+                btnTraitements, btnQuestionnaires, btnMesReponses, btnSeances,
+                btnEvenements, btnMesParticipations, btnFavorisEvenements
         };
         for (Button btn : boutons) {
             btn.setOnMouseEntered(e -> { if (btn != activeButton) btn.setStyle(STYLE_HOVER); });

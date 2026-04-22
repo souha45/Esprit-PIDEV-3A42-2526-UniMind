@@ -4,6 +4,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.fxml.FXMLLoader?>
+<?import javafx.scene.chart.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.controllers.DashboardResponsableController"
@@ -16,8 +17,149 @@
     <center>
         <VBox spacing="0">
             <children>
-                <fx:include source="/navbar.fxml"/>
+                <fx:include source="/navbar.fxml" fx:id="navbar"/>
                 <ScrollPane fx:id="contentScrollPane" VBox.vgrow="ALWAYS" fitToWidth="true" styleClass="etudiant-scroll">
+                    <VBox spacing="20" style="-fx-background-color: #f0f4ff; -fx-padding: 30;">
+
+                        <!-- Header -->
+                        <Label text="Tableau de bord Responsable"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px;
+                                      -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+
+                        <Label text="Vue d'ensemble des statistiques"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                                      -fx-text-fill: #6b7280;" />
+
+                        <!-- Statistiques Cards -->
+                        <HBox spacing="20" VBox.vgrow="ALWAYS">
+
+                            <!-- Événements -->
+                            <VBox spacing="10" HBox.hgrow="ALWAYS"
+                                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                                         -fx-padding: 20; -fx-border-color: #e0e7ff; -fx-border-width: 1;
+                                         -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.10), 10, 0, 0, 3);">
+                                <Label text="🎪"
+                                       style="-fx-font-size: 32px;" />
+                                <Label text="Événements"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                                              -fx-font-weight: bold; -fx-text-fill: #6366f1;" />
+                                <Label text="Total des événements créés"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                                              -fx-text-fill: #9ca3af;" />
+                                <Region VBox.vgrow="ALWAYS" />
+                                <Label fx:id="lblTotalEvenements" text="0"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 36px;
+                                              -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                            </VBox>
+
+                            <!-- Participations -->
+                            <VBox spacing="10" HBox.hgrow="ALWAYS"
+                                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                                         -fx-padding: 20; -fx-border-color: #e0e7ff; -fx-border-width: 1;
+                                         -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.10), 10, 0, 0, 3);">
+                                <Label text="✅"
+                                       style="-fx-font-size: 32px;" />
+                                <Label text="Participations"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                                              -fx-font-weight: bold; -fx-text-fill: #10b981;" />
+                                <Label text="Total des inscriptions"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                                              -fx-text-fill: #9ca3af;" />
+                                <Region VBox.vgrow="ALWAYS" />
+                                <Label fx:id="lblTotalParticipations" text="0"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 36px;
+                                              -fx-font-weight: bold; -fx-text-fill: #059669;" />
+                            </VBox>
+
+                            <!-- Sponsors -->
+                            <VBox spacing="10" HBox.hgrow="ALWAYS"
+                                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                                         -fx-padding: 20; -fx-border-color: #e0e7ff; -fx-border-width: 1;
+                                         -fx-effect: dropshadow(gaussian, rgba(245,158,11,0.10), 10, 0, 0, 3);">
+                                <Label text="🏢"
+                                       style="-fx-font-size: 32px;" />
+                                <Label text="Sponsors"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                                              -fx-font-weight: bold; -fx-text-fill: #f59e0b;" />
+                                <Label text="Sponsors attribués"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                                              -fx-text-fill: #9ca3af;" />
+                                <Region VBox.vgrow="ALWAYS" />
+                                <Label fx:id="lblTotalSponsors" text="0"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 36px;
+                                              -fx-font-weight: bold; -fx-text-fill: #d97706;" />
+                            </VBox>
+
+                            <!-- Feedbacks -->
+                            <VBox spacing="10" HBox.hgrow="ALWAYS"
+                                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                                         -fx-padding: 20; -fx-border-color: #e0e7ff; -fx-border-width: 1;
+                                         -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.10), 10, 0, 0, 3);">
+                                <Label text="💬"
+                                       style="-fx-font-size: 32px;" />
+                                <Label text="Feedbacks"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                                              -fx-font-weight: bold; -fx-text-fill: #ef4444;" />
+                                <Label text="Avis des participants"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                                              -fx-text-fill: #9ca3af;" />
+                                <Region VBox.vgrow="ALWAYS" />
+                                <Label fx:id="lblTotalFeedbacks" text="0"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 36px;
+                                              -fx-font-weight: bold; -fx-text-fill: #dc2626;" />
+                            </VBox>
+
+                        </HBox>
+
+                        <!-- ── SECTION CHARTS ── -->
+                        <VBox spacing="20">
+                            <Label text="📊 Statistiques détaillées"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 20px;
+                                          -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+
+                            <HBox spacing="20" prefHeight="350">
+
+                                <!-- BAR CHART: Événements par type -->
+                                <VBox spacing="12" HBox.hgrow="ALWAYS"
+                                      style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                                             -fx-padding: 20; -fx-border-color: #e0e7ff; -fx-border-width: 1;
+                                             -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 10, 0, 0, 3);">
+                                    <Label text="📊 Événements par type"
+                                           style="-fx-font-family: 'Segoe UI'; -fx-font-size: 16px;
+                                                  -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                                    <Label text="Répartition des événements selon leur type"
+                                           style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                                                  -fx-text-fill: #9ca3af;" />
+                                    <BarChart fx:id="barChartEvenements" VBox.vgrow="ALWAYS"
+                                              animated="true" legendVisible="false">
+                                        <xAxis>
+                                            <CategoryAxis label="Type" fx:id="xAxisEvenements"/>
+                                        </xAxis>
+                                        <yAxis>
+                                            <NumberAxis label="Nombre" lowerBound="0" tickUnit="1" minorTickVisible="false"/>
+                                        </yAxis>
+                                    </BarChart>
+                                </VBox>
+
+                                <!-- PIE CHART: Participations par statut -->
+                                <VBox spacing="12" prefWidth="400"
+                                      style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                                             -fx-padding: 20; -fx-border-color: #e0e7ff; -fx-border-width: 1;
+                                             -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.08), 10, 0, 0, 3);">
+                                    <Label text="❤ Participations par statut"
+                                           style="-fx-font-family: 'Segoe UI'; -fx-font-size: 16px;
+                                                  -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                                    <Label text="Répartition des participations selon le statut"
+                                           style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                                                  -fx-text-fill: #9ca3af;" />
+                                    <PieChart fx:id="pieChartParticipations" VBox.vgrow="ALWAYS"
+                                              animated="true" labelsVisible="true" legendVisible="true" legendSide="BOTTOM"/>
+                                </VBox>
+
+                            </HBox>
+                        </VBox>
+
+                    </VBox>
                 </ScrollPane>
             </children>
         </VBox>

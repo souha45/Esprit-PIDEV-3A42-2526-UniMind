@@ -16,7 +16,7 @@
 
     <!-- ========== CONTENU PRINCIPAL ========== -->
     <center>
-        <ScrollPane fitToWidth="true"
+        <ScrollPane fx:id="contentScrollPane" fitToWidth="true"
                     style="-fx-background-color: #f0f4ff; -fx-background: #f0f4ff; -fx-border-width: 0;">
             <VBox spacing="0" style="-fx-background-color: #f0f4ff;">
 
@@ -278,6 +278,63 @@
                                           -fx-text-fill: #9ca3af;" />
                             <VBox fx:id="boxMonPsy" spacing="8" />
                             <Label fx:id="lblEmptyPsy" text="👋 Aucun psychologue consulté"
+                                   visible="false" managed="false"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                                          -fx-text-fill: #c4b5fd;" />
+                        </VBox>
+
+                    </HBox>
+
+                    <!-- ── ROW 4 : Événements à venir + Mes Participations ── -->
+                    <HBox spacing="16" fillHeight="true">
+
+                        <!-- Événements à venir -->
+                        <VBox spacing="12" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: #ffffff; -fx-background-radius: 14;
+                                     -fx-padding: 20 22; -fx-border-color: #e0e7ff;
+                                     -fx-border-width: 1; -fx-border-radius: 14;
+                                     -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="🎪 Événements à venir"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 15px;
+                                              -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label fx:id="lblNbEvenements"
+                                       style="-fx-background-color: #ede9fe; -fx-text-fill: #6366f1;
+                                              -fx-font-size: 11px; -fx-font-weight: bold;
+                                              -fx-padding: 3 10; -fx-background-radius: 20;" />
+                            </HBox>
+                            <Label text="Prochains événements disponibles"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
+                                          -fx-text-fill: #9ca3af;" />
+                            <VBox fx:id="listeEvenementsDashboard" spacing="8" />
+                            <Label fx:id="lblEmptyEvenements" text="📭 Aucun événement à venir"
+                                   visible="false" managed="false"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                                          -fx-text-fill: #c4b5fd;" />
+                        </VBox>
+
+                        <!-- Mes Participations -->
+                        <VBox spacing="12" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: #ffffff; -fx-background-radius: 14;
+                                     -fx-padding: 20 22; -fx-border-color: #e0e7ff;
+                                     -fx-border-width: 1; -fx-border-radius: 14;
+                                     -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="✅ Mes Participations"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 15px;
+                                              -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label fx:id="lblNbParticipations"
+                                       style="-fx-background-color: #dcfce7; -fx-text-fill: #16a34a;
+                                              -fx-font-size: 11px; -fx-font-weight: bold;
+                                              -fx-padding: 3 10; -fx-background-radius: 20;" />
+                            </HBox>
+                            <Label text="Événements auxquels je participe"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
+                                          -fx-text-fill: #9ca3af;" />
+                            <VBox fx:id="listeParticipationsDashboard" spacing="8" />
+                            <Label fx:id="lblEmptyParticipations" text="📭 Aucune participation"
                                    visible="false" managed="false"
                                    style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
                                           -fx-text-fill: #c4b5fd;" />
