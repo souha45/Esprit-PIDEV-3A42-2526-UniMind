@@ -10,17 +10,22 @@
             styleClass="dashboard-bg">
 
     <top>
-        <VBox spacing="16" styleClass="padding-medium">
+        <VBox spacing="16" style="-fx-padding: 20;">
             <children>
                 <HBox spacing="16" alignment="CENTER_LEFT">
                     <children>
-                        <Label text="GESTION DES PARTICIPATIONS" styleClass="label-subtitle"/>
+                        <HBox spacing="4" styleClass="page-header-container" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+                            <children>
+                                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label text="✅ GESTION DES PARTICIPATIONS" styleClass="page-header-title"/>
+                                        <Label text="Gérez les inscriptions des participants aux événements" styleClass="page-header-subtitle"/>
+                                    </children>
+                                </VBox>
 
-                        <Region HBox.hgrow="ALWAYS"/>
-
-                        <Button fx:id="btnAjouter" text="➕ Inscrire" onAction="#ajouterParticipation" styleClass="btn-primary"/>
-
-                        <Button text="🔙 Retour" onAction="#retourAccueil" styleClass="btn-secondary"/>
+                                <Button fx:id="btnAjouter" text="➕ Inscrire" onAction="#ajouterParticipation" styleClass="btn-primary"/>
+                            </children>
+                        </HBox>
                     </children>
                 </HBox>
 

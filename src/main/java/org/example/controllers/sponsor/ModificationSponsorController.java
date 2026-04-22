@@ -161,7 +161,7 @@ public class ModificationSponsorController {
             try {
                 NavigationContext.loadContentInCenter("/sponsor/GestionSponsor.fxml");
             } catch (IOException e) {
-                afficherErreur("Erreur lors de la navigation : " + e.getMessage());
+                System.err.println("Erreur lors de la navigation: " + e.getMessage());
             }
 
         } catch (SQLException e) {
@@ -170,12 +170,8 @@ public class ModificationSponsorController {
     }
 
     @FXML
-    private void retour(ActionEvent event) {
-        try {
-            NavigationContext.loadContentInCenter("/sponsor/GestionSponsor.fxml");
-        } catch (IOException e) {
-            afficherErreur("Erreur lors de la navigation : " + e.getMessage());
-        }
+    private void retour(ActionEvent event) throws IOException {
+        NavigationContext.loadContentInCenter("/sponsor/GestionSponsor.fxml");
     }
 
     private boolean validerFormulaire() {

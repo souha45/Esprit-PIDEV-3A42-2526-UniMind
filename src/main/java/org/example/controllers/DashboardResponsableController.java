@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.stage.Stage;
 import org.example.utils.NavigationContext;
@@ -13,7 +14,7 @@ import org.example.utils.SessionManager;
 
 import java.io.IOException;
 
-public class DashboardResponsableController {
+public class DashboardResponsableController extends BaseDashboardController {
 
     @FXML
     private ScrollPane contentScrollPane;
@@ -22,21 +23,45 @@ public class DashboardResponsableController {
     private SidebarResponsableController sidebarResponsableController;
 
     @FXML
+    private NavbarController navbarController;
+
+    @FXML
+    private Label lblTotalEvenements;
+
+    @FXML
+    private Label lblTotalParticipations;
+
+    @FXML
+    private Label lblTotalSponsors;
+
+    @FXML
+    private Label lblTotalFeedbacks;
+
+    @FXML
     public void initialize() {
         // Initialiser le contexte de navigation
         NavigationContext.setContentScrollPane(contentScrollPane);
+
+        // Initialiser le navbar controller
+        if (navbarController != null) {
+            navbarController.setParentController(this);
+        }
 
         // Initialiser le sidebar controller
         if (sidebarResponsableController != null) {
             sidebarResponsableController.setParentController(this);
         }
 
-        // Charger par défaut la gestion des événements
-        try {
-            gestionEvenements(new ActionEvent());
-        } catch (IOException e) {
-            System.err.println("Erreur lors du chargement initial: " + e.getMessage());
+        // Charger les statistiques
+        chargerStatistiques();
+    }
+
+    @Override
+    protected void afficherInfosNavbar() {
+        if (navNomLabel != null && utilisateurConnecte != null) {
+            navNomLabel.setText("Bonjour, " + utilisateurConnecte.getPrenom() + " " + utilisateurConnecte.getNom());
         }
+        chargerPhotoNavbar();
     }
 
     @FXML
@@ -47,6 +72,13 @@ public class DashboardResponsableController {
         } catch (IOException e) {
             System.err.println("Erreur: " + e.getMessage());
         }
+    }
+
+    @FXML
+    public void dashboard(ActionEvent event) {
+        // Recharger le dashboard par défaut (les statistiques sont déjà dans le FXML)
+        // On recharge juste les données
+        chargerStatistiques();
     }
 
     @FXML
@@ -97,5 +129,46 @@ public class DashboardResponsableController {
         stage.setScene(scene);
         stage.setTitle(titre);
         stage.show();
+    }
+
+    private void chargerStatistiques() {
+        try {
+            java.sql.Connection conn = org.example.utils.MyDataBase_Unimind.getInstance().getConnection();
+
+            // Total événements
+            int totalEvenements = queryInt(conn, "SELECT COUNT(*) FROM evenement");
+            lblTotalEvenements.setText(String.valueOf(totalEvenements));
+
+            // Total participations
+            int totalParticipations = queryInt(conn, "SELECT COUNT(*) FROM participation");
+            lblTotalParticipations.setText(String.valueOf(totalParticipations));
+
+            // Total sponsors
+            int totalSponsors = queryInt(conn, "SELECT COUNT(*) FROM sponsor");
+            lblTotalSponsors.setText(String.valueOf(totalSponsors));
+
+            // Total feedbacks
+            int totalFeedbacks = queryInt(conn, "SELECT COUNT(*) FROM feedback");
+            lblTotalFeedbacks.setText(String.valueOf(totalFeedbacks));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            lblTotalEvenements.setText("—");
+            lblTotalParticipations.setText("—");
+            lblTotalSponsors.setText("—");
+            lblTotalFeedbacks.setText("—");
+        }
+    }
+
+    private int queryInt(java.sql.Connection conn, String sql) {
+        try (java.sql.PreparedStatement ps = conn.prepareStatement(sql);
+             java.sql.ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 }

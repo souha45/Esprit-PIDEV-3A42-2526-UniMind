@@ -248,10 +248,15 @@ public class ModificationEvenementController {
             timeline.play();
 
             // Revenir à l'écran de gestion
-            try {
-                NavigationContext.loadContentInCenter("/evenement/GestionEvenement.fxml");
-            } catch (IOException e) {
-                afficherErreur("Erreur lors de la navigation : " + e.getMessage());
+            Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ADMIN);
+            if (role == Role.ADMIN) {
+                org.example.controllers.admin.AdminDashboardController.loadContent("/evenement/GestionEvenement.fxml");
+            } else {
+                try {
+                    NavigationContext.loadContentInCenter("/evenement/GestionEvenement.fxml");
+                } catch (IOException e) {
+                    afficherErreur("Erreur lors de la navigation: " + e.getMessage());
+                }
             }
 
         } catch (SQLException e) {
@@ -263,10 +268,15 @@ public class ModificationEvenementController {
 
     @FXML
     private void retour(ActionEvent event) {
-        try {
-            NavigationContext.loadContentInCenter("/evenement/GestionEvenement.fxml");
-        } catch (IOException e) {
-            afficherErreur("Erreur lors de la navigation : " + e.getMessage());
+        Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ADMIN);
+        if (role == Role.ADMIN) {
+            org.example.controllers.admin.AdminDashboardController.loadContent("/evenement/GestionEvenement.fxml");
+        } else {
+            try {
+                NavigationContext.loadContentInCenter("/evenement/GestionEvenement.fxml");
+            } catch (IOException e) {
+                afficherErreur("Erreur lors de la navigation: " + e.getMessage());
+            }
         }
     }
 

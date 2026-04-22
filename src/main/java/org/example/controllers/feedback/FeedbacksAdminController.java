@@ -38,6 +38,9 @@ public class FeedbacksAdminController {
     private ComboBox<TypeEvenement> comboTypeEvenement;
 
     @FXML
+    private ComboBox<String> comboResponsable;
+
+    @FXML
     private DatePicker dateDebut;
 
     @FXML
@@ -76,9 +79,43 @@ public class FeedbacksAdminController {
         comboTypeEvenement.getItems().addAll(TypeEvenement.values());
         comboTypeEvenement.setValue(null);
 
+        // Initialiser le combo des responsables
+        comboResponsable.getItems().clear();
+        comboResponsable.getItems().add(null);
+        chargerResponsables();
+
         // Initialiser le combo de tri
         comboTri.getItems().addAll("Pertinence", "Date récente", "Date ancienne", "Note élevée", "Note faible", "Alphabétique");
         comboTri.setValue("Pertinence");
+    }
+
+    private void chargerResponsables() {
+        try {
+            // D'abord, essayer sans filtre de rôle pour voir si le problème vient de là
+            String sql = "SELECT DISTINCT u.user_id, u.nom, u.prenom, u.role " +
+                        "FROM user u " +
+                        "INNER JOIN evenement e ON u.user_id = e.organisateur_id " +
+                        "ORDER BY u.nom, u.prenom";
+            System.out.println("SQL pour charger les responsables: " + sql);
+            try (java.sql.PreparedStatement ps = org.example.utils.MyDataBase_Unimind.getInstance().getConnection().prepareStatement(sql)) {
+                try (java.sql.ResultSet rs = ps.executeQuery()) {
+                    int count = 0;
+                    while (rs.next()) {
+                        String nom = rs.getString("nom");
+                        String prenom = rs.getString("prenom");
+                        String role = rs.getString("role");
+                        String nomComplet = prenom + " " + nom;
+                        comboResponsable.getItems().add(nomComplet);
+                        count++;
+                        System.out.println("Organisateur ajouté: " + nomComplet + " (rôle: " + role + ")");
+                    }
+                    System.out.println("Nombre d'organisateurs chargés: " + count);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors du chargement des responsables: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void chargerFeedbacks() {
@@ -204,6 +241,16 @@ public class FeedbacksAdminController {
             });
         }
 
+        // Filtrer par responsable
+        String responsableSelectionne = comboResponsable.getValue();
+        if (responsableSelectionne != null) {
+            listeFiltree.removeIf(p -> {
+                Evenement e = chargerEvenementParId(p.getEvenementId());
+                if (e == null) return true;
+                String nomResponsable = chargerNomResponsable(e.getOrganisateurId());
+                return !responsableSelectionne.equals(nomResponsable);
+            });
+        }
 
         // Filtrer par période (date de l'événement)
         LocalDate debut = dateDebut.getValue();
@@ -234,6 +281,7 @@ public class FeedbacksAdminController {
     @FXML
     private void reinitialiserFiltres() {
         comboTypeEvenement.setValue(null);
+        comboResponsable.setValue(null);
         dateDebut.setValue(null);
         dateFin.setValue(null);
         comboTri.setValue("Pertinence");
@@ -331,10 +379,12 @@ public class FeedbacksAdminController {
                         e.setEvenementId(rs.getInt("evenement_id"));
                         e.setTitre(rs.getString("titre"));
                         e.setDescription(rs.getString("description"));
+                        e.setType(TypeEvenement.fromDb(rs.getString("type")));
                         e.setDateDebut(rs.getTimestamp("date_debut"));
                         e.setDateFin(rs.getTimestamp("date_fin"));
                         e.setLieu(rs.getString("lieu"));
                         e.setImage(rs.getString("image"));
+                        e.setOrganisateurId(rs.getInt("organisateur_id"));
                         return e;
                     }
                 }
@@ -362,5 +412,24 @@ public class FeedbacksAdminController {
             System.err.println("Erreur lors du chargement du nom de l'étudiant: " + e.getMessage());
         }
         return "Étudiant inconnu";
+    }
+
+    private String chargerNomResponsable(int responsableId) {
+        try {
+            String sql = "SELECT nom, prenom FROM user WHERE user_id = ?";
+            try (java.sql.PreparedStatement ps = org.example.utils.MyDataBase_Unimind.getInstance().getConnection().prepareStatement(sql)) {
+                ps.setInt(1, responsableId);
+                try (java.sql.ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String nom = rs.getString("nom");
+                        String prenom = rs.getString("prenom");
+                        return (prenom != null ? prenom : "") + " " + (nom != null ? nom : "");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors du chargement du nom du responsable: " + e.getMessage());
+        }
+        return "Responsable inconnu";
     }
 }

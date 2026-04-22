@@ -16,8 +16,101 @@
     <center>
         <VBox spacing="0">
             <children>
-                <fx:include source="/navbar.fxml"/>
+                <fx:include source="/navbar.fxml" fx:id="navbar"/>
                 <ScrollPane fx:id="contentScrollPane" VBox.vgrow="ALWAYS" fitToWidth="true" styleClass="etudiant-scroll">
+                    <VBox spacing="20" style="-fx-background-color: #f0f4ff; -fx-padding: 30;">
+
+                        <!-- Header -->
+                        <Label text="Tableau de bord Responsable"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px;
+                                      -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+
+                        <Label text="Vue d'ensemble des statistiques"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                                      -fx-text-fill: #6b7280;" />
+
+                        <!-- Statistiques Cards -->
+                        <HBox spacing="20" VBox.vgrow="ALWAYS">
+
+                            <!-- Événements -->
+                            <VBox spacing="10" HBox.hgrow="ALWAYS"
+                                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                                         -fx-padding: 20; -fx-border-color: #e0e7ff; -fx-border-width: 1;
+                                         -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.10), 10, 0, 0, 3);">
+                                <Label text="🎪"
+                                       style="-fx-font-size: 32px;" />
+                                <Label text="Événements"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                                              -fx-font-weight: bold; -fx-text-fill: #6366f1;" />
+                                <Label text="Total des événements créés"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                                              -fx-text-fill: #9ca3af;" />
+                                <Region VBox.vgrow="ALWAYS" />
+                                <Label fx:id="lblTotalEvenements" text="0"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 36px;
+                                              -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                            </VBox>
+
+                            <!-- Participations -->
+                            <VBox spacing="10" HBox.hgrow="ALWAYS"
+                                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                                         -fx-padding: 20; -fx-border-color: #e0e7ff; -fx-border-width: 1;
+                                         -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.10), 10, 0, 0, 3);">
+                                <Label text="✅"
+                                       style="-fx-font-size: 32px;" />
+                                <Label text="Participations"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                                              -fx-font-weight: bold; -fx-text-fill: #10b981;" />
+                                <Label text="Total des inscriptions"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                                              -fx-text-fill: #9ca3af;" />
+                                <Region VBox.vgrow="ALWAYS" />
+                                <Label fx:id="lblTotalParticipations" text="0"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 36px;
+                                              -fx-font-weight: bold; -fx-text-fill: #059669;" />
+                            </VBox>
+
+                            <!-- Sponsors -->
+                            <VBox spacing="10" HBox.hgrow="ALWAYS"
+                                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                                         -fx-padding: 20; -fx-border-color: #e0e7ff; -fx-border-width: 1;
+                                         -fx-effect: dropshadow(gaussian, rgba(245,158,11,0.10), 10, 0, 0, 3);">
+                                <Label text="🏢"
+                                       style="-fx-font-size: 32px;" />
+                                <Label text="Sponsors"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                                              -fx-font-weight: bold; -fx-text-fill: #f59e0b;" />
+                                <Label text="Sponsors attribués"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                                              -fx-text-fill: #9ca3af;" />
+                                <Region VBox.vgrow="ALWAYS" />
+                                <Label fx:id="lblTotalSponsors" text="0"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 36px;
+                                              -fx-font-weight: bold; -fx-text-fill: #d97706;" />
+                            </VBox>
+
+                            <!-- Feedbacks -->
+                            <VBox spacing="10" HBox.hgrow="ALWAYS"
+                                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                                         -fx-padding: 20; -fx-border-color: #e0e7ff; -fx-border-width: 1;
+                                         -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.10), 10, 0, 0, 3);">
+                                <Label text="💬"
+                                       style="-fx-font-size: 32px;" />
+                                <Label text="Feedbacks"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                                              -fx-font-weight: bold; -fx-text-fill: #ef4444;" />
+                                <Label text="Avis des participants"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                                              -fx-text-fill: #9ca3af;" />
+                                <Region VBox.vgrow="ALWAYS" />
+                                <Label fx:id="lblTotalFeedbacks" text="0"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 36px;
+                                              -fx-font-weight: bold; -fx-text-fill: #dc2626;" />
+                            </VBox>
+
+                        </HBox>
+
+                    </VBox>
                 </ScrollPane>
             </children>
         </VBox>

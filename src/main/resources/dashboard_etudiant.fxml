@@ -16,7 +16,7 @@
 
     <!-- ========== CONTENU PRINCIPAL ========== -->
     <center>
-        <ScrollPane fitToWidth="true"
+        <ScrollPane fx:id="contentScrollPane" fitToWidth="true"
                     style="-fx-background-color: #f0f4ff; -fx-background: #f0f4ff; -fx-border-width: 0;">
             <VBox spacing="0" style="-fx-background-color: #f0f4ff;">
 

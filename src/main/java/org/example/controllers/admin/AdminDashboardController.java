@@ -34,6 +34,13 @@ import java.util.Optional;
 
 public class AdminDashboardController {
 
+    // Instance statique pour permettre l'accès depuis d'autres contrôleurs
+    private static AdminDashboardController instance;
+
+    public static AdminDashboardController getInstance() {
+        return instance;
+    }
+
     // NAVBAR
     @FXML private TextField navRechercheField;
     @FXML private Label navNomAdmin;
@@ -46,6 +53,10 @@ public class AdminDashboardController {
     @FXML private Button btnDeconnexion;
     @FXML private Button btnStats;
     @FXML private Button btnSeances;
+    @FXML private Button btnEvenements;
+    @FXML private Button btnParticipations;
+    @FXML private Button btnSponsors;
+    @FXML private Button btnFeedbacks;
 
     // CONTENU PRINCIPAL (StackPane)
     @FXML private StackPane contentArea;
@@ -90,6 +101,8 @@ public class AdminDashboardController {
     // INITIALISATION
     @FXML
     public void initialize() {
+        instance = this; // Initialiser l'instance statique
+
         configurerTable();
         configurerTableDemandes();
         chargerUtilisateurs();
@@ -105,6 +118,30 @@ public class AdminDashboardController {
         modalStage = new Stage();
         modalStage.initModality(Modality.APPLICATION_MODAL);
         modalStage.initStyle(StageStyle.TRANSPARENT);
+    }
+
+    /**
+     * Méthode statique pour charger du contenu dans le contentArea de l'AdminDashboard
+     * Utilisable depuis les contrôleurs de gestion
+     */
+    public static void loadContent(String fxmlPath) {
+        if (instance != null) {
+            try {
+                Node page = FXMLLoader.load(instance.getClass().getResource(fxmlPath));
+                instance.contentArea.getChildren().setAll(page);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Surcharge pour charger directement un Node déjà chargé
+     */
+    public static void loadContent(Node node) {
+        if (instance != null) {
+            instance.contentArea.getChildren().setAll(node);
+        }
     }
 
     public void setUser(User user) {
@@ -165,6 +202,30 @@ public class AdminDashboardController {
         setActiveSidebarButton(btnStats);
     }
 
+    @FXML
+    public void showEvenements() {
+        loadPage("/evenement/GestionEvenement.fxml");
+        setActiveSidebarButton(btnEvenements);
+    }
+
+    @FXML
+    public void showParticipations() {
+        loadPage("/participation/GestionParticipation.fxml");
+        setActiveSidebarButton(btnParticipations);
+    }
+
+    @FXML
+    public void showSponsors() {
+        loadPage("/sponsor/GestionSponsor.fxml");
+        setActiveSidebarButton(btnSponsors);
+    }
+
+    @FXML
+    public void showFeedbacks() {
+        loadPage("/feedback/FeedbacksAdmin.fxml");
+        setActiveSidebarButton(btnFeedbacks);
+    }
+
     private void loadPage(String fxmlPath) {
         try {
             Node page = FXMLLoader.load(getClass().getResource(fxmlPath));
@@ -176,7 +237,7 @@ public class AdminDashboardController {
 
     // Gestion du style des boutons de la sidebar
     private void setActiveSidebarButton(Button active) {
-        Button[] allButtons = {btnGestionUsers, btnDemandes, btnProfil, btnStats, btnSeances};
+        Button[] allButtons = {btnGestionUsers, btnDemandes, btnProfil, btnStats, btnSeances, btnEvenements, btnParticipations, btnSponsors, btnFeedbacks};
         for (Button btn : allButtons) {
             btn.setStyle(sidebarBtnStyle(false));
         }

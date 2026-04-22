@@ -218,16 +218,16 @@ public class GestionAttributionSponsorController {
                     boolean isOrganisateur = attribution.getOrganisateurId() == currentUserId;
                     boolean peutModifier = isAdmin || isOrganisateur;
 
-                    HBox hbox = new HBox(5);
+                    HBox hbox = new HBox(8);
 
                     // Ajouter les boutons Modifier et Supprimer seulement si l'utilisateur a les permissions
                     if (peutModifier) {
-                        Button btnModifier = new Button("modifier");
-                        btnModifier.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-min-width: 60px;");
+                        Button btnModifier = new Button("✏");
+                        btnModifier.setStyle("-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16px; -fx-min-width: 40px; -fx-min-height: 40px; -fx-background-radius: 8; -fx-cursor: hand;");
                         btnModifier.setOnAction(event -> modifierAttribution(getTableView().getItems().get(getIndex())));
 
-                        Button btnSupprimer = new Button("supprimer");
-                        btnSupprimer.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-min-width: 80px;");
+                        Button btnSupprimer = new Button("🗑");
+                        btnSupprimer.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16px; -fx-min-width: 40px; -fx-min-height: 40px; -fx-background-radius: 8; -fx-cursor: hand;");
                         btnSupprimer.setOnAction(event -> supprimerAttribution(getTableView().getItems().get(getIndex())));
 
                         hbox.getChildren().addAll(btnModifier, btnSupprimer);

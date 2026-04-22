@@ -112,10 +112,15 @@ public class AjoutParticipationController {
 
     @FXML
     private void retour(ActionEvent event) {
-        try {
-            NavigationContext.loadContentInCenter("/participation/GestionParticipation.fxml");
-        } catch (IOException e) {
-            afficherErreur("Erreur lors de la navigation : " + e.getMessage());
+        Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ADMIN);
+        if (role == Role.ADMIN) {
+            org.example.controllers.admin.AdminDashboardController.loadContent("/participation/GestionParticipation.fxml");
+        } else {
+            try {
+                NavigationContext.loadContentInCenter("/participation/GestionParticipation.fxml");
+            } catch (IOException e) {
+                afficherErreur("Erreur lors de la navigation: " + e.getMessage());
+            }
         }
     }
 

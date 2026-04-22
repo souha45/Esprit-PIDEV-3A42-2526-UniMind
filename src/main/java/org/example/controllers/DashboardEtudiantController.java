@@ -7,11 +7,13 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.example.entities.User;
 import org.example.utils.MyDataBase_Unimind;
+import org.example.utils.NavigationContext;
 
 import java.io.IOException;
 import java.sql.*;
@@ -26,6 +28,9 @@ public class DashboardEtudiantController extends BaseDashboardController
 
     // ── Sidebar ─────────────────────────────────────────────────────
     @FXML private SidebarEtudiantController sidebarEtudiantController;
+
+    // ── Content ScrollPane ───────────────────────────────────────────
+    @FXML private ScrollPane contentScrollPane;
 
     // ── Header ──────────────────────────────────────────────────────
     @FXML private Label lblSoustitre;
@@ -79,6 +84,9 @@ public class DashboardEtudiantController extends BaseDashboardController
     // ────────────────────────────────────────────────────────────────
     @FXML
     public void initialize() {
+        // Initialiser le contexte de navigation
+        NavigationContext.setContentScrollPane(contentScrollPane);
+
         // Date en français
         LocalDate today = LocalDate.now();
         String jourSemaine = today.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.FRENCH);

@@ -59,6 +59,20 @@ public class SessionManager {
         return currentUser;
     }
 
+    public java.util.Optional<org.example.enums.Role> getCurrentUserRole() {
+        if (currentUser != null && currentUser.getRole() != null) {
+            return java.util.Optional.of(currentUser.getRole());
+        }
+        return java.util.Optional.empty();
+    }
+
+    public java.util.Optional<Integer> getCurrentUserId() {
+        if (currentUser != null) {
+            return java.util.Optional.of(currentUser.getUserId());
+        }
+        return java.util.Optional.empty();
+    }
+
     public int getUtilisateurConnecteId() {
         return currentUser != null ? currentUser.getUserId() : -1;
     }

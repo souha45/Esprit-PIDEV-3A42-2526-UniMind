@@ -178,6 +178,9 @@ public class VoirEvenementController {
         // Vérifier les permissions : cacher les boutons si l'utilisateur n'est pas l'organisateur (sauf admin)
         verifierPermissions();
 
+        // Mettre à jour le bouton favori selon l'état initial
+        mettreAJourBoutonFavori();
+
         // Charger les avis
         chargerAvis();
     }
@@ -277,18 +280,21 @@ public class VoirEvenementController {
     @FXML
     private void retour(ActionEvent event) throws IOException {
         Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ETUDIANT);
-        
+
         // Si une page précédente est définie, y retourner
         if (pagePrecedente != null && !pagePrecedente.isEmpty()) {
             NavigationContext.loadContentInCenter(pagePrecedente);
             return;
         }
-        
-        // Sinon, utiliser le comportement par défaut
+
+        // Sinon, utiliser le comportement par défaut selon le rôle
         if (role == Role.ETUDIANT) {
             NavigationContext.loadContentInCenter("/participation/ParticipationsEtudiant.fxml");
-        } else {
+        } else if (role == Role.RESPONSABLE_ETUDIANT) {
             NavigationContext.loadContentInCenter("/evenement/GestionEvenement.fxml");
+        } else {
+            // Admin utilise AdminDashboardController
+            org.example.controllers.admin.AdminDashboardController.loadContent("/evenement/GestionEvenement.fxml");
         }
     }
 
@@ -301,7 +307,7 @@ public class VoirEvenementController {
             ModificationEvenementController controller = loader.getController();
             controller.setEvenement(evenementCourant);
 
-            NavigationContext.loadContentInCenter((javafx.scene.Parent) root);
+            NavigationContext.loadContentInCenter(root);
         } catch (IOException e) {
             afficherAlerte("Erreur", "Impossible d'ouvrir l'écran de modification: " + e.getMessage());
         } catch (Exception e) {
@@ -355,12 +361,12 @@ public class VoirEvenementController {
 
             participationService.ajouter(participation);
             afficherAlerte("Succès", "Vous êtes inscrit à l'événement \"" + evenementCourant.getTitre() + "\"");
-            
+
             // Rediriger vers la page des événements
             try {
                 NavigationContext.loadContentInCenter("/evenement/EvenementsEtudiant.fxml");
-            } catch (IOException ioE) {
-                afficherAlerte("Erreur", "Erreur lors de la navigation: " + ioE.getMessage());
+            } catch (IOException ioException) {
+                afficherAlerte("Erreur", "Erreur lors de la navigation: " + ioException.getMessage());
             }
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible de participer à l'événement: " + e.getMessage());
@@ -427,6 +433,8 @@ public class VoirEvenementController {
                 estFavori = true;
                 afficherAlerte("Succès", "Événement ajouté aux favoris");
             }
+            // Mettre à jour le bouton
+            mettreAJourBoutonFavori();
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible d'ajouter aux favoris: " + e.getMessage());
         }
@@ -451,6 +459,19 @@ public class VoirEvenementController {
             favoriService.supprimer(favoriId);
             estFavori = false;
             afficherAlerte("Succès", "Événement retiré des favoris");
+        }
+    }
+
+    private void mettreAJourBoutonFavori() {
+        if (btnFavori == null) {
+            return;
+        }
+        if (estFavori) {
+            btnFavori.setText("♥ Retirer des favoris");
+            btnFavori.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 8 14; -fx-cursor: hand; -fx-font-weight: bold;");
+        } else {
+            btnFavori.setText("♡ Ajouter aux favoris");
+            btnFavori.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-border-color: #ef4444; -fx-border-width: 1; -fx-background-radius: 10; -fx-border-radius: 10; -fx-padding: 8 14; -fx-cursor: hand; -fx-font-weight: bold;");
         }
     }
 

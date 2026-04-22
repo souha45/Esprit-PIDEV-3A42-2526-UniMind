@@ -8,19 +8,25 @@
             fx:controller="org.example.controllers.evenement.GestionEvenementController"
             stylesheets="@../css/EventBack.css"
             styleClass="dashboard-bg">
-    
+
     <top>
-        <VBox spacing="16" styleClass="padding-medium">
+        <VBox spacing="16" style="-fx-padding: 20;">
             <children>
                 <HBox spacing="16" alignment="CENTER_LEFT">
                     <children>
-                        <Label text="GESTION DES ÉVÉNEMENTS" styleClass="label-subtitle"/>
+                        <HBox spacing="4" styleClass="page-header-container" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+                            <children>
+                                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label text="📋 GESTION DES ÉVÉNEMENTS" styleClass="page-header-title"/>
+                                        <Label text="Gérez tous vos événements, organisez des activités et suivez leur progression" styleClass="page-header-subtitle"/>
+                                    </children>
+                                </VBox>
 
-                        <Region HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="btnAjouter" text="➕ Ajouter" onAction="#ajouterEvenement" styleClass="btn-primary"/>
 
-                        <Button fx:id="btnAjouter" text="➕ Ajouter" onAction="#ajouterEvenement" styleClass="btn-primary"/>
-
-                        <Button text="🔙 Retour" onAction="#retourAccueil" styleClass="btn-secondary"/>
+                            </children>
+                        </HBox>
                     </children>
                 </HBox>
 
@@ -40,51 +46,54 @@
                     </children>
                 </HBox>
 
-                <GridPane hgap="12" vgap="10" styleClass="filter-grid">
+                <!-- Filtres avancés -->
+                <HBox spacing="16" alignment="CENTER_LEFT" styleClass="filter-bar">
                     <children>
-                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                        <!-- Type -->
+                        <VBox spacing="4">
                             <children>
-                                <Label text="Type" styleClass="form-label" />
-                                <ComboBox fx:id="comboType" promptText="Tous" styleClass="filter-combo" />
+                                <Label text="Type" styleClass="form-label"/>
+                                <ComboBox fx:id="comboType" prefWidth="150" promptText="Tous les types"/>
                             </children>
                         </VBox>
 
-                        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                        <!-- Statut -->
+                        <VBox spacing="4">
                             <children>
-                                <Label text="Statut" styleClass="form-label" />
-                                <ComboBox fx:id="comboStatut" promptText="Tous" styleClass="filter-combo" />
+                                <Label text="Statut" styleClass="form-label"/>
+                                <ComboBox fx:id="comboStatut" prefWidth="150" promptText="Tous les statuts"/>
                             </children>
                         </VBox>
 
-                        <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                        <!-- Organisateur -->
+                        <VBox spacing="4">
                             <children>
-                                <Label text="Organisateur" styleClass="form-label" />
-                                <ComboBox fx:id="comboOrganisateur" promptText="Tous" styleClass="filter-combo" />
+                                <Label text="Organisateur" styleClass="form-label"/>
+                                <ComboBox fx:id="comboOrganisateur" prefWidth="200" promptText="Tous les organisateurs"/>
                             </children>
                         </VBox>
 
-                        <VBox spacing="6" GridPane.columnIndex="3" GridPane.rowIndex="0">
+                        <!-- Période -->
+                        <VBox spacing="4">
                             <children>
-                                <Label text="Du" styleClass="form-label" />
-                                <DatePicker fx:id="dateDu" styleClass="form-input" />
+                                <Label text="Période événement" styleClass="form-label"/>
+                                <HBox spacing="8" alignment="CENTER_LEFT">
+                                    <children>
+                                        <DatePicker fx:id="dateDu" prefWidth="120" promptText="Du"/>
+                                        <Label text="au" styleClass="form-label"/>
+                                        <DatePicker fx:id="dateAu" prefWidth="120" promptText="Au"/>
+                                    </children>
+                                </HBox>
                             </children>
                         </VBox>
 
-                        <VBox spacing="6" GridPane.columnIndex="4" GridPane.rowIndex="0">
-                            <children>
-                                <Label text="Au" styleClass="form-label" />
-                                <DatePicker fx:id="dateAu" styleClass="form-input" />
-                            </children>
-                        </VBox>
+                        <Region HBox.hgrow="ALWAYS"/>
 
-                        <HBox spacing="10" alignment="CENTER_LEFT" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="5">
-                            <children>
-                                <Button text="Filtrer" onAction="#appliquerFiltres" styleClass="btn-primary" />
-                                <Button text="Réinitialiser" onAction="#reinitialiserFiltres" styleClass="btn-secondary" />
-                            </children>
-                        </HBox>
+                        <!-- Boutons -->
+                        <Button text="🔍 Filtrer" onAction="#appliquerFiltres" styleClass="btn-primary"/>
+                        <Button text="🔄 Réinitialiser" onAction="#reinitialiserFiltres" styleClass="btn-secondary"/>
                     </children>
-                </GridPane>
+                </HBox>
 
                 <HBox spacing="16" alignment="CENTER_LEFT" styleClass="stats-bar">
                     <children>

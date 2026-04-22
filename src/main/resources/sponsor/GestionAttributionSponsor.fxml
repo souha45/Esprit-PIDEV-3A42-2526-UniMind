@@ -14,10 +14,19 @@
     </padding>
 
     <HBox spacing="16" alignment="CENTER_LEFT">
-        <Label text="Gestion des Attributions de Sponsors" styleClass="label-subtitle"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button text="➕ Nouvelle Attribution" onAction="#ajouterAttribution" styleClass="btn-primary"/>
-        <Button text="🔙 Retour" onAction="#retour" styleClass="btn-secondary"/>
+        <children>
+            <HBox spacing="4" styleClass="page-header-container" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+                <children>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label text="💰 GESTION DES ATTRIBUTIONS DE SPONSORS" styleClass="page-header-title"/>
+                            <Label text="Attribuez des sponsors aux événements et suivez les partenariats" styleClass="page-header-subtitle"/>
+                        </children>
+                    </VBox>
+                    <Button text="➕ Nouvelle Attribution" onAction="#ajouterAttribution" styleClass="btn-primary"/>
+                </children>
+            </HBox>
+        </children>
     </HBox>
 
     <!-- Barre de recherche -->

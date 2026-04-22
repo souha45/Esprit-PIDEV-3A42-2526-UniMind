@@ -219,7 +219,7 @@ public class AjoutEvenementController {
                         try {
                             NavigationContext.loadContentInCenter("/evenement/GestionEvenement.fxml");
                         } catch (IOException e) {
-                            System.err.println("Erreur lors de la navigation : " + e.getMessage());
+                            System.err.println("Erreur lors de la navigation: " + e.getMessage());
                         }
                     }
             ));

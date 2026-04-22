@@ -105,6 +105,24 @@
                        -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
                        -fx-background-radius: 10; -fx-cursor: hand;"  onAction="#showMesFavoris" />
 
+        <Button fx:id="btnEvenements" text="  🎪 Événements" maxWidth="Infinity"
+                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                       -fx-background-radius: 10; -fx-cursor: hand;" onAction="#showEvenements" />
+
+        <Button fx:id="btnMesParticipations" text="  ✅ Mes Participations" maxWidth="Infinity"
+                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                       -fx-background-radius: 10; -fx-cursor: hand;" onAction="#showMesParticipations" />
+
+        <Button fx:id="btnFavorisEvenements" text="  ❤ Favoris Événements" maxWidth="Infinity"
+                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                       -fx-background-radius: 10; -fx-cursor: hand;" onAction="#showFavorisEvenements" />
+
         <Button fx:id="btnProfil" text="  👤  Mon profil" maxWidth="Infinity"
                 style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
                        -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;

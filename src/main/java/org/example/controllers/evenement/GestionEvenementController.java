@@ -254,20 +254,20 @@ public class GestionEvenementController {
                     boolean peutModifier = isAdmin || isOrganisateur;
 
                     // Créer les boutons selon les permissions
-                    Button btnVoir = new Button("voir");
-                    btnVoir.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-min-width: 60px;");
+                    Button btnVoir = new Button("👁");
+                    btnVoir.setStyle("-fx-background-color: #6366f1; -fx-text-fill: white; -fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16px; -fx-min-width: 40px; -fx-min-height: 40px; -fx-background-radius: 8; -fx-cursor: hand;");
                     btnVoir.setOnAction(event -> voirEvenement(getTableView().getItems().get(getIndex())));
 
-                    HBox hbox = new HBox(5, btnVoir);
+                    HBox hbox = new HBox(8, btnVoir);
 
                     // Ajouter les boutons Modifier et Supprimer seulement si l'utilisateur a les permissions
                     if (peutModifier) {
-                        Button btnModifier = new Button("modifier");
-                        btnModifier.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-min-width: 60px;");
+                        Button btnModifier = new Button("✏");
+                        btnModifier.setStyle("-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16px; -fx-min-width: 40px; -fx-min-height: 40px; -fx-background-radius: 8; -fx-cursor: hand;");
                         btnModifier.setOnAction(event -> modifierEvenement(getTableView().getItems().get(getIndex())));
 
-                        Button btnSupprimer = new Button("supprimer");
-                        btnSupprimer.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-min-width: 80px;");
+                        Button btnSupprimer = new Button("🗑");
+                        btnSupprimer.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16px; -fx-min-width: 40px; -fx-min-height: 40px; -fx-background-radius: 8; -fx-cursor: hand;");
                         btnSupprimer.setOnAction(event -> supprimerEvenement(getTableView().getItems().get(getIndex())));
 
                         hbox.getChildren().addAll(btnModifier, btnSupprimer);
@@ -405,8 +405,8 @@ public class GestionEvenementController {
             VoirEvenementController controller = loader.getController();
             controller.setEvenement(evenementAvecNom.getEvenement());
             controller.setPagePrecedente("/evenement/GestionEvenement.fxml"); // Retour vers la gestion des événements
-            
-            NavigationContext.loadContentInCenter((javafx.scene.Parent) root);
+
+            NavigationContext.loadContentInCenter(root);
         } catch (IOException e) {
             afficherAlerte("Erreur", "Impossible d'ouvrir l'écran de détails: " + e.getMessage());
         } catch (Exception e) {
@@ -510,8 +510,8 @@ public class GestionEvenementController {
             Parent root = loader.load();
             ModificationEvenementController controller = loader.getController();
             controller.setEvenement(evenementAvecNom.getEvenement());
-            
-            NavigationContext.loadContentInCenter((javafx.scene.Parent) root);
+
+            NavigationContext.loadContentInCenter(root);
         } catch (IOException e) {
             afficherAlerte("Erreur", "Impossible d'ouvrir l'écran de modification: " + e.getMessage());
         } catch (Exception e) {
@@ -538,30 +538,8 @@ public class GestionEvenementController {
     }
 
     @FXML
-    private void retourAccueil(ActionEvent event) throws IOException {
-        // Rediriger vers le dashboard selon le rôle de l'utilisateur connecté
-        String fxmlPath;
-
-        org.example.enums.Role role = org.example.utils.SessionManager.getInstance().getCurrentUserRole()
-                .orElse(org.example.enums.Role.ETUDIANT);
-
-        switch (role) {
-            case ADMIN:
-                fxmlPath = "/admin_dashboard.fxml";
-                break;
-            case RESPONSABLE_ETUDIANT:
-                fxmlPath = "/dashboard_responsable.fxml";
-                break;
-            case ETUDIANT:
-                fxmlPath = "/dashboard_etudiant.fxml";
-                break;
-            default:
-                fxmlPath = "/admin_dashboard.fxml";
-                break;
-        }
-
-        // Recharger le dashboard (qui affichera les statistiques par défaut)
-        NavigationContext.loadContentInCenter(fxmlPath);
+    public void retourAccueil(ActionEvent event) throws IOException {
+        NavigationContext.loadContentInCenter("/evenement/GestionEvenement.fxml");
     }
 
     private void afficherAlerte(String type, String message) {
