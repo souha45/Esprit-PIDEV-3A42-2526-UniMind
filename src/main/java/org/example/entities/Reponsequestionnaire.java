@@ -2,28 +2,29 @@ package org.example.entities;
 
 import java.sql.Timestamp;
 
-public class ReponseQuestionnaire {
-    private int reponseQuestionnaireId;
-    private double scoreTotale;
-    private String reponseQuest;      // Stocké en JSON dans la DB
-    private String interpretation;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
-    private Integer dureePassage;     // Peut être NULL
-    private String niveau;
-    private boolean aBesoinPsy;       // tinyint(4) -> boolean
-    private String commentaire;       // Peut être NULL
-    private int questionnaireId;
-    private int userId;           // Peut être NULL
+public class Reponsequestionnaire {
 
-    // Constructeur par défaut
-    public ReponseQuestionnaire() {
+    private int reponseQuestionnaireId;   // AUTO_INCREMENT, NOT NULL
+    private double scoreTotale;           // double, NOT NULL
+    private String reponseQuest;          // longtext, NOT NULL
+    private String interpretation;        // longtext, NULL possible
+    private Timestamp createdAt;          // datetime, NOT NULL
+    private Timestamp updatedAt;          // datetime, NULL possible
+    private Integer dureePassage;         // int(11), NULL possible
+    private String niveau;                // varchar(20), NOT NULL
+    private boolean aBesoinPsy;           // tinyint(4), NOT NULL
+    private String commentaire;           // longtext, NULL possible
+    private int questionnaireId;          // int(11), NOT NULL (FK)
+    private Integer userId;               // int(11), NULL possible (FK)
+
+    // ─── Constructeur par défaut ───
+    public Reponsequestionnaire() {
     }
 
-    // Constructeur pour création (sans ID)
-    public ReponseQuestionnaire(double scoreTotale, String reponseQuest, String interpretation,
+    // ─── Constructeur pour création (sans ID) ───
+    public Reponsequestionnaire(double scoreTotale, String reponseQuest, String interpretation,
                                 Integer dureePassage, String niveau, boolean aBesoinPsy,
-                                String commentaire, int questionnaireId, int userId) {
+                                String commentaire, int questionnaireId, Integer userId) {
         this.scoreTotale = scoreTotale;
         this.reponseQuest = reponseQuest;
         this.interpretation = interpretation;
@@ -36,11 +37,11 @@ public class ReponseQuestionnaire {
         this.createdAt = new Timestamp(System.currentTimeMillis());
     }
 
-    // Constructeur complet avec ID
-    public ReponseQuestionnaire(int reponseQuestionnaireId, double scoreTotale, String reponseQuest,
+    // ─── Constructeur complet avec ID ───
+    public Reponsequestionnaire(int reponseQuestionnaireId, double scoreTotale, String reponseQuest,
                                 String interpretation, Timestamp createdAt, Timestamp updatedAt,
                                 Integer dureePassage, String niveau, boolean aBesoinPsy,
-                                String commentaire, int questionnaireId, int userId) {
+                                String commentaire, int questionnaireId, Integer userId) {
         this.reponseQuestionnaireId = reponseQuestionnaireId;
         this.scoreTotale = scoreTotale;
         this.reponseQuest = reponseQuest;
@@ -55,7 +56,8 @@ public class ReponseQuestionnaire {
         this.userId = userId;
     }
 
-    // Getters et Setters
+    // ─── Getters & Setters ───
+
     public int getReponseQuestionnaireId() {
         return reponseQuestionnaireId;
     }
@@ -144,11 +146,11 @@ public class ReponseQuestionnaire {
         this.questionnaireId = questionnaireId;
     }
 
-    public int getUserId() {
+    public Integer getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(Integer userId) {
         this.userId = userId;
     }
 

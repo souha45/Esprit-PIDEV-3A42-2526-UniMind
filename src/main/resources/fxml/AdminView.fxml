@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.example.controllers.AdminController"
+            style="-fx-background-color: #f1f5f9;">
+
+    <top>
+        <VBox style="-fx-background-color: #ffffff; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 8, 0, 0, 2);">
+            <padding><Insets top="14" right="24" bottom="14" left="24"/></padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="0">
+                <VBox HBox.hgrow="ALWAYS">
+                    <Label text="🧠 UniMind — Admin"
+                           style="-fx-text-fill: #3b82f6; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+                    <Label text="Gestion des Questionnaires Psychologiques"
+                           style="-fx-text-fill: #94a3b8; -fx-font-size: 12px;"/>
+                </VBox>
+                <Button text="Vue Etudiant  ➡️" onAction="#goToEtudiant"
+                        style="-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 10; -fx-cursor: hand;"/>
+            </HBox>
+
+            <HBox spacing="10">
+                <padding><Insets top="12" bottom="4"/></padding>
+                <Button fx:id="btnQuestionnaire" text="📋  Questionnaires" onAction="#showQuestionnaire"
+                        style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                <Button fx:id="btnQuestion" text="❓  Questions" onAction="#showQuestion"
+                        style="-fx-background-color: #e2e8f0; -fx-text-fill: #64748b; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                <Button fx:id="btnReponse" text="📝  Réponses" onAction="#showReponse"
+                        style="-fx-background-color: #e2e8f0; -fx-text-fill: #64748b; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                <Button fx:id="btnStats" text="📊  Statistiques" onAction="#showStats"
+                        style="-fx-background-color: #e2e8f0; -fx-text-fill: #64748b; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <StackPane fx:id="contentArea" style="-fx-background-color: #f1f5f9; -fx-padding: 20;"/>
+    </center>
+
+</BorderPane>
