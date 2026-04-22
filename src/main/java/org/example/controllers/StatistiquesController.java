@@ -1,9 +1,11 @@
 package org.example.controllers;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.chart.*;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import org.example.entities.Question;
 import org.example.entities.Questionnaire;
@@ -14,10 +16,17 @@ import org.example.services.ReponseQuestionnaireServices;
 
 import java.net.URL;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class StatistiquesController implements Initializable {
+
+    // ─── FILTRE MOIS ───
+    @FXML private ComboBox<String> cbMois;
+    @FXML private Label lblPeriode;
 
     // ─── CARTES STAT ───
     @FXML private Label lblTotalQuestionnaires;
@@ -34,21 +43,92 @@ public class StatistiquesController implements Initializable {
     private final QuestionServices             qqService = new QuestionServices();
     private final ReponseQuestionnaireServices rService  = new ReponseQuestionnaireServices();
 
+    private List<Questionnaire>        tousQuestionnaires;
+    private List<Question>             toutesQuestions;
+    private List<Reponsequestionnaire> toutesReponses;
+
+    // Mois en cours
+    private int moisSelectionne  = LocalDate.now().getMonthValue();
+    private int anneeSelectionnee = LocalDate.now().getYear();
+
+    // Noms des mois en français
+    private static final String[] MOIS_FR = {
+            "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+            "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+    };
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         try {
-            List<Questionnaire>        questionnaires = qService.afficher();
-            List<Question>             questions      = qqService.afficher();
-            List<Reponsequestionnaire> reponses       = rService.afficher();
+            tousQuestionnaires = qService.afficher();
+            toutesQuestions    = qqService.afficher();
+            toutesReponses     = rService.afficher();
 
-            chargerCartes(questionnaires, questions, reponses);
-            chargerPieType(questionnaires);
-            chargerBarNiveau(reponses);
-            chargerBarTopQuestionnaires(reponses, questionnaires);
+            // ─── Remplir ComboBox mois ───
+            ObservableList<String> moisItems = FXCollections.observableArrayList();
+            moisItems.add("Tous les mois");
+            for (int i = 0; i < 12; i++) {
+                moisItems.add(MOIS_FR[i] + " " + anneeSelectionnee);
+            }
+            cbMois.setItems(moisItems);
+
+            // Sélectionner le mois en cours
+            cbMois.setValue(MOIS_FR[moisSelectionne - 1] + " " + anneeSelectionnee);
+
+            // ─── Listener changement mois ───
+            cbMois.valueProperty().addListener((obs, old, val) -> {
+                if (val != null) rafraichir(val);
+            });
+
+            // ─── Charger les stats du mois en cours ───
+            rafraichir(cbMois.getValue());
 
         } catch (SQLException e) {
             System.out.println("Erreur statistiques: " + e.getMessage());
         }
+    }
+
+    // ══════════════════════════════════════════
+    //  RAFRAICHIR SELON MOIS SELECTIONNE
+    // ══════════════════════════════════════════
+    private void rafraichir(String moisStr) {
+
+        List<Reponsequestionnaire> reponsesFiltrees;
+
+        if (moisStr.equals("Tous les mois")) {
+            reponsesFiltrees = toutesReponses;
+            lblPeriode.setText("📅 Période : Toute la durée");
+        } else {
+            // Extraire le numéro du mois depuis le nom
+            int mois = getMoisNumero(moisStr);
+            int annee = anneeSelectionnee;
+
+            // Filtrer les réponses par mois et année
+            reponsesFiltrees = toutesReponses.stream()
+                    .filter(r -> r.getCreatedAt() != null)
+                    .filter(r -> {
+                        LocalDate date = r.getCreatedAt().toLocalDateTime().toLocalDate();
+                        return date.getMonthValue() == mois && date.getYear() == annee;
+                    })
+                    .collect(Collectors.toList());
+
+            lblPeriode.setText("📅 Période : " + moisStr);
+        }
+
+        chargerCartes(tousQuestionnaires, toutesQuestions, reponsesFiltrees);
+        chargerPieType(tousQuestionnaires);
+        chargerBarNiveau(reponsesFiltrees);
+        chargerBarTopQuestionnaires(reponsesFiltrees, tousQuestionnaires);
+    }
+
+    // ══════════════════════════════════════════
+    //  HELPER — nom mois → numéro
+    // ══════════════════════════════════════════
+    private int getMoisNumero(String moisStr) {
+        for (int i = 0; i < MOIS_FR.length; i++) {
+            if (moisStr.startsWith(MOIS_FR[i])) return i + 1;
+        }
+        return LocalDate.now().getMonthValue();
     }
 
     // ══════════════════════════════════════════
@@ -90,7 +170,7 @@ public class StatistiquesController implements Initializable {
                 .collect(Collectors.groupingBy(Reponsequestionnaire::getNiveau, Collectors.counting()));
 
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Reponses");
+        series.setName("Réponses");
 
         List<String> niveaux = List.of("legere", "modere", "severe");
         for (String niveau : niveaux) {
@@ -102,7 +182,6 @@ public class StatistiquesController implements Initializable {
         barNiveau.getData().add(series);
         barNiveau.setLegendVisible(false);
 
-        // Couleurs après rendu
         barNiveau.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
                 barNiveau.lookupAll(".data0.chart-bar")
@@ -131,7 +210,7 @@ public class StatistiquesController implements Initializable {
                         Collectors.counting()));
 
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Reponses");
+        series.setName("Réponses");
 
         countByQ.entrySet().stream()
                 .sorted(Map.Entry.<Integer, Long>comparingByValue().reversed())

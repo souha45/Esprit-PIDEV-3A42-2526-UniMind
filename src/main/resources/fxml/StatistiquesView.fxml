@@ -11,13 +11,30 @@
             fitToWidth="true"
             style="-fx-background-color: #f1f5f9; -fx-background: #f1f5f9;">
 
-    <VBox spacing="20" style="-fx-padding: 10;">
+    <VBox spacing="20" style="-fx-padding: 20;">
 
-        <Label text="📊 Tableau de Bord — Statistiques"
-               style="-fx-text-fill: #1e293b; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+        <!-- TITRE + FILTRE MOIS -->
+        <HBox alignment="CENTER_LEFT" spacing="16">
+            <VBox HBox.hgrow="ALWAYS">
+                <Label text="📊 Tableau de Bord — Statistiques"
+                       style="-fx-text-fill: #1e293b; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+                <Label fx:id="lblPeriode" text=""
+                       style="-fx-text-fill: #94a3b8; -fx-font-size: 12px;"/>
+            </VBox>
+            <VBox spacing="4" alignment="CENTER_RIGHT">
+                <Label text="Filtrer par mois"
+                       style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+                <ComboBox fx:id="cbMois" prefWidth="200"
+                          style="-fx-background-color: #ffffff; -fx-border-color: #e2e8f0;
+                                 -fx-border-radius: 8; -fx-background-radius: 8;
+                                 -fx-font-size: 13px;"/>
+            </VBox>
+        </HBox>
 
         <!-- CARTES STAT -->
         <HBox spacing="16">
+
+            <!-- Questionnaires -->
             <VBox spacing="6" HBox.hgrow="ALWAYS"
                   style="-fx-background-color: #ffffff; -fx-background-radius: 12;
                          -fx-border-color: #e0e7ff; -fx-border-radius: 12; -fx-border-width: 1;
@@ -25,9 +42,11 @@
                 <Label text="📋" style="-fx-font-size: 24px;"/>
                 <Label fx:id="lblTotalQuestionnaires" text="0"
                        style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #6366f1;"/>
-                <Label text="Questionnaires" style="-fx-font-size: 12px; -fx-text-fill: #9ca3af;"/>
+                <Label text="Questionnaires"
+                       style="-fx-font-size: 12px; -fx-text-fill: #9ca3af;"/>
             </VBox>
 
+            <!-- Questions -->
             <VBox spacing="6" HBox.hgrow="ALWAYS"
                   style="-fx-background-color: #ffffff; -fx-background-radius: 12;
                          -fx-border-color: #d1fae5; -fx-border-radius: 12; -fx-border-width: 1;
@@ -35,9 +54,11 @@
                 <Label text="❓" style="-fx-font-size: 24px;"/>
                 <Label fx:id="lblTotalQuestions" text="0"
                        style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #10b981;"/>
-                <Label text="Questions" style="-fx-font-size: 12px; -fx-text-fill: #9ca3af;"/>
+                <Label text="Questions"
+                       style="-fx-font-size: 12px; -fx-text-fill: #9ca3af;"/>
             </VBox>
 
+            <!-- Réponses -->
             <VBox spacing="6" HBox.hgrow="ALWAYS"
                   style="-fx-background-color: #ffffff; -fx-background-radius: 12;
                          -fx-border-color: #fde68a; -fx-border-radius: 12; -fx-border-width: 1;
@@ -45,9 +66,11 @@
                 <Label text="📝" style="-fx-font-size: 24px;"/>
                 <Label fx:id="lblTotalReponses" text="0"
                        style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #f59e0b;"/>
-                <Label text="Réponses" style="-fx-font-size: 12px; -fx-text-fill: #9ca3af;"/>
+                <Label text="Réponses"
+                       style="-fx-font-size: 12px; -fx-text-fill: #9ca3af;"/>
             </VBox>
 
+            <!-- Besoin Psy -->
             <VBox spacing="6" HBox.hgrow="ALWAYS"
                   style="-fx-background-color: #ffffff; -fx-background-radius: 12;
                          -fx-border-color: #fecaca; -fx-border-radius: 12; -fx-border-width: 1;
@@ -55,12 +78,16 @@
                 <Label text="🧑‍⚕️" style="-fx-font-size: 24px;"/>
                 <Label fx:id="lblBesoinPsy" text="0"
                        style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #ef4444;"/>
-                <Label text="Besoin Suivi Psy" style="-fx-font-size: 12px; -fx-text-fill: #9ca3af;"/>
+                <Label text="Besoin Suivi Psy"
+                       style="-fx-font-size: 12px; -fx-text-fill: #9ca3af;"/>
             </VBox>
+
         </HBox>
 
-        <!-- GRAPHIQUES -->
+        <!-- GRAPHIQUES LIGNE 1 : PieChart + BarChart Niveau -->
         <HBox spacing="16">
+
+            <!-- Camembert par type -->
             <VBox spacing="8" HBox.hgrow="ALWAYS"
                   style="-fx-background-color: #ffffff; -fx-background-radius: 12;
                          -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-border-width: 1;
@@ -71,6 +98,7 @@
                           style="-fx-background-color: transparent;"/>
             </VBox>
 
+            <!-- Barres par niveau -->
             <VBox spacing="8" HBox.hgrow="ALWAYS"
                   style="-fx-background-color: #ffffff; -fx-background-radius: 12;
                          -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-border-width: 1;
@@ -83,14 +111,15 @@
                     <yAxis><NumberAxis label="Nombre"/></yAxis>
                 </BarChart>
             </VBox>
+
         </HBox>
 
-        <!-- TOP QUESTIONNAIRES -->
+        <!-- GRAPHIQUE LIGNE 2 : Top Questionnaires -->
         <VBox spacing="8"
               style="-fx-background-color: #ffffff; -fx-background-radius: 12;
                      -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-border-width: 1;
                      -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
-            <Label text="🏆 Questionnaires les plus répondus"
+            <Label text="🏆 Top 5 Questionnaires les plus répondus"
                    style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
             <BarChart fx:id="barTopQuestionnaires" prefHeight="250"
                       style="-fx-background-color: transparent;">
