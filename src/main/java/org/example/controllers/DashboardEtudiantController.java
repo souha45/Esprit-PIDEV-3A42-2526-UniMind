@@ -12,8 +12,13 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.example.entities.User;
+import org.example.entities.Evenement;
+import org.example.entities.Participation;
 import org.example.utils.MyDataBase_Unimind;
 import org.example.utils.NavigationContext;
+import org.example.services.EvenementService;
+import org.example.services.ParticipationService;
+import org.example.enums.StatutEvenement;
 
 import java.io.IOException;
 import java.sql.*;
@@ -21,6 +26,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
+import java.util.List;
 import java.util.Locale;
 
 public class DashboardEtudiantController extends BaseDashboardController
@@ -71,6 +77,14 @@ public class DashboardEtudiantController extends BaseDashboardController
     // ── Mon psy ─────────────────────────────────────────────────────
     @FXML private VBox  boxMonPsy;
     @FXML private Label lblEmptyPsy;
+
+    // ── Événements & Participations (Module événements) ─────────────
+    @FXML private VBox listeEvenementsDashboard;
+    @FXML private Label lblNbEvenements;
+    @FXML private Label lblEmptyEvenements;
+    @FXML private VBox listeParticipationsDashboard;
+    @FXML private Label lblNbParticipations;
+    @FXML private Label lblEmptyParticipations;
 
     // ── Données ─────────────────────────────────────────────────────
     private User     utilisateur;
@@ -145,6 +159,8 @@ public class DashboardEtudiantController extends BaseDashboardController
         chargerRepartitionStatuts(etudiantId);
         chargerDernieresConsultations(etudiantId);
         chargerMonPsy(etudiantId);
+        chargerEvenementsDashboard();
+        chargerParticipationsDashboard(etudiantId);
     }
 
     // ── 1. Stat cards ───────────────────────────────────────────────
@@ -460,6 +476,145 @@ public class DashboardEtudiantController extends BaseDashboardController
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    // ── Événements à venir (Module événements) ───────────────────────
+    private void chargerEvenementsDashboard() {
+        try {
+            EvenementService evenementService = new EvenementService();
+            List<Evenement> evenements = evenementService.afficher();
+
+            // Filtrer: statut A_VENIR ou EN_COURS, date debut >= aujourd'hui
+            LocalDate today = LocalDate.now();
+            List<Evenement> evenementsAVenir = evenements.stream()
+                    .filter(e -> e.getStatut() == StatutEvenement.A_VENIR || e.getStatut() == StatutEvenement.EN_COURS)
+                    .filter(e -> e.getDateDebut() != null && e.getDateDebut().toLocalDateTime().toLocalDate().isAfter(today.minusDays(1)))
+                    .sorted((e1, e2) -> e1.getDateDebut().compareTo(e2.getDateDebut()))
+                    .limit(3)
+                    .toList();
+
+            lblNbEvenements.setText(String.valueOf(evenementsAVenir.size()));
+
+            if (evenementsAVenir.isEmpty()) {
+                lblEmptyEvenements.setVisible(true);
+                lblEmptyEvenements.setManaged(true);
+            } else {
+                listeEvenementsDashboard.getChildren().clear();
+                for (Evenement e : evenementsAVenir) {
+                    HBox card = new HBox(12);
+                    card.setAlignment(Pos.CENTER_LEFT);
+                    card.setStyle("-fx-background-color: #f8f7ff; -fx-background-radius: 10; -fx-padding: 12 14;");
+
+                    VBox info = new VBox(4);
+                    HBox.setHgrow(info, Priority.ALWAYS);
+
+                    Label lTitre = new Label(e.getTitre() != null ? e.getTitre() : "Sans titre");
+                    lTitre.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #3730a3;");
+                    lTitre.setWrapText(true);
+
+                    String dateStr = e.getDateDebut() != null ? e.getDateDebut().toLocalDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "";
+                    Label lDate = new Label(dateStr);
+                    lDate.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;");
+
+                    Label lType = new Label(e.getType() != null ? e.getType().name() : "");
+                    lType.setStyle("-fx-background-color: #ede9fe; -fx-text-fill: #6366f1; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 2 8; -fx-background-radius: 12;");
+
+                    info.getChildren().addAll(lTitre, lDate, lType);
+                    card.getChildren().addAll(info);
+                    listeEvenementsDashboard.getChildren().add(card);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            lblEmptyEvenements.setVisible(true);
+            lblEmptyEvenements.setManaged(true);
+        }
+    }
+
+    // ── Mes Participations (Module événements) ────────────────────────
+    private void chargerParticipationsDashboard(int etudiantId) {
+        try {
+            ParticipationService participationService = new ParticipationService();
+            List<Participation> participations = participationService.afficher();
+
+            // Filtrer: participations de cet étudiant, statut CONFIRME
+            List<Participation> mesParticipations = participations.stream()
+                    .filter(p -> p.getEtudiantId() == etudiantId)
+                    .filter(p -> p.getStatut() == org.example.enums.StatutParticipation.CONFIRME)
+                    .toList();
+
+            lblNbParticipations.setText(String.valueOf(mesParticipations.size()));
+
+            if (mesParticipations.isEmpty()) {
+                lblEmptyParticipations.setVisible(true);
+                lblEmptyParticipations.setManaged(true);
+            } else {
+                listeParticipationsDashboard.getChildren().clear();
+                EvenementService evenementService = new EvenementService();
+                LocalDate today = LocalDate.now();
+
+                // Filtrer par date de l'événement et limiter à 3
+                List<Participation> participationsFiltrees = mesParticipations.stream()
+                        .filter(p -> {
+                            try {
+                                Evenement e = evenementService.findById(p.getEvenementId());
+                                return e != null && e.getDateDebut() != null
+                                        && e.getDateDebut().toLocalDateTime().toLocalDate().isAfter(today.minusDays(1));
+                            } catch (SQLException ex) {
+                                return false;
+                            }
+                        })
+                        .sorted((p1, p2) -> {
+                            try {
+                                Evenement e1 = evenementService.findById(p1.getEvenementId());
+                                Evenement e2 = evenementService.findById(p2.getEvenementId());
+                                if (e1 != null && e2 != null && e1.getDateDebut() != null && e2.getDateDebut() != null) {
+                                    return e1.getDateDebut().compareTo(e2.getDateDebut());
+                                }
+                            } catch (SQLException ex) {
+                                ex.printStackTrace();
+                            }
+                            return 0;
+                        })
+                        .limit(3)
+                        .toList();
+
+                for (Participation p : participationsFiltrees) {
+                    try {
+                        Evenement e = evenementService.findById(p.getEvenementId());
+                        if (e != null) {
+                            HBox card = new HBox(12);
+                            card.setAlignment(Pos.CENTER_LEFT);
+                            card.setStyle("-fx-background-color: #f0fdf4; -fx-background-radius: 10; -fx-padding: 12 14;");
+
+                            VBox info = new VBox(4);
+                            HBox.setHgrow(info, Priority.ALWAYS);
+
+                            Label lTitre = new Label(e.getTitre() != null ? e.getTitre() : "Sans titre");
+                            lTitre.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #166534;");
+                            lTitre.setWrapText(true);
+
+                            String dateStr = e.getDateDebut() != null ? e.getDateDebut().toLocalDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "";
+                            Label lDate = new Label(dateStr);
+                            lDate.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;");
+
+                            Label lStatut = new Label("Confirmé");
+                            lStatut.setStyle("-fx-background-color: #dcfce7; -fx-text-fill: #16a34a; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 2 8; -fx-background-radius: 12;");
+
+                            info.getChildren().addAll(lTitre, lDate, lStatut);
+                            card.getChildren().addAll(info);
+                            listeParticipationsDashboard.getChildren().add(card);
+                        }
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            lblEmptyParticipations.setVisible(true);
+            lblEmptyParticipations.setManaged(true);
         }
     }
 

@@ -66,12 +66,17 @@
                                     </children>
                                 </VBox>
 
-                                <HBox spacing="10" alignment="CENTER_LEFT" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="5">
+                                <VBox spacing="6" GridPane.columnIndex="5" GridPane.rowIndex="0">
                                     <children>
-                                        <Button text="Filtrer" onAction="#appliquerFiltres" styleClass="btn-primary" />
-                                        <Button text="Réinitialiser" onAction="#reinitialiserFiltres" styleClass="btn-secondary" />
+                                        <Label text="" styleClass="form-label" />
+                                        <HBox spacing="10" alignment="CENTER_LEFT">
+                                            <children>
+                                                <Button text="Filtrer" onAction="#appliquerFiltres" styleClass="btn-primary" />
+                                                <Button text="Réinitialiser" onAction="#reinitialiserFiltres" styleClass="btn-secondary" />
+                                            </children>
+                                        </HBox>
                                     </children>
-                                </HBox>
+                                </VBox>
                             </children>
                         </GridPane>
                     </children>

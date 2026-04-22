@@ -6,8 +6,14 @@ import javafx.fxml.Initializable;
 import javafx.scene.chart.*;
 import org.example.entities.CategorieMeditation;
 import org.example.entities.SeanceMeditation;
+import org.example.entities.Evenement;
+import org.example.entities.Participation;
 import org.example.services.CategorieMeditationServices;
 import org.example.services.SeanceMeditationServices;
+import org.example.services.EvenementService;
+import org.example.services.ParticipationService;
+import org.example.enums.StatutEvenement;
+import org.example.enums.StatutParticipation;
 
 import java.net.URL;
 import java.sql.SQLException;
@@ -29,8 +35,21 @@ public class StatsController implements Initializable {
     @FXML private CategoryAxis xAxis;
     @FXML private PieChart pieChart;
 
+    // ── Module Événements: KPI Labels ──
+    @FXML private javafx.scene.control.Label lblTotalEvenements;
+    @FXML private javafx.scene.control.Label lblEvenementsAVenir;
+    @FXML private javafx.scene.control.Label lblTotalParticipations;
+    @FXML private javafx.scene.control.Label lblParticipationsConfirmees;
+
+    // ── Module Événements: Charts ──
+    @FXML private BarChart<String, Number> barChartEvenements;
+    @FXML private CategoryAxis xAxisEvenements;
+    @FXML private PieChart pieChartParticipations;
+
     private final SeanceMeditationServices seanceService = new SeanceMeditationServices();
     private final CategorieMeditationServices categorieService = new CategorieMeditationServices();
+    private final EvenementService evenementService = new EvenementService();
+    private final ParticipationService participationService = new ParticipationService();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -41,6 +60,14 @@ public class StatsController implements Initializable {
             loadKPIs(seances, categories);
             loadLineChart(seances);
             loadPieChart(seances, categories);
+
+            // ── Module Événements ──
+            List<Evenement> evenements = evenementService.afficher();
+            List<Participation> participations = participationService.afficher();
+
+            loadEventKPIs(evenements, participations);
+            loadEventBarChart(evenements);
+            loadParticipationPieChart(participations);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -169,6 +196,112 @@ public class StatsController implements Initializable {
                 javafx.scene.control.Tooltip.install(data.getNode(),
                         new javafx.scene.control.Tooltip(
                                 data.getName() + "\n" + (int) data.getPieValue() + " séance(s)"
+                        ))
+        );
+    }
+
+    // ==================== MODULE ÉVÉNEMENTS ====================
+
+    private void loadEventKPIs(List<Evenement> evenements, List<Participation> participations) {
+        lblTotalEvenements.setText(String.valueOf(evenements.size()));
+
+        LocalDate today = LocalDate.now();
+        long aVenir = evenements.stream()
+                .filter(e -> e.getStatut() == StatutEvenement.A_VENIR || e.getStatut() == StatutEvenement.EN_COURS)
+                .filter(e -> e.getDateDebut() != null && e.getDateDebut().toLocalDateTime().toLocalDate().isAfter(today.minusDays(1)))
+                .count();
+        lblEvenementsAVenir.setText(String.valueOf(aVenir));
+
+        lblTotalParticipations.setText(String.valueOf(participations.size()));
+
+        long confirmees = participations.stream()
+                .filter(p -> p.getStatut() == StatutParticipation.CONFIRME)
+                .count();
+        lblParticipationsConfirmees.setText(String.valueOf(confirmees));
+    }
+
+    private void loadEventBarChart(List<Evenement> evenements) {
+        // Count events by type
+        Map<String, Long> countByType = evenements.stream()
+                .filter(e -> e.getType() != null)
+                .collect(Collectors.groupingBy(
+                        e -> e.getType().name(),
+                        Collectors.counting()
+                ));
+
+        // Build series
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        series.setName("Événements");
+
+        for (Map.Entry<String, Long> entry : countByType.entrySet()) {
+            XYChart.Data<String, Number> dataPoint = new XYChart.Data<>(entry.getKey(), entry.getValue());
+            series.getData().add(dataPoint);
+        }
+
+        xAxisEvenements.setCategories(FXCollections.observableArrayList(countByType.keySet()));
+        barChartEvenements.getData().add(series);
+
+        // Style the bars after rendering
+        barChartEvenements.setAnimated(true);
+        barChartEvenements.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                styleBarChart();
+            }
+        });
+
+        javafx.application.Platform.runLater(this::styleBarChart);
+    }
+
+    private void styleBarChart() {
+        // Style the bars
+        barChartEvenements.lookupAll(".chart-bar").forEach(node ->
+                node.setStyle("-fx-bar-fill: #6366f1;")
+        );
+    }
+
+    private void loadParticipationPieChart(List<Participation> participations) {
+        // Count participations by status
+        Map<StatutParticipation, Long> countByStatut = participations.stream()
+                .collect(Collectors.groupingBy(
+                        Participation::getStatut,
+                        Collectors.counting()
+                ));
+
+        // Build pie slices
+        List<PieChart.Data> pieData = new ArrayList<>();
+        String[] colors = {
+                "#10b981", // CONFIRME - green
+                "#f59e0b", // EN_ATTENTE - orange
+                "#ef4444"  // ANNULE - red
+        };
+
+        int colorIdx = 0;
+        for (Map.Entry<StatutParticipation, Long> entry : countByStatut.entrySet()) {
+            String statutName = entry.getKey().getDbValue();
+            PieChart.Data slice = new PieChart.Data(statutName + " (" + entry.getValue() + ")", entry.getValue());
+            pieData.add(slice);
+
+            // Apply color after rendering
+            final String color = colors[Math.min(colorIdx, colors.length - 1)];
+            slice.nodeProperty().addListener((obs, old, node) -> {
+                if (node != null) {
+                    node.setStyle("-fx-pie-color: " + color + ";");
+                }
+            });
+            colorIdx++;
+        }
+
+        if (pieData.isEmpty()) {
+            pieData.add(new PieChart.Data("Aucune participation", 1));
+        }
+
+        pieChartParticipations.setData(FXCollections.observableArrayList(pieData));
+
+        // Tooltips on hover
+        pieChartParticipations.getData().forEach(data ->
+                javafx.scene.control.Tooltip.install(data.getNode(),
+                        new javafx.scene.control.Tooltip(
+                                data.getName() + "\n" + (int) data.getPieValue() + " participation(s)"
                         ))
         );
     }

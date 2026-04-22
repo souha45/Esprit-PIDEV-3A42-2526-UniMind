@@ -18,6 +18,10 @@
         <Label text="Vue d'ensemble de la plateforme Unimind" styleClass="page-subtitle"/>
     </VBox>
 
+    <!-- SCROLLABLE CONTENT -->
+    <ScrollPane fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+        <VBox spacing="0">
+
     <!-- KPI CARDS -->
     <HBox spacing="16">
         <VBox.margin><Insets top="20" right="24" bottom="0" left="24"/></VBox.margin>
@@ -50,7 +54,7 @@
     </HBox>
 
     <!-- CHARTS ROW -->
-    <HBox spacing="16" VBox.vgrow="ALWAYS">
+    <HBox spacing="16" prefHeight="350">
         <VBox.margin><Insets top="20" right="24" bottom="24" left="24"/></VBox.margin>
 
         <!-- LINE CHART: Evolution mensuelle -->
@@ -81,5 +85,78 @@
         </VBox>
 
     </HBox>
+
+    <!-- ── MODULE ÉVÉNEMENTS: KPI CARDS ── -->
+    <VBox spacing="0">
+        <VBox.margin><Insets top="0" right="24" bottom="0" left="24"/></VBox.margin>
+        <Label text="🎪 Statistiques Événements"
+               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3730a3; -fx-padding: 24 0 16 0;"/>
+    </VBox>
+
+    <HBox spacing="16">
+        <VBox.margin><Insets top="0" right="24" bottom="0" left="24"/></VBox.margin>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="🎪" styleClass="stat-icon"/>
+            <Label fx:id="lblTotalEvenements" text="0" styleClass="stat-number"/>
+            <Label text="Total événements" styleClass="stat-label"/>
+        </VBox>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="📅" styleClass="stat-icon"/>
+            <Label fx:id="lblEvenementsAVenir" text="0" styleClass="stat-number"/>
+            <Label text="Événements à venir" styleClass="stat-label"/>
+        </VBox>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="✅" styleClass="stat-icon"/>
+            <Label fx:id="lblTotalParticipations" text="0" styleClass="stat-number"/>
+            <Label text="Total participations" styleClass="stat-label"/>
+        </VBox>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS"
+              style="-fx-border-color: #10b981; -fx-background-color: #ecfdf5;">
+            <Label text="👥" styleClass="stat-icon"/>
+            <Label fx:id="lblParticipationsConfirmees" text="0" styleClass="stat-number"
+                   style="-fx-text-fill: #059669;"/>
+            <Label text="Participations confirmées" styleClass="stat-label"/>
+        </VBox>
+    </HBox>
+
+    <!-- ── MODULE ÉVÉNEMENTS: CHARTS ROW ── -->
+    <HBox spacing="16" prefHeight="350">
+        <VBox.margin><Insets top="20" right="24" bottom="24" left="24"/></VBox.margin>
+
+        <!-- BAR CHART: Événements par type -->
+        <VBox styleClass="chart-card" HBox.hgrow="ALWAYS">
+            <Label text="📊 Événements par type" styleClass="chart-title"/>
+            <Label text="Répartition des événements selon leur type" styleClass="chart-subtitle"/>
+            <BarChart fx:id="barChartEvenements" VBox.vgrow="ALWAYS"
+                      styleClass="custom-chart" animated="true"
+                      legendVisible="false">
+                <xAxis>
+                    <CategoryAxis label="Type" fx:id="xAxisEvenements" styleClass="chart-axis"/>
+                </xAxis>
+                <yAxis>
+                    <NumberAxis label="Nombre" lowerBound="0" tickUnit="1"
+                                minorTickVisible="false" styleClass="chart-axis"/>
+                </yAxis>
+            </BarChart>
+        </VBox>
+
+        <!-- PIE CHART: Participations par statut -->
+        <VBox styleClass="chart-card" prefWidth="380">
+            <Label text="❤ Participations par statut" styleClass="chart-title"/>
+            <Label text="Répartition des participations selon le statut" styleClass="chart-subtitle"/>
+            <PieChart fx:id="pieChartParticipations" VBox.vgrow="ALWAYS"
+                      styleClass="custom-chart" animated="true"
+                      labelsVisible="true" legendVisible="true"
+                      legendSide="BOTTOM"/>
+        </VBox>
+
+    </HBox>
+
+        </VBox>
+    </ScrollPane>
 
 </VBox>

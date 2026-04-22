@@ -8,11 +8,12 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.Node;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -75,9 +76,30 @@ public class EvenementsEtudiantController {
 
         if (tileEvenements != null) {
             tileEvenements.setMaxWidth(Double.MAX_VALUE);
-            if (tileEvenements.getParent() instanceof Region parentRegion) {
-                tileEvenements.prefWrapLengthProperty().bind(parentRegion.widthProperty());
-            }
+            tileEvenements.sceneProperty().addListener((obs, oldScene, newScene) -> {
+                if (newScene == null) {
+                    return;
+                }
+                ScrollPane scrollPane = findScrollPaneParent(tileEvenements);
+                if (scrollPane == null) {
+                    return;
+                }
+
+                // Utilise la largeur réelle du viewport (zone visible) pour calculer le wrapping.
+                // On retire un peu de marge pour éviter les arrondis/scrollbars.
+                scrollPane.viewportBoundsProperty().addListener((o, oldBounds, newBounds) -> {
+                    if (newBounds == null) {
+                        return;
+                    }
+                    tileEvenements.setPrefWrapLength(Math.max(0, newBounds.getWidth() - 10));
+                });
+
+                // Appliquer une première fois immédiatement
+                var bounds = scrollPane.getViewportBounds();
+                if (bounds != null) {
+                    tileEvenements.setPrefWrapLength(Math.max(0, bounds.getWidth() - 10));
+                }
+            });
         }
 
         try {
@@ -232,6 +254,17 @@ public class EvenementsEtudiantController {
         // Initialiser le ComboBox de tri
         comboTri.getItems().setAll("Date (plus proche)", "Date (plus lointain)");
         comboTri.setValue("Date (plus proche)");
+    }
+
+    private ScrollPane findScrollPaneParent(Node node) {
+        Node current = node;
+        while (current != null) {
+            if (current instanceof ScrollPane sp) {
+                return sp;
+            }
+            current = current.getParent();
+        }
+        return null;
     }
 
     private void chargerFavorisEtudiant() {
