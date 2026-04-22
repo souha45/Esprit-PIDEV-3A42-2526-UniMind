@@ -98,8 +98,12 @@ public class DashboardEtudiantController extends BaseDashboardController
     // ────────────────────────────────────────────────────────────────
     @FXML
     public void initialize() {
-        // Initialiser le contexte de navigation
-        NavigationContext.setContentScrollPane(contentScrollPane);
+        // Initialiser le contexte de navigation (uniquement si pas déjà initialisé)
+        // Sinon, lors d'un rechargement de dashboard dans le centre, on écrase le ScrollPane principal
+        // et la navigation « coince ».
+        if (NavigationContext.getContentScrollPane() == null) {
+            NavigationContext.setContentScrollPane(contentScrollPane);
+        }
 
         // Date en français
         LocalDate today = LocalDate.now();
