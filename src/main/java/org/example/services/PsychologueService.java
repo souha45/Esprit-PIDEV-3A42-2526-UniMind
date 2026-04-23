@@ -201,4 +201,25 @@ public class PsychologueService extends UserService {
         }
         return null;
     }
+
+
+    /**
+     * Récupère l'email d'un psychologue par son ID
+     * @param userId L'ID du psychologue
+     * @return L'email ou null si non trouvé
+     */
+    public String getEmailPsychologueById(int userId) {
+        String sql = "SELECT email FROM user WHERE user_id = ? AND role = 'psychologue'";
+
+        try (PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setInt(1, userId);
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) {
+                return rs.getString("email");
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération de l'email: " + e.getMessage());
+        }
+        return null;
+    }
 }

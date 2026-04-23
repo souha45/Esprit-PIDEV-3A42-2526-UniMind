@@ -12,10 +12,9 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.example.entities.DisponibilitePsy;
 import org.example.entities.Psychologue;
+import org.example.entities.Etudiant;
 import org.example.entities.RendezVous;
-import org.example.services.DisponibilitePsyService;
-import org.example.services.PsychologueService;
-import org.example.services.RendezVousService;
+import org.example.services.*;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -23,6 +22,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PrendreRendezVousModalController {
 
@@ -41,7 +42,7 @@ public class PrendreRendezVousModalController {
     @FXML private Button           btnAnnuler;
     @FXML private Button           btnConfirmer;
 
-    // ── Toast + Overlay overlay ─────────────────────────────────────
+    // ── Toast + Overlay ─────────────────────────────────────────────
     @FXML private StackPane toastContainer;
     @FXML private StackPane confirmOverlay;
 
@@ -49,6 +50,11 @@ public class PrendreRendezVousModalController {
     private DisponibilitePsyService disponibiliteService;
     private RendezVousService       rendezVousService;
     private PsychologueService      psychologueService;
+    private EtudiantService      etudiantService;
+    private EmailService            emailService;  // ← Service d'envoi d'email
+
+    // ── Cache pour les noms des psychologues ────────────────────────
+    private Map<Integer, String> psyNameCache = new ConcurrentHashMap<>();
 
     // ── Données ─────────────────────────────────────────────────────
     private ObservableList<DisponibilitePsy> disponibilitesList;
@@ -79,8 +85,16 @@ public class PrendreRendezVousModalController {
         disponibiliteService = new DisponibilitePsyService();
         rendezVousService    = new RendezVousService();
         psychologueService   = new PsychologueService();
+        etudiantService  = new EtudiantService();
+        emailService         = new EmailService();  // ← Initialisation du service email
         disponibilitesList   = FXCollections.observableArrayList();
         filteredList         = new FilteredList<>(disponibilitesList, p -> true);
+
+        // Initialiser le placeholder pour grille vide
+        if (lblEmptyCreneaux != null) {
+            lblEmptyCreneaux.setText("✨ Aucun créneau disponible pour ces critères");
+            lblEmptyCreneaux.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:13px;-fx-text-fill:#c4b5fd;");
+        }
 
         initialiserFiltres();
 
@@ -103,16 +117,19 @@ public class PrendreRendezVousModalController {
     //  FILTRES
     // ════════════════════════════════════════════════════════════════
     private void initialiserFiltres() {
-        comboType.setItems(FXCollections.observableArrayList("Tous","présentiel","en_ligne"));
+        comboType.setItems(FXCollections.observableArrayList("Tous", "présentiel", "en_ligne"));
         comboType.setValue("Tous");
-        comboPsy.valueProperty().addListener((o,ov,nv)         -> appliquerFiltres());
-        comboType.valueProperty().addListener((o,ov,nv)        -> appliquerFiltres());
-        datePickerFiltre.valueProperty().addListener((o,ov,nv) -> appliquerFiltres());
+        comboPsy.valueProperty().addListener((o, ov, nv)         -> appliquerFiltres());
+        comboType.valueProperty().addListener((o, ov, nv)        -> appliquerFiltres());
+        datePickerFiltre.valueProperty().addListener((o, ov, nv) -> appliquerFiltres());
     }
 
     private void remplirComboPsy(List<DisponibilitePsy> liste) {
         ObservableList<String> items = FXCollections.observableArrayList("Tous");
-        liste.stream().map(d -> getNomPsy(d.getUserId())).distinct().forEach(items::add);
+        liste.stream()
+                .map(d -> getNomPsy(d.getUserId()))
+                .distinct()
+                .forEach(items::add);
         comboPsy.setItems(items);
         comboPsy.setValue("Tous");
     }
@@ -121,12 +138,14 @@ public class PrendreRendezVousModalController {
         String psy      = comboPsy.getValue();
         String type     = comboType.getValue();
         LocalDate dateMin = datePickerFiltre.getValue();
+
         filteredList.setPredicate(d -> {
-            boolean mp = psy   == null || "Tous".equals(psy)  || getNomPsy(d.getUserId()).equals(psy);
-            boolean mt = type  == null || "Tous".equals(type) || d.getTypeConsult().toString().equalsIgnoreCase(type);
+            boolean mp = psy == null || "Tous".equals(psy) || getNomPsy(d.getUserId()).equals(psy);
+            boolean mt = type == null || "Tous".equals(type) || d.getTypeConsult().toString().equalsIgnoreCase(type);
             boolean md = dateMin == null || !d.getDateDispo().toLocalDate().isBefore(dateMin);
             return mp && mt && md;
         });
+
         int nb = filteredList.size();
         lblNbCreneaux.setText(nb + " créneau" + (nb > 1 ? "x" : "") + " disponible" + (nb > 1 ? "s" : ""));
         construireGrille();
@@ -138,14 +157,19 @@ public class PrendreRendezVousModalController {
     private void construireGrille() {
         gridCreneaux.getChildren().clear();
         if (filteredList.isEmpty()) {
-            lblEmptyCreneaux.setVisible(true);
-            lblEmptyCreneaux.setManaged(true);
+            if (lblEmptyCreneaux != null) {
+                lblEmptyCreneaux.setVisible(true);
+                lblEmptyCreneaux.setManaged(true);
+            }
             return;
         }
-        lblEmptyCreneaux.setVisible(false);
-        lblEmptyCreneaux.setManaged(false);
-        for (DisponibilitePsy d : filteredList)
+        if (lblEmptyCreneaux != null) {
+            lblEmptyCreneaux.setVisible(false);
+            lblEmptyCreneaux.setManaged(false);
+        }
+        for (DisponibilitePsy d : filteredList) {
             gridCreneaux.getChildren().add(construireCarte(d));
+        }
     }
 
     private VBox construireCarte(DisponibilitePsy dispo) {
@@ -166,7 +190,7 @@ public class PrendreRendezVousModalController {
         boolean presentiel = "présentiel".equalsIgnoreCase(dispo.getTypeConsult().toString());
         Label badge = new Label(presentiel ? "🏢" : "💻");
         badge.setStyle("-fx-background-color:" + (presentiel ? "#dbeafe" : "#ede9fe") + ";" +
-                "-fx-text-fill:"       + (presentiel ? "#1d4ed8" : "#5b21b6") + ";" +
+                "-fx-text-fill:" + (presentiel ? "#1d4ed8" : "#5b21b6") + ";" +
                 "-fx-font-size:10px;-fx-padding:2 7;-fx-background-radius:12;");
         topRow.getChildren().addAll(lPsy, badge);
 
@@ -184,7 +208,7 @@ public class PrendreRendezVousModalController {
 
         String lieu = dispo.getLieu();
         if (presentiel && lieu != null && !lieu.isEmpty()) {
-            Label lLieu = new Label("📍 " + (lieu.length() > 22 ? lieu.substring(0,22)+"…" : lieu));
+            Label lLieu = new Label("📍 " + (lieu.length() > 22 ? lieu.substring(0, 22) + "…" : lieu));
             lLieu.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:11px;-fx-text-fill:#6b7280;");
             carte.getChildren().addAll(topRow, lDate, lHeure, lLieu);
         } else {
@@ -192,7 +216,8 @@ public class PrendreRendezVousModalController {
         }
 
         if (selected) {
-            Region sp = new Region(); VBox.setVgrow(sp, Priority.ALWAYS);
+            Region sp = new Region();
+            VBox.setVgrow(sp, Priority.ALWAYS);
             Label sl = new Label("✓ Sélectionné");
             sl.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:10px;" +
                     "-fx-text-fill:#7c3aed;-fx-font-weight:bold;");
@@ -200,16 +225,28 @@ public class PrendreRendezVousModalController {
         }
 
         carte.setOnMouseClicked(e -> {
-            if (dispo.equals(disponibiliteSelectionnee)) deselectionner();
-            else { disponibiliteSelectionnee = dispo; afficherBandeau(dispo); rafraichirStylesCartes(); }
+            if (dispo.equals(disponibiliteSelectionnee)) {
+                deselectionner();
+            } else {
+                disponibiliteSelectionnee = dispo;
+                afficherBandeau(dispo);
+                construireGrille(); // Rafraîchir les styles
+            }
         });
-        carte.setOnMouseEntered(e -> { if (!dispo.equals(disponibiliteSelectionnee)) carte.setStyle(STYLE_CARTE_HOVER); });
-        carte.setOnMouseExited(e  -> { if (!dispo.equals(disponibiliteSelectionnee)) carte.setStyle(STYLE_CARTE_IDLE);  });
+
+        carte.setOnMouseEntered(e -> {
+            if (!dispo.equals(disponibiliteSelectionnee)) {
+                carte.setStyle(STYLE_CARTE_HOVER);
+            }
+        });
+        carte.setOnMouseExited(e -> {
+            if (!dispo.equals(disponibiliteSelectionnee)) {
+                carte.setStyle(STYLE_CARTE_IDLE);
+            }
+        });
 
         return carte;
     }
-
-    private void rafraichirStylesCartes() { construireGrille(); }
 
     // ════════════════════════════════════════════════════════════════
     //  BANDEAU SÉLECTION
@@ -249,24 +286,96 @@ public class PrendreRendezVousModalController {
     }
 
     // ════════════════════════════════════════════════════════════════
-    //  CONFIRMATION — modal overlay moderne (remplace Alert.CONFIRMATION)
+    //  RÉSERVATION AVEC ENVOI D'EMAIL AU PSYCHOLOGUE
     // ════════════════════════════════════════════════════════════════
+    private void effectuerReservation(DisponibilitePsy dispo, int etudiantId, String motif) {
+        try {
+            // 1. Créer le rendez-vous
+            RendezVous rdv = new RendezVous(dispo.getDispoId(), etudiantId, dispo.getUserId(), motif);
+            rendezVousService.ajouter(rdv);
+
+            // 2. Envoyer l'email au psychologue avec les infos de l'étudiant
+            try {
+                // Récupérer les informations du psychologue
+                Psychologue psychologue = psychologueService.getPsychologueById(dispo.getUserId());
+
+                // Récupérer les informations de l'étudiant
+                Etudiant etudiant = etudiantService.getEtudiantById(etudiantId);
+
+                if (psychologue != null && psychologue.getEmail() != null && !psychologue.getEmail().isEmpty()) {
+                    // ✅ Extraire les informations de l'étudiant avec vérification
+                    String nomEtudiant = "Étudiant";
+                    String prenomEtudiant = "";
+                    String emailEtudiant = "Non renseigné";
+
+                    if (etudiant != null) {
+                        nomEtudiant = etudiant.getNom() != null && !etudiant.getNom().isEmpty()
+                                ? etudiant.getNom() : "Étudiant";
+                        prenomEtudiant = etudiant.getPrenom() != null ? etudiant.getPrenom() : "";
+                        emailEtudiant = etudiant.getEmail() != null ? etudiant.getEmail() : "Non renseigné";
+                    }
+
+                    emailService.envoyerEmailNouveauRdvAuPsy(
+                            psychologue.getEmail(),           // Email du psy
+                            psychologue.getNom(),             // Nom du psy
+                            psychologue.getPrenom(),          // Prénom du psy
+                            nomEtudiant,                      // ✅ Nom de l'étudiant
+                            prenomEtudiant,                   // ✅ Prénom de l'étudiant
+                            emailEtudiant,                    // ✅ Email de l'étudiant
+                            dispo.getDateDispo().toString(),  // Date
+                            dispo.getHeureDebut().toString().substring(0, 5),  // Heure début
+                            dispo.getHeureFin().toString().substring(0, 5),    // Heure fin
+                            dispo.getTypeConsult().toString(), // Type
+                            dispo.getLieu(),                   // Lieu
+                            motif                             // Motif
+                    );
+                    showToast("✓ Rendez-vous réservé ! Un email a été envoyé au psychologue.", ToastType.SUCCESS);
+                } else {
+                    showToast("✓ Rendez-vous réservé ! (Email non envoyé)", ToastType.WARNING);
+                }
+            } catch (Exception e) {
+                System.err.println("❌ Erreur lors de l'envoi de l'email: " + e.getMessage());
+                e.printStackTrace();
+                showToast("✓ Rendez-vous réservé ! (Email non envoyé)", ToastType.WARNING);
+            }
+
+            // 3. Fermer le modal après 1,8 secondes
+            new javafx.animation.Timeline(new javafx.animation.KeyFrame(
+                    Duration.seconds(1.8),
+                    e -> fermerModal()
+            )).play();
+
+        } catch (SQLException e) {
+            showToast("✗ Impossible de réserver : " + e.getMessage(), ToastType.ERROR);
+            e.printStackTrace();
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  CONFIRMATION
+    // ════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════
+//  CONFIRMATION
+// ════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════
+//  CONFIRMATION — Modal overlay moderne (design que tu veux garder)
+// ════════════════════════════════════════════════════════════════
     private void confirmerReservation() {
         if (disponibiliteSelectionnee == null) {
-            showToast("⚠  Veuillez sélectionner un créneau disponible.", ToastType.WARNING);
+            showToast("⚠ Veuillez sélectionner un créneau disponible.", ToastType.WARNING);
             return;
         }
 
-        String motifSaisi  = txtMotif.getText().trim();
-        String motifFinal  = motifSaisi.isEmpty() ? "Consultation psychologique" : motifSaisi;
+        String motifSaisi = txtMotif.getText().trim();
+        String motifFinal = motifSaisi.isEmpty() ? "Consultation psychologique" : motifSaisi;
         DisponibilitePsy d = disponibiliteSelectionnee;
 
-        String debut   = d.getHeureDebut().toString().substring(0, 5);
-        String fin     = d.getHeureFin().toString().substring(0, 5);
-        String nomPsy  = getNomPsy(d.getUserId());
+        String debut = d.getHeureDebut().toString().substring(0, 5);
+        String fin = d.getHeureFin().toString().substring(0, 5);
+        String nomPsy = getNomPsy(d.getUserId());
         String dateStr = d.getDateDispo().toLocalDate()
                 .format(DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy", Locale.FRENCH));
-        dateStr = dateStr.substring(0,1).toUpperCase() + dateStr.substring(1);
+        dateStr = dateStr.substring(0, 1).toUpperCase() + dateStr.substring(1);
 
         // ── Construire le card overlay ────────────────────────────
         VBox card = new VBox(0);
@@ -289,11 +398,11 @@ public class PrendreRendezVousModalController {
         cardBody.setStyle("-fx-padding:18 22 14 22;");
 
         cardBody.getChildren().addAll(
-                rowDetail("👨‍⚕️  Psychologue", nomPsy,   "#4c1d95"),
-                rowDetail("📅  Date",           dateStr,  "#374151"),
-                rowDetail("🕐  Horaire",         debut + " – " + fin, "#374151"),
-                rowDetail("💬  Type",            d.getTypeConsult().toString(), "#374151"),
-                rowDetail("📝  Motif",           motifFinal, "#374151")
+                rowDetail("👨‍⚕️  Psychologue", nomPsy, "#4c1d95"),
+                rowDetail("📅  Date", dateStr, "#374151"),
+                rowDetail("🕐  Horaire", debut + " – " + fin, "#374151"),
+                rowDetail("💬  Type", d.getTypeConsult().toString(), "#374151"),
+                rowDetail("📝  Motif", motifFinal, "#374151")
         );
 
         // Footer
@@ -322,6 +431,7 @@ public class PrendreRendezVousModalController {
         card.getChildren().addAll(cardHeader, cardBody, cardFooter);
 
         // Afficher l'overlay
+        confirmOverlay.getChildren().clear();  // ← Nettoie avant d'ajouter
         confirmOverlay.getChildren().add(card);
         confirmOverlay.setVisible(true);
         confirmOverlay.setManaged(true);
@@ -329,17 +439,27 @@ public class PrendreRendezVousModalController {
 
         // Fade-in
         FadeTransition ft = new FadeTransition(Duration.millis(180), card);
-        ft.setFromValue(0); ft.setToValue(1); ft.play();
+        ft.setFromValue(0);
+        ft.setToValue(1);
+        ft.play();
 
-        // Actions
+        // Actions des boutons
         final String mf = motifFinal;
+        final DisponibilitePsy dFinal = d;
+        final int etudiantIdFinal = this.etudiantId;
+
         btnNon.setOnAction(e -> fermerOverlayConfirm(card));
-        confirmOverlay.setOnMouseClicked(e -> {
-            if (e.getTarget() == confirmOverlay) fermerOverlayConfirm(card);
-        });
+
         btnOui.setOnAction(e -> {
             fermerOverlayConfirm(card);
-            effectuerReservation(d, etudiantId, mf);
+            effectuerReservation(dFinal, etudiantIdFinal, mf);
+        });
+
+        // Cliquer à l'extérieur ferme aussi
+        confirmOverlay.setOnMouseClicked(e -> {
+            if (e.getTarget() == confirmOverlay) {
+                fermerOverlayConfirm(card);
+            }
         });
     }
 
@@ -362,7 +482,8 @@ public class PrendreRendezVousModalController {
 
     private void fermerOverlayConfirm(VBox card) {
         FadeTransition ft = new FadeTransition(Duration.millis(150), card);
-        ft.setFromValue(1); ft.setToValue(0);
+        ft.setFromValue(1);
+        ft.setToValue(0);
         ft.setOnFinished(e -> {
             confirmOverlay.getChildren().remove(card);
             if (confirmOverlay.getChildren().isEmpty()) {
@@ -374,30 +495,20 @@ public class PrendreRendezVousModalController {
     }
 
     // ════════════════════════════════════════════════════════════════
-    //  RÉSERVATION
-    // ════════════════════════════════════════════════════════════════
-    private void effectuerReservation(DisponibilitePsy dispo, int etudiantId, String motif) {
-        try {
-            RendezVous rdv = new RendezVous(dispo.getDispoId(), etudiantId, dispo.getUserId(), motif);
-            rendezVousService.ajouter(rdv);
-            showToast("✓  Rendez-vous réservé avec succès !", ToastType.SUCCESS);
-            // Ferme le modal après 1,8 s
-            new javafx.animation.Timeline(new javafx.animation.KeyFrame(
-                    Duration.seconds(1.8),
-                    e -> fermerModal()
-            )).play();
-        } catch (SQLException e) {
-            showToast("✗  Impossible de réserver : " + e.getMessage(), ToastType.ERROR);
-            e.printStackTrace();
-        }
-    }
-
-    // ════════════════════════════════════════════════════════════════
     //  TOAST
     // ════════════════════════════════════════════════════════════════
     private enum ToastType { SUCCESS, WARNING, ERROR }
 
     private void showToast(String message, ToastType type) {
+        if (toastContainer == null) {
+            Alert alert = new Alert(type == ToastType.ERROR ? Alert.AlertType.ERROR :
+                    type == ToastType.WARNING ? Alert.AlertType.WARNING :
+                            Alert.AlertType.INFORMATION);
+            alert.setContentText(message);
+            alert.show();
+            return;
+        }
+
         String bg = switch (type) {
             case SUCCESS -> "#10b981";
             case WARNING -> "#f59e0b";
@@ -417,11 +528,13 @@ public class PrendreRendezVousModalController {
         StackPane.setAlignment(pill, Pos.BOTTOM_CENTER);
 
         FadeTransition fi = new FadeTransition(Duration.millis(200), pill);
-        fi.setFromValue(0); fi.setToValue(1);
+        fi.setFromValue(0);
+        fi.setToValue(1);
 
         FadeTransition fo = new FadeTransition(Duration.millis(400), pill);
         fo.setDelay(Duration.seconds(type == ToastType.SUCCESS ? 1.4 : 2.4));
-        fo.setFromValue(1); fo.setToValue(0);
+        fo.setFromValue(1);
+        fo.setToValue(0);
         fo.setOnFinished(e -> {
             toastContainer.getChildren().remove(pill);
             if (toastContainer.getChildren().isEmpty()) {
@@ -429,26 +542,37 @@ public class PrendreRendezVousModalController {
                 toastContainer.setManaged(false);
             }
         });
-        fi.play(); fo.play();
+        fi.play();
+        fo.play();
     }
 
     // ════════════════════════════════════════════════════════════════
     //  HELPERS
     // ════════════════════════════════════════════════════════════════
     private String getNomPsy(int userId) {
-        if (psychologueService == null) return "Psy #" + userId;
+        if (psyNameCache.containsKey(userId)) {
+            return psyNameCache.get(userId);
+        }
+
         try {
             Psychologue psy = psychologueService.getPsychologueById(userId);
-            if (psy != null)
-                return "Dr. " + psy.getPrenom() + " " + psy.getNom().toUpperCase();
+            if (psy != null) {
+                String nom = "Dr. " + psy.getPrenom() + " " + psy.getNom().toUpperCase();
+                psyNameCache.put(userId, nom);
+                return nom;
+            }
         } catch (Exception e) {
-            System.err.println("Erreur récupération psy : " + e.getMessage());
+            System.err.println("Erreur récupération psy ID " + userId + " : " + e.getMessage());
         }
-        return "Psy #" + userId;
+        String fallback = "Psy #" + userId;
+        psyNameCache.put(userId, fallback);
+        return fallback;
     }
 
     private void fermerModal() {
-        if (modalStage != null) modalStage.close();
+        if (modalStage != null) {
+            modalStage.close();
+        }
     }
 
     public void setEtudiantId(int id) {
@@ -456,5 +580,7 @@ public class PrendreRendezVousModalController {
         chargerDisponibilites();
     }
 
-    public void setModalStage(Stage stage) { this.modalStage = stage; }
+    public void setModalStage(Stage stage) {
+        this.modalStage = stage;
+    }
 }

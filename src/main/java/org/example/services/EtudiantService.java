@@ -188,4 +188,33 @@ public class EtudiantService extends UserService {
         }
         return null;
     }
+
+    /**
+     * Récupère un étudiant par son ID
+     */
+    public Etudiant getEtudiantById(int userId) {
+        String sql = "SELECT * FROM user WHERE user_id = ? AND role = 'Etudiant'";
+
+        try (PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setInt(1, userId);
+            ResultSet rs = pst.executeQuery();
+
+            if (rs.next()) {
+                Etudiant etu = new Etudiant();
+                etu.setUserId(rs.getInt("user_id"));
+                etu.setNom(rs.getString("nom"));
+                etu.setPrenom(rs.getString("prenom"));
+                etu.setEmail(rs.getString("email"));
+                etu.setCin(rs.getString("cin"));
+                etu.setActive(rs.getBoolean("is_active"));
+                etu.setVerified(rs.getBoolean("is_verified"));
+                etu.setIdentifiant(rs.getString("identifiant"));
+                etu.setNomEtablissement(rs.getString("nom_etablissement"));
+                return etu;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur récupération étudiant: " + e.getMessage());
+        }
+        return null;
+    }
 }
