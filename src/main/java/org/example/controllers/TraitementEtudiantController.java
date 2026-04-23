@@ -536,13 +536,23 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             suivisSection.getChildren().add(aucunSuiviMsg);
         }
 
-        // Bouton ajouter suivi
+        // Boutons d'actions
+        HBox actionsBox = new HBox();
+        actionsBox.setSpacing(10);
+        actionsBox.setAlignment(Pos.CENTER);
+
         Button btnAjouterSuivi = new Button("+ Ajouter un suivi");
         btnAjouterSuivi.getStyleClass().add("btn-primary-small");
         btnAjouterSuivi.setMaxWidth(Double.MAX_VALUE);
         btnAjouterSuivi.setOnAction(e -> ouvrirAjoutSuivi(traitement));
 
-        carte.getChildren().addAll(header, details, suivisSection, btnAjouterSuivi);
+        Button btnTraduire = new Button("Traduire");
+        btnTraduire.getStyleClass().add("btn-secondary-small");
+        btnTraduire.setOnAction(e -> ouvrirTraduction(traitement));
+
+        actionsBox.getChildren().addAll(btnAjouterSuivi, btnTraduire);
+
+        carte.getChildren().addAll(header, details, suivisSection, actionsBox);
 
         return carte;
     }
@@ -688,5 +698,26 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
 
         fadeIn.play();
         fadeOut.play();
+    }
+
+    private void ouvrirTraduction(Traitement traitement) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-traduction-view.fxml"));
+            Parent root = loader.load();
+
+            TraitementTraductionController controller = loader.getController();
+            controller.setTraitement(traitement);
+            controller.setUtilisateur(currentUser);
+
+            Stage stage = new Stage();
+            stage.setTitle("Traduction - " + traitement.getTitre());
+            stage.setScene(new Scene(root, 1000, 700));
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (lblStatus != null) lblStatus.setText("Erreur: Impossible d'ouvrir la page de traduction");
+            afficherToast("Impossible d'ouvrir la page de traduction", false);
+        }
     }
 }
