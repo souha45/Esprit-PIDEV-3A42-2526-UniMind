@@ -53,12 +53,36 @@
             right: 20px;
             background: rgba(0,0,0,0.85);
             color: white;
-            padding: 12px;
+            padding: 12px 16px;
             border-radius: 8px;
             font-size: 13px;
             z-index: 1000;
             text-align: center;
             font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        #addressText {
+            flex: 1;
+            text-align: left;
+        }
+        #btnConfirmer {
+            display: none;
+            padding: 8px 18px;
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        #btnConfirmer:hover {
+            background: #16a34a;
         }
     </style>
 </head>
@@ -69,7 +93,8 @@
 </div>
 <div id="map"></div>
 <div class="info-box" id="infoBox">
-    &#128205; Cliquez sur la carte pour sélectionner un lieu
+    <span id="addressText">&#128205; Cliquez sur la carte pour sélectionner un lieu</span>
+    <button id="btnConfirmer" onclick="confirmerLieu()">&#10003; Confirmer ce lieu</button>
 </div>
 
 <script>
@@ -89,25 +114,7 @@
     var geocodeTimer = null;   // debounce : on attend 1s avant d'appeler Nominatim
 
     // ─────────────────────────────────────────────────────────
-    // Envoi de l'adresse vers Java via le pont JSObject
-    // ─────────────────────────────────────────────────────────
-    function sendAddressToJava(address) {
-        if (window.javaApp && window.javaApp.setSelectedAddress) {
-            window.javaApp.setSelectedAddress(address);
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────
-    // Met à jour la barre d'info en bas
-    // ─────────────────────────────────────────────────────────
-    function updateInfoBox(html, isError, isLoading) {
-        var infoBox = document.getElementById('infoBox');
-        infoBox.style.color = isError ? '#f87171' : (isLoading ? '#facc15' : '#4ade80');
-        infoBox.innerHTML = html;
-    }
-
-    // ─────────────────────────────────────────────────────────
-    // XHR helper générique avec User-Agent (obligatoire Nominatim)
+    // XHR helper générique
     // ─────────────────────────────────────────────────────────
     function xhrGet(url, onSuccess, onError) {
         var xhr = new XMLHttpRequest();
@@ -197,23 +204,55 @@
         return parts.length > 0 ? parts.join(", ") : null;
     }
 
-    // Affiche l'adresse et l'envoie à Java
-    function showSuccess(address) {
-        updateInfoBox('&#9989; ' + address
-            + ' &nbsp; <strong style="color:#facc15">&#x2713; Lieu sélectionné</strong>',
-            false, false);
-        sendAddressToJava(address);
+    // ─────────────────────────────────────────────────────────
+    // Met à jour la barre d'info — gère le bouton Confirmer
+    // ─────────────────────────────────────────────────────────
+    function updateInfoBox(html, isError, isLoading) {
+        var addressText  = document.getElementById('addressText');
+        var btnConfirmer = document.getElementById('btnConfirmer');
+        addressText.style.color = isError ? '#f87171' : (isLoading ? '#facc15' : '#4ade80');
+        addressText.innerHTML   = html;
+        // Bouton visible seulement quand une adresse est prête
+        btnConfirmer.style.display = (!isError && !isLoading) ? 'block' : 'none';
     }
 
     // ─────────────────────────────────────────────────────────
-    // Fallback : coordonnées GPS si Nominatim échoue
+    // Affiche l'adresse — stocke dans currentAddress
+    // N'envoie PAS à Java ici (le pont peut ne pas être prêt)
+    // ─────────────────────────────────────────────────────────
+    function showSuccess(address) {
+        currentAddress = address;
+        updateInfoBox('&#9989; ' + address, false, false);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Bouton "Confirmer ce lieu" — seul point d'envoi à Java
+    // ─────────────────────────────────────────────────────────
+    function confirmerLieu() {
+        if (!currentAddress) {
+            alert("Veuillez d'abord sélectionner un lieu sur la carte.");
+            return;
+        }
+        if (window.javaApp) {
+            try {
+                window.javaApp.setSelectedAddress(currentAddress);
+            } catch(e) {
+                alert("Erreur pont Java : " + e);
+            }
+        } else {
+            // javaApp absent = le pont n'est pas injecté
+            // Afficher l'adresse dans le titre pour diagnostic
+            document.title = "ADRESSE:" + currentAddress;
+            alert("Le pont Java n'est pas disponible (javaApp = null).\nAdresse : " + currentAddress);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Fallback : coordonnées GPS si géocodage impossible
     // ─────────────────────────────────────────────────────────
     function useFallbackCoords(lat, lng) {
         currentAddress = lat.toFixed(6) + ", " + lng.toFixed(6);
-        updateInfoBox('&#128205; Coordonnées : ' + currentAddress
-            + ' &nbsp; <strong style="color:#facc15">&#x2713; Lieu sélectionné</strong>',
-            false, false);
-        sendAddressToJava(currentAddress);
+        updateInfoBox('&#128205; Coordonnées : ' + currentAddress, false, false);
     }
 
     // ─────────────────────────────────────────────────────────

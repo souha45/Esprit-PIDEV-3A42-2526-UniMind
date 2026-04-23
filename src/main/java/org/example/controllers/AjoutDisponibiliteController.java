@@ -37,7 +37,7 @@ public class AjoutDisponibiliteController {
     @FXML private ComboBox<String> cbTypeConsult;
     @FXML private VBox             boxLieu;
     @FXML private TextField        txtLieu;
-    @FXML private Button           btnOuvrirCarte;  // ← NOUVEAU BOUTON
+    @FXML private Button           btnOuvrirCarte;
 
     // Boutons
     @FXML private Button btnFermer;
@@ -61,13 +61,11 @@ public class AjoutDisponibiliteController {
     public void initialize() {
         disponibiliteService = new DisponibilitePsyService();
 
-        // ── Spinners : valeurs initiales et format éditable (valeur -1 = vide)
-        configurerSpinner(spinnerHeureDebut,   0, 23, -1);
-        configurerSpinner(spinnerMinuteDebut,  0, 59, -1);
-        configurerSpinner(spinnerHeureFin,     0, 23, -1);
-        configurerSpinner(spinnerMinuteFin,    0, 59, -1);
+        configurerSpinner(spinnerHeureDebut,  0, 23, -1);
+        configurerSpinner(spinnerMinuteDebut, 0, 59, -1);
+        configurerSpinner(spinnerHeureFin,    0, 23, -1);
+        configurerSpinner(spinnerMinuteFin,   0, 59, -1);
 
-        // ── Preview live des horaires ────────────────────────────────
         spinnerHeureDebut.valueProperty().addListener((o,ov,nv)  -> mettreAJourPreviewDebut());
         spinnerMinuteDebut.valueProperty().addListener((o,ov,nv) -> mettreAJourPreviewDebut());
         spinnerHeureFin.valueProperty().addListener((o,ov,nv)    -> mettreAJourPreviewFin());
@@ -76,7 +74,6 @@ public class AjoutDisponibiliteController {
         mettreAJourPreviewDebut();
         mettreAJourPreviewFin();
 
-        // ── Effacer erreurs à la saisie ──────────────────────────────
         datePicker.valueProperty().addListener((o,ov,nv) -> cacherErreur(errDate, datePicker));
         spinnerHeureDebut.valueProperty().addListener((o,ov,nv)  -> cacherErreurSimple(errHeureDebut));
         spinnerMinuteDebut.valueProperty().addListener((o,ov,nv) -> cacherErreurSimple(errHeureDebut));
@@ -88,21 +85,16 @@ public class AjoutDisponibiliteController {
         });
         txtLieu.textProperty().addListener((o,ov,nv) -> cacherErreurSimple(errLieu));
 
-        // ── Actions boutons ──────────────────────────────────────────
         btnEnregistrer.setOnAction(e -> enregistrerDisponibilite());
         btnAnnuler.setOnAction(e     -> fermerModal());
         btnFermer.setOnAction(e      -> fermerModal());
-
-        // ✅ NOUVEAU : Bouton pour ouvrir la carte
         btnOuvrirCarte.setOnAction(e -> ouvrirCarte());
 
-        // ── Hover ────────────────────────────────────────────────────
         btnEnregistrer.setOnMouseEntered(e ->
                 btnEnregistrer.setStyle(btnEnregistrer.getStyle().replace("#6366f1","#4f46e5")));
         btnEnregistrer.setOnMouseExited(e ->
                 btnEnregistrer.setStyle(btnEnregistrer.getStyle().replace("#4f46e5","#6366f1")));
 
-        // Hover pour le bouton carte
         btnOuvrirCarte.setOnMouseEntered(e ->
                 btnOuvrirCarte.setStyle("-fx-background-color: #4f46e5; -fx-text-fill: white; " +
                         "-fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 8 15; " +
@@ -113,67 +105,86 @@ public class AjoutDisponibiliteController {
                         "-fx-background-radius: 8; -fx-cursor: hand;"));
     }
 
-    /**
-     * ✅ Ouvre la fenêtre modale avec la carte OpenStreetMap
-     */
+    // ── Ouvre la carte ───────────────────────────────────────────────
     private void ouvrirCarte() {
         try {
             Stage carteStage = new Stage();
-            carteStage.setTitle("📍 Sélectionner un lieu sur la carte");
+            carteStage.setTitle("Sélectionner un lieu sur la carte");
             carteStage.initModality(javafx.stage.Modality.WINDOW_MODAL);
             carteStage.initOwner(btnOuvrirCarte.getScene().getWindow());
 
-            WebView webView = new WebView();
-            WebEngine webEngine = webView.getEngine();
+            WebView    webView    = new WebView();
+            WebEngine  webEngine  = webView.getEngine();
 
-            // Charger le fichier HTML
             java.net.URL url = getClass().getResource("/carte.html");
             if (url == null) {
-                showAlert(Alert.AlertType.ERROR, "Erreur", "Fichier carte.html non trouvé");
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Fichier carte.html non trouvé dans resources/");
                 return;
             }
-            webEngine.load(url.toExternalForm());
 
-            // Exposer l'objet Java à JavaScript
+            // ── Créer le bridge UNE SEULE FOIS avant le chargement ──
+            // IMPORTANT : on passe txtLieu et carteStage directement
+            JavaBridge bridge = new JavaBridge(carteStage, txtLieu);
+
             webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
                 if (newState == Worker.State.SUCCEEDED) {
-                    JSObject window = (JSObject) webEngine.executeScript("window");
-                    window.setMember("javaApp", new JavaBridge(carteStage));
+                    // Platform.runLater garantit que window est prêt
+                    javafx.application.Platform.runLater(() -> {
+                        try {
+                            JSObject window = (JSObject) webEngine.executeScript("window");
+                            window.setMember("javaApp", bridge);
+                            System.out.println("[Carte] javaApp injecté avec succès");
+                        } catch (Exception ex) {
+                            System.err.println("[Carte] Erreur injection javaApp : " + ex.getMessage());
+                        }
+                    });
                 }
             });
 
-            VBox root = new VBox(webView);
+            webEngine.load(url.toExternalForm());
+
+            VBox root   = new VBox(webView);
             Scene scene = new Scene(root, 950, 700);
             carteStage.setScene(scene);
             carteStage.showAndWait();
 
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir la carte");
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir la carte : " + e.getMessage());
         }
     }
 
-    /**
-     * ✅ Pont entre JavaScript et Java pour recevoir l'adresse sélectionnée
-     */
-    private class JavaBridge {
-        private Stage carteStage;
+    // ── PONT Java ↔ JavaScript ───────────────────────────────────────
+    // RÈGLES OBLIGATOIRES pour JSObject.setMember() :
+    //   1. La classe DOIT être public static (pas une inner class)
+    //   2. La méthode appelée depuis JS DOIT être public
+    public static class JavaBridge {
 
-        public JavaBridge(Stage stage) {
-            this.carteStage = stage;
+        private final Stage     carteStage;
+        private final TextField txtLieu;
+
+        public JavaBridge(Stage carteStage, TextField txtLieu) {
+            this.carteStage = carteStage;
+            this.txtLieu    = txtLieu;
         }
 
+        // Appelée depuis JavaScript : window.javaApp.setSelectedAddress("...")
         public void setSelectedAddress(String address) {
+            System.out.println("[JavaBridge] Adresse reçue : " + address);
             javafx.application.Platform.runLater(() -> {
-                txtLieu.setText(address);
-                System.out.println("📍 Adresse reçue de la carte: " + address);
-                // Fermer la fenêtre de la carte
+                if (txtLieu != null) {
+                    txtLieu.setText(address);
+                    System.out.println("[JavaBridge] txtLieu mis à jour : " + address);
+                }
                 if (carteStage != null) {
                     carteStage.close();
+                    System.out.println("[JavaBridge] Fenêtre carte fermée");
                 }
             });
         }
     }
+
+    // ────────────────────────────────────────────────────────────────
 
     private void showAlert(Alert.AlertType type, String titre, String message) {
         Alert alert = new Alert(type);
@@ -183,7 +194,6 @@ public class AjoutDisponibiliteController {
         alert.showAndWait();
     }
 
-    // ── Configuration Spinner ────────────────────────────────────────
     private void configurerSpinner(Spinner<Integer> spinner, int min, int max, int init) {
         SpinnerValueFactory<Integer> factory =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(min, max, init);
@@ -197,8 +207,7 @@ public class AjoutDisponibiliteController {
                     String trimmed = s.trim();
                     if ("--".equals(trimmed) || trimmed.isEmpty()) return -1;
                     return Integer.parseInt(trimmed);
-                }
-                catch (NumberFormatException e) { return init; }
+                } catch (NumberFormatException e) { return init; }
             }
         });
         spinner.setValueFactory(factory);
@@ -208,28 +217,20 @@ public class AjoutDisponibiliteController {
         });
     }
 
-    // ── Preview heure ────────────────────────────────────────────────
     private void mettreAJourPreviewDebut() {
-        int heure = spinnerHeureDebut.getValue();
+        int heure  = spinnerHeureDebut.getValue();
         int minute = spinnerMinuteDebut.getValue();
-        if (heure == -1 || minute == -1) {
-            lblPreviewDebut.setText("--:--");
-        } else {
-            lblPreviewDebut.setText(String.format("%02d:%02d", heure, minute));
-        }
+        lblPreviewDebut.setText((heure == -1 || minute == -1)
+                ? "--:--" : String.format("%02d:%02d", heure, minute));
     }
 
     private void mettreAJourPreviewFin() {
-        int heure = spinnerHeureFin.getValue();
+        int heure  = spinnerHeureFin.getValue();
         int minute = spinnerMinuteFin.getValue();
-        if (heure == -1 || minute == -1) {
-            lblPreviewFin.setText("--:--");
-        } else {
-            lblPreviewFin.setText(String.format("%02d:%02d", heure, minute));
-        }
+        lblPreviewFin.setText((heure == -1 || minute == -1)
+                ? "--:--" : String.format("%02d:%02d", heure, minute));
     }
 
-    // ── Lieu conditionnel ────────────────────────────────────────────
     private void gererAffichageLieu(String typeChoisi) {
         boolean presentiel = "Présentiel".equals(typeChoisi);
         boxLieu.setVisible(presentiel);
@@ -240,7 +241,6 @@ public class AjoutDisponibiliteController {
         }
     }
 
-    // ── Erreurs inline ───────────────────────────────────────────────
     private void afficherErreur(Label errLabel, Control champ, String message) {
         errLabel.setText("⚠ " + message);
         errLabel.setVisible(true);
@@ -284,12 +284,10 @@ public class AjoutDisponibiliteController {
         cacherErreurSimple(errLieu);
     }
 
-    // ── Enregistrement ───────────────────────────────────────────────
     private void enregistrerDisponibilite() {
         reinitialiserErreurs();
         boolean valide = true;
 
-        // 1. Date
         if (datePicker.getValue() == null) {
             afficherErreur(errDate, datePicker, "Veuillez sélectionner une date.");
             valide = false;
@@ -298,7 +296,6 @@ public class AjoutDisponibiliteController {
             valide = false;
         }
 
-        // 2. Validation des heures non vides
         if (spinnerHeureDebut.getValue() == -1 || spinnerMinuteDebut.getValue() == -1) {
             afficherErreurSimple(errHeureDebut, "Veuillez sélectionner l'heure de début.");
             valide = false;
@@ -309,11 +306,9 @@ public class AjoutDisponibiliteController {
             valide = false;
         }
 
-        // 3. Cohérence heure début < heure fin
         if (valide) {
             int debutMin = spinnerHeureDebut.getValue() * 60 + spinnerMinuteDebut.getValue();
             int finMin   = spinnerHeureFin.getValue()   * 60 + spinnerMinuteFin.getValue();
-
             if (debutMin >= finMin) {
                 afficherErreurSimple(errHeureFin,
                         "L'heure de fin doit être après l'heure de début ("
@@ -322,13 +317,11 @@ public class AjoutDisponibiliteController {
             }
         }
 
-        // 4. Type
         if (cbTypeConsult.getValue() == null) {
             afficherErreurSimple(errType, "Veuillez sélectionner un type de consultation.");
             valide = false;
         }
 
-        // 5. Lieu (si présentiel)
         if ("Présentiel".equals(cbTypeConsult.getValue())) {
             if (txtLieu.getText().trim().isEmpty()) {
                 afficherErreur(errLieu, txtLieu, "Veuillez saisir le lieu de consultation.");
@@ -338,9 +331,8 @@ public class AjoutDisponibiliteController {
 
         if (!valide) return;
 
-        // ── Tout est valide → enregistrement ────────────────────────
         try {
-            LocalDate date        = datePicker.getValue();
+            LocalDate date = datePicker.getValue();
             int hd = spinnerHeureDebut.getValue(), md = spinnerMinuteDebut.getValue();
             int hf = spinnerHeureFin.getValue(),   mf = spinnerMinuteFin.getValue();
 
@@ -352,24 +344,18 @@ public class AjoutDisponibiliteController {
                     : TypeConsultation.en_ligne;
 
             String lieu = typeConsult == TypeConsultation.présentiel
-                    ? txtLieu.getText().trim()
-                    : null;
+                    ? txtLieu.getText().trim() : null;
 
             DisponibilitePsy disponibilite = new DisponibilitePsy(
-                    userIdConnecte,
-                    Date.valueOf(date),
-                    heureDebutTime,
-                    heureFinTime,
-                    typeConsult,
-                    lieu
-            );
+                    userIdConnecte, Date.valueOf(date),
+                    heureDebutTime, heureFinTime, typeConsult, lieu);
 
             disponibiliteService.ajouter(disponibilite);
-
             afficherAlerteSucces(date, lieu);
 
         } catch (SQLException e) {
-            afficherAlerteErreur("Erreur SQL", "Une erreur est survenue lors de l'ajout de la disponibilité.", e.getMessage());
+            afficherAlerteErreur("Erreur SQL",
+                    "Une erreur est survenue lors de l'ajout de la disponibilité.", e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
             afficherAlerteErreur("Erreur système", "Une erreur inattendue est survenue.", e.getMessage());
@@ -377,35 +363,21 @@ public class AjoutDisponibiliteController {
         }
     }
 
-    // ── Utilitaires ─────────────────────────────────────────────────
     private void fermerModal() {
         if (modalStage != null) modalStage.close();
     }
 
-    public void setUserId(int userId) {
-        this.userIdConnecte = userId;
-    }
-
-    public void setModalStage(Stage stage) {
-        this.modalStage = stage;
-    }
-
-    // ===== ALERTES PERSONNALISÉES =====
+    public void setUserId(int userId)      { this.userIdConnecte = userId; }
+    public void setModalStage(Stage stage) { this.modalStage = stage; }
 
     private void afficherAlerteSucces(LocalDate date, String lieu) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Unimind - Succès");
         alert.setHeaderText("Disponibilité ajoutée avec succès !");
-
-        String contenu = buildContenuSucces(date, lieu);
-        alert.setContentText(contenu);
-
+        alert.setContentText(buildContenuSucces(date, lieu));
         ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
         alert.getButtonTypes().setAll(okButton);
-
-        DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.setStyle(getStyleAlerteSucces());
-
+        alert.getDialogPane().setStyle(getStyleAlerteSucces());
         alert.showAndWait();
         fermerModal();
     }
@@ -415,13 +387,9 @@ public class AjoutDisponibiliteController {
         alert.setTitle("Unimind - " + titre);
         alert.setHeaderText(header);
         alert.setContentText(message);
-
         ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
         alert.getButtonTypes().setAll(okButton);
-
-        DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.setStyle(getStyleAlerteErreur());
-
+        alert.getDialogPane().setStyle(getStyleAlerteErreur());
         alert.showAndWait();
     }
 
@@ -432,33 +400,21 @@ public class AjoutDisponibiliteController {
         sb.append("Horaire : ").append(lblPreviewDebut.getText())
                 .append(" - ").append(lblPreviewFin.getText()).append("\n");
         sb.append("Type : ").append(cbTypeConsult.getValue());
-
-        if (lieu != null && !lieu.trim().isEmpty()) {
-            sb.append("\nLieu : ").append(lieu);
-        }
-
+        if (lieu != null && !lieu.trim().isEmpty()) sb.append("\nLieu : ").append(lieu);
         return sb.toString();
     }
 
     private String getStyleAlerteSucces() {
-        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; " +
-                "-fx-font-size: 14px; " +
-                "-fx-background-color: #f0fdf4; " +
-                "-fx-border-color: #86efac; " +
-                "-fx-border-width: 2px; " +
-                "-fx-border-radius: 12px; " +
-                "-fx-background-radius: 12px; " +
-                "-fx-padding: 20px;";
+        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; -fx-font-size: 14px; " +
+                "-fx-background-color: #f0fdf4; -fx-border-color: #86efac; " +
+                "-fx-border-width: 2px; -fx-border-radius: 12px; " +
+                "-fx-background-radius: 12px; -fx-padding: 20px;";
     }
 
     private String getStyleAlerteErreur() {
-        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; " +
-                "-fx-font-size: 14px; " +
-                "-fx-background-color: #fef2f2; " +
-                "-fx-border-color: #fca5a5; " +
-                "-fx-border-width: 2px; " +
-                "-fx-border-radius: 12px; " +
-                "-fx-background-radius: 12px; " +
-                "-fx-padding: 20px;";
+        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; -fx-font-size: 14px; " +
+                "-fx-background-color: #fef2f2; -fx-border-color: #fca5a5; " +
+                "-fx-border-width: 2px; -fx-border-radius: 12px; " +
+                "-fx-background-radius: 12px; -fx-padding: 20px;";
     }
 }
