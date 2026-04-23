@@ -1,5 +1,6 @@
 package org.example.controllers;
 
+import java.io.File;
 import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
 import org.example.entities.User;
 import org.example.enums.SaisiPar;
+import org.example.services.OrdonnancePDFService;
 import org.example.services.SuiviTraitementService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
@@ -39,6 +41,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -546,11 +549,15 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         btnAjouterSuivi.setMaxWidth(Double.MAX_VALUE);
         btnAjouterSuivi.setOnAction(e -> ouvrirAjoutSuivi(traitement));
 
+        Button btnExporterPDF = new Button("Exporter Ordonnance");
+        btnExporterPDF.getStyleClass().add("btn-primary-small");
+        btnExporterPDF.setOnAction(e -> handleExporterPDF(traitement));
+
         Button btnTraduire = new Button("Traduire");
         btnTraduire.getStyleClass().add("btn-secondary-small");
         btnTraduire.setOnAction(e -> ouvrirTraduction(traitement));
 
-        actionsBox.getChildren().addAll(btnAjouterSuivi, btnTraduire);
+        actionsBox.getChildren().addAll(btnAjouterSuivi, btnExporterPDF, btnTraduire);
 
         carte.getChildren().addAll(header, details, suivisSection, actionsBox);
 
@@ -698,6 +705,47 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
 
         fadeIn.play();
         fadeOut.play();
+    }
+
+    private void handleExporterPDF(Traitement traitement) {
+        try {
+            if (currentUser == null) {
+                afficherToast("⚠️ Utilisateur non connecté", false);
+                return;
+            }
+
+            // Créer le service PDF et générer l'ordonnance
+            OrdonnancePDFService pdfService = new OrdonnancePDFService();
+            byte[] pdfBytes = pdfService.genererOrdonnancePDF(traitement, null, currentUser);
+
+            // Choix du fichier de sauvegarde
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Enregistrer l'ordonnance PDF");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Fichier PDF", "*.pdf")
+            );
+
+            String nomFichier = pdfService.genererNomFichier(traitement);
+            fileChooser.setInitialFileName(nomFichier);
+
+            File file = fileChooser.showSaveDialog(cardsContainer.getScene().getWindow());
+
+            if (file != null) {
+                // Sauvegarder le PDF
+                try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file)) {
+                    fos.write(pdfBytes);
+                }
+
+                afficherToast("✓ Ordonnance exportée: " + file.getName(), true);
+                if (lblStatus != null) {
+                    lblStatus.setText("✓ Ordonnance exportée: " + file.getName());
+                }
+            }
+
+        } catch (Exception e) {
+            afficherToast("✗ Erreur d'export PDF: " + e.getMessage(), false);
+            e.printStackTrace();
+        }
     }
 
     private void ouvrirTraduction(Traitement traitement) {
