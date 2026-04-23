@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.controllers.TraitementStatistiquesController"
+      spacing="0" stylesheets="@/css/traitements-suivis.css">
+
+    <!-- En-tête -->
+    <VBox styleClass="page-header">
+        <HBox alignment="CENTER_LEFT" spacing="15">
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="Statistiques des Traitements" styleClass="page-title"/>
+                <Label text="Analyse et visualisation des données de traitement"
+                       styleClass="page-subtitle"/>
+            </VBox>
+            <Label fx:id="lblDate" styleClass="date-label"
+                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                          -fx-text-fill: #6b7280;"/>
+        </HBox>
+    </VBox>
+
+    <!-- Barre de filtres -->
+    <HBox styleClass="filter-bar" spacing="15" alignment="CENTER_LEFT">
+        <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+        <Label text="Période :"
+               style="-fx-font-family: 'Segoe UI'; -fx-font-weight: bold;
+                      -fx-font-size: 13px; -fx-text-fill: #4b5563;"/>
+        <ComboBox fx:id="cmbPeriode" prefWidth="160" styleClass="filter-combo"/>
+        <Label fx:id="lblAnneeLabel" text="Année :"
+               style="-fx-font-family: 'Segoe UI'; -fx-font-weight: bold;
+                      -fx-font-size: 13px; -fx-text-fill: #4b5563;"/>
+        <ComboBox fx:id="cmbAnnee" prefWidth="100" styleClass="filter-combo"/>
+        <Button text="Actualiser" onAction="#handleActualiser"
+                styleClass="btn-primary-small"/>
+        <Button text="Retour" onAction="#handleRetour"
+                styleClass="btn-secondary-small"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblStatus" text="Chargement..."
+               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                      -fx-text-fill: #6b7280;"/>
+    </HBox>
+
+    <!-- Zone principale scrollable -->
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                style="-fx-background: transparent;
+                       -fx-background-color: transparent;">
+        <VBox spacing="20" style="-fx-padding: 20; -fx-background-color: #f3f4f6;">
+
+            <!-- ── Ligne 1 : Cartes statistiques ── -->
+            <HBox spacing="15" alignment="CENTER">
+                <VBox spacing="4" HBox.hgrow="ALWAYS" styleClass="stat-card"
+                      alignment="CENTER">
+                    <Label text="TOTAL TRAITEMENTS" styleClass="stat-label"/>
+                    <Label fx:id="statTotal" text="0" styleClass="stat-value"/>
+                    <Label text="traitements" styleClass="stat-unit"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS" styleClass="stat-card"
+                      alignment="CENTER">
+                    <Label text="EN COURS" styleClass="stat-label"/>
+                    <Label fx:id="statEnCours" text="0" styleClass="stat-value"/>
+                    <Label text="traitements" styleClass="stat-unit"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS" styleClass="stat-card"
+                      alignment="CENTER">
+                    <Label text="TERMINÉS" styleClass="stat-label"/>
+                    <Label fx:id="statTermine" text="0" styleClass="stat-value"/>
+                    <Label text="traitements" styleClass="stat-unit"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS" styleClass="stat-card"
+                      alignment="CENTER">
+                    <Label text="SUSPENDUS" styleClass="stat-label"/>
+                    <Label fx:id="statSuspendu" text="0" styleClass="stat-value"/>
+                    <Label text="traitements" styleClass="stat-unit"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS" styleClass="stat-card"
+                      alignment="CENTER">
+                    <Label text="PRIORITÉ HAUTE" styleClass="stat-label"/>
+                    <Label fx:id="statPrioriteHaute" text="0" styleClass="stat-value"/>
+                    <Label text="traitements" styleClass="stat-unit"/>
+                </VBox>
+            </HBox>
+
+            <!-- ── Ligne 2 : PieCharts ── -->
+            <HBox spacing="20" alignment="CENTER">
+                <VBox spacing="10" HBox.hgrow="ALWAYS" styleClass="chart-container">
+                    <Label text="Répartition par Statut" styleClass="chart-title"/>
+                    <PieChart fx:id="pieChartStatut"
+                              prefHeight="280"
+                              legendVisible="true"
+                              animated="false"
+                              labelsVisible="true"/>
+                </VBox>
+                <VBox spacing="10" HBox.hgrow="ALWAYS" styleClass="chart-container">
+                    <Label text="Répartition par Priorité" styleClass="chart-title"/>
+                    <PieChart fx:id="pieChartPriorite"
+                              prefHeight="280"
+                              legendVisible="true"
+                              animated="false"
+                              labelsVisible="true"/>
+                </VBox>
+            </HBox>
+
+            <!-- ── Ligne 3 : BarChart Catégorie ── -->
+            <VBox spacing="10" styleClass="chart-container">
+                <Label text="Traitements par Catégorie" styleClass="chart-title"/>
+                <VBox fx:id="vboxBarCategorie" prefHeight="320" VBox.vgrow="ALWAYS"/>
+            </VBox>
+
+            <!-- ── Ligne 4 : BarChart Évolution ── -->
+            <VBox fx:id="vboxEvolution" spacing="10" styleClass="chart-container">
+                <Label text="Évolution des traitements" styleClass="chart-title"/>
+                <VBox fx:id="vboxBarEvolution" prefHeight="320" VBox.vgrow="ALWAYS"/>
+            </VBox>
+
+            <!-- ── Ligne 5 : Top étudiants ── -->
+            <VBox spacing="10" styleClass="chart-container">
+                <Label text="Top 5 Étudiants avec le plus de traitements"
+                       styleClass="chart-title"/>
+                <TableView fx:id="tableViewTopEtudiants" prefHeight="220">
+                    <columns>
+                        <TableColumn text="Étudiant"
+                                     fx:id="colEtudiantNom"
+                                     prefWidth="200" minWidth="150"/>
+                        <TableColumn text="Total"
+                                     fx:id="colNbTraitements"
+                                     prefWidth="100" minWidth="80"/>
+                        <TableColumn text="En cours"
+                                     fx:id="colEnCours"
+                                     prefWidth="100" minWidth="80"/>
+                        <TableColumn text="Terminés"
+                                     fx:id="colTermines"
+                                     prefWidth="100" minWidth="80"/>
+                        <TableColumn text="Suspendus"
+                                     fx:id="colSuspendus"
+                                     prefWidth="100" minWidth="80"/>
+                    </columns>
+                    <placeholder>
+                        <Label text="Aucun étudiant trouvé pour cette période"
+                               style="-fx-text-fill: #9ca3af;
+                                      -fx-font-style: italic;"/>
+                    </placeholder>
+                </TableView>
+            </VBox>
+
+        </VBox>
+    </ScrollPane>
+
+</VBox>
