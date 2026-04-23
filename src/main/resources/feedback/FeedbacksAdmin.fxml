@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="20" style="-fx-padding: 20; -fx-background-color: #f5f6fa;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.feedback.FeedbacksAdminController" stylesheets="@../css/EventBack.css">
+    <children>
+        <!-- En-tête -->
+        <VBox spacing="4" styleClass="page-header-container">
+            <children>
+                <Label text="⭐ AVIS DES PARTICIPANTS" styleClass="page-header-title"/>
+                <Label text="Consultez les avis et feedbacks des participants" styleClass="page-header-subtitle"/>
+            </children>
+        </VBox>
+
+        <!-- Filtres avancés -->
+        <HBox spacing="16" alignment="CENTER_LEFT" styleClass="filter-bar">
+            <children>
+                <!-- Type d'événement -->
+                <VBox spacing="4">
+                    <children>
+                        <Label text="Type d'événement" styleClass="form-label"/>
+                        <ComboBox fx:id="comboTypeEvenement" prefWidth="180" promptText="Tous les types"/>
+                    </children>
+                </VBox>
+
+                <!-- Responsable -->
+                <VBox spacing="4">
+                    <children>
+                        <Label text="Responsable" styleClass="form-label"/>
+                        <ComboBox fx:id="comboResponsable" prefWidth="180" promptText="Tous les responsables"/>
+                    </children>
+                </VBox>
+
+                <!-- Période -->
+                <VBox spacing="4">
+                    <children>
+                        <Label text="Période (événement)" styleClass="form-label"/>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <children>
+                                <DatePicker fx:id="dateDebut" prefWidth="120" promptText="Du"/>
+                                <Label text="au" styleClass="form-label"/>
+                                <DatePicker fx:id="dateFin" prefWidth="120" promptText="Au"/>
+                            </children>
+                        </HBox>
+                    </children>
+                </VBox>
+
+                <!-- Tri -->
+                <VBox spacing="4">
+                    <children>
+                        <Label text="Tri" styleClass="form-label"/>
+                        <ComboBox fx:id="comboTri" prefWidth="180" promptText="Pertinence"/>
+                    </children>
+                </VBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <!-- Boutons -->
+                <Button text="🔍 Filtrer" onAction="#appliquerFiltres" styleClass="btn-primary"/>
+                <Button text="🔄 Réinitialiser" onAction="#reinitialiserFiltres" styleClass="btn-secondary"/>
+            </children>
+        </HBox>
+
+        <!-- Statistiques -->
+        <HBox spacing="16" alignment="CENTER_LEFT" styleClass="stats-bar">
+            <children>
+                <Label text="Statistiques :" styleClass="stats-label"/>
+                <Label fx:id="lblTotal" text="0 avis" styleClass="stat-badge stat-total"/>
+                <HBox spacing="4" alignment="CENTER">
+                    <Label text="Note moyenne :" styleClass="form-label"/>
+                    <Label fx:id="lblNoteMoyenne" text="⭐ 0.0/5" style="-fx-text-fill: #f39c12; -fx-font-weight: bold;"/>
+                </HBox>
+                <HBox spacing="4" alignment="CENTER">
+                    <Label text="Top événement :" styleClass="form-label"/>
+                    <Label fx:id="lblTopEvenement" text="-" style="-fx-text-fill: #3498db; -fx-font-weight: bold;"/>
+                </HBox>
+            </children>
+        </HBox>
+
+        <!-- Conteneur des cartes de feedbacks -->
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+            <content>
+                <TilePane fx:id="tileFeedbacks" hgap="15" vgap="15" prefColumns="3" style="-fx-padding: 10;">
+                </TilePane>
+            </content>
+        </ScrollPane>
+    </children>
+</VBox>

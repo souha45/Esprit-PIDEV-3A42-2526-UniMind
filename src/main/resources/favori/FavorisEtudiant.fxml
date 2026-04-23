@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.GridPane?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.controllers.favori.FavorisEtudiantController"
+      stylesheets="@../css/EventFont.css"
+      spacing="16" styleClass="etudiant-content" maxWidth="Infinity">
+	<padding>
+		<Insets topRightBottomLeft="20"/>
+	</padding>
+
+    <children>
+        <VBox spacing="16" styleClass="etudiant-page" maxWidth="Infinity">
+            <children>
+                <VBox spacing="6" styleClass="page-header">
+                    <children>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <children>
+                                <Label text="Mes Favoris" styleClass="page-title" />
+                                <Label text="UniMind" styleClass="page-title-accent" />
+                            </children>
+                        </HBox>
+                        <Label text="Événements favoris" styleClass="page-subtitle" />
+                    </children>
+                </VBox>
+
+                <!-- Card filtres (comme page événements) -->
+                <VBox spacing="12" styleClass="card-surface" maxWidth="Infinity">
+                    <children>
+                        <GridPane hgap="12" vgap="10" styleClass="filter-grid">
+                            <children>
+                                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
+                                    <children>
+                                        <Label text="Recherche" styleClass="form-label" />
+                                        <HBox spacing="5" alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label text="🔍" style="-fx-font-size: 16px;" />
+                                                <TextField fx:id="txtRecherche" promptText="Titre de l'événement" styleClass="form-input" HBox.hgrow="ALWAYS" />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
+
+                                <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                    <children>
+                                        <Label text="Type" styleClass="form-label" />
+                                        <ComboBox fx:id="comboType" promptText="Tous" styleClass="filter-combo" />
+                                    </children>
+                                </VBox>
+
+                                <VBox spacing="6" GridPane.columnIndex="3" GridPane.rowIndex="0">
+                                    <children>
+                                        <Label text="Statut" styleClass="form-label" />
+                                        <ComboBox fx:id="comboStatut" promptText="Tous" styleClass="filter-combo" />
+                                    </children>
+                                </VBox>
+
+                                <VBox spacing="6" GridPane.columnIndex="4" GridPane.rowIndex="0">
+                                    <children>
+                                        <Label text="Tri par date" styleClass="form-label" />
+                                        <ComboBox fx:id="comboTri" promptText="Date (plus proche)" styleClass="filter-combo" />
+                                    </children>
+                                </VBox>
+
+                                <VBox spacing="6" GridPane.columnIndex="5" GridPane.rowIndex="0">
+                                    <children>
+                                        <Label text="" styleClass="form-label" />
+                                        <HBox spacing="10" alignment="CENTER_LEFT">
+                                            <children>
+                                                <Button text="Filtrer" onAction="#appliquerFiltres" styleClass="btn-primary" />
+                                                <Button text="Réinitialiser" onAction="#reinitialiserFiltres" styleClass="btn-secondary" />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </GridPane>
+                    </children>
+                </VBox>
+
+                <!-- Card liste des favoris (cards) -->
+                <VBox spacing="12" styleClass="card-surface" maxWidth="Infinity">
+                    <VBox.margin>
+                        <Insets top="14" />
+                    </VBox.margin>
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="card-header">
+                            <children>
+                                <Label text="Événements favoris" styleClass="section-title" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label fx:id="lblTotal" text="" style="-fx-text-fill: #7f8c8d; -fx-font-size: 14px;" />
+                            </children>
+                        </HBox>
+                        <ScrollPane fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS" styleClass="event-scroll">
+                            <content>
+                                <VBox spacing="0" maxWidth="Infinity" fillWidth="true">
+                                    <padding>
+                                        <Insets topRightBottomLeft="20"/>
+                                    </padding>
+                                    <children>
+                                        <FlowPane fx:id="tileFavoris" hgap="30" vgap="30" styleClass="event-tile-pane" maxWidth="Infinity" />
+                                    </children>
+                                </VBox>
+                            </content>
+                        </ScrollPane>
+                    </children>
+                </VBox>
+            </children>
+        </VBox>
+    </children>
+</VBox>

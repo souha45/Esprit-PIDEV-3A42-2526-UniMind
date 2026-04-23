@@ -3,6 +3,8 @@ package org.example.services;
 import org.example.entities.Etudiant;
 import org.example.entities.Profil;
 import org.example.entities.User;
+import org.example.enums.Role;
+import org.example.utils.MyDataBase_Unimind;
 import org.example.utils.PasswordUtils;
 
 import java.sql.*;
@@ -11,7 +13,10 @@ import java.util.List;
 
 public class EtudiantService extends UserService {
 
-    public EtudiantService() { super(); }
+    private Connection con;
+
+    public EtudiantService() { super();
+        con = MyDataBase_Unimind.getInstance().getConnection();}
 
     //  INSCRIPTION ETUDIANt
     @Override
@@ -165,5 +170,22 @@ public class EtudiantService extends UserService {
         ResultSet rs = ps.executeQuery();
         rs.next();
         return rs.getInt(1) > 0;
+    }
+
+    public User getUserById(int id) throws SQLException {
+        String sql = "SELECT * FROM user WHERE user_id = ?";
+        PreparedStatement ps = con.prepareStatement(sql);
+        ps.setInt(1, id);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            User user = new User();
+            user.setUserId(rs.getInt("user_id"));
+            user.setNom(rs.getString("nom"));
+            user.setPrenom(rs.getString("prenom"));
+            user.setEmail(rs.getString("email"));
+            user.setRole(Role.valueOf(rs.getString("role")));
+            return user;
+        }
+        return null;
     }
 }

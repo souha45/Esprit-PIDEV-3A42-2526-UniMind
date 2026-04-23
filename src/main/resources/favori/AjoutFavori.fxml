@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.favori.AjoutFavoriController"
+            stylesheets="@../css/EventFont.css"
+            styleClass="dashboard-bg">
+
+    <top>
+        <HBox spacing="16" alignment="CENTER_LEFT" styleClass="topbar" BorderPane.alignment="CENTER">
+            <children>
+                <Label text="AJOUTER UN FAVORI" styleClass="label-subtitle" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button text="🔙 Retour" onAction="#retour" styleClass="btn-secondary" />
+            </children>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+            <VBox spacing="16" alignment="TOP_CENTER" styleClass="padding-large">
+                <children>
+                    <HBox spacing="20" alignment="CENTER">
+                        <children>
+                            <!-- ID Événement -->
+                            <VBox spacing="8" prefWidth="250">
+                                <children>
+                                    <Label text="Événement (ID) *" styleClass="form-label" />
+                                    <TextField fx:id="txtEvenementId" promptText="ID de l'événement" prefWidth="250" styleClass="form-input" />
+                                    <Label fx:id="lblErreurEvenementId" text="Obligatoire"
+                                           styleClass="error-label" visible="false" />
+                                </children>
+                            </VBox>
+
+                            <!-- ID Étudiant -->
+                            <VBox spacing="8" prefWidth="250">
+                                <children>
+                                    <Label text="Étudiant (ID) *" styleClass="form-label" />
+                                    <TextField fx:id="txtEtudiantId" promptText="ID de l'étudiant" prefWidth="250" styleClass="form-input" />
+                                    <Label fx:id="lblErreurEtudiantId" text="Obligatoire"
+                                           styleClass="error-label" visible="false" />
+                                    <Label fx:id="lblErreurUnicite" text="Ce favori existe déjà"
+                                           styleClass="error-label" visible="false" />
+                                </children>
+                            </VBox>
+                        </children>
+                    </HBox>
+
+                    <HBox spacing="10" alignment="CENTER" style="-fx-padding: 20;">
+                        <children>
+                            <Button text="💾 Enregistrer" onAction="#enregistrerFavori"
+                                    prefWidth="150" styleClass="btn-primary" />
+                            <Button text="❌ Annuler" onAction="#retour"
+                                    prefWidth="150" styleClass="btn-secondary" />
+                        </children>
+                    </HBox>
+
+                    <Label fx:id="lblSucces" text="Favori ajouté avec succès !"
+                           style="-fx-text-fill: #27ae60; -fx-font-size: 14px; -fx-font-weight: bold;" visible="false" />
+                </children>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

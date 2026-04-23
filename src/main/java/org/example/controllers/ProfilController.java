@@ -84,6 +84,15 @@ public class ProfilController {
         chargerChampsSpecifiques();
         chargerProfil();
         chargerPhoto();
+
+        // ── Ajustement de la fenêtre après chargement des données ──
+        javafx.application.Platform.runLater(() -> {
+            Stage stage = (Stage) photoProfile.getScene().getWindow();
+            stage.setWidth(780);
+            stage.setHeight(700);
+            stage.centerOnScreen();
+        });
+
     }
 
     private void afficherInfos() {
@@ -189,24 +198,32 @@ public class ProfilController {
     public void choisirPhoto() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Choisir une photo");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg"));
+        fc.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg", "*.avif"));
         File fichier = fc.showOpenDialog(photoProfile.getScene().getWindow());
 
         if (fichier != null) {
             try {
-                String uploadDir = "uploads/";
-                File dir = new File(uploadDir);
-                if (!dir.exists()) dir.mkdirs();
+                // Dossier uploads ABSOLU à côté du jar / répertoire de travail
+                File uploadDir = new File(System.getProperty("user.dir"), "uploads");
+                if (!uploadDir.exists()) uploadDir.mkdirs();
+
                 String fileName = System.currentTimeMillis() + "_" + fichier.getName();
-                Path destination = Paths.get(uploadDir + fileName);
-                Files.copy(fichier.toPath(), destination, StandardCopyOption.REPLACE_EXISTING);
-                currentPhotoPath = uploadDir + fileName;
-                photoProfile.setImage(new Image(destination.toUri().toString()));
+                File destination = new File(uploadDir, fileName);
+
+                Files.copy(fichier.toPath(), destination.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING);
+
+                // On stocke le chemin ABSOLU
+                currentPhotoPath = destination.getAbsolutePath();
+
+                photoProfile.setImage(new Image(destination.toURI().toString()));
                 pMessageProfil.setStyle("-fx-text-fill: green;");
                 pMessageProfil.setText("✓ Photo sélectionnée, cliquez sur Sauvegarder");
+
             } catch (IOException e) {
                 pMessageProfil.setStyle("-fx-text-fill: red;");
-                pMessageProfil.setText("Erreur copie fichier");
+                pMessageProfil.setText("Erreur copie fichier : " + e.getMessage());
             }
         }
     }

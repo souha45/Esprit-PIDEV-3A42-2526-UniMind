@@ -5,28 +5,108 @@
 <?import javafx.scene.shape.*?>
 <?import javafx.geometry.*?>
 
-<VBox spacing="15" style="-fx-background-color: #5B21B6; -fx-padding: 20 0;"
+<VBox prefWidth="260" spacing="0"
+      style="-fx-background-color: #ffffff;
+             -fx-border-color: #e0e7ff; -fx-border-width: 0 2 0 0;
+             -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.10), 16, 0, 2, 0);"
+      xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="org.example.controllers.SidebarResponsableController">
 
-    <VBox alignment="CENTER" spacing="8" style="-fx-padding: 0 0 20 0;">
-        <ImageView fx:id="sidebarPhoto" fitWidth="70" fitHeight="70">
-            <clip><Circle centerX="35" centerY="35" radius="35"/></clip>
-        </ImageView>
-        <Label fx:id="sidebarNomLabel" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;"/>
-        <Label fx:id="sidebarPrenomLabel" style="-fx-text-fill: #C4B5FD; -fx-font-size: 13;"/>
-        <Label fx:id="sidebarRoleLabel" text="Responsable" style="-fx-text-fill: #A78BFA; -fx-font-size: 11;"/>
+    <!-- ── Brand header ───────────────────────────────────────── -->
+    <VBox alignment="CENTER_LEFT" spacing="2"
+          style="-fx-background-color: linear-gradient(to bottom right, #6366f1, #8b5cf6);
+                 -fx-padding: 24 18 20 18;">
+        <Label text="Unimind"
+               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 20px;
+                      -fx-font-weight: bold; -fx-text-fill: #ffffff;" />
+        <Label text="Espace Responsable"
+               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px;
+                      -fx-text-fill: rgba(255,255,255,0.75); -fx-letter-spacing: 1px;" />
     </VBox>
 
-    <Separator style="-fx-background-color: #7C3AED;"/>
-
-    <VBox spacing="5" style="-fx-padding: 10 0 0 0;">
-        <Button fx:id="btnProfil" text="👤  Mon Profil" onAction="#ouvrirProfil"
-                style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 200; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
-
-        <Button fx:id="btnDeconnexion" text="🚪  Déconnexion" onAction="#seDeconnecter"
-                style="-fx-background-color: transparent; -fx-text-fill: #FCA5A5; -fx-pref-width: 200; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+    <!-- ── Zone utilisateur ───────────────────────────────────── -->
+    <VBox alignment="CENTER_LEFT" spacing="12"
+          style="-fx-background-color: #f5f3ff; -fx-padding: 16 18 16 18;
+                 -fx-border-color: #e0e7ff; -fx-border-width: 0 0 1 0;">
+        <HBox spacing="14" alignment="CENTER_LEFT">
+            <!-- Photo circulaire -->
+            <ImageView fx:id="sidebarPhoto" fitWidth="54" fitHeight="54">
+                <clip><Circle centerX="27" centerY="27" radius="27"/></clip>
+            </ImageView>
+            <!-- Texte -->
+            <VBox spacing="3">
+                <Label fx:id="sidebarNomLabel"
+                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                              -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
+                <Label fx:id="sidebarPrenomLabel"
+                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+                              -fx-text-fill: #6b7280;" />
+                <Label fx:id="sidebarRoleLabel" text="Responsable"
+                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 9px;
+                              -fx-text-fill: #a78bfa; -fx-letter-spacing: 1.5px;" />
+            </VBox>
+        </HBox>
     </VBox>
 
-    <Region VBox.vgrow="ALWAYS"/>
+    <!-- ── Menu principal ─────────────────────────────────────── -->
+    <VBox spacing="2" style="-fx-padding: 20 12 12 12;" VBox.vgrow="ALWAYS">
+        <Label text="NAVIGATION"
+               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 9px; -fx-text-fill: #c4b5fd;
+                      -fx-padding: 4 8 8 8; -fx-letter-spacing: 2px;" />
+
+        <Button fx:id="btnDashboard" text="  📊  Dashboard" maxWidth="Infinity"
+                onAction="#dashboard"
+                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                       -fx-background-radius: 10; -fx-cursor: hand;" />
+
+        <Button fx:id="btnEvenements" text="  🎪  Gestion Événements" maxWidth="Infinity"
+                onAction="#gestionEvenements"
+                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                       -fx-background-radius: 10; -fx-cursor: hand;" />
+
+        <Button fx:id="btnParticipations" text="  ✅  Gestion Participations" maxWidth="Infinity"
+                onAction="#gestionParticipations"
+                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                       -fx-background-radius: 10; -fx-cursor: hand;" />
+
+        <Button fx:id="btnAttributionSponsors" text="  🏢  Attribution Sponsors" maxWidth="Infinity"
+                onAction="#attributionSponsors"
+                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                       -fx-background-radius: 10; -fx-cursor: hand;" />
+
+        <Button fx:id="btnFeedbacks" text="  💬  Avis des participants" maxWidth="Infinity"
+                onAction="#gestionFeedbacks"
+                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                       -fx-background-radius: 10; -fx-cursor: hand;" />
+
+        <Button fx:id="btnProfil" text="  👤  Mon Profil" maxWidth="Infinity"
+                onAction="#ouvrirProfil"
+                style="-fx-background-color: transparent; -fx-text-fill: #6b7280;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                       -fx-background-radius: 10; -fx-cursor: hand;" />
+    </VBox>
+
+    <!-- ── Pied : déconnexion ─────────────────────────────────── -->
+    <VBox spacing="6"
+          style="-fx-padding: 10 12 18 12; -fx-border-color: #e0e7ff; -fx-border-width: 1 0 0 0;">
+        <Button fx:id="btnDeconnexion" text="  🚪  Déconnexion" maxWidth="Infinity"
+                onAction="#seDeconnecter"
+                style="-fx-background-color: transparent; -fx-text-fill: #ef4444;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                       -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
+                       -fx-background-radius: 10; -fx-cursor: hand;" />
+    </VBox>
+
 </VBox>

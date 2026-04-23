@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controllers.SeanceMeditationController"
+      styleClass="page-container"
+      stylesheets="/css/admin.css"
+      spacing="0">
+
+    <!-- PAGE HEADER -->
+    <VBox styleClass="page-header">
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <Button text="← Retour" styleClass="btn-back" onAction="#retourCategories"/>
+            <Label text="🎯 Séances de Méditation  ›" styleClass="page-title"/>
+            <Label fx:id="lblNomCategorie" text="Catégorie" styleClass="page-title-accent"/>
+            <Label fx:id="lblDescriptionCategorie" text="" styleClass="page-subtitle"
+                   wrapText="true"/>
+        </HBox>
+        <Label text="Gérez les séances de méditation de cette catégorie" styleClass="page-subtitle"/>
+    </VBox>
+
+    <!-- STATS CARDS -->
+    <HBox spacing="16">
+        <VBox.margin><Insets top="20" right="24" bottom="0" left="24"/></VBox.margin>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="🎵" styleClass="stat-icon"/>
+            <Label fx:id="lblNbSeances" text="0" styleClass="stat-number"/>
+            <Label text="Séances totales" styleClass="stat-label"/>
+        </VBox>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="✅" styleClass="stat-icon"/>
+            <Label fx:id="lblNbActives" text="0" styleClass="stat-number"/>
+            <Label text="Séances actives" styleClass="stat-label"/>
+        </VBox>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="🕐" styleClass="stat-icon"/>
+            <Label fx:id="lblDerniereDate" text="—" styleClass="stat-number-sm"/>
+            <Label text="Dernière création" styleClass="stat-label"/>
+        </VBox>
+    </HBox>
+
+    <!-- TOOLBAR -->
+    <VBox spacing="10">
+        <VBox.margin><Insets top="20" right="24" bottom="0" left="24"/></VBox.margin>
+
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <!-- Search -->
+            <HBox styleClass="search-box" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" spacing="8">
+                <Label text="🔍" styleClass="search-icon"/>
+                <TextField fx:id="tfSearch" promptText="Rechercher par titre ou description..."
+                           styleClass="search-field" HBox.hgrow="ALWAYS"
+                           onKeyReleased="#onSearch"/>
+            </HBox>
+
+            <!-- Filter Type -->
+            <ComboBox fx:id="cbFilterType" promptText="📁 Type" styleClass="filter-combo" onAction="#onFilter"/>
+
+            <!-- Filter Niveau -->
+            <ComboBox fx:id="cbFilterNiveau" promptText="📊 Niveau" styleClass="filter-combo" onAction="#onFilter"/>
+
+            <!-- Filter Statut -->
+            <ComboBox fx:id="cbFilterStatut" promptText="⚡ Statut" styleClass="filter-combo" onAction="#onFilter"/>
+
+            <!-- Add Button -->
+            <Button text="＋  Ajouter une séance" styleClass="btn-primary" onAction="#openAddForm"/>
+        </HBox>
+    </VBox>
+
+    <!-- TABLE -->
+    <VBox VBox.vgrow="ALWAYS" styleClass="table-container">
+        <VBox.margin><Insets top="16" right="24" bottom="24" left="24"/></VBox.margin>
+
+        <TableView fx:id="tableSeances" VBox.vgrow="ALWAYS" styleClass="data-table">
+            <columns>
+                <TableColumn fx:id="colTitre" text="Titre" prefWidth="180"/>
+                <TableColumn fx:id="colDescription" text="Description" prefWidth="200"/>
+                <TableColumn fx:id="colType" text="Type" prefWidth="80" styleClass="col-center"/>
+                <TableColumn fx:id="colDuree" text="Durée" prefWidth="80" styleClass="col-center"/>
+                <TableColumn fx:id="colNiveau" text="Niveau" prefWidth="100" styleClass="col-center"/>
+                <TableColumn fx:id="colStatut" text="Statut" prefWidth="90" styleClass="col-center"/>
+                <TableColumn fx:id="colActions" text="Actions" prefWidth="180" styleClass="col-center"/>
+            </columns>
+            <placeholder>
+                <VBox alignment="CENTER" spacing="12">
+                    <Label text="📭" style="-fx-font-size: 40px;"/>
+                    <Label text="Aucune séance trouvée" styleClass="empty-label"/>
+                </VBox>
+            </placeholder>
+        </TableView>
+    </VBox>
+
+</VBox>

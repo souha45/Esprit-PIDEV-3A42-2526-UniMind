@@ -7,7 +7,7 @@ public class TrouverMotDePasse {
     public static void main(String[] args) {
 
         // ── Hash stocké en base de données ────────────────────────────
-        String hashBD = "$2y$13$xfeobzGo4Di3L2uvHKIv9OHkoWCsQFwq2XLF//sR2mAH3eBgIml/K";
+        String hashBD = "$2a$13$EBD6VxLEUToZr8s40XMWSettkXaaEyJDsUUu3199N2lXp8Yd8HK2um";
 
         // ── Convertir $2y$ → $2a$ (PHP → Java) ───────────────────────
         String hashPourVerif = hashBD;
@@ -37,7 +37,7 @@ public class TrouverMotDePasse {
                 "123456789", "12345678", "1234567890",
                 "Motdepasse1", "Motdepasse1!",
                 "Pidev2024!", "Pidev2025!", "Esprit2024!",
-                // Ajoute tes propres candidats ici
+                "Nermine123!", "Nermine123", "nermine123",
                 "MonMotDePasse1",
                 "MonPassword1!",
         };
@@ -71,12 +71,12 @@ public class TrouverMotDePasse {
             System.out.println("Lance cette commande SQL dans MySQL :");
             System.out.println();
 
-            // Générer un nouveau hash pour "Admin123!"
-            String nouveauMdp = "Admin123!";
+            // Générer un nouveau hash pour "Nermine123!"
+            String nouveauMdp = "Nermine123!";
             String nouveauHash = BCrypt.withDefaults().hashToString(13, nouveauMdp.toCharArray());
             System.out.println("UPDATE user");
             System.out.println("SET password = '" + nouveauHash + "'");
-            System.out.println("WHERE email = 'louatiislem74@gmail.com';");
+            System.out.println("WHERE email = 'admin@test.com';");
             System.out.println();
             System.out.println("Nouveau mot de passe : " + nouveauMdp);
         }

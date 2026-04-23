@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controllers.EtudiantRepondreController"
+      spacing="12"
+      style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+             -fx-border-color: #ddd6fe; -fx-border-radius: 12;
+             -fx-border-width: 1; -fx-padding: 20;
+             -fx-effect: dropshadow(gaussian, rgba(124,58,237,0.1), 8, 0, 0, 2);">
+
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Button text="⬅️ Retour" onAction="#handleRetour"
+                style="-fx-background-color: #ede9fe; -fx-text-fill: #7c3aed; -fx-font-weight: bold; -fx-padding: 7 14; -fx-background-radius: 7; -fx-cursor: hand;"/>
+        <Label fx:id="lblTitreQuestionnaire" text="Questions"
+               style="-fx-text-fill: #7c3aed; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+    </HBox>
+
+    <Label text="Répondez à toutes les questions puis cliquez sur Soumettre"
+           style="-fx-text-fill: #a78bfa; -fx-font-size: 12px;"/>
+
+    <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true"
+                style="-fx-background-color: transparent; -fx-background: transparent;">
+        <VBox fx:id="questionsContainer" spacing="16" style="-fx-padding: 10;"/>
+    </ScrollPane>
+
+    <HBox alignment="CENTER_RIGHT" spacing="10">
+        <Label fx:id="lblStatus" text="" wrapText="true"
+               style="-fx-font-size: 12px;" HBox.hgrow="ALWAYS"/>
+        <Button text="✅ Soumettre les réponses" onAction="#handleSoumettre"
+                style="-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 12 28; -fx-background-radius: 8; -fx-cursor: hand;"/>
+    </HBox>
+</VBox>

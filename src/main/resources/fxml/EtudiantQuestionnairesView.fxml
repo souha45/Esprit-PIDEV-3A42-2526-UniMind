@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controllers.EtudiantQuestionnairesController"
+      spacing="12"
+      style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+             -fx-border-color: #ddd6fe; -fx-border-radius: 12;
+             -fx-border-width: 1; -fx-padding: 20;
+             -fx-effect: dropshadow(gaussian, rgba(124,58,237,0.1), 8, 0, 0, 2);">
+
+    <Label text="📋 Questionnaires Disponibles"
+           style="-fx-text-fill: #7c3aed; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+    <Label text="Cliquez sur un questionnaire puis appuyez sur Répondre"
+           style="-fx-text-fill: #a78bfa; -fx-font-size: 12px;"/>
+
+    <TextField fx:id="tfSearch"
+               promptText="🔍  Rechercher un questionnaire..."
+               style="-fx-background-color: #f5f3ff; -fx-text-fill: #1e293b;
+                      -fx-border-color: #ddd6fe; -fx-border-radius: 8;
+                      -fx-background-radius: 8; -fx-font-size: 13px; -fx-padding: 8 12 8 12;"/>
+
+    <ListView fx:id="listQuestionnaire" VBox.vgrow="ALWAYS"
+              style="-fx-background-color: transparent;
+                     -fx-border-color: transparent;
+                     -fx-padding: 0;"/>
+
+    <HBox alignment="CENTER_RIGHT">
+        <Button fx:id="btnRepondre" text="✍️  Répondre à ce questionnaire"
+                onAction="#handleRepondre"
+                style="-fx-background-color: #7c3aed; -fx-text-fill: white;
+                       -fx-font-size: 13px; -fx-font-weight: bold;
+                       -fx-padding: 10 24; -fx-background-radius: 8; -fx-cursor: hand;"/>
+    </HBox>
+
+    <Label fx:id="lblStatus" text="" wrapText="true" style="-fx-font-size: 12px;"/>
+</VBox>

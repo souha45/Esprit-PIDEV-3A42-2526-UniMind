@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controllers.CategorieMeditationController"
+      styleClass="page-container"
+      stylesheets="/css/admin.css"
+      spacing="0">
+
+    <!-- PAGE HEADER -->
+    <VBox styleClass="page-header">
+        <Label text=" 🌼  Gestion des Catégories de Méditation" styleClass="page-title"/>
+        <Label text="Administrez les catégories et leurs séances associées" styleClass="page-subtitle"/>
+    </VBox>
+
+    <!-- STATS CARDS -->
+    <HBox spacing="16">
+        <VBox.margin><Insets top="20" right="24" bottom="0" left="24"/></VBox.margin>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="📁" styleClass="stat-icon"/>
+            <Label fx:id="lblNbCategories" text="0" styleClass="stat-number"/>
+            <Label text="Catégories" styleClass="stat-label"/>
+        </VBox>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="🎯" styleClass="stat-icon"/>
+            <Label fx:id="lblNbSeances" text="0" styleClass="stat-number"/>
+            <Label text="Séances totales" styleClass="stat-label"/>
+        </VBox>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="🕐" styleClass="stat-icon"/>
+            <Label fx:id="lblDerniereDate" text="—" styleClass="stat-number-sm"/>
+            <Label text="Dernière création" styleClass="stat-label"/>
+        </VBox>
+    </HBox>
+
+    <!-- TOOLBAR -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <VBox.margin><Insets top="20" right="24" bottom="0" left="24"/></VBox.margin>
+
+        <HBox styleClass="search-box" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" spacing="8">
+            <Label text="🔍" styleClass="search-icon"/>
+            <TextField fx:id="tfSearch" promptText="Rechercher par nom ou description..."
+                       styleClass="search-field" HBox.hgrow="ALWAYS"
+                       onKeyReleased="#onSearch"/>
+        </HBox>
+
+        <Button text="＋  Ajouter une catégorie"
+                styleClass="btn-primary" onAction="#openAddForm"/>
+    </HBox>
+
+    <!-- TABLE -->
+    <VBox VBox.vgrow="ALWAYS" styleClass="table-container">
+        <VBox.margin><Insets top="16" right="24" bottom="24" left="24"/></VBox.margin>
+
+        <TableView fx:id="tableCategories" VBox.vgrow="ALWAYS" styleClass="data-table">
+            <columns>
+                <TableColumn fx:id="colIcon" text="Icône" prefWidth="70" styleClass="col-center"/>
+                <TableColumn fx:id="colNom" text="Nom" prefWidth="200"/>
+                <TableColumn fx:id="colDescription" text="Description" prefWidth="320"/>
+                <TableColumn fx:id="colDate" text="Date Création" prefWidth="160"/>
+                <TableColumn fx:id="colActions" text="Actions" prefWidth="140" styleClass="col-center"/>
+            </columns>
+            <placeholder>
+                <VBox alignment="CENTER" spacing="12">
+                    <Label text="📭" style="-fx-font-size: 40px;"/>
+                    <Label text="Aucune catégorie trouvée" styleClass="empty-label"/>
+                </VBox>
+            </placeholder>
+        </TableView>
+    </VBox>
+
+</VBox>

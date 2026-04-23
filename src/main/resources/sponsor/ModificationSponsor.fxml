@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.sponsor.ModificationSponsorController"
+            stylesheets="@../css/EventBack.css"
+            styleClass="dashboard-bg">
+
+    <top>
+        <HBox spacing="16" alignment="CENTER_LEFT" styleClass="topbar" BorderPane.alignment="CENTER">
+            <children>
+                <Label text="MODIFIER UN SPONSOR" styleClass="label-subtitle" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button text="🔙 Retour" onAction="#retour" styleClass="btn-secondary" />
+            </children>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+            <VBox spacing="16" alignment="TOP_CENTER" styleClass="padding-large">
+                <children>
+                    <!-- Nom -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Nom du sponsor *" styleClass="form-label" />
+                            <TextField fx:id="txtNom" promptText="Nom du sponsor" prefWidth="400" styleClass="form-input" />
+                            <Label fx:id="lblErreurNom" text="Le nom est obligatoire"
+                                   styleClass="error-label" visible="false" />
+                        </children>
+                    </VBox>
+
+                    <!-- Type -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Type *" styleClass="form-label" />
+                            <ComboBox fx:id="comboType" promptText="Type" prefWidth="400" styleClass="form-input" />
+                        </children>
+                    </VBox>
+
+                    <!-- Email -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Email *" styleClass="form-label" />
+                            <TextField fx:id="txtEmail" promptText="Email de contact" prefWidth="400" styleClass="form-input" />
+                            <Label fx:id="lblErreurEmail" text="L'email est obligatoire et doit être valide"
+                                   styleClass="error-label" visible="false" />
+                        </children>
+                    </VBox>
+
+                    <!-- Téléphone -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Téléphone" styleClass="form-label" />
+                            <TextField fx:id="txtTelephone" promptText="Numéro de téléphone (8 chiffres)" prefWidth="400" styleClass="form-input" />
+                            <Label fx:id="lblErreurTelephone" text="Le téléphone doit contenir exactement 8 chiffres"
+                                   styleClass="error-label" visible="false" />
+                        </children>
+                    </VBox>
+
+                    <!-- Site web -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Site web" styleClass="form-label" />
+                            <TextField fx:id="txtSiteWeb" promptText="https://..." prefWidth="400" styleClass="form-input" />
+                            <Label fx:id="lblErreurSiteWeb" text="Format attendu: https://www.exemple.com"
+                                   styleClass="error-label" visible="false" />
+                        </children>
+                    </VBox>
+
+                    <!-- Domaine d'activité -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Domaine d'activité" styleClass="form-label" />
+                            <TextField fx:id="txtDomaine" promptText="Domaine d'activité" prefWidth="400" styleClass="form-input" />
+                        </children>
+                    </VBox>
+
+                    <!-- Adresse -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Adresse" styleClass="form-label" />
+                            <TextArea fx:id="txtAdresse" promptText="Adresse" prefRowCount="2" prefWidth="400" wrapText="true" styleClass="form-textarea" />
+                        </children>
+                    </VBox>
+
+                    <!-- Logo -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Logo" styleClass="form-label" />
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <children>
+                                    <TextField fx:id="txtLogo" promptText="Nom du fichier logo (ex: mon-logo.jpg)" prefWidth="300" styleClass="form-input" />
+                                    <Button text="Parcourir" onAction="#parcourirLogo" styleClass="btn-secondary" />
+                                </children>
+                            </HBox>
+                        </children>
+                    </VBox>
+
+                    <!-- Statut -->
+                    <VBox spacing="8">
+                        <children>
+                            <Label text="Statut *" styleClass="form-label" />
+                            <ComboBox fx:id="comboStatut" promptText="Statut" prefWidth="400" styleClass="form-input" />
+                        </children>
+                    </VBox>
+
+                    <HBox spacing="10" alignment="CENTER" style="-fx-padding: 20;">
+                        <children>
+                            <Button text="💾 Enregistrer" onAction="#enregistrerModification"
+                                    prefWidth="150" styleClass="btn-primary" />
+                            <Button text="❌ Annuler" onAction="#retour"
+                                    prefWidth="150" styleClass="btn-secondary" />
+                        </children>
+                    </HBox>
+
+                    <Label fx:id="lblSucces" text="Sponsor modifié avec succès !"
+                           style="-fx-text-fill: #27ae60; -fx-font-size: 14px; -fx-font-weight: bold;" visible="false" />
+                </children>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

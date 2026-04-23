@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.evenement.GestionEvenementController"
+            stylesheets="@../css/EventBack.css"
+            styleClass="dashboard-bg">
+
+    <top>
+        <VBox spacing="16" style="-fx-padding: 20;">
+            <children>
+                <HBox spacing="16" alignment="CENTER_LEFT">
+                    <children>
+                        <HBox spacing="4" styleClass="page-header-container" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+                            <children>
+                                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label text="📋 GESTION DES ÉVÉNEMENTS" styleClass="page-header-title"/>
+                                        <Label text="Gérez tous vos événements, organisez des activités et suivez leur progression" styleClass="page-header-subtitle"/>
+                                    </children>
+                                </VBox>
+
+                                <Button fx:id="btnAjouter" text="➕ Ajouter" onAction="#ajouterEvenement" styleClass="btn-primary"/>
+
+                            </children>
+                        </HBox>
+                    </children>
+                </HBox>
+
+                <HBox spacing="16" alignment="CENTER_LEFT">
+                    <children>
+                        <HBox styleClass="search-box" alignment="CENTER_LEFT" spacing="8">
+                            <Label text="🔍" styleClass="search-icon"/>
+                            <TextField fx:id="txtRecherche" prefWidth="250" promptText="Titre, lieu..." styleClass="search-field" HBox.hgrow="ALWAYS"/>
+                        </HBox>
+                        <Button text="🔍 Rechercher" onAction="#rechercherEvenements" styleClass="btn-primary"/>
+                        <Button text="🔄" onAction="#reinitialiserRecherche" styleClass="btn-secondary"/>
+
+                        <Region HBox.hgrow="ALWAYS"/>
+
+                        <Label text="Total:" styleClass="form-label"/>
+                        <Label fx:id="lblTotal" text="0 événements" styleClass="form-label"/>
+                    </children>
+                </HBox>
+
+                <!-- Filtres avancés -->
+                <HBox spacing="16" alignment="CENTER_LEFT" styleClass="filter-bar">
+                    <children>
+                        <!-- Type -->
+                        <VBox spacing="4">
+                            <children>
+                                <Label text="Type" styleClass="form-label"/>
+                                <ComboBox fx:id="comboType" prefWidth="150" promptText="Tous les types"/>
+                            </children>
+                        </VBox>
+
+                        <!-- Statut -->
+                        <VBox spacing="4">
+                            <children>
+                                <Label text="Statut" styleClass="form-label"/>
+                                <ComboBox fx:id="comboStatut" prefWidth="150" promptText="Tous les statuts"/>
+                            </children>
+                        </VBox>
+
+                        <!-- Organisateur -->
+                        <VBox spacing="4">
+                            <children>
+                                <Label text="Organisateur" styleClass="form-label"/>
+                                <ComboBox fx:id="comboOrganisateur" prefWidth="200" promptText="Tous les organisateurs"/>
+                            </children>
+                        </VBox>
+
+                        <!-- Période -->
+                        <VBox spacing="4">
+                            <children>
+                                <Label text="Période événement" styleClass="form-label"/>
+                                <HBox spacing="8" alignment="CENTER_LEFT">
+                                    <children>
+                                        <DatePicker fx:id="dateDu" prefWidth="120" promptText="Du"/>
+                                        <Label text="au" styleClass="form-label"/>
+                                        <DatePicker fx:id="dateAu" prefWidth="120" promptText="Au"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+
+                        <Region HBox.hgrow="ALWAYS"/>
+
+                        <!-- Boutons -->
+                        <Button text="🔍 Filtrer" onAction="#appliquerFiltres" styleClass="btn-primary"/>
+                        <Button text="🔄 Réinitialiser" onAction="#reinitialiserFiltres" styleClass="btn-secondary"/>
+                    </children>
+                </HBox>
+
+                <HBox spacing="16" alignment="CENTER_LEFT" styleClass="stats-bar">
+                    <children>
+                        <Label text="Statistiques :" styleClass="stats-label"/>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Region styleClass="legend-color" style="-fx-background-color: #e8f5e9;"/>
+                            <Label fx:id="lblStatutAVenir" text="0 à venir" styleClass="stat-badge stat-avenir"/>
+                        </HBox>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Region styleClass="legend-color" style="-fx-background-color: #fff9c4;"/>
+                            <Label fx:id="lblStatutEnCours" text="0 en cours" styleClass="stat-badge stat-encours"/>
+                        </HBox>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Region styleClass="legend-color" style="-fx-background-color: #f5f5f5;"/>
+                            <Label fx:id="lblStatutTermine" text="0 terminés" styleClass="stat-badge stat-termine"/>
+                        </HBox>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Region styleClass="legend-color" style="-fx-background-color: #ffebee;"/>
+                            <Label fx:id="lblStatutAnnule" text="0 annulés" styleClass="stat-badge stat-annule"/>
+                        </HBox>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Region styleClass="legend-color" style="-fx-background-color: white; -fx-border-color: #e74c3c; -fx-border-width: 2px;"/>
+                            <Label fx:id="lblPleins" text="0 événements pleins" styleClass="stat-badge stat-plein"/>
+                        </HBox>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+    
+    <center>
+        <TableView fx:id="tableEvenements" prefHeight="500" styleClass="data-table">
+            <columns>
+                <TableColumn fx:id="colImage" text="Image" prefWidth="80" sortable="false"/>
+                <TableColumn fx:id="colTitre" text="Titre" prefWidth="200" sortable="true"/>
+                <TableColumn fx:id="colType" text="Type" prefWidth="120" sortable="true"/>
+                <TableColumn fx:id="colDateDebut" text="Date Début" prefWidth="180" sortable="true"/>
+                <TableColumn fx:id="colLieu" text="Lieu" prefWidth="200" sortable="true"/>
+                <TableColumn fx:id="colOrganisateur" text="Organisateur" prefWidth="200" sortable="true"/>
+                <TableColumn fx:id="colStatut" text="Statut" prefWidth="120" sortable="true"/>
+                <TableColumn fx:id="colPlacesLibres" text="Places libres" prefWidth="120" sortable="true"/>
+                <TableColumn fx:id="colActions" text="Actions" prefWidth="200" sortable="false"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>
