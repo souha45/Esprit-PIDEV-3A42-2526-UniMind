@@ -82,9 +82,17 @@ public class GestionAttributionSponsorController {
     @FXML
     private DatePicker dateFin;
 
+    @FXML
+    private Pagination paginationAttributions;
+
+    @FXML
+    private Label lblPageInfo;
+
     private final EvenementSponsorService attributionService = new EvenementSponsorService();
     private ObservableList<EvenementSponsorService.AttributionAvecInfos> listeAttributions;
     private ObservableList<EvenementSponsorService.AttributionAvecInfos> listeFiltree;
+
+    private static final int ITEMS_PER_PAGE = 10;
 
     @FXML
     public void initialize() {
@@ -92,6 +100,66 @@ public class GestionAttributionSponsorController {
         configurerColonnes();
         configurerColorationLignes();
         chargerAttributions();
+
+        if (paginationAttributions != null) {
+            paginationAttributions.currentPageIndexProperty().addListener((obs, oldIdx, newIdx) -> {
+                if (newIdx != null) {
+                    updateTableForPage(newIdx.intValue());
+                }
+            });
+        }
+    }
+
+    private void applyFilteredList(java.util.List<EvenementSponsorService.AttributionAvecInfos> newList, String totalLabel) {
+        if (listeFiltree == null) {
+            listeFiltree = FXCollections.observableArrayList();
+        }
+        listeFiltree.setAll(newList);
+
+        if (lblTotal != null) {
+            lblTotal.setText(totalLabel);
+        }
+
+        if (paginationAttributions != null) {
+            int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+            paginationAttributions.setPageCount(Math.max(pageCount, 1));
+            paginationAttributions.setCurrentPageIndex(0);
+            updateTableForPage(0);
+        } else {
+            tableAttributions.setItems(listeFiltree);
+            if (lblPageInfo != null) lblPageInfo.setText("");
+        }
+
+        calculerStatistiques();
+    }
+
+    private void updateTableForPage(int pageIndex) {
+        if (listeFiltree == null) {
+            tableAttributions.setItems(FXCollections.observableArrayList());
+            if (lblPageInfo != null) lblPageInfo.setText("");
+            return;
+        }
+
+        int fromIndex = pageIndex * ITEMS_PER_PAGE;
+        int toIndex = Math.min(fromIndex + ITEMS_PER_PAGE, listeFiltree.size());
+
+        ObservableList<EvenementSponsorService.AttributionAvecInfos> pageItems;
+        if (fromIndex >= listeFiltree.size() || fromIndex < 0) {
+            pageItems = FXCollections.observableArrayList();
+        } else {
+            pageItems = FXCollections.observableArrayList(listeFiltree.subList(fromIndex, toIndex));
+        }
+
+        tableAttributions.setItems(pageItems);
+
+        if (lblPageInfo != null) {
+            int total = listeFiltree.size();
+            if (total == 0) {
+                lblPageInfo.setText("Aucun résultat");
+            } else {
+                lblPageInfo.setText("Affichage " + (fromIndex + 1) + " - " + toIndex + " sur " + total);
+            }
+        }
     }
 
     private void initialiserFiltres() {
@@ -259,25 +327,25 @@ public class GestionAttributionSponsorController {
                 );
             }
 
-            listeFiltree = FXCollections.observableArrayList(listeAttributions);
-            tableAttributions.setItems(listeFiltree);
-            lblTotal.setText("Total : " + listeFiltree.size());
-            calculerStatistiques();
+            listeFiltree = FXCollections.observableArrayList();
+            applyFilteredList(listeAttributions, "Total : " + listeAttributions.size());
         } catch (SQLException e) {
             afficherErreur("Erreur lors du chargement des attributions : " + e.getMessage());
         }
     }
 
     private void calculerStatistiques() {
-        lblTotalAttributions.setText(listeFiltree.size() + " attributions");
-        lblTotal.setText("Total : " + listeFiltree.size());
+        if (lblTotalAttributions != null) lblTotalAttributions.setText(listeFiltree.size() + " attributions");
+        if (lblTotal != null && (lblTotal.getText() == null || lblTotal.getText().isBlank())) {
+            lblTotal.setText("Total : " + listeFiltree.size());
+        }
 
         // Montant total
         BigDecimal montantTotal = listeFiltree.stream()
             .map(EvenementSponsorService.AttributionAvecInfos::getMontantContribution)
             .filter(Objects::nonNull)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
-        lblMontantTotal.setText(montantTotal.toString() + " DT");
+        if (lblMontantTotal != null) lblMontantTotal.setText(montantTotal.toString() + " DT");
 
         // Répartition par statut
         long confirmes = listeFiltree.stream().filter(a -> a.getStatut() == StatutSponsor.CONFIRME).count();
@@ -285,10 +353,10 @@ public class GestionAttributionSponsorController {
         long refuses = listeFiltree.stream().filter(a -> a.getStatut() == StatutSponsor.REFUSE).count();
         long annules = listeFiltree.stream().filter(a -> a.getStatut() == StatutSponsor.ANNULE).count();
 
-        lblStatutConfirme.setText(confirmes + " confirmées");
-        lblStatutEnAttente.setText(enAttente + " en attente");
-        lblStatutRefuse.setText(refuses + " refusées");
-        lblStatutAnnule.setText(annules + " annulées");
+        if (lblStatutConfirme != null) lblStatutConfirme.setText(confirmes + " confirmées");
+        if (lblStatutEnAttente != null) lblStatutEnAttente.setText(enAttente + " en attente");
+        if (lblStatutRefuse != null) lblStatutRefuse.setText(refuses + " refusées");
+        if (lblStatutAnnule != null) lblStatutAnnule.setText(annules + " annulées");
 
         // Top sponsor (celui avec le plus de contributions)
         Map<String, Long> countBySponsor = listeFiltree.stream()
@@ -298,9 +366,9 @@ public class GestionAttributionSponsorController {
             .max(Map.Entry.comparingByValue());
         
         if (topSponsor.isPresent()) {
-            lblTopSponsor.setText(topSponsor.get().getKey() + " (" + topSponsor.get().getValue() + ")");
+            if (lblTopSponsor != null) lblTopSponsor.setText(topSponsor.get().getKey() + " (" + topSponsor.get().getValue() + ")");
         } else {
-            lblTopSponsor.setText("-");
+            if (lblTopSponsor != null) lblTopSponsor.setText("-");
         }
     }
 
@@ -331,35 +399,31 @@ public class GestionAttributionSponsorController {
             }
         }
 
-        listeFiltree.clear();
-        listeFiltree.addAll(resultats);
-        tableAttributions.setItems(listeFiltree);
-        lblTotal.setText("Total : " + resultats.size() + " (filtrés)");
-        calculerStatistiques();
+        applyFilteredList(resultats, "Total : " + resultats.size() + " (filtrés)");
     }
 
     @FXML
     private void appliquerFiltres() {
-        listeFiltree.clear();
-        listeFiltree.addAll(listeAttributions);
+        ObservableList<EvenementSponsorService.AttributionAvecInfos> resultats = FXCollections.observableArrayList();
+        resultats.addAll(listeAttributions);
 
         // Filtrer par statut
         StatutSponsor statut = comboStatut.getValue();
         if (statut != null) {
-            listeFiltree.removeIf(a -> a.getStatut() != statut);
+            resultats.removeIf(a -> a.getStatut() != statut);
         }
 
         // Filtrer par type de contribution
         TypeContribution type = comboType.getValue();
         if (type != null) {
-            listeFiltree.removeIf(a -> a.getTypeContribution() != type);
+            resultats.removeIf(a -> a.getTypeContribution() != type);
         }
 
         // Filtrer par période
         LocalDate debut = dateDebut.getValue();
         LocalDate fin = dateFin.getValue();
         if (debut != null || fin != null) {
-            listeFiltree.removeIf(a -> {
+            resultats.removeIf(a -> {
                 if (a.getDateContribution() == null) return true;
                 LocalDate dateContribution = a.getDateContribution().toLocalDateTime().toLocalDate();
                 if (debut != null && dateContribution.isBefore(debut)) return true;
@@ -368,9 +432,7 @@ public class GestionAttributionSponsorController {
             });
         }
 
-        tableAttributions.setItems(listeFiltree);
-        lblTotal.setText("Total : " + listeFiltree.size() + " (filtrés)");
-        calculerStatistiques();
+        applyFilteredList(resultats, "Total : " + resultats.size() + " (filtrés)");
     }
 
     @FXML

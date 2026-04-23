@@ -74,8 +74,17 @@ public class GestionSponsorController {
     @FXML
     private Label lblTotalSponsors;
 
+    @FXML
+    private Pagination paginationSponsors;
+
+    @FXML
+    private Label lblPageInfo;
+
     private SponsorService sponsorService;
     private ObservableList<SponsorService.SponsorAvecInfos> listeSponsors;
+    private ObservableList<SponsorService.SponsorAvecInfos> listeFiltree;
+
+    private static final int ITEMS_PER_PAGE = 10;
 
     @FXML
     public void initialize() {
@@ -91,6 +100,7 @@ public class GestionSponsorController {
 
         sponsorService = new SponsorService();
         listeSponsors = FXCollections.observableArrayList();
+        listeFiltree = FXCollections.observableArrayList();
 
         // Initialiser les filtres
         initialiserFiltres();
@@ -98,6 +108,14 @@ public class GestionSponsorController {
         configurerColonnes();
         configurerColorationLignes();
         chargerSponsors();
+
+        if (paginationSponsors != null) {
+            paginationSponsors.currentPageIndexProperty().addListener((obs, oldIdx, newIdx) -> {
+                if (newIdx != null) {
+                    updateTableForPage(newIdx.intValue());
+                }
+            });
+        }
     }
 
     private void initialiserFiltres() {
@@ -268,20 +286,71 @@ public class GestionSponsorController {
                 listeSponsors.add(info);
             }
 
-            tableSponsors.setItems(listeSponsors);
-            lblTotal.setText(listeSponsors.size() + " sponsors");
-
-            // Calculer et afficher les statistiques
-            calculerStatistiques();
+            applyFilteredList(listeSponsors, listeSponsors.size() + " sponsors");
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible de charger les sponsors: " + e.getMessage());
+        }
+    }
+
+    private void applyFilteredList(java.util.List<SponsorService.SponsorAvecInfos> newList, String totalLabel) {
+        listeFiltree.setAll(newList);
+
+        if (lblTotal != null) {
+            lblTotal.setText(totalLabel);
+        }
+
+        // Mettre à jour pagination
+        if (paginationSponsors != null) {
+            int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+            paginationSponsors.setPageCount(Math.max(pageCount, 1));
+            paginationSponsors.setCurrentPageIndex(0);
+            updateTableForPage(0);
+        } else {
+            tableSponsors.setItems(listeFiltree);
+            if (lblPageInfo != null) lblPageInfo.setText("");
+        }
+
+        // Calculer et afficher les statistiques
+        calculerStatistiques();
+    }
+
+    private void updateTableForPage(int pageIndex) {
+        if (listeFiltree == null) {
+            tableSponsors.setItems(FXCollections.observableArrayList());
+            if (lblPageInfo != null) lblPageInfo.setText("");
+            return;
+        }
+
+        int fromIndex = pageIndex * ITEMS_PER_PAGE;
+        int toIndex = Math.min(fromIndex + ITEMS_PER_PAGE, listeFiltree.size());
+
+        ObservableList<SponsorService.SponsorAvecInfos> pageItems;
+        if (fromIndex >= listeFiltree.size() || fromIndex < 0) {
+            pageItems = FXCollections.observableArrayList();
+        } else {
+            pageItems = FXCollections.observableArrayList(listeFiltree.subList(fromIndex, toIndex));
+        }
+
+        tableSponsors.setItems(pageItems);
+
+        if (lblPageInfo != null) {
+            int total = listeFiltree.size();
+            if (total == 0) {
+                lblPageInfo.setText("Aucun résultat");
+            } else {
+                lblPageInfo.setText("Affichage " + (fromIndex + 1) + " - " + toIndex + " sur " + total);
+            }
         }
     }
 
     private void calculerStatistiques() {
         int enAttente = 0, confirmes = 0, refuses = 0, annules = 0;
 
-        for (SponsorService.SponsorAvecInfos sponsor : listeSponsors) {
+        ObservableList<SponsorService.SponsorAvecInfos> base = (listeFiltree != null)
+                ? listeFiltree
+                : listeSponsors;
+
+        for (SponsorService.SponsorAvecInfos sponsor : base) {
             switch (sponsor.getStatut()) {
                 case EN_ATTENTE:
                     enAttente++;
@@ -298,11 +367,11 @@ public class GestionSponsorController {
             }
         }
 
-        lblStatutActif.setText(confirmes + " confirmés");
-        lblStatutInactif.setText(enAttente + " en attente");
-        lblStatutRefuse.setText(refuses + " refusés");
-        lblStatutAnnule.setText(annules + " annulés");
-        lblTotalSponsors.setText(listeSponsors.size() + " sponsors");
+        if (lblStatutActif != null) lblStatutActif.setText(confirmes + " confirmés");
+        if (lblStatutInactif != null) lblStatutInactif.setText(enAttente + " en attente");
+        if (lblStatutRefuse != null) lblStatutRefuse.setText(refuses + " refusés");
+        if (lblStatutAnnule != null) lblStatutAnnule.setText(annules + " annulés");
+        if (lblTotalSponsors != null) lblTotalSponsors.setText(base.size() + " sponsors");
     }
 
     @FXML
@@ -329,8 +398,7 @@ public class GestionSponsorController {
             }
         }
 
-        tableSponsors.setItems(resultats);
-        lblTotal.setText(resultats.size() + " sponsors (filtrés)");
+        applyFilteredList(resultats, resultats.size() + " sponsors (filtrés)");
     }
 
     @FXML
@@ -377,8 +445,7 @@ public class GestionSponsorController {
             resultats.add(sponsor);
         }
 
-        tableSponsors.setItems(resultats);
-        lblTotal.setText(resultats.size() + " sponsors (filtrés)");
+        applyFilteredList(resultats, resultats.size() + " sponsors (filtrés)");
     }
 
     @FXML

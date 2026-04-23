@@ -21,7 +21,15 @@ public class NavigationContext {
         if (content instanceof BorderPane borderPane
                 && borderPane.getLeft() != null
                 && borderPane.getCenter() != null) {
-            return borderPane.getCenter();
+            Node center = borderPane.getCenter();
+            if (center instanceof Parent centerParent) {
+                for (String stylesheet : borderPane.getStylesheets()) {
+                    if (!centerParent.getStylesheets().contains(stylesheet)) {
+                        centerParent.getStylesheets().add(stylesheet);
+                    }
+                }
+            }
+            return center;
         }
         return content;
     }
@@ -106,3 +114,4 @@ public class NavigationContext {
         sidebar = null;
     }
 }
+

@@ -115,17 +115,29 @@
     </top>
 
     <center>
-        <TableView fx:id="tableSponsors" prefHeight="500" styleClass="data-table">
-            <columns>
-                <TableColumn fx:id="colEvenement" text="Événement" prefWidth="200" sortable="true"/>
-                <TableColumn fx:id="colLogo" text="Logo" prefWidth="80" sortable="false"/>
-                <TableColumn fx:id="colNom" text="Sponsor" prefWidth="180" sortable="true"/>
-                <TableColumn fx:id="colType" text="Type" prefWidth="120" sortable="true"/>
-                <TableColumn fx:id="colEmail" text="Email" prefWidth="180" sortable="true"/>
-                <TableColumn fx:id="colStatut" text="Statut" prefWidth="100" sortable="true"/>
-                <TableColumn fx:id="colDate" text="Date" prefWidth="150" sortable="true"/>
-                <TableColumn fx:id="colActions" text="Actions" prefWidth="200" sortable="false"/>
-            </columns>
-        </TableView>
+        <VBox spacing="10" style="-fx-padding: 0 20 20 20;">
+            <children>
+                <TableView fx:id="tableSponsors" prefHeight="500" VBox.vgrow="ALWAYS" styleClass="data-table">
+                    <columns>
+                        <TableColumn fx:id="colEvenement" text="Événement" prefWidth="200" sortable="true"/>
+                        <TableColumn fx:id="colLogo" text="Logo" prefWidth="80" sortable="false"/>
+                        <TableColumn fx:id="colNom" text="Sponsor" prefWidth="180" sortable="true"/>
+                        <TableColumn fx:id="colType" text="Type" prefWidth="120" sortable="true"/>
+                        <TableColumn fx:id="colEmail" text="Email" prefWidth="180" sortable="true"/>
+                        <TableColumn fx:id="colStatut" text="Statut" prefWidth="100" sortable="true"/>
+                        <TableColumn fx:id="colDate" text="Date" prefWidth="150" sortable="true"/>
+                        <TableColumn fx:id="colActions" text="Actions" prefWidth="200" sortable="false"/>
+                    </columns>
+                </TableView>
+
+                <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 6 0 0 0;">
+                    <children>
+                        <Label fx:id="lblPageInfo" text="" styleClass="form-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Pagination fx:id="paginationSponsors" maxPageIndicatorCount="7" prefHeight="40"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
     </center>
 </BorderPane>

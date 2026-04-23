@@ -49,11 +49,19 @@ public class FeedbacksAdminController {
     @FXML
     private ComboBox<String> comboTri;
 
+    @FXML
+    private Pagination paginationFeedbacks;
+
+    @FXML
+    private Label lblPageInfo;
+
     private ParticipationService participationService;
     private EvenementService evenementService;
     private List<Participation> listeFeedbacks;
     private List<Participation> listeFiltree;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    private static final int ITEMS_PER_PAGE = 6;
 
     @FXML
     public void initialize() {
@@ -66,9 +74,46 @@ public class FeedbacksAdminController {
             
             initialiserFiltres();
             chargerFeedbacks();
+
+            if (paginationFeedbacks != null) {
+                paginationFeedbacks.currentPageIndexProperty().addListener((obs, oldIdx, newIdx) -> {
+                    if (newIdx != null) {
+                        updateTileForPage(newIdx.intValue());
+                    }
+                });
+            }
         } catch (Exception e) {
             System.err.println("Erreur lors de l'initialisation: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void updateTileForPage(int pageIndex) {
+        if (listeFiltree == null) {
+            tileFeedbacks.getChildren().clear();
+            if (lblPageInfo != null) lblPageInfo.setText("");
+            return;
+        }
+
+        int fromIndex = pageIndex * ITEMS_PER_PAGE;
+        int toIndex = Math.min(fromIndex + ITEMS_PER_PAGE, listeFiltree.size());
+
+        List<Participation> pageItems;
+        if (fromIndex >= listeFiltree.size() || fromIndex < 0) {
+            pageItems = new ArrayList<>();
+        } else {
+            pageItems = listeFiltree.subList(fromIndex, toIndex);
+        }
+
+        afficherCartesFeedbacks(pageItems);
+
+        if (lblPageInfo != null) {
+            int total = listeFiltree.size();
+            if (total == 0) {
+                lblPageInfo.setText("Aucun résultat");
+            } else {
+                lblPageInfo.setText("Affichage " + (fromIndex + 1) + " - " + toIndex + " sur " + total);
+            }
         }
     }
 
@@ -139,9 +184,22 @@ public class FeedbacksAdminController {
                 lblTotal.setText("0 avis");
                 lblNoteMoyenne.setText("⭐ 0.0/5");
                 lblTopEvenement.setText("-");
+                if (paginationFeedbacks != null) {
+                    paginationFeedbacks.setPageCount(1);
+                    paginationFeedbacks.setCurrentPageIndex(0);
+                }
+                if (lblPageInfo != null) lblPageInfo.setText("Aucun résultat");
             } else {
-                appliquerTri();
-                afficherCartesFeedbacks(listeFiltree);
+                // Mettre à jour pagination
+                if (paginationFeedbacks != null) {
+                    int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+                    paginationFeedbacks.setPageCount(Math.max(pageCount, 1));
+                    paginationFeedbacks.setCurrentPageIndex(0);
+                    updateTileForPage(0);
+                } else {
+                    appliquerTri();
+                    afficherCartesFeedbacks(listeFiltree);
+                }
                 calculerStatistiques();
             }
         } catch (SQLException e) {
@@ -271,9 +329,21 @@ public class FeedbacksAdminController {
             lblTotal.setText("0 avis");
             lblNoteMoyenne.setText("⭐ 0.0/5");
             lblTopEvenement.setText("-");
+            if (paginationFeedbacks != null) {
+                paginationFeedbacks.setPageCount(1);
+                paginationFeedbacks.setCurrentPageIndex(0);
+            }
+            if (lblPageInfo != null) lblPageInfo.setText("Aucun résultat");
         } else {
             appliquerTri();
-            afficherCartesFeedbacks(listeFiltree);
+            if (paginationFeedbacks != null) {
+                int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+                paginationFeedbacks.setPageCount(Math.max(pageCount, 1));
+                paginationFeedbacks.setCurrentPageIndex(0);
+                updateTileForPage(0);
+            } else {
+                afficherCartesFeedbacks(listeFiltree);
+            }
             calculerStatistiques();
         }
     }

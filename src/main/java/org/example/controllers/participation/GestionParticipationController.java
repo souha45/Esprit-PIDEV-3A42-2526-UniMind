@@ -85,10 +85,18 @@ public class GestionParticipationController {
     @FXML
     private Label lblTotalParticipations;
 
+    @FXML
+    private Pagination paginationParticipations;
+
+    @FXML
+    private Label lblPageInfo;
+
     private ParticipationService participationService;
     private EvenementService evenementService;
     private ObservableList<ParticipationService.ParticipationAvecNoms> listeParticipations;
     private ObservableList<ParticipationService.ParticipationAvecNoms> listeFiltree;
+
+    private static final int ITEMS_PER_PAGE = 10;
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -121,6 +129,14 @@ public class GestionParticipationController {
         configurerColonnes();
         configurerColorationLignes();
         chargerParticipations();
+
+        if (paginationParticipations != null) {
+            paginationParticipations.currentPageIndexProperty().addListener((obs, oldIdx, newIdx) -> {
+                if (newIdx != null) {
+                    updateTableForPage(newIdx.intValue());
+                }
+            });
+        }
     }
 
     private void configurerColorationLignes() {
@@ -243,12 +259,55 @@ public class GestionParticipationController {
                 listeParticipations.addAll(participationService.afficherAvecNoms());
             }
 
-            listeFiltree.clear();
-            listeFiltree.addAll(listeParticipations);
-            tableParticipations.setItems(listeFiltree);
-            calculerStatistiques();
+            applyFilteredList(listeParticipations);
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible de charger les participations: " + e.getMessage());
+        }
+    }
+
+    private void applyFilteredList(List<ParticipationService.ParticipationAvecNoms> newList) {
+        listeFiltree.setAll(newList);
+
+        // Mettre à jour pagination
+        if (paginationParticipations != null) {
+            int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+            paginationParticipations.setPageCount(Math.max(pageCount, 1));
+            paginationParticipations.setCurrentPageIndex(0);
+            updateTableForPage(0);
+        } else {
+            tableParticipations.setItems(listeFiltree);
+            if (lblPageInfo != null) lblPageInfo.setText("");
+        }
+
+        calculerStatistiques();
+    }
+
+    private void updateTableForPage(int pageIndex) {
+        if (listeFiltree == null) {
+            tableParticipations.setItems(FXCollections.observableArrayList());
+            if (lblPageInfo != null) lblPageInfo.setText("");
+            return;
+        }
+
+        int fromIndex = pageIndex * ITEMS_PER_PAGE;
+        int toIndex = Math.min(fromIndex + ITEMS_PER_PAGE, listeFiltree.size());
+
+        ObservableList<ParticipationService.ParticipationAvecNoms> pageItems;
+        if (fromIndex >= listeFiltree.size() || fromIndex < 0) {
+            pageItems = FXCollections.observableArrayList();
+        } else {
+            pageItems = FXCollections.observableArrayList(listeFiltree.subList(fromIndex, toIndex));
+        }
+
+        tableParticipations.setItems(pageItems);
+
+        if (lblPageInfo != null) {
+            int total = listeFiltree.size();
+            if (total == 0) {
+                lblPageInfo.setText("Aucun résultat");
+            } else {
+                lblPageInfo.setText("Affichage " + (fromIndex + 1) + " - " + toIndex + " sur " + total);
+            }
         }
     }
 
@@ -271,11 +330,11 @@ public class GestionParticipationController {
             }
         }
 
-        lblStatutConfirme.setText(confirmes + " confirmées");
-        lblStatutEnAttente.setText(enAttente + " en attente");
-        lblStatutAnnule.setText(annulees + " annulées");
-        lblTotalParticipations.setText(listeFiltree.size() + " participations");
-        lblTotal.setText(listeFiltree.size() + " participations");
+        if (lblStatutConfirme != null) lblStatutConfirme.setText(confirmes + " confirmées");
+        if (lblStatutEnAttente != null) lblStatutEnAttente.setText(enAttente + " en attente");
+        if (lblStatutAnnule != null) lblStatutAnnule.setText(annulees + " annulées");
+        if (lblTotalParticipations != null) lblTotalParticipations.setText(listeFiltree.size() + " participations");
+        if (lblTotal != null) lblTotal.setText(listeFiltree.size() + " participations");
     }
 
     @FXML
@@ -301,10 +360,7 @@ public class GestionParticipationController {
             }
         }
 
-        listeFiltree.clear();
-        listeFiltree.addAll(resultats);
-        tableParticipations.setItems(listeFiltree);
-        calculerStatistiques();
+        applyFilteredList(resultats);
     }
 
     @FXML
@@ -336,10 +392,7 @@ public class GestionParticipationController {
             });
         }
 
-        listeFiltree.clear();
-        listeFiltree.addAll(resultats);
-        tableParticipations.setItems(listeFiltree);
-        calculerStatistiques();
+        applyFilteredList(resultats);
     }
 
     @FXML

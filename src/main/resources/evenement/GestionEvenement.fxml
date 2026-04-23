@@ -125,18 +125,30 @@
     </top>
     
     <center>
-        <TableView fx:id="tableEvenements" prefHeight="500" styleClass="data-table">
-            <columns>
-                <TableColumn fx:id="colImage" text="Image" prefWidth="80" sortable="false"/>
-                <TableColumn fx:id="colTitre" text="Titre" prefWidth="200" sortable="true"/>
-                <TableColumn fx:id="colType" text="Type" prefWidth="120" sortable="true"/>
-                <TableColumn fx:id="colDateDebut" text="Date Début" prefWidth="180" sortable="true"/>
-                <TableColumn fx:id="colLieu" text="Lieu" prefWidth="200" sortable="true"/>
-                <TableColumn fx:id="colOrganisateur" text="Organisateur" prefWidth="200" sortable="true"/>
-                <TableColumn fx:id="colStatut" text="Statut" prefWidth="120" sortable="true"/>
-                <TableColumn fx:id="colPlacesLibres" text="Places libres" prefWidth="120" sortable="true"/>
-                <TableColumn fx:id="colActions" text="Actions" prefWidth="200" sortable="false"/>
-            </columns>
-        </TableView>
+        <VBox spacing="10" style="-fx-padding: 0 20 20 20;">
+            <children>
+                <TableView fx:id="tableEvenements" prefHeight="500" VBox.vgrow="ALWAYS" styleClass="data-table">
+                    <columns>
+                        <TableColumn fx:id="colImage" text="Image" prefWidth="80" sortable="false"/>
+                        <TableColumn fx:id="colTitre" text="Titre" prefWidth="200" sortable="true"/>
+                        <TableColumn fx:id="colType" text="Type" prefWidth="120" sortable="true"/>
+                        <TableColumn fx:id="colDateDebut" text="Date Début" prefWidth="180" sortable="true"/>
+                        <TableColumn fx:id="colLieu" text="Lieu" prefWidth="200" sortable="true"/>
+                        <TableColumn fx:id="colOrganisateur" text="Organisateur" prefWidth="200" sortable="true"/>
+                        <TableColumn fx:id="colStatut" text="Statut" prefWidth="120" sortable="true"/>
+                        <TableColumn fx:id="colPlacesLibres" text="Places libres" prefWidth="120" sortable="true"/>
+                        <TableColumn fx:id="colActions" text="Actions" prefWidth="200" sortable="false"/>
+                    </columns>
+                </TableView>
+
+                <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 6 0 0 0;">
+                    <children>
+                        <Label fx:id="lblPageInfo" text="" styleClass="form-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Pagination fx:id="paginationEvenements" maxPageIndicatorCount="7" prefHeight="40"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
     </center>
 </BorderPane>

@@ -94,8 +94,17 @@ public class GestionEvenementController {
     @FXML
     private Label lblPleins;
 
+    @FXML
+    private Pagination paginationEvenements;
+
+    @FXML
+    private Label lblPageInfo;
+
     private EvenementService evenementService;
     private ObservableList<EvenementService.EvenementAvecOrganisateurNom> listeEvenements;
+    private ObservableList<EvenementService.EvenementAvecOrganisateurNom> listeFiltre;
+
+    private static final int ITEMS_PER_PAGE = 10;
 
     // Formatter pour les dates
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -104,6 +113,7 @@ public class GestionEvenementController {
     public void initialize() {
         evenementService = new EvenementService();
         listeEvenements = FXCollections.observableArrayList();
+        listeFiltre = FXCollections.observableArrayList();
 
         // Mettre à jour automatiquement les images (une seule fois)
         try {
@@ -126,6 +136,15 @@ public class GestionEvenementController {
 
         // Charger les données
         chargerEvenements();
+
+        // Pagination
+        if (paginationEvenements != null) {
+            paginationEvenements.currentPageIndexProperty().addListener((obs, oldIdx, newIdx) -> {
+                if (newIdx != null) {
+                    updateTableForPage(newIdx.intValue());
+                }
+            });
+        }
     }
 
     private void initialiserFiltres() {
@@ -330,20 +349,74 @@ public class GestionEvenementController {
 
                 listeEvenements.add(evenementAvecNom);
             }
-            tableEvenements.setItems(listeEvenements);
-            lblTotal.setText(listeEvenements.size() + " événements");
 
-            // Calculer et afficher les statistiques
-            calculerStatistiques();
+            applyFilteredList(listeEvenements, listeEvenements.size() + " événements");
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible de charger les événements: " + e.getMessage());
+        }
+    }
+
+    private void applyFilteredList(ObservableList<EvenementService.EvenementAvecOrganisateurNom> newList, String totalLabel) {
+        listeFiltre.setAll(newList);
+        if (lblTotal != null) {
+            lblTotal.setText(totalLabel);
+        }
+
+        // Calculer et afficher les statistiques sur la liste filtrée
+        calculerStatistiques();
+
+        if (paginationEvenements == null) {
+            tableEvenements.setItems(listeFiltre);
+            if (lblPageInfo != null) lblPageInfo.setText("");
+            return;
+        }
+
+        // Mettre à jour pagination
+        int pageCount = (int) Math.ceil((double) listeFiltre.size() / ITEMS_PER_PAGE);
+        paginationEvenements.setPageCount(Math.max(pageCount, 1));
+        paginationEvenements.setCurrentPageIndex(0);
+
+        // Rafraîchir la première page
+        updateTableForPage(0);
+    }
+
+    private void updateTableForPage(int pageIndex) {
+        if (listeFiltre == null) {
+            tableEvenements.setItems(FXCollections.observableArrayList());
+            if (lblPageInfo != null) lblPageInfo.setText("");
+            return;
+        }
+
+        int fromIndex = pageIndex * ITEMS_PER_PAGE;
+        int toIndex = Math.min(fromIndex + ITEMS_PER_PAGE, listeFiltre.size());
+
+        ObservableList<EvenementService.EvenementAvecOrganisateurNom> pageItems;
+        if (fromIndex >= listeFiltre.size() || fromIndex < 0) {
+            pageItems = FXCollections.observableArrayList();
+        } else {
+            pageItems = FXCollections.observableArrayList(listeFiltre.subList(fromIndex, toIndex));
+        }
+
+        tableEvenements.setItems(pageItems);
+
+        if (lblPageInfo != null) {
+            int total = listeFiltre.size();
+            if (total == 0) {
+                lblPageInfo.setText("Aucun résultat");
+            } else {
+                lblPageInfo.setText("Affichage " + (fromIndex + 1) + " - " + toIndex + " sur " + total);
+            }
         }
     }
 
     private void calculerStatistiques() {
         int aVenir = 0, enCours = 0, termine = 0, annule = 0, pleins = 0;
 
-        for (EvenementService.EvenementAvecOrganisateurNom item : listeEvenements) {
+        ObservableList<EvenementService.EvenementAvecOrganisateurNom> base = (listeFiltre != null)
+                ? listeFiltre
+                : listeEvenements;
+
+        for (EvenementService.EvenementAvecOrganisateurNom item : base) {
             Evenement e = item.getEvenement();
 
             // Compter par statut
@@ -433,8 +506,7 @@ public class GestionEvenementController {
             }
         }
 
-        tableEvenements.setItems(resultat);
-        lblTotal.setText(resultat.size() + " événements (filtrés)");
+        applyFilteredList(resultat, resultat.size() + " événements (filtrés)");
     }
 
     @FXML
@@ -489,8 +561,7 @@ public class GestionEvenementController {
             resultats.add(item);
         }
 
-        tableEvenements.setItems(resultats);
-        lblTotal.setText(resultats.size() + " événements (filtrés)");
+        applyFilteredList(resultats, resultats.size() + " événements (filtrés)");
     }
 
     @FXML
