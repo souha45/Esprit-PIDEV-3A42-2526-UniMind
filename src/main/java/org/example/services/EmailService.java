@@ -50,13 +50,11 @@ public class EmailService {
                                             String typeConsult, String lieu, String motif) {
 
         String sujet = "📅 Nouveau rendez-vous réservé - Unimind";
-
         String corps = buildEmailNouveauRdv(
                 psyNom, psyPrenom, etudiantNom, etudiantPrenom, etudiantEmail,
                 date, heureDebut, heureFin, typeConsult, lieu, motif
         );
-
-        envoyerEmail(psyEmail, sujet, corps);
+        envoyerEmailMailjet(psyEmail, sujet, corps);
     }
 
     /**
@@ -68,13 +66,61 @@ public class EmailService {
                                                  String psyNom, String psyPrenom) {
 
         String sujet = "✅ Votre rendez-vous a été confirmé - Unimind";
-
         String corps = buildEmailConfirmationEtudiant(
                 etudiantNom, etudiantPrenom, date, heureDebut, heureFin,
                 typeConsult, lieu, motif, psyNom, psyPrenom
         );
+        envoyerEmailMailjet(etudiantEmail, sujet, corps);
+    }
 
-        envoyerEmail(etudiantEmail, sujet, corps);
+    /**
+     * Méthode publique pour envoyer un email (utilisée par le service de rappel)
+     */
+    public void envoyerEmailRappel(String destinataire, String sujet, String corpsHtml) {
+        envoyerEmailMailjet(destinataire, sujet, corpsHtml);
+    }
+
+    // ========== MÉTHODES PRIVÉES ==========
+
+    private void envoyerEmailMailjet(String destinataire, String sujet, String corpsHtml) {
+        if (apiKey == null || secretKey == null) {
+            System.err.println("❌ Mailjet non configuré");
+            return;
+        }
+
+        try {
+            ClientOptions options = ClientOptions.builder()
+                    .apiKey(apiKey)
+                    .apiSecretKey(secretKey)
+                    .build();
+
+            MailjetClient client = new MailjetClient(options);
+
+            MailjetRequest request = new MailjetRequest(Emailv31.resource)
+                    .property(Emailv31.MESSAGES, new JSONArray()
+                            .put(new JSONObject()
+                                    .put(Emailv31.Message.FROM, new JSONObject()
+                                            .put("Email", fromEmail)
+                                            .put("Name", fromName))
+                                    .put(Emailv31.Message.TO, new JSONArray()
+                                            .put(new JSONObject()
+                                                    .put("Email", destinataire)
+                                                    .put("Name", destinataire)))
+                                    .put(Emailv31.Message.SUBJECT, sujet)
+                                    .put(Emailv31.Message.HTMLPART, corpsHtml)));
+
+            MailjetResponse response = client.post(request);
+
+            if (response.getStatus() == 200) {
+                System.out.println("✅ Email envoyé avec succès à " + destinataire);
+            } else {
+                System.err.println("❌ Erreur lors de l'envoi de l'email: " + response.getData());
+            }
+
+        } catch (MailjetException e) {
+            System.err.println("❌ Exception Mailjet: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private String buildEmailNouveauRdv(String psyNom, String psyPrenom,
@@ -143,46 +189,5 @@ public class EmailService {
                 "<p>Vous pouvez consulter vos rendez-vous dans votre espace étudiant.</p>" +
                 "<div class='footer'><p>Cet email est envoyé automatiquement, merci de ne pas y répondre.</p>" +
                 "<p>© 2025 Unimind - Santé Mentale</p></div></div></body></html>";
-    }
-
-    private void envoyerEmail(String destinataire, String sujet, String corpsHtml) {
-        if (apiKey == null || secretKey == null) {
-            System.err.println("❌ Mailjet non configuré");
-            return;
-        }
-
-        try {
-            ClientOptions options = ClientOptions.builder()
-                    .apiKey(apiKey)
-                    .apiSecretKey(secretKey)
-                    .build();
-
-            MailjetClient client = new MailjetClient(options);
-
-            MailjetRequest request = new MailjetRequest(Emailv31.resource)
-                    .property(Emailv31.MESSAGES, new JSONArray()
-                            .put(new JSONObject()
-                                    .put(Emailv31.Message.FROM, new JSONObject()
-                                            .put("Email", fromEmail)
-                                            .put("Name", fromName))
-                                    .put(Emailv31.Message.TO, new JSONArray()
-                                            .put(new JSONObject()
-                                                    .put("Email", destinataire)
-                                                    .put("Name", destinataire)))
-                                    .put(Emailv31.Message.SUBJECT, sujet)
-                                    .put(Emailv31.Message.HTMLPART, corpsHtml)));
-
-            MailjetResponse response = client.post(request);
-
-            if (response.getStatus() == 200) {
-                System.out.println("✅ Email envoyé avec succès à " + destinataire);
-            } else {
-                System.err.println("❌ Erreur lors de l'envoi de l'email: " + response.getData());
-            }
-
-        } catch (MailjetException e) {
-            System.err.println("❌ Exception Mailjet: " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 }

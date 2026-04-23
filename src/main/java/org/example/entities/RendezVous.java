@@ -11,6 +11,7 @@ public class RendezVous {
     private StatutRendezVous statut;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private boolean rappelEnvoye;
 
     // Clés étrangères
     private int dispoId;
@@ -111,6 +112,9 @@ public class RendezVous {
     public void setPsyId(int psyId) {
         this.psyId = psyId;
     }
+
+    public boolean isRappelEnvoye() { return rappelEnvoye; }
+    public void setRappelEnvoye(boolean rappelEnvoye) { this.rappelEnvoye = rappelEnvoye; }
 
     @Override
     public String toString() {

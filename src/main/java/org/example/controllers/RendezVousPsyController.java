@@ -15,7 +15,10 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import org.example.entities.RendezVousDetail;
 import org.example.entities.User;
+import org.example.entities.Etudiant;
 import org.example.services.RendezVousService;
+import org.example.services.EmailService;
+import org.example.services.EtudiantService;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -52,6 +55,8 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
 
     // ========== SERVICES ==========
     private RendezVousService rendezVousService;
+    private EmailService emailService;
+    private EtudiantService etudiantService;  // ← CHANGÉ : Utiliser EtudiantService
     private ObservableList<RendezVousDetail> rendezVousList;
     private ObservableList<RendezVousDetail> filteredList;
     private User utilisateur;
@@ -63,6 +68,8 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
     public void initialize() {
         lblDate.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         rendezVousService = new RendezVousService();
+        emailService = new EmailService();
+        etudiantService = new EtudiantService();  // ← CHANGÉ
         rendezVousList    = FXCollections.observableArrayList();
         filteredList      = FXCollections.observableArrayList();
 
@@ -109,7 +116,7 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
                             && !rdv.getStatut().equalsIgnoreCase(statutFiltre)) return false;
                     if (typeFiltre != null && !typeFiltre.equals("Tous")
                             && !rdv.getTypeConsult().equalsIgnoreCase(typeFiltre)) return false;
-                    if (recherche != null && !recherche.isEmpty()) {
+                    if (!recherche.isEmpty()) {
                         String info = (rdv.getEtudiantPrenom() + " " + rdv.getEtudiantNom()
                                 + " " + rdv.getEtudiantEmail()).toLowerCase();
                         if (!info.contains(recherche)) return false;
@@ -145,7 +152,6 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
                 c.getValue().getDateDispo().toString() + "\n"
                         + c.getValue().getHeureDebut() + " – " + c.getValue().getHeureFin()));
 
-        // ── Badge Type ──────────────────────────────────────────
         colType.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getTypeConsult()));
         colType.setCellFactory(col -> new TableCell<>() {
             @Override protected void updateItem(String item, boolean empty) {
@@ -161,7 +167,6 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
             }
         });
 
-        // ── Badge Statut ────────────────────────────────────────
         colStatut.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStatut()));
         colStatut.setCellFactory(col -> new TableCell<>() {
             @Override protected void updateItem(String item, boolean empty) {
@@ -249,17 +254,74 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
         btn.setStyle("-fx-background-color:" + color + ";-fx-text-fill:white;" +
                 "-fx-font-family:'Segoe UI';-fx-font-size:10px;-fx-font-weight:bold;" +
                 "-fx-padding:5 10;-fx-background-radius:8;-fx-cursor:hand;");
-        // Hover : légère opacité
         btn.setOnMouseEntered(e -> btn.setOpacity(0.85));
         btn.setOnMouseExited(e  -> btn.setOpacity(1.0));
         return btn;
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  DÉTAILS — panel inline au lieu d'Alert
+    //  CHANGER STATUT — avec envoi d'email à l'étudiant
+    // ══════════════════════════════════════════════════════════════
+    private void changerStatut(RendezVousDetail rdv, String nouveauStatut) {
+        try {
+            rendezVousService.modifierStatutRendezVous(
+                    rdv.getRendezVousId(),
+                    rdv.getEtudiantId(),
+                    utilisateur.getUserId(),
+                    nouveauStatut);
+
+            // ✅ Envoyer un email à l'étudiant si le statut est "confirme"
+            if ("confirme".equals(nouveauStatut)) {
+                envoyerEmailConfirmationEtudiant(rdv);
+            }
+
+            chargerRendezVous();
+            showToast("✓  Rendez-vous " + getMessageStatut(nouveauStatut), true);
+        } catch (SQLException e) {
+            showToast("✗  Impossible de modifier le statut : " + e.getMessage(), false);
+        }
+    }
+
+    /**
+     * Envoie un email de confirmation à l'étudiant
+     */
+    private void envoyerEmailConfirmationEtudiant(RendezVousDetail rdv) {
+        // Récupérer les informations complètes de l'étudiant
+        Etudiant etudiant = etudiantService.getEtudiantById(rdv.getEtudiantId());
+
+        if (etudiant != null && etudiant.getEmail() != null && !etudiant.getEmail().isEmpty()) {
+            // Récupérer les informations du psychologue
+            String psyNom = utilisateur.getNom();
+            String psyPrenom = utilisateur.getPrenom();
+
+            // Formater la date
+            String date = rdv.getDateDispo().toString();
+            String heureDebut = rdv.getHeureDebut().toString().substring(0, 5);
+            String heureFin = rdv.getHeureFin().toString().substring(0, 5);
+
+            emailService.envoyerEmailConfirmationEtudiant(
+                    etudiant.getEmail(),           // Email étudiant
+                    etudiant.getNom(),             // Nom étudiant
+                    etudiant.getPrenom(),          // Prénom étudiant
+                    date,                          // Date
+                    heureDebut,                    // Heure début
+                    heureFin,                      // Heure fin
+                    rdv.getTypeConsult(),          // Type consultation
+                    "",                            // Lieu (à récupérer si besoin)
+                    rdv.getMotif() != null ? rdv.getMotif() : "Consultation psychologique",
+                    psyNom,                        // Nom du psy
+                    psyPrenom                      // Prénom du psy
+            );
+            System.out.println("✅ Email de confirmation envoyé à l'étudiant: " + etudiant.getEmail());
+        } else {
+            System.err.println("❌ Impossible d'envoyer l'email: étudiant non trouvé ou email invalide");
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  DÉTAILS — panel inline
     // ══════════════════════════════════════════════════════════════
     private void afficherDetailsRendezVous(RendezVousDetail rdv) {
-        // Construire le panel de détails
         VBox panel = new VBox(10);
         panel.setStyle("-fx-background-color:#ffffff;-fx-background-radius:14;" +
                 "-fx-border-color:#e0e7ff;-fx-border-width:1;-fx-border-radius:14;" +
@@ -268,7 +330,6 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
         panel.setMaxWidth(420);
         panel.setAlignment(Pos.TOP_LEFT);
 
-        // Titre + bouton fermer
         HBox header = new HBox();
         header.setAlignment(Pos.CENTER_LEFT);
         Label titre = new Label("📋  Détails du rendez-vous");
@@ -285,11 +346,9 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
                 .replace("#ef4444", "#9ca3af")));
         header.getChildren().addAll(titre, spacer, btnClose);
 
-        // Séparateur
         javafx.scene.control.Separator sep = new javafx.scene.control.Separator();
         sep.setStyle("-fx-background-color:#e0e7ff;");
 
-        // Lignes de détail
         VBox body = new VBox(8);
         body.getChildren().addAll(
                 detailRow("👤  Patient",  rdv.getEtudiantPrenom() + " " + rdv.getEtudiantNom()),
@@ -305,19 +364,16 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
 
         panel.getChildren().addAll(header, sep, body);
 
-        // Afficher dans le toastContainer (overlay)
         toastContainer.getChildren().add(panel);
         toastContainer.setVisible(true);
         toastContainer.setManaged(true);
         StackPane.setAlignment(panel, Pos.CENTER);
 
-        // Fermer au clic sur ✕ ou sur le fond
         btnClose.setOnAction(e -> fermerOverlay(panel));
         toastContainer.setOnMouseClicked(e -> {
             if (e.getTarget() == toastContainer) fermerOverlay(panel);
         });
 
-        // Fade-in
         FadeTransition ft = new FadeTransition(Duration.millis(180), panel);
         ft.setFromValue(0); ft.setToValue(1); ft.play();
     }
@@ -349,23 +405,6 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  CHANGER STATUT — toast de confirmation au lieu d'Alert
-    // ══════════════════════════════════════════════════════════════
-    private void changerStatut(RendezVousDetail rdv, String nouveauStatut) {
-        try {
-            rendezVousService.modifierStatutRendezVous(
-                    rdv.getRendezVousId(),
-                    rdv.getEtudiantId(),
-                    utilisateur.getUserId(),
-                    nouveauStatut);
-            chargerRendezVous();
-            showToast("✓  Rendez-vous " + getMessageStatut(nouveauStatut), true);
-        } catch (SQLException e) {
-            showToast("✗  Impossible de modifier le statut : " + e.getMessage(), false);
-        }
-    }
-
-    // ══════════════════════════════════════════════════════════════
     //  TOAST NOTIFICATION
     // ══════════════════════════════════════════════════════════════
     private void showToast(String message, boolean success) {
@@ -382,7 +421,6 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
         toastContainer.setManaged(true);
         StackPane.setAlignment(toast, Pos.BOTTOM_CENTER);
 
-        // Fade-in → pause → fade-out
         FadeTransition fadeIn = new FadeTransition(Duration.millis(200), toast);
         fadeIn.setFromValue(0); fadeIn.setToValue(1);
 
