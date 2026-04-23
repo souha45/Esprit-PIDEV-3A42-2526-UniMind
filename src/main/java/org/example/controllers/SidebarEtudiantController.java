@@ -22,6 +22,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.example.utils.NavigationContext;
 
 public class SidebarEtudiantController {
 
@@ -71,7 +72,7 @@ public class SidebarEtudiantController {
 
     @FXML
     public void showMesFavoris() {
-        naviguer("/org/example/views/MesFavorisSeances.fxml", "Mes favoris", null);
+        naviguer("/org/example/views/MesFavorisSeances.fxml", "Mes favoris", btnFavoris);
     }
 
     @FXML
@@ -381,6 +382,7 @@ public class SidebarEtudiantController {
     }
 
     private void setActiveButton(Button button) {
+        if (button == null) return;
         Button[] boutons = {
                 btnDashboard, btnMesRendezVous, btnConsultations,
                 btnTraitements, btnQuestionnaires, btnMesReponses, btnSeances, btnFavoris,
@@ -394,7 +396,7 @@ public class SidebarEtudiantController {
     private void styliserBoutons() {
         Button[] boutons = {
                 btnDashboard, btnMesRendezVous, btnConsultations,
-                btnTraitements, btnQuestionnaires, btnMesReponses, btnSeances,
+                btnTraitements, btnQuestionnaires, btnMesReponses, btnSeances, btnFavoris,
                 btnEvenements, btnMesParticipations, btnFavorisEvenements
         };
         for (Button btn : boutons) {
@@ -441,6 +443,7 @@ public class SidebarEtudiantController {
 
     @FXML
     public void seDeconnecter() {
+        NavigationContext.clear();
         if (parentController != null) {
             // Délègue au parent qui gère la navigation vers login
             parentController.seDeconnecter();
