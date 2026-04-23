@@ -216,6 +216,7 @@ public class SeanceMeditationController implements Initializable {
                 setGraphic(box);
             }
         });
+        tableSeances.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
     // ==================== DATA ====================

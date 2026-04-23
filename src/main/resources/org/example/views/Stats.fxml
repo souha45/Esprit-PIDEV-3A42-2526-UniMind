@@ -21,6 +21,11 @@
     <!-- SCROLLABLE CONTENT -->
     <ScrollPane fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
         <VBox spacing="0">
+            <VBox spacing="0">
+                <VBox.margin><Insets top="0" right="24" bottom="0" left="24"/></VBox.margin>
+                <Label text="❤  Statistiques Séances de méditation"
+                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3730a3; -fx-padding: 24 0 16 0;"/>
+            </VBox>
 
     <!-- KPI CARDS -->
     <HBox spacing="16">

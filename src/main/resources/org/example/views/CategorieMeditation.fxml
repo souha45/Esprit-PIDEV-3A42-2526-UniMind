@@ -59,7 +59,11 @@
     <VBox VBox.vgrow="ALWAYS" styleClass="table-container">
         <VBox.margin><Insets top="16" right="24" bottom="24" left="24"/></VBox.margin>
 
-        <TableView fx:id="tableCategories" VBox.vgrow="ALWAYS" styleClass="data-table">
+        <TableView fx:id="tableCategories"
+                   VBox.vgrow="ALWAYS"
+                   styleClass="data-table"
+                   prefWidth="Infinity"
+                   maxWidth="Infinity">
             <columns>
                 <TableColumn fx:id="colIcon" text="Icône" prefWidth="70" styleClass="col-center"/>
                 <TableColumn fx:id="colNom" text="Nom" prefWidth="200"/>
