@@ -714,9 +714,19 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
                 return;
             }
 
+            // Récupérer le psychologue associé au traitement
+            User psychologue = null;
+            try {
+                // Utiliser le service psychologue pour récupérer le psychologue par son ID
+                org.example.services.PsychologueService psychologueService = new org.example.services.PsychologueService();
+                psychologue = psychologueService.getPsychologueById(traitement.getPsychologueId());
+            } catch (Exception e) {
+                System.err.println("Impossible de récupérer le psychologue: " + e.getMessage());
+            }
+
             // Créer le service PDF et générer l'ordonnance
             OrdonnancePDFService pdfService = new OrdonnancePDFService();
-            byte[] pdfBytes = pdfService.genererOrdonnancePDF(traitement, null, currentUser);
+            byte[] pdfBytes = pdfService.genererOrdonnancePDF(traitement, psychologue, currentUser);
 
             // Choix du fichier de sauvegarde
             FileChooser fileChooser = new FileChooser();
