@@ -9,6 +9,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Pagination;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
@@ -45,6 +46,12 @@ public class FavorisEtudiantController {
     private Label lblTotal;
 
     @FXML
+    private Pagination paginationFavoris;
+
+    @FXML
+    private Label lblPageInfo;
+
+    @FXML
     private TextField txtRecherche;
 
     @FXML
@@ -59,8 +66,11 @@ public class FavorisEtudiantController {
     private FavoriService favoriService;
     private EvenementService evenementService;
     private List<Evenement> listeFavoris;
+    private List<Evenement> listeFiltree;
     private Set<Integer> favoriEvenementIds;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    private static final int ITEMS_PER_PAGE = 6;
 
     @FXML
     public void initialize() {
@@ -123,9 +133,46 @@ public class FavorisEtudiantController {
 
             chargerFavorisEtudiant();
             chargerEvenementsFavoris();
+
+            if (paginationFavoris != null) {
+                paginationFavoris.currentPageIndexProperty().addListener((obs, oldIdx, newIdx) -> {
+                    if (newIdx != null) {
+                        updateTileForPage(newIdx.intValue());
+                    }
+                });
+            }
         } catch (Exception e) {
             System.err.println("Erreur lors de l'initialisation: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void updateTileForPage(int pageIndex) {
+        if (listeFiltree == null) {
+            tileFavoris.getChildren().clear();
+            if (lblPageInfo != null) lblPageInfo.setText("");
+            return;
+        }
+
+        int fromIndex = pageIndex * ITEMS_PER_PAGE;
+        int toIndex = Math.min(fromIndex + ITEMS_PER_PAGE, listeFiltree.size());
+
+        List<Evenement> pageItems;
+        if (fromIndex >= listeFiltree.size() || fromIndex < 0) {
+            pageItems = new ArrayList<>();
+        } else {
+            pageItems = listeFiltree.subList(fromIndex, toIndex);
+        }
+
+        afficherCartesFavoris(pageItems);
+
+        if (lblPageInfo != null) {
+            int total = listeFiltree.size();
+            if (total == 0) {
+                lblPageInfo.setText("Aucun résultat");
+            } else {
+                lblPageInfo.setText("Affichage " + (fromIndex + 1) + " - " + toIndex + " sur " + total);
+            }
         }
     }
 
@@ -159,11 +206,29 @@ public class FavorisEtudiantController {
                     listeFavoris.add(e);
                 }
             }
+            listeFiltree = new ArrayList<>(listeFavoris);
 
             System.out.println("Nombre d'événements favoris chargés: " + listeFavoris.size());
 
-            // Appliquer les filtres initiaux
-            appliquerFiltres();
+            if (listeFiltree.isEmpty()) {
+                afficherMessageAucunFavori();
+                lblTotal.setText("0 favoris");
+                if (paginationFavoris != null) {
+                    paginationFavoris.setPageCount(1);
+                    paginationFavoris.setCurrentPageIndex(0);
+                }
+                if (lblPageInfo != null) lblPageInfo.setText("Aucun résultat");
+            } else {
+                if (paginationFavoris != null) {
+                    int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+                    paginationFavoris.setPageCount(Math.max(pageCount, 1));
+                    paginationFavoris.setCurrentPageIndex(0);
+                    updateTileForPage(0);
+                } else {
+                    afficherCartesFavoris(listeFiltree);
+                }
+                lblTotal.setText(listeFiltree.size() + " favoris");
+            }
         } catch (SQLException e) {
             System.err.println("Erreur SQL lors du chargement des favoris: " + e.getMessage());
             e.printStackTrace();
@@ -206,12 +271,26 @@ public class FavorisEtudiantController {
             }
         }
 
+        listeFiltree = filtres;
+
         // Afficher les résultats
         if (filtres.isEmpty()) {
             afficherMessageAucunFavori();
             lblTotal.setText("0 favoris");
+            if (paginationFavoris != null) {
+                paginationFavoris.setPageCount(1);
+                paginationFavoris.setCurrentPageIndex(0);
+            }
+            if (lblPageInfo != null) lblPageInfo.setText("Aucun résultat");
         } else {
-            afficherCartesFavoris(filtres);
+            if (paginationFavoris != null) {
+                int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+                paginationFavoris.setPageCount(Math.max(pageCount, 1));
+                paginationFavoris.setCurrentPageIndex(0);
+                updateTileForPage(0);
+            } else {
+                afficherCartesFavoris(filtres);
+            }
             lblTotal.setText(filtres.size() + " favoris");
         }
     }
@@ -222,7 +301,17 @@ public class FavorisEtudiantController {
         comboType.setValue(null);
         comboStatut.setValue(null);
         comboTri.setValue("Date (plus proche)");
-        appliquerFiltres();
+
+        listeFiltree = new ArrayList<>(listeFavoris);
+        if (paginationFavoris != null) {
+            int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+            paginationFavoris.setPageCount(Math.max(pageCount, 1));
+            paginationFavoris.setCurrentPageIndex(0);
+            updateTileForPage(0);
+        } else {
+            afficherCartesFavoris(listeFiltree);
+        }
+        lblTotal.setText(listeFiltree.size() + " favoris");
     }
 
     private void afficherMessageAucunFavori() {

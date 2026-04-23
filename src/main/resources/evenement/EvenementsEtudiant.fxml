@@ -110,6 +110,14 @@
                                 </VBox>
                             </content>
                         </ScrollPane>
+
+                        <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 6 0 0 0;">
+                            <children>
+                                <Label fx:id="lblPageInfo" text="" styleClass="form-label"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Pagination fx:id="paginationEvenements" maxPageIndicatorCount="7" prefHeight="40"/>
+                            </children>
+                        </HBox>
                     </children>
                 </VBox>
             </children>
