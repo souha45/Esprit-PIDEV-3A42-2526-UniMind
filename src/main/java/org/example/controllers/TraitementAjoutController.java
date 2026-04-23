@@ -12,6 +12,7 @@ import org.example.enums.CategorieTraitement;
 import org.example.enums.PrioriteTraitement;
 import org.example.enums.StatutTraitement;
 import org.example.services.EtudiantTraitementService;
+import org.example.services.TraitementEmailService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
 
@@ -325,6 +326,27 @@ public class TraitementAjoutController implements Initializable {
         traitement.setDescription(txtDescription.getText());
 
         traitementService.ajouter(traitement);
+
+        // Envoyer une notification email à l'étudiant
+        try {
+            TraitementEmailService emailService = new TraitementEmailService();
+
+            // Récupérer le psychologue connecté
+            org.example.services.PsychologueService psychologueService = new org.example.services.PsychologueService();
+            org.example.entities.User psychologue = psychologueService.getPsychologueById(session.getUtilisateurConnecteId());
+
+            if (psychologue != null) {
+                var resultat = emailService.envoyerNotificationNouveauTraitementEtudiant(traitement, psychologue);
+                if (resultat.isSuccess()) {
+                    System.out.println("✓ Notification envoyée à l'étudiant pour le nouveau traitement");
+                } else {
+                    System.err.println("✗ Erreur envoi notification étudiant: " + resultat.getErrorMessage());
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'envoi de l'email de notification: " + e.getMessage());
+            // Ne pas bloquer l'ajout du traitement si l'email échoue
+        }
     }
 
     @FXML private void handleAnnuler() { fermerFenetre(); }

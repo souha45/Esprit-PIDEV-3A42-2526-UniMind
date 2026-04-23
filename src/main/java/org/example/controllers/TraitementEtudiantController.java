@@ -17,6 +17,7 @@ import org.example.entities.User;
 import org.example.enums.SaisiPar;
 import org.example.services.OrdonnancePDFService;
 import org.example.services.SuiviTraitementService;
+import org.example.services.TraitementEmailService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
 
@@ -660,7 +661,10 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             stage.setScene(new Scene(root, 800, 650));
             stage.show();
 
-            stage.setOnHiding(event -> chargerDonnees());
+            stage.setOnHiding(event -> {
+                chargerDonnees();
+                verifierEtNotifierNouveauSuivi(traitement);
+            });
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -753,7 +757,7 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             }
 
         } catch (Exception e) {
-            afficherToast("✗ Erreur d'export PDF: " + e.getMessage(), false);
+            afficherToast(" Erreur d'export PDF: " + e.getMessage(), false);
             e.printStackTrace();
         }
     }
@@ -776,6 +780,47 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             e.printStackTrace();
             if (lblStatus != null) lblStatus.setText("Erreur: Impossible d'ouvrir la page de traduction");
             afficherToast("Impossible d'ouvrir la page de traduction", false);
+        }
+    }
+
+    /**
+     * V\u00e9rifie si un nouveau suivi a \u00e9t\u00e9 ajout\u00e9 et envoie une notification au psychologue
+     */
+    private void verifierEtNotifierNouveauSuivi(Traitement traitement) {
+        try {
+            // R\u00e9cup\u00e9rer les suivis actuels pour ce traitement
+            List<SuiviTraitement> suivisActuels = suiviTraitementService.afficher().stream()
+                    .filter(s -> s.getTraitementId() == traitement.getTraitementId())
+                    .sorted((s1, s2) -> {
+                        if (s1.getDateSuivi() == null || s2.getDateSuivi() == null) return 0;
+                        return s2.getDateSuivi().compareTo(s1.getDateSuivi());
+                    })
+                    .collect(Collectors.toList());
+
+            if (!suivisActuels.isEmpty()) {
+                SuiviTraitement dernierSuivi = suivisActuels.get(0);
+
+                // V\u00e9rifier si le suivi a \u00e9t\u00e9 ajout\u00e9 aujourd'hui par l'\u00e9tudiant
+                boolean estRecent = dernierSuivi.getDateSuivi() != null &&
+                        dernierSuivi.getDateSuivi().toLocalDate().equals(LocalDate.now());
+                boolean estEtudiant = dernierSuivi.getSaisiPar() == SaisiPar.ETUDIANT;
+
+                if (estRecent && estEtudiant) {
+                    // Envoyer la notification au psychologue
+                    TraitementEmailService emailService = new TraitementEmailService();
+                    var resultat = emailService.envoyerNotificationNouveauSuiviPsychologue(
+                            dernierSuivi, traitement, currentUser);
+
+                    if (resultat.isSuccess()) {
+                        System.out.println(" Notification envoy\u00e9e au psychologue pour le nouveau suivi");
+                    } else {
+                        System.err.println(" Erreur envoi notification: " + resultat.getErrorMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la v\u00e9rification du nouveau suivi: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
