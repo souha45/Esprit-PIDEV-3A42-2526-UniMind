@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.controllers.TraitementTraductionController"
+      spacing="20" styleClass="main-container"
+      stylesheets="@css/traitements-suivis.css">
+
+    <!-- Header -->
+    <HBox styleClass="header" alignment="CENTER_LEFT" spacing="20">
+        <Button fx:id="btnRetour" text="Retour" onAction="#handleRetour" styleClass="btn-secondary"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label text="Traduction de Traitement" styleClass="page-title">
+            <font>
+                <Font name="System Bold" size="24"/>
+            </font>
+        </Label>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnImprimer" text="Imprimer" onAction="#imprimerTraduction" styleClass="btn-secondary"/>
+        <Button fx:id="btnExporter" text="Exporter" onAction="#exporterTraduction" styleClass="btn-primary"/>
+    </HBox>
+
+    <!-- Main Content -->
+    <ScrollPane fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS">
+        <VBox spacing="20" styleClass="content-container">
+            <!-- Traitement Info -->
+            <VBox styleClass="info-section" spacing="10">
+                <Label text="Informations du Traitement" styleClass="section-title"/>
+                <GridPane hgap="15" vgap="10">
+                    <Label text="Titre :" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="field-label"/>
+                    <Label fx:id="lblTitre" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="field-value"/>
+
+                    <Label text="Type :" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="field-label"/>
+                    <Label fx:id="lblType" GridPane.rowIndex="1" GridPane.columnIndex="1" styleClass="field-value"/>
+
+                    <Label text="Catégorie :" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="field-label"/>
+                    <Label fx:id="lblCategorie" GridPane.rowIndex="2" GridPane.columnIndex="1" styleClass="field-value"/>
+
+                    <Label text="Objectif :" GridPane.rowIndex="3" GridPane.columnIndex="0" styleClass="field-label"/>
+                    <Label fx:id="lblObjectif" GridPane.rowIndex="3" GridPane.columnIndex="1" styleClass="field-value"/>
+                </GridPane>
+            </VBox>
+
+            <!-- Language Selection -->
+            <VBox styleClass="language-section" spacing="10">
+                <Label text="Sélection de la langue de traduction" styleClass="section-title"/>
+                <HBox spacing="15" alignment="CENTER_LEFT">
+                    <ComboBox fx:id="cmbLangueSource" prefWidth="150" promptText="Langue source"/>
+                    <Label text="vers" styleClass="translation-arrow"/>
+                    <ComboBox fx:id="cmbLangueCible" prefWidth="150" promptText="Langue cible"/>
+                    <Button fx:id="btnTraduire" text="Traduire" onAction="#handleTraduire" styleClass="btn-primary"/>
+                </HBox>
+            </VBox>
+
+            <!-- Translation Results -->
+            <VBox styleClass="translation-section" spacing="10" VBox.vgrow="ALWAYS">
+                <Label text="Résultats de la traduction" styleClass="section-title"/>
+                <ScrollPane fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS">
+                    <VBox fx:id="containerResultats" spacing="10">
+                        <!-- Translation results will be added here dynamically -->
+                    </VBox>
+                </ScrollPane>
+            </VBox>
+        </VBox>
+    </ScrollPane>
+
+    <!-- Status Bar -->
+    <HBox styleClass="status-bar" alignment="CENTER_LEFT" spacing="10">
+        <Label fx:id="lblStatus" styleClass="status-label"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <ProgressBar fx:id="progressBar" prefWidth="200" visible="false"/>
+    </HBox>
+
+</VBox>

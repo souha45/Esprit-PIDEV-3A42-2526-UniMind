@@ -330,6 +330,8 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             if (lblCount != null) lblCount.setText(totalTraitements + " traitement(s)");
             if (lblStatus != null) lblStatus.setText(totalTraitements + " traitement(s) affiché(s)");
 
+            System.out.println("✅ Chargement terminé: " + totalTraitements + " traitements affichés");
+
         } catch (Exception e) {
             System.err.println("Erreur: " + e.getMessage());
             if (lblStatus != null) lblStatus.setText("Erreur: " + e.getMessage());
@@ -382,6 +384,8 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             long totalTraitements = lignes.stream().filter(l -> l.getTraitement() != null).count();
             if (lblCount != null) lblCount.setText(totalTraitements + " traitement(s)");
             if (lblStatus != null) lblStatus.setText(totalTraitements + " traitement(s) affiché(s)");
+
+            System.out.println("✅ Chargement terminé: " + totalTraitements + " traitements affichés");
 
         } catch (Exception e) {
             System.err.println("Erreur: " + e.getMessage());
@@ -586,6 +590,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
         colObjectif.setPrefWidth(200);
         colSuivis.setPrefWidth(100);
 
+        // ===== COLONNE ÉTUDIANT (avec VBox stylisé) =====
         colEtudiant.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             if (ligne.isEstLigneSeparateur()) {
@@ -606,7 +611,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                     LigneGroupée ligne = getTableRow().getItem();
                     if (ligne.isEstLigneSeparateur()) {
                         setText("");
-                        setStyle("-fx-background-color: #f3f4f6; -fx-padding: 2px;");
+                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
                         setGraphic(null);
                     } else if (ligne.isPremiereLigneDuGroupe()) {
                         VBox vbox = new VBox();
@@ -635,6 +640,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE TITRE =====
         colTitre.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -664,6 +670,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE TYPE =====
         colType.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -693,6 +700,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE CATÉGORIE =====
         colCategorie.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -722,6 +730,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE DURÉE =====
         colDuree.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -744,13 +753,14 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                         setText("");
                         setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
                     } else {
-                        setText(item);
+                        setText(item + "j");
                         setStyle("-fx-background-color: white; -fx-padding: 10 8;");
                     }
                 }
             }
         });
 
+        // ===== COLONNE STATUT (avec badge) =====
         colStatut.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -795,6 +805,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE PRIORITÉ (avec badge) =====
         colPriorite.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -839,6 +850,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE DATE DÉBUT =====
         colDateDebut.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -868,6 +880,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE OBJECTIF =====
         colObjectif.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -901,6 +914,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE SUIVIS (avec badge) =====
         colSuivis.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             if (ligne.isEstLigneSeparateur()) {
@@ -941,7 +955,6 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
 
         configurerColonneActions();
     }
-
     private void configurerColonneActions() {
         SessionManager session = SessionManager.getInstance();
 
@@ -949,16 +962,19 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             private final Button btnView = new Button("Afficher");
             private final Button btnEdit = new Button("Modifier");
             private final Button btnDelete = new Button("Supprimer");
-            private final HBox container = new HBox(8, btnView, btnEdit, btnDelete);
+            private final Button btnTranslate = new Button("🌐");
+            private final HBox container = new HBox(6, btnView, btnEdit, btnDelete, btnTranslate);
 
             {
                 container.setAlignment(Pos.CENTER);
                 btnView.getStyleClass().addAll("table-action-button", "table-action-button-view");
                 btnEdit.getStyleClass().addAll("table-action-button", "table-action-button-edit");
                 btnDelete.getStyleClass().addAll("table-action-button", "table-action-button-delete");
+                btnTranslate.getStyleClass().addAll("table-action-button", "table-action-button-translate");
                 btnView.setPrefWidth(70);
                 btnEdit.setPrefWidth(70);
                 btnDelete.setPrefWidth(70);
+                btnTranslate.setPrefWidth(35);
 
                 btnView.setOnAction(event -> {
                     LigneGroupée ligne = getTableView().getItems().get(getIndex());
@@ -981,6 +997,14 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                     Traitement traitement = ligne.getPremierTraitement();
                     if (traitement != null && session.peutSupprimerTraitement()) {
                         supprimerTraitement(traitement);
+                    }
+                });
+
+                btnTranslate.setOnAction(event -> {
+                    LigneGroupée ligne = getTableView().getItems().get(getIndex());
+                    Traitement traitement = ligne.getPremierTraitement();
+                    if (traitement != null) {
+                        ouvrirPageTraductionPourTraitement(traitement);
                     }
                 });
             }
@@ -1110,7 +1134,6 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
 
             SuiviTraitementController controller = loader.getController();
             if (controller != null) {
-                // Utiliser l'utilisateur existant ou celui de SessionManager
                 User userToPass = utilisateur;
                 if (userToPass == null) {
                     SessionManager session = SessionManager.getInstance();
@@ -1120,9 +1143,6 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                 }
                 if (userToPass != null) {
                     controller.setUtilisateur(userToPass);
-                    System.out.println("✅ Utilisateur passé à SuiviTraitementController: " + userToPass.getNom());
-                } else {
-                    System.out.println("⚠️ Aucun utilisateur disponible pour SuiviTraitementController");
                 }
             }
 
@@ -1132,6 +1152,35 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         } catch (Exception e) {
             afficherToast("✗ Erreur de navigation: " + e.getMessage(), false);
+        }
+    }
+
+    @FXML
+    private void handleStatistiques() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-statistiques-view.fxml"));
+            Parent root = loader.load();
+
+            TraitementStatistiquesController controller = loader.getController();
+            if (controller != null) {
+                User userToPass = utilisateur;
+                if (userToPass == null) {
+                    SessionManager session = SessionManager.getInstance();
+                    if (session.estConnecte()) {
+                        userToPass = session.getCurrentUser();
+                    }
+                }
+                if (userToPass != null) {
+                    controller.setUtilisateur(userToPass);
+                }
+            }
+
+            Scene currentScene = tableViewTraitements.getScene();
+            if (currentScene != null) {
+                currentScene.setRoot(root);
+            }
+        } catch (Exception e) {
+            afficherToast("✗ Erreur: " + e.getMessage(), false);
             e.printStackTrace();
         }
     }
@@ -1213,6 +1262,26 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             } catch (Exception e) {
                 afficherToast("✗ Erreur de suppression: " + e.getMessage(), false);
             }
+        }
+    }
+
+    private void ouvrirPageTraductionPourTraitement(Traitement traitement) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-traduction-view.fxml"));
+            Parent root = loader.load();
+
+            TraitementTraductionController controller = loader.getController();
+            if (controller != null) {
+                controller.setTraitement(traitement);
+                controller.setUtilisateur(utilisateur);
+            }
+
+            Scene currentScene = tableViewTraitements.getScene();
+            if (currentScene != null) {
+                currentScene.setRoot(root);
+            }
+        } catch (Exception e) {
+            afficherToast("✗ Erreur d'ouverture: " + e.getMessage(), false);
         }
     }
 

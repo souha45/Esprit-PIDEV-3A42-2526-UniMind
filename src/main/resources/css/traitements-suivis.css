@@ -925,3 +925,431 @@
     -fx-border-radius: 8;
     -fx-border-style: dashed;
 }
+
+/* =============================================
+   PAGE DE TRADUCTION
+   ============================================= */
+
+.main-container {
+    -fx-background-color: #f5f3ff;
+    -fx-padding: 20;
+}
+
+.header {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #e0e7ff;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 15 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 4, 0, 0, 2);
+}
+
+.content-container {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #e0e7ff;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 4, 0, 0, 2);
+}
+
+.info-section {
+    -fx-background-color: #f9fafb;
+    -fx-background-radius: 8;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 15;
+}
+
+.language-section {
+    -fx-background-color: #f0f9ff;
+    -fx-background-radius: 8;
+    -fx-border-color: #bae6fd;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 15;
+}
+
+.translation-section {
+    -fx-background-color: #f0fdf4;
+    -fx-background-radius: 8;
+    -fx-border-color: #bbf7d0;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 15;
+    -fx-min-height: 200;
+}
+
+.preview-section {
+    -fx-background-color: #fefce8;
+    -fx-background-radius: 8;
+    -fx-border-color: #fde047;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 15;
+    -fx-min-height: 200;
+}
+
+.section-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e1b4b;
+    -fx-padding: 0 0 10 0;
+}
+
+.field-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6366f1;
+}
+
+.field-value {
+    -fx-font-size: 13px;
+    -fx-text-fill: #374151;
+    -fx-background-color: white;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 6;
+}
+
+.translation-arrow {
+    -fx-font-size: 14px;
+    -fx-text-fill: #6366f1;
+    -fx-font-weight: bold;
+}
+
+.html-preview {
+    -fx-background-color: white;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-font-family: "Courier New", monospace;
+    -fx-font-size: 12px;
+    -fx-padding: 10;
+}
+
+.html-preview .content {
+    -fx-background-color: transparent;
+}
+
+.html-preview .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.html-preview .scroll-bar:vertical .thumb {
+    -fx-background-color: #c4b5fd;
+    -fx-background-radius: 10;
+}
+
+.html-preview .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #a5b4fc;
+}
+
+.translation-result {
+    -fx-background-color: white;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 15;
+    -fx-spacing: 10;
+}
+
+.translation-result:hover {
+    -fx-border-color: #c4b5fd;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.1), 4, 0, 0, 2);
+}
+
+.translation-field-name {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #4f46e5;
+}
+
+.translation-original {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6b7280;
+    -fx-font-style: italic;
+    -fx-background-color: #f9fafb;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 6;
+}
+
+.translation-translated {
+    -fx-font-size: 13px;
+    -fx-text-fill: #059669;
+    -fx-font-weight: 500;
+    -fx-background-color: #ecfdf5;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12;
+    -fx-border-color: #10b981;
+    -fx-border-radius: 6;
+}
+
+.translation-error {
+    -fx-font-size: 12px;
+    -fx-text-fill: #dc2626;
+    -fx-font-style: italic;
+    -fx-background-color: #fef2f2;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12;
+    -fx-border-color: #fca5a5;
+    -fx-border-radius: 6;
+}
+
+.table-action-button-translate {
+    -fx-text-fill: #059669;
+    -fx-border-color: #10b981;
+    -fx-border-width: 1;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.table-action-button-translate:hover {
+    -fx-background-color: #ecfdf5;
+    -fx-text-fill: #047857;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   STATISTIQUES — CARTES
+═══════════════════════════════════════════════════════════ */
+.stat-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-padding: 16 20;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.09), 8, 0, 0, 2);
+}
+
+.stat-label {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 10px;
+    -fx-text-fill: #a5b4fc;
+}
+
+.stat-value {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6366f1;
+}
+
+.stat-unit {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 11px;
+    -fx-text-fill: #9ca3af;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CONTENEURS DE GRAPHIQUES
+═══════════════════════════════════════════════════════════ */
+.chart-container {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-padding: 16;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+}
+
+.chart-title {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #4f46e5;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BARCHARTS — FOND ET GRILLE
+═══════════════════════════════════════════════════════════ */
+.chart-plot-background {
+    -fx-background-color: #f8f9ff;
+}
+
+.chart-vertical-grid-lines {
+    -fx-stroke: transparent;
+}
+
+.chart-horizontal-grid-lines {
+    -fx-stroke: #e0e7ff;
+    -fx-stroke-dash-array: 4 4;
+    -fx-stroke-width: 1;
+}
+
+.chart-vertical-zero-line {
+    -fx-stroke: #e5e7eb;
+}
+
+.chart-horizontal-zero-line {
+    -fx-stroke: #e5e7eb;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AXES — TITRES (xlabel / ylabel)
+   -fx-fill car c'est un Text SVG, pas un Label JavaFX
+═══════════════════════════════════════════════════════════ */
+.axis-label {
+    -fx-fill: #4f46e5;
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AXES — TICK LABELS (noms des catégories / valeurs Y)
+   CRITIQUE : utiliser -fx-fill, pas -fx-text-fill
+═══════════════════════════════════════════════════════════ */
+.category-axis {
+    -fx-tick-label-fill: #1f2937;
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 12px;
+}
+
+.number-axis {
+    -fx-tick-label-fill: #1f2937;
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 11px;
+}
+
+/* Tick marks (les petits tirets sur les axes) */
+.axis > .axis-tick-mark {
+    -fx-stroke: #9ca3af;
+    -fx-stroke-width: 1;
+}
+
+.axis > .axis-minor-tick-mark {
+    -fx-stroke: transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BARCHARTS — COULEUR DES BARRES
+═══════════════════════════════════════════════════════════ */
+.default-color0.chart-bar {
+    -fx-bar-fill: #6366f1;
+    -fx-background-radius: 4 4 0 0;
+    -fx-background-insets: 0;
+}
+
+.default-color0.chart-bar:hover {
+    -fx-bar-fill: #4f46e5;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PIECHARTS
+═══════════════════════════════════════════════════════════ */
+.chart-pie-label {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 11px;
+    -fx-fill: #374151;
+}
+
+.chart-pie-label-line {
+    -fx-stroke: #9ca3af;
+}
+
+.chart-legend {
+    -fx-background-color: transparent;
+    -fx-padding: 8 0 0 0;
+}
+
+.chart-legend-item {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 11px;
+    -fx-text-fill: #6b7280;
+}
+
+.default-color0.chart-pie { -fx-pie-color: #6366f1; }
+.default-color1.chart-pie { -fx-pie-color: #10b981; }
+.default-color2.chart-pie { -fx-pie-color: #f59e0b; }
+
+/* ═══════════════════════════════════════════════════════════
+   TABLEAU TOP ÉTUDIANTS
+═══════════════════════════════════════════════════════════ */
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-table-cell-border-color: #f3f4f6;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #f5f3ff;
+    -fx-background-radius: 8 8 0 0;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 10 12;
+}
+
+.table-view .column-header .label {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #4f46e5;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.table-view .table-cell {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 13px;
+    -fx-text-fill: #374151;
+    -fx-padding: 10 12;
+    -fx-border-color: transparent transparent #f3f4f6 transparent;
+}
+
+.table-row-cell:odd  { -fx-background-color: #fafafa; }
+.table-row-cell:even { -fx-background-color: white; }
+
+.table-row-cell:selected { -fx-background-color: #ede9fe; }
+.table-row-cell:selected .table-cell { -fx-text-fill: #4f46e5; }
+
+.table-view .placeholder .label {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 13px;
+    -fx-text-fill: #9ca3af;
+    -fx-font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════
+   FIX ABSOLU — AXES BARCHART TOUJOURS VISIBLES
+   Ces règles ont la priorité maximale
+═══════════════════════════════════════════════ */
+
+/* Tick labels axe X (noms catégories / mois) */
+.bar-chart > .chart-content > .plot-content > .category-axis > .axis-tick-mark,
+.category-axis .tick-mark { -fx-stroke: #6b7280; }
+
+/* Le vrai fix : cibler Text directement */
+.category-axis Text,
+.category-axis .text {
+    -fx-fill: #1f2937 !important;
+    -fx-font-size: 12px !important;
+}
+
+.number-axis Text,
+.number-axis .text {
+    -fx-fill: #1f2937 !important;
+    -fx-font-size: 11px !important;
+}
+
+/* Titre des axes (xlabel / ylabel) */
+.axis-label Text,
+.axis > .axis-label {
+    -fx-fill: #4f46e5 !important;
+    -fx-font-weight: bold !important;
+    -fx-font-size: 12px !important;
+}
+
+/* Annuler tout héritage de couleur blanche sur les axes */
+.bar-chart .axis {
+    -fx-tick-label-fill: #1f2937 !important;
+}

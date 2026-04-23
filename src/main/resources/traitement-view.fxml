@@ -108,9 +108,11 @@
             <!-- Barre d'actions -->
             <HBox styleClass="action-bar" spacing="15" alignment="CENTER_LEFT">
                 <Button fx:id="btnAjouter" text="+ Nouveau Traitement" onAction="#handleAjouter" styleClass="btn-primary"/>
-                <Button text="⟳ Rafraîchir" onAction="#handleRafraichir" styleClass="btn-secondary"/>
-                <Button text="📋 Suivi des Traitements" onAction="#ouvrirSuiviTraitementView" styleClass="btn-info"/>
-                <Button text="📎 Exporter Excel" onAction="#handleExporterExcel" styleClass="btn-secondary"/>
+                <Button text="Rafraîchir" onAction="#handleRafraichir" styleClass="btn-secondary"/>
+                <Button text="Suivi des Traitements" onAction="#ouvrirSuiviTraitementView" styleClass="btn-info"/>
+                <Button text="Exporter Excel" onAction="#handleExporterExcel" styleClass="btn-secondary"/>
+                <Button fx:id="btnStatistiques" text="📊 Statistiques" onAction="#handleStatistiques" styleClass="btn-primary"
+                        style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-padding: 8 16; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 4, 0, 2);"/>
 
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label fx:id="lblCount" styleClass="count-badge"/>
