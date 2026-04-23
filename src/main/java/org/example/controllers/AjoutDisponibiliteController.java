@@ -1,12 +1,17 @@
 package org.example.controllers;
 
+import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import org.example.enums.TypeConsultation;
 import org.example.entities.DisponibilitePsy;
 import org.example.services.DisponibilitePsyService;
+import netscape.javascript.JSObject;
 
 import java.sql.Date;
 import java.sql.SQLException;
@@ -32,6 +37,7 @@ public class AjoutDisponibiliteController {
     @FXML private ComboBox<String> cbTypeConsult;
     @FXML private VBox             boxLieu;
     @FXML private TextField        txtLieu;
+    @FXML private Button           btnOuvrirCarte;  // ← NOUVEAU BOUTON
 
     // Boutons
     @FXML private Button btnFermer;
@@ -87,18 +93,100 @@ public class AjoutDisponibiliteController {
         btnAnnuler.setOnAction(e     -> fermerModal());
         btnFermer.setOnAction(e      -> fermerModal());
 
+        // ✅ NOUVEAU : Bouton pour ouvrir la carte
+        btnOuvrirCarte.setOnAction(e -> ouvrirCarte());
+
         // ── Hover ────────────────────────────────────────────────────
         btnEnregistrer.setOnMouseEntered(e ->
                 btnEnregistrer.setStyle(btnEnregistrer.getStyle().replace("#6366f1","#4f46e5")));
         btnEnregistrer.setOnMouseExited(e ->
                 btnEnregistrer.setStyle(btnEnregistrer.getStyle().replace("#4f46e5","#6366f1")));
+
+        // Hover pour le bouton carte
+        btnOuvrirCarte.setOnMouseEntered(e ->
+                btnOuvrirCarte.setStyle("-fx-background-color: #4f46e5; -fx-text-fill: white; " +
+                        "-fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 8 15; " +
+                        "-fx-background-radius: 8; -fx-cursor: hand;"));
+        btnOuvrirCarte.setOnMouseExited(e ->
+                btnOuvrirCarte.setStyle("-fx-background-color: #6366f1; -fx-text-fill: white; " +
+                        "-fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 8 15; " +
+                        "-fx-background-radius: 8; -fx-cursor: hand;"));
+    }
+
+    /**
+     * ✅ Ouvre la fenêtre modale avec la carte OpenStreetMap
+     */
+    private void ouvrirCarte() {
+        try {
+            Stage carteStage = new Stage();
+            carteStage.setTitle("📍 Sélectionner un lieu sur la carte");
+            carteStage.initModality(javafx.stage.Modality.WINDOW_MODAL);
+            carteStage.initOwner(btnOuvrirCarte.getScene().getWindow());
+
+            WebView webView = new WebView();
+            WebEngine webEngine = webView.getEngine();
+
+            // Charger le fichier HTML
+            java.net.URL url = getClass().getResource("/carte.html");
+            if (url == null) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Fichier carte.html non trouvé");
+                return;
+            }
+            webEngine.load(url.toExternalForm());
+
+            // Exposer l'objet Java à JavaScript
+            webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+                if (newState == Worker.State.SUCCEEDED) {
+                    JSObject window = (JSObject) webEngine.executeScript("window");
+                    window.setMember("javaApp", new JavaBridge(carteStage));
+                }
+            });
+
+            VBox root = new VBox(webView);
+            Scene scene = new Scene(root, 950, 700);
+            carteStage.setScene(scene);
+            carteStage.showAndWait();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir la carte");
+        }
+    }
+
+    /**
+     * ✅ Pont entre JavaScript et Java pour recevoir l'adresse sélectionnée
+     */
+    private class JavaBridge {
+        private Stage carteStage;
+
+        public JavaBridge(Stage stage) {
+            this.carteStage = stage;
+        }
+
+        public void setSelectedAddress(String address) {
+            javafx.application.Platform.runLater(() -> {
+                txtLieu.setText(address);
+                System.out.println("📍 Adresse reçue de la carte: " + address);
+                // Fermer la fenêtre de la carte
+                if (carteStage != null) {
+                    carteStage.close();
+                }
+            });
+        }
+    }
+
+    private void showAlert(Alert.AlertType type, String titre, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle(titre);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     // ── Configuration Spinner ────────────────────────────────────────
     private void configurerSpinner(Spinner<Integer> spinner, int min, int max, int init) {
         SpinnerValueFactory<Integer> factory =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(min, max, init);
-        // Afficher "--" pour valeur vide (-1), sinon 2 chiffres
         factory.setConverter(new javafx.util.StringConverter<>() {
             @Override public String toString(Integer v) {
                 if (v == null || v == -1) return "--";
@@ -115,9 +203,8 @@ public class AjoutDisponibiliteController {
         });
         spinner.setValueFactory(factory);
         spinner.setEditable(true);
-        // Valider saisie manuelle à la perte de focus
         spinner.getEditor().focusedProperty().addListener((o, ov, nv) -> {
-            if (!nv) spinner.increment(0); // force commit
+            if (!nv) spinner.increment(0);
         });
     }
 
@@ -125,7 +212,6 @@ public class AjoutDisponibiliteController {
     private void mettreAJourPreviewDebut() {
         int heure = spinnerHeureDebut.getValue();
         int minute = spinnerMinuteDebut.getValue();
-
         if (heure == -1 || minute == -1) {
             lblPreviewDebut.setText("--:--");
         } else {
@@ -136,7 +222,6 @@ public class AjoutDisponibiliteController {
     private void mettreAJourPreviewFin() {
         int heure = spinnerHeureFin.getValue();
         int minute = spinnerMinuteFin.getValue();
-
         if (heure == -1 || minute == -1) {
             lblPreviewFin.setText("--:--");
         } else {
@@ -224,7 +309,7 @@ public class AjoutDisponibiliteController {
             valide = false;
         }
 
-        // 3. Cohérence heure début < heure fin (seulement si les heures sont valides)
+        // 3. Cohérence heure début < heure fin
         if (valide) {
             int debutMin = spinnerHeureDebut.getValue() * 60 + spinnerMinuteDebut.getValue();
             int finMin   = spinnerHeureFin.getValue()   * 60 + spinnerMinuteFin.getValue();
@@ -243,7 +328,7 @@ public class AjoutDisponibiliteController {
             valide = false;
         }
 
-        // 4. Lieu (si présentiel)
+        // 5. Lieu (si présentiel)
         if ("Présentiel".equals(cbTypeConsult.getValue())) {
             if (txtLieu.getText().trim().isEmpty()) {
                 afficherErreur(errLieu, txtLieu, "Veuillez saisir le lieu de consultation.");
@@ -281,7 +366,6 @@ public class AjoutDisponibiliteController {
 
             disponibiliteService.ajouter(disponibilite);
 
-            // Alerte succès personnalisée
             afficherAlerteSucces(date, lieu);
 
         } catch (SQLException e) {
@@ -313,19 +397,15 @@ public class AjoutDisponibiliteController {
         alert.setTitle("Unimind - Succès");
         alert.setHeaderText("Disponibilité ajoutée avec succès !");
 
-        // Contenu formaté avec style
         String contenu = buildContenuSucces(date, lieu);
         alert.setContentText(contenu);
 
-        // Personnaliser les boutons
         ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
         alert.getButtonTypes().setAll(okButton);
 
-        // Appliquer le style personnalisé
         DialogPane dialogPane = alert.getDialogPane();
         dialogPane.setStyle(getStyleAlerteSucces());
 
-        // Centrer et afficher
         alert.showAndWait();
         fermerModal();
     }
@@ -336,11 +416,9 @@ public class AjoutDisponibiliteController {
         alert.setHeaderText(header);
         alert.setContentText(message);
 
-        // Personnaliser les boutons
         ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
         alert.getButtonTypes().setAll(okButton);
 
-        // Appliquer le style personnalisé
         DialogPane dialogPane = alert.getDialogPane();
         dialogPane.setStyle(getStyleAlerteErreur());
 

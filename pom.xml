@@ -58,6 +58,13 @@
             <version>${javafx.version}</version>
         </dependency>
 
+        <!-- ✅ AJOUT OBLIGATOIRE : JavaFX Web pour la carte OpenStreetMap -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-web</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+
         <!-- Spring Security Crypto -->
         <dependency>
             <groupId>org.springframework.security</groupId>

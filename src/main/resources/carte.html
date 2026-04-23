@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Carte OpenStreetMap</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+        .search-container {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex;
+            gap: 8px;
+            width: 350px;
+        }
+        .search-container input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .search-container button {
+            padding: 8px 12px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .info-box {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 1000;
+            text-align: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+    </style>
+</head>
+<body>
+<div class="search-container">
+    <input type="text" id="searchInput" placeholder="Rechercher une adresse (ex: 12 Rue de Tunis)" />
+    <button onclick="searchAddress()">&#128269; Rechercher</button>
+</div>
+<div id="map"></div>
+<div class="info-box" id="infoBox">
+    &#128205; Cliquez sur la carte pour sélectionner un lieu
+</div>
+
+<script>
+    // Initialisation de la carte (centre sur Tunis)
+    var map = L.map('map').setView([36.8065, 10.1815], 13);
+
+    // Fond de carte
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        subdomains: 'abcd'
+    }).addTo(map);
+
+    var marker = null;
+    var currentAddress = "";
+    var pendingLat = null;
+    var pendingLng = null;
+    var geocodeTimer = null;   // debounce : on attend 1s avant d'appeler Nominatim
+
+    // ─────────────────────────────────────────────────────────
+    // Envoi de l'adresse vers Java via le pont JSObject
+    // ─────────────────────────────────────────────────────────
+    function sendAddressToJava(address) {
+        if (window.javaApp && window.javaApp.setSelectedAddress) {
+            window.javaApp.setSelectedAddress(address);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Met à jour la barre d'info en bas
+    // ─────────────────────────────────────────────────────────
+    function updateInfoBox(html, isError, isLoading) {
+        var infoBox = document.getElementById('infoBox');
+        infoBox.style.color = isError ? '#f87171' : (isLoading ? '#facc15' : '#4ade80');
+        infoBox.innerHTML = html;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // XHR helper générique avec User-Agent (obligatoire Nominatim)
+    // ─────────────────────────────────────────────────────────
+    function xhrGet(url, onSuccess, onError) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.setRequestHeader("Accept", "application/json");
+        // NE PAS définir User-Agent : JavaFX WebView le gère (le surcharger cause un 403)
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    try {
+                        onSuccess(JSON.parse(xhr.responseText));
+                    } catch (e) {
+                        onError("Erreur de parsing JSON");
+                    }
+                } else if (xhr.status === 429) {
+                    onError("Trop de requetes - patientez quelques secondes");
+                } else {
+                    onError("Erreur HTTP " + xhr.status);
+                }
+            }
+        };
+        xhr.onerror = function () { onError("Erreur reseau"); };
+        xhr.send();
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Géocodage inversé
+    // 1er essai : Photon (komoot) — aucune restriction User-Agent
+    // Fallback  : Nominatim si Photon échoue
+    // ─────────────────────────────────────────────────────────
+    function doReverseGeocode(lat, lng) {
+        var url = "https://photon.komoot.io/reverse?lat=" + lat + "&lon=" + lng + "&lang=fr";
+
+        xhrGet(url,
+            function (data) {
+                var name = extractPhotonAddress(data);
+                if (name) {
+                    currentAddress = name;
+                    showSuccess(currentAddress);
+                } else {
+                    doReverseGeocodeNominatim(lat, lng);
+                }
+            },
+            function () {
+                doReverseGeocodeNominatim(lat, lng);
+            }
+        );
+    }
+
+    // Fallback Nominatim
+    function doReverseGeocodeNominatim(lat, lng) {
+        var url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=" + lat
+                + "&lon=" + lng + "&accept-language=fr";
+        xhrGet(url,
+            function (data) {
+                if (data && data.display_name) {
+                    currentAddress = data.display_name;
+                    showSuccess(currentAddress);
+                } else {
+                    useFallbackCoords(lat, lng);
+                }
+            },
+            function (errMsg) {
+                if (errMsg === "429") {
+                    updateInfoBox('&#9203; Serveur surchargé, nouvel essai dans 3s...', false, true);
+                    setTimeout(function () { doReverseGeocodeNominatim(lat, lng); }, 3000);
+                } else {
+                    useFallbackCoords(lat, lng);
+                }
+            }
+        );
+    }
+
+    // Extrait une adresse lisible depuis la réponse Photon
+    function extractPhotonAddress(data) {
+        if (!data || !data.features || data.features.length === 0) return null;
+        var p = data.features[0].properties;
+        if (!p) return null;
+        var parts = [];
+        if (p.housenumber) parts.push(p.housenumber);
+        if (p.street)      parts.push(p.street);
+        else if (p.name)   parts.push(p.name);
+        if (p.city)        parts.push(p.city);
+        if (p.state)       parts.push(p.state);
+        if (p.country)     parts.push(p.country);
+        return parts.length > 0 ? parts.join(", ") : null;
+    }
+
+    // Affiche l'adresse et l'envoie à Java
+    function showSuccess(address) {
+        updateInfoBox('&#9989; ' + address
+            + ' &nbsp; <strong style="color:#facc15">&#x2713; Lieu sélectionné</strong>',
+            false, false);
+        sendAddressToJava(address);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Fallback : coordonnées GPS si Nominatim échoue
+    // ─────────────────────────────────────────────────────────
+    function useFallbackCoords(lat, lng) {
+        currentAddress = lat.toFixed(6) + ", " + lng.toFixed(6);
+        updateInfoBox('&#128205; Coordonnées : ' + currentAddress
+            + ' &nbsp; <strong style="color:#facc15">&#x2713; Lieu sélectionné</strong>',
+            false, false);
+        sendAddressToJava(currentAddress);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Clic sur la carte — debounce 1s pour éviter le 429
+    // ─────────────────────────────────────────────────────────
+    map.on('click', function (e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+
+        pendingLat = lat;
+        pendingLng = lng;
+
+        if (marker) {
+            marker.setLatLng([lat, lng]);
+        } else {
+            marker = L.marker([lat, lng]).addTo(map);
+        }
+
+        updateInfoBox('&#9203; Géocodage en cours...', false, true);
+
+        // Annuler le timer précédent si l'utilisateur clique vite
+        if (geocodeTimer) clearTimeout(geocodeTimer);
+        geocodeTimer = setTimeout(function () {
+            doReverseGeocode(pendingLat, pendingLng);
+        }, 1000);
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // Recherche d'adresse par texte — via Photon
+    // ─────────────────────────────────────────────────────────
+    function searchAddress() {
+        var query = document.getElementById('searchInput').value.trim();
+        if (!query) {
+            updateInfoBox('&#10060; Veuillez saisir une adresse', true, false);
+            return;
+        }
+
+        updateInfoBox('&#9203; Recherche en cours...', false, true);
+
+        var url = "https://photon.komoot.io/api/?q=" + encodeURIComponent(query) + "&limit=1&lang=fr";
+
+        xhrGet(url,
+            function (data) {
+                if (data && data.features && data.features.length > 0) {
+                    var coords = data.features[0].geometry.coordinates; // [lon, lat]
+                    var lat = coords[1];
+                    var lon = coords[0];
+                    var address = extractPhotonAddress(data);
+                    if (!address) address = query;
+
+                    map.setView([lat, lon], 16);
+
+                    if (marker) {
+                        marker.setLatLng([lat, lon]);
+                    } else {
+                        marker = L.marker([lat, lon]).addTo(map);
+                    }
+
+                    currentAddress = address;
+                    showSuccess(currentAddress);
+                } else {
+                    // Fallback Nominatim pour la recherche
+                    searchAddressNominatim(query);
+                }
+            },
+            function () {
+                searchAddressNominatim(query);
+            }
+        );
+    }
+
+    // Fallback Nominatim pour la recherche texte
+    function searchAddressNominatim(query) {
+        var url = "https://nominatim.openstreetmap.org/search?format=json&q="
+                + encodeURIComponent(query) + "&limit=1&accept-language=fr";
+
+        xhrGet(url,
+            function (data) {
+                if (data && data.length > 0) {
+                    var lat = parseFloat(data[0].lat);
+                    var lon = parseFloat(data[0].lon);
+                    map.setView([lat, lon], 16);
+                    if (marker) {
+                        marker.setLatLng([lat, lon]);
+                    } else {
+                        marker = L.marker([lat, lon]).addTo(map);
+                    }
+                    currentAddress = data[0].display_name;
+                    showSuccess(currentAddress);
+                } else {
+                    updateInfoBox('&#10060; Adresse non trouvée', true, false);
+                }
+            },
+            function (errMsg) {
+                updateInfoBox('&#10060; ' + errMsg, true, false);
+            }
+        );
+    }
+
+    // Touche Entrée dans le champ de recherche
+    document.getElementById('searchInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') searchAddress();
+    });
+
+    console.log("Carte chargee, en attente de connexion avec Java...");
+</script>
+</body>
+</html>
