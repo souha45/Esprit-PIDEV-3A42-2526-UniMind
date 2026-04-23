@@ -22,6 +22,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.example.utils.NavigationContext;
 
 public class SidebarEtudiantController {
 
@@ -441,6 +442,7 @@ public class SidebarEtudiantController {
 
     @FXML
     public void seDeconnecter() {
+        NavigationContext.clear();
         if (parentController != null) {
             // Délègue au parent qui gère la navigation vers login
             parentController.seDeconnecter();
