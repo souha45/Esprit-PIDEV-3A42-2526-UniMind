@@ -192,12 +192,12 @@ public class DashboardEtudiantController extends BaseDashboardController
             lblTotalConsultations.setText(String.valueOf(totalConsult));
             lblConsultDetail.setText(totalConsult <= 1 ? "séance effectuée" : "séances effectuées");
 
-            // Traitements actifs
+            // Traitements en cours
             int traitements = queryInt(conn,
-                    "SELECT COUNT(*) FROM traitement WHERE etudiant_id = ? AND statut = 'actif'",
+                    "SELECT COUNT(*) FROM traitement WHERE etudiant_id = ? AND statut = 'en cours'",
                     etudiantId);
             lblTraitementsActifs.setText(String.valueOf(traitements));
-            lblTraitDetail.setText(traitements <= 1 ? "traitement actif" : "traitements actifs");
+            lblTraitDetail.setText(traitements <= 1 ? "traitement en cours" : "traitements en cours");
 
             // Note satisfaction moyenne (mes notes données)
             int nbNotes = queryInt(conn,
