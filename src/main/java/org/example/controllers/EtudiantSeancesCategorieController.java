@@ -12,6 +12,7 @@ import javafx.scene.media.*;
 import org.example.entities.*;
 import org.example.enums.TypeFichier;
 import org.example.services.*;
+import org.example.utils.NavigationContext;
 import org.example.utils.Session;
 
 import java.io.File;
@@ -53,6 +54,27 @@ public class EtudiantSeancesCategorieController implements Initializable {
         String desc = cat.getDescription();
         lblDescCategorie.setText(desc != null && !desc.isBlank() ? "📝 " + desc : "");
         loadSeances();
+
+        // On attend que la scène soit prête pour récupérer le ScrollPane parent
+        Platform.runLater(() -> {
+            // Remonte jusqu'au ScrollPane qui contient cette vue (le centre du BorderPane principal)
+            ScrollPane centralScrollPane = trouverScrollPaneCentral();
+            if (centralScrollPane != null) {
+                NavigationContext.setContentScrollPane(centralScrollPane);
+            }
+        });
+
+    }
+
+    private ScrollPane trouverScrollPaneCentral() {
+        Node node = seancesGrid;
+        while (node != null) {
+            if (node instanceof ScrollPane) {
+                return (ScrollPane) node;
+            }
+            node = node.getParent();
+        }
+        return null;
     }
 
     private void loadSeances() {

@@ -11,6 +11,8 @@
             stylesheets="/css/etudiant.css"
             fitToWidth="true" hbarPolicy="NEVER">
 
+
+
     <VBox styleClass="etudiant-page" spacing="0">
 
         <!-- HEADER -->
