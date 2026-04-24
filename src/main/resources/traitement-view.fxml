@@ -112,7 +112,7 @@
                 <Button text="Suivi des Traitements" onAction="#ouvrirSuiviTraitementView" styleClass="btn-info"/>
                 <Button text="Exporter Excel" onAction="#handleExporterExcel" styleClass="btn-secondary"/>
                 <Button fx:id="btnStatistiques" text="📊 Statistiques" onAction="#handleStatistiques" styleClass="btn-primary"
-                        style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-padding: 8 16; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 4, 0, 2);"/>
+                        style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-padding: 8 16; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 4.0, 0.0, 0.0, 2.0);"/>
 
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label fx:id="lblCount" styleClass="count-badge"/>

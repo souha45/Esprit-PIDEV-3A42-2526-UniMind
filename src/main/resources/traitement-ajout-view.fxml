@@ -11,110 +11,152 @@
         <Label text="Créez un nouveau traitement pour un étudiant" styleClass="page-subtitle"/>
     </VBox>
 
-    <VBox styleClass="form-container" spacing="20">
-        <padding>
-            <Insets top="20" right="30" bottom="20" left="30"/>
-        </padding>
+    <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
+        <VBox styleClass="form-container" spacing="20">
+            <padding>
+                <Insets top="20" right="30" bottom="20" left="30"/>
+            </padding>
 
-        <GridPane hgap="20" vgap="5" styleClass="form-grid">
-
-            <!-- Ligne 1 : Titre -->
-            <Label text="Titre" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-            <VBox GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.columnSpan="3">
-                <TextField fx:id="txtTitre" promptText="Entrez le titre du traitement" styleClass="form-field"/>
-                <Label fx:id="lblErreurTitre" styleClass="error-label" text="" visible="false" managed="false"/>
-            </VBox>
-
-            <!-- Ligne 2 : Type et Catégorie -->
-            <Label text="Type" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-            <VBox GridPane.rowIndex="1" GridPane.columnIndex="1">
-                <ComboBox fx:id="cmbType" promptText="Sélectionnez un type" styleClass="form-combo"/>
-                <Label fx:id="lblErreurType" styleClass="error-label" text="" visible="false" managed="false"/>
-            </VBox>
-
-            <Label text="Catégorie" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
-            <VBox GridPane.rowIndex="1" GridPane.columnIndex="3">
-                <ComboBox fx:id="cmbCategorie" promptText="Sélectionnez une catégorie" styleClass="form-combo"/>
-                <Label fx:id="lblErreurCategorie" styleClass="error-label" text="" visible="false" managed="false"/>
-            </VBox>
-
-            <!-- Ligne 3 : Statut et Priorité -->
-            <Label text="Statut" styleClass="form-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-            <VBox GridPane.rowIndex="2" GridPane.columnIndex="1">
-                <HBox spacing="15" alignment="CENTER_LEFT">
-                    <RadioButton fx:id="rbEnCours" text="En cours"><toggleGroup><ToggleGroup fx:id="statutGroup"/></toggleGroup></RadioButton>
-                    <RadioButton fx:id="rbTermine" text="Terminé"><toggleGroup><ToggleGroup fx:id="statutGroup"/></toggleGroup></RadioButton>
-                    <RadioButton fx:id="rbSuspendu" text="Suspendu"><toggleGroup><ToggleGroup fx:id="statutGroup"/></toggleGroup></RadioButton>
-                </HBox>
-                <Label fx:id="lblErreurStatut" styleClass="error-label" text="" visible="false" managed="false"/>
-            </VBox>
-
-            <Label text="Priorité" styleClass="form-label" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
-            <VBox GridPane.rowIndex="2" GridPane.columnIndex="3">
-                <HBox spacing="15" alignment="CENTER_LEFT">
-                    <RadioButton fx:id="rbPrioriteBasse" text="Basse"><toggleGroup><ToggleGroup fx:id="prioriteGroup"/></toggleGroup></RadioButton>
-                    <RadioButton fx:id="rbPrioriteMoyenne" text="Moyenne"><toggleGroup><ToggleGroup fx:id="prioriteGroup"/></toggleGroup></RadioButton>
-                    <RadioButton fx:id="rbPrioriteHaute" text="Haute"><toggleGroup><ToggleGroup fx:id="prioriteGroup"/></toggleGroup></RadioButton>
-                </HBox>
-                <Label fx:id="lblErreurPriorite" styleClass="error-label" text="" visible="false" managed="false"/>
-            </VBox>
-
-            <!-- Ligne 4 : Date Début et Date Fin -->
-            <Label text="Date Début" styleClass="form-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-            <VBox GridPane.rowIndex="3" GridPane.columnIndex="1">
-                <DatePicker fx:id="dpDateDebut" styleClass="form-datepicker" promptText="jj/mm/aaaa"/>
-                <Label fx:id="lblErreurDateDebut" styleClass="error-label" text="" visible="false" managed="false"/>
-            </VBox>
-
-            <Label text="Date Fin" styleClass="form-label" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
-            <VBox GridPane.rowIndex="3" GridPane.columnIndex="3">
-                <DatePicker fx:id="dpDateFin" styleClass="form-datepicker" promptText="jj/mm/aaaa"/>
-                <Label fx:id="lblErreurDateFin" styleClass="error-label" text="" visible="false" managed="false"/>
-            </VBox>
-
-            <!-- Ligne 5 : Dosage -->
-            <Label text="Dosage" styleClass="form-label" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-            <VBox GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.columnSpan="3">
+            <!-- Section IA pour génération intelligente -->
+            <VBox styleClass="ia-section" spacing="15">
+                <padding>
+                    <Insets top="15" right="20" bottom="15" left="20"/>
+                </padding>
                 <HBox spacing="10" alignment="CENTER_LEFT">
-                    <Spinner fx:id="spinnerDosage" min="0" max="100" initialValue="1" editable="true" styleClass="form-spinner" prefWidth="80"/>
-                    <ComboBox fx:id="cmbUniteDosage" promptText="unité" styleClass="form-combo" prefWidth="150"/>
+                    <Label text="🤖" styleClass="ia-icon"/>
+                    <Label text="Génération IA" styleClass="ia-title"/>
+                    <Label text="Laissez l'IA vous aider à créer un traitement personnalisé" styleClass="ia-subtitle"/>
                 </HBox>
-                <Label fx:id="lblErreurDosage" styleClass="error-label" text="" visible="false" managed="false"/>
+
+                <GridPane hgap="15" vgap="10">
+                    <Label text="Symptômes principaux" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <TextArea fx:id="txtSymptomesIA" promptText="Décrivez les symptômes (ex: anxiété, stress, troubles du sommeil...)"
+                              styleClass="form-textarea-small" prefHeight="60" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                    <Label text="Description détaillée" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <TextArea fx:id="txtDescriptionIA" promptText="Donnez plus de détails sur la situation..."
+                              styleClass="form-textarea-small" prefHeight="60" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                    <Label text="Âge de l'étudiant" styleClass="form-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <Spinner fx:id="spinnerAgeIA" min="15" max="50" initialValue="20" editable="true"
+                             styleClass="form-spinner" prefWidth="100" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                    <Label text="Niveau d'études" styleClass="form-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                    <ComboBox fx:id="cmbNiveauEtudesIA" promptText="Sélectionnez" styleClass="form-combo"
+                              prefWidth="200" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                </GridPane>
+
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Button fx:id="btnGenererIA" text="🚀 Générer avec l'IA" onAction="#handleGenererIA"
+                            styleClass="btn-ia-primary"/>
+                    <Button fx:id="btnAnalyserIA" text="🔍 Analyser" onAction="#handleAnalyserIA"
+                            styleClass="btn-ia-secondary"/>
+                    <Label fx:id="lblStatusIA" text="" styleClass="ia-status"/>
+                </HBox>
             </VBox>
 
-            <!-- Ligne 6 : Étudiant -->
-            <Label text="Étudiant" styleClass="form-label" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-            <VBox GridPane.rowIndex="5" GridPane.columnIndex="1" GridPane.columnSpan="3">
-                <ComboBox fx:id="cmbEtudiant" promptText="Sélectionnez un étudiant" styleClass="form-combo"/>
-                <Label fx:id="lblErreurEtudiant" styleClass="error-label" text="" visible="false" managed="false"/>
-            </VBox>
+            <Separator styleClass="form-separator"/>
 
-            <!-- Ligne 7 : Objectif Thérapeutique -->
-            <Label text="Objectif Thérapeutique" styleClass="form-label" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
-            <VBox GridPane.rowIndex="6" GridPane.columnIndex="1" GridPane.columnSpan="3">
-                <TextField fx:id="txtObjectifTherapeutique" promptText="Objectif thérapeutique du traitement" styleClass="form-field-full"/>
-                <Label fx:id="lblErreurObjectif" styleClass="error-label" text="" visible="false" managed="false"/>
-            </VBox>
+            <GridPane hgap="20" vgap="5" styleClass="form-grid">
 
-            <!-- Ligne 8 : Description -->
-            <Label text="Description" styleClass="form-label" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
-            <VBox GridPane.rowIndex="7" GridPane.columnIndex="1" GridPane.columnSpan="3">
-                <TextArea fx:id="txtDescription" promptText="Description détaillée du traitement..." styleClass="form-textarea"/>
-                <Label fx:id="lblErreurDescription" styleClass="error-label" text="" visible="false" managed="false"/>
-            </VBox>
+                <!-- Ligne 1 : Titre -->
+                <Label text="Titre" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <VBox GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.columnSpan="3">
+                    <TextField fx:id="txtTitre" promptText="Entrez le titre du traitement" styleClass="form-field"/>
+                    <Label fx:id="lblErreurTitre" styleClass="error-label" text="" visible="false" managed="false"/>
+                </VBox>
 
-        </GridPane>
+                <!-- Ligne 2 : Type et Catégorie -->
+                <Label text="Type" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <VBox GridPane.rowIndex="1" GridPane.columnIndex="1">
+                    <ComboBox fx:id="cmbType" promptText="Sélectionnez un type" styleClass="form-combo"/>
+                    <Label fx:id="lblErreurType" styleClass="error-label" text="" visible="false" managed="false"/>
+                </VBox>
 
-        <Separator styleClass="form-separator"/>
+                <Label text="Catégorie" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                <VBox GridPane.rowIndex="1" GridPane.columnIndex="3">
+                    <ComboBox fx:id="cmbCategorie" promptText="Sélectionnez une catégorie" styleClass="form-combo"/>
+                    <Label fx:id="lblErreurCategorie" styleClass="error-label" text="" visible="false" managed="false"/>
+                </VBox>
 
-        <HBox spacing="15" alignment="CENTER" styleClass="form-buttons">
-            <Button text="Enregistrer" onAction="#handleEnregistrer" styleClass="btn-primary"/>
-            <Button text="Vider" onAction="#handleVider" styleClass="btn-secondary"/>
-            <Button text="Annuler" onAction="#handleAnnuler" styleClass="btn-danger"/>
-        </HBox>
+                <!-- Ligne 3 : Statut et Priorité -->
+                <Label text="Statut" styleClass="form-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <VBox GridPane.rowIndex="2" GridPane.columnIndex="1">
+                    <HBox spacing="15" alignment="CENTER_LEFT">
+                        <RadioButton fx:id="rbEnCours" text="En cours"><toggleGroup><ToggleGroup fx:id="statutGroup"/></toggleGroup></RadioButton>
+                        <RadioButton fx:id="rbTermine" text="Terminé"><toggleGroup><ToggleGroup fx:id="statutGroup"/></toggleGroup></RadioButton>
+                        <RadioButton fx:id="rbSuspendu" text="Suspendu"><toggleGroup><ToggleGroup fx:id="statutGroup"/></toggleGroup></RadioButton>
+                    </HBox>
+                    <Label fx:id="lblErreurStatut" styleClass="error-label" text="" visible="false" managed="false"/>
+                </VBox>
 
-        <HBox styleClass="status-bar">
-            <Label fx:id="lblStatus" text="✓ Prêt à ajouter un traitement" styleClass="status-text"/>
-        </HBox>
-    </VBox>
+                <Label text="Priorité" styleClass="form-label" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+                <VBox GridPane.rowIndex="2" GridPane.columnIndex="3">
+                    <HBox spacing="15" alignment="CENTER_LEFT">
+                        <RadioButton fx:id="rbPrioriteBasse" text="Basse"><toggleGroup><ToggleGroup fx:id="prioriteGroup"/></toggleGroup></RadioButton>
+                        <RadioButton fx:id="rbPrioriteMoyenne" text="Moyenne"><toggleGroup><ToggleGroup fx:id="prioriteGroup"/></toggleGroup></RadioButton>
+                        <RadioButton fx:id="rbPrioriteHaute" text="Haute"><toggleGroup><ToggleGroup fx:id="prioriteGroup"/></toggleGroup></RadioButton>
+                    </HBox>
+                    <Label fx:id="lblErreurPriorite" styleClass="error-label" text="" visible="false" managed="false"/>
+                </VBox>
+
+                <!-- Ligne 4 : Date Début et Date Fin -->
+                <Label text="Date Début" styleClass="form-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <VBox GridPane.rowIndex="3" GridPane.columnIndex="1">
+                    <DatePicker fx:id="dpDateDebut" styleClass="form-datepicker" promptText="jj/mm/aaaa"/>
+                    <Label fx:id="lblErreurDateDebut" styleClass="error-label" text="" visible="false" managed="false"/>
+                </VBox>
+
+                <Label text="Date Fin" styleClass="form-label" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+                <VBox GridPane.rowIndex="3" GridPane.columnIndex="3">
+                    <DatePicker fx:id="dpDateFin" styleClass="form-datepicker" promptText="jj/mm/aaaa"/>
+                    <Label fx:id="lblErreurDateFin" styleClass="error-label" text="" visible="false" managed="false"/>
+                </VBox>
+
+                <!-- Ligne 5 : Dosage -->
+                <Label text="Dosage" styleClass="form-label" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                <VBox GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.columnSpan="3">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Spinner fx:id="spinnerDosage" min="0" max="100" initialValue="1" editable="true" styleClass="form-spinner" prefWidth="80"/>
+                        <ComboBox fx:id="cmbUniteDosage" promptText="unité" styleClass="form-combo" prefWidth="150"/>
+                    </HBox>
+                    <Label fx:id="lblErreurDosage" styleClass="error-label" text="" visible="false" managed="false"/>
+                </VBox>
+
+                <!-- Ligne 6 : Étudiant -->
+                <Label text="Étudiant" styleClass="form-label" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                <VBox GridPane.rowIndex="5" GridPane.columnIndex="1" GridPane.columnSpan="3">
+                    <ComboBox fx:id="cmbEtudiant" promptText="Sélectionnez un étudiant" styleClass="form-combo"/>
+                    <Label fx:id="lblErreurEtudiant" styleClass="error-label" text="" visible="false" managed="false"/>
+                </VBox>
+
+                <!-- Ligne 7 : Objectif Thérapeutique -->
+                <Label text="Objectif Thérapeutique" styleClass="form-label" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                <VBox GridPane.rowIndex="6" GridPane.columnIndex="1" GridPane.columnSpan="3">
+                    <TextField fx:id="txtObjectifTherapeutique" promptText="Objectif thérapeutique du traitement" styleClass="form-field-full"/>
+                    <Label fx:id="lblErreurObjectif" styleClass="error-label" text="" visible="false" managed="false"/>
+                </VBox>
+
+                <!-- Ligne 8 : Description -->
+                <Label text="Description" styleClass="form-label" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+                <VBox GridPane.rowIndex="7" GridPane.columnIndex="1" GridPane.columnSpan="3">
+                    <TextArea fx:id="txtDescription" promptText="Description détaillée du traitement..." styleClass="form-textarea"/>
+                    <Label fx:id="lblErreurDescription" styleClass="error-label" text="" visible="false" managed="false"/>
+                </VBox>
+
+            </GridPane>
+
+            <Separator styleClass="form-separator"/>
+
+            <HBox spacing="15" alignment="CENTER" styleClass="form-buttons">
+                <Button text="Enregistrer" onAction="#handleEnregistrer" styleClass="btn-primary"/>
+                <Button text="Vider" onAction="#handleVider" styleClass="btn-secondary"/>
+                <Button text="Annuler" onAction="#handleAnnuler" styleClass="btn-danger"/>
+            </HBox>
+
+            <HBox styleClass="status-bar">
+                <Label fx:id="lblStatus" text="✓ Prêt à ajouter un traitement" styleClass="status-text"/>
+            </HBox>
+        </VBox>
+    </ScrollPane>
 </VBox>
