@@ -92,6 +92,24 @@
             <artifactId>mailjet-client</artifactId>
             <version>5.2.0</version>
         </dependency>
+
+
+        <!-- Vosk - Reconnaissance vocale hors ligne -->
+        <dependency>
+            <groupId>com.alphacephei</groupId>
+            <artifactId>vosk</artifactId>
+            <version>0.3.45</version>
+        </dependency>
+
+        <!-- Pour la gestion du microphone -->
+        <dependency>
+            <groupId>javax.sound</groupId>
+            <artifactId>javax.sound-api</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${java.home}/lib/jrt-fs.jar</systemPath>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
     <build>

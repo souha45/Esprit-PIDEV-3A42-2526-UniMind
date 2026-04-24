@@ -121,26 +121,34 @@
                 </HBox>
 
                 <!-- Motif -->
+                <!-- MOTIF avec bouton dictée -->
                 <VBox spacing="6"
-                      style="-fx-background-color:#ffffff;-fx-background-radius:12;
-                             -fx-padding:14 16;-fx-border-color:#ddd6fe;
-                             -fx-border-width:1;-fx-border-radius:12;">
-                    <HBox alignment="CENTER_LEFT" spacing="8">
-                        <Label text="Motif de consultation"
-                               style="-fx-font-family:'Segoe UI';-fx-font-size:13px;
-                                      -fx-font-weight:bold;-fx-text-fill:#4c1d95;"/>
+                      style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+             -fx-padding: 16 18; -fx-border-color: #e0e7ff; -fx-border-width: 1;
+             -fx-border-radius: 12;
+             -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.07), 8, 0, 0, 2);">
+                    <HBox alignment="CENTER_LEFT" spacing="6">
+                        <Label text="📝  Motif de consultation"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                      -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
                         <Label text="(optionnel)"
-                               style="-fx-font-family:'Segoe UI';-fx-font-size:11px;
-                                      -fx-text-fill:#a78bfa;"/>
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
+                      -fx-text-fill: #9ca3af;" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnDictation" text="🎤 Dictée vocale"
+                                style="-fx-background-color: #6366f1; -fx-text-fill: white;
+                       -fx-font-size: 11px; -fx-font-weight: bold;
+                       -fx-padding: 5 12; -fx-background-radius: 8;
+                       -fx-cursor: hand;" />
                     </HBox>
                     <TextArea fx:id="txtMotif"
                               promptText="Décrivez brièvement la raison de votre consultation…"
-                              prefHeight="58" wrapText="true"
-                              style="-fx-background-color:#f5f3ff;-fx-border-color:#ddd6fe;
-                                     -fx-border-width:1;-fx-border-radius:8;-fx-background-radius:8;
-                                     -fx-font-family:'Segoe UI';-fx-font-size:13px;
-                                     -fx-text-fill:#374151;-fx-prompt-text-fill:#c4b5fd;
-                                     -fx-control-inner-background:#f5f3ff;"/>
+                              prefHeight="60" wrapText="true"
+                              style="-fx-background-color: #f5f3ff; -fx-border-color: #e0e7ff;
+                     -fx-border-width: 1; -fx-border-radius: 10; -fx-background-radius: 10;
+                     -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                     -fx-text-fill: #374151; -fx-prompt-text-fill: #c4b5fd;
+                     -fx-control-inner-background: #f5f3ff;" />
                 </VBox>
 
             </VBox>

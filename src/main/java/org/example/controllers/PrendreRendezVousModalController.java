@@ -6,6 +6,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
@@ -41,6 +42,7 @@ public class PrendreRendezVousModalController {
     @FXML private Button           btnFermer;
     @FXML private Button           btnAnnuler;
     @FXML private Button           btnConfirmer;
+    @FXML private Button           btnDictation;
 
     // ── Toast + Overlay ─────────────────────────────────────────────
     @FXML private StackPane toastContainer;
@@ -50,11 +52,12 @@ public class PrendreRendezVousModalController {
     private DisponibilitePsyService disponibiliteService;
     private RendezVousService       rendezVousService;
     private PsychologueService      psychologueService;
-    private EtudiantService      etudiantService;
-    private EmailService            emailService;  // ← Service d'envoi d'email
+    private EtudiantService         etudiantService;
+    private EmailService            emailService;
+    private ReconnaissanceVocaleService reconnaissanceService;
 
     // ── Cache pour les noms des psychologues ────────────────────────
-    private Map<Integer, String> psyNameCache = new ConcurrentHashMap<>();
+    private final Map<Integer, String> psyNameCache = new ConcurrentHashMap<>();
 
     // ── Données ─────────────────────────────────────────────────────
     private ObservableList<DisponibilitePsy> disponibilitesList;
@@ -85,12 +88,12 @@ public class PrendreRendezVousModalController {
         disponibiliteService = new DisponibilitePsyService();
         rendezVousService    = new RendezVousService();
         psychologueService   = new PsychologueService();
-        etudiantService  = new EtudiantService();
-        emailService         = new EmailService();  // ← Initialisation du service email
+        etudiantService      = new EtudiantService();
+        emailService         = new EmailService();
+        reconnaissanceService = new ReconnaissanceVocaleService();
         disponibilitesList   = FXCollections.observableArrayList();
         filteredList         = new FilteredList<>(disponibilitesList, p -> true);
 
-        // Initialiser le placeholder pour grille vide
         if (lblEmptyCreneaux != null) {
             lblEmptyCreneaux.setText("✨ Aucun créneau disponible pour ces critères");
             lblEmptyCreneaux.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:13px;-fx-text-fill:#c4b5fd;");
@@ -111,6 +114,13 @@ public class PrendreRendezVousModalController {
                 btnFermer.setStyle(btnFermer.getStyle().replace("0.12","0.24")));
         btnFermer.setOnMouseExited(e ->
                 btnFermer.setStyle(btnFermer.getStyle().replace("0.24","0.12")));
+
+        // Configurer le bouton dictée
+        btnDictation.setOnAction(e -> demarrerDictation());
+        btnDictation.setOnMouseEntered(e ->
+                btnDictation.setStyle(btnDictation.getStyle().replace("#6366f1","#4f46e5")));
+        btnDictation.setOnMouseExited(e ->
+                btnDictation.setStyle(btnDictation.getStyle().replace("#4f46e5","#6366f1")));
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -230,7 +240,7 @@ public class PrendreRendezVousModalController {
             } else {
                 disponibiliteSelectionnee = dispo;
                 afficherBandeau(dispo);
-                construireGrille(); // Rafraîchir les styles
+                construireGrille();
             }
         });
 
@@ -286,63 +296,42 @@ public class PrendreRendezVousModalController {
     }
 
     // ════════════════════════════════════════════════════════════════
-    //  RÉSERVATION AVEC ENVOI D'EMAIL AU PSYCHOLOGUE
+    //  RÉSERVATION
     // ════════════════════════════════════════════════════════════════
     private void effectuerReservation(DisponibilitePsy dispo, int etudiantId, String motif) {
         try {
-            // 1. Créer le rendez-vous
             RendezVous rdv = new RendezVous(dispo.getDispoId(), etudiantId, dispo.getUserId(), motif);
             rendezVousService.ajouter(rdv);
 
-            // 2. Envoyer l'email au psychologue avec les infos de l'étudiant
             try {
-                // Récupérer les informations du psychologue
                 Psychologue psychologue = psychologueService.getPsychologueById(dispo.getUserId());
-
-                // Récupérer les informations de l'étudiant
                 Etudiant etudiant = etudiantService.getEtudiantById(etudiantId);
 
                 if (psychologue != null && psychologue.getEmail() != null && !psychologue.getEmail().isEmpty()) {
-                    // ✅ Extraire les informations de l'étudiant avec vérification
-                    String nomEtudiant = "Étudiant";
-                    String prenomEtudiant = "";
-                    String emailEtudiant = "Non renseigné";
-
-                    if (etudiant != null) {
-                        nomEtudiant = etudiant.getNom() != null && !etudiant.getNom().isEmpty()
-                                ? etudiant.getNom() : "Étudiant";
-                        prenomEtudiant = etudiant.getPrenom() != null ? etudiant.getPrenom() : "";
-                        emailEtudiant = etudiant.getEmail() != null ? etudiant.getEmail() : "Non renseigné";
-                    }
+                    String nomEtudiant = (etudiant != null && etudiant.getNom() != null) ? etudiant.getNom() : "Étudiant";
+                    String prenomEtudiant = (etudiant != null && etudiant.getPrenom() != null) ? etudiant.getPrenom() : "";
+                    String emailEtudiant = (etudiant != null && etudiant.getEmail() != null) ? etudiant.getEmail() : "Non renseigné";
 
                     emailService.envoyerEmailNouveauRdvAuPsy(
-                            psychologue.getEmail(),           // Email du psy
-                            psychologue.getNom(),             // Nom du psy
-                            psychologue.getPrenom(),          // Prénom du psy
-                            nomEtudiant,                      // ✅ Nom de l'étudiant
-                            prenomEtudiant,                   // ✅ Prénom de l'étudiant
-                            emailEtudiant,                    // ✅ Email de l'étudiant
-                            dispo.getDateDispo().toString(),  // Date
-                            dispo.getHeureDebut().toString().substring(0, 5),  // Heure début
-                            dispo.getHeureFin().toString().substring(0, 5),    // Heure fin
-                            dispo.getTypeConsult().toString(), // Type
-                            dispo.getLieu(),                   // Lieu
-                            motif                             // Motif
+                            psychologue.getEmail(), psychologue.getNom(), psychologue.getPrenom(),
+                            nomEtudiant, prenomEtudiant, emailEtudiant,
+                            dispo.getDateDispo().toString(),
+                            dispo.getHeureDebut().toString().substring(0, 5),
+                            dispo.getHeureFin().toString().substring(0, 5),
+                            dispo.getTypeConsult().toString(),
+                            dispo.getLieu(), motif
                     );
                     showToast("✓ Rendez-vous réservé ! Un email a été envoyé au psychologue.", ToastType.SUCCESS);
                 } else {
                     showToast("✓ Rendez-vous réservé ! (Email non envoyé)", ToastType.WARNING);
                 }
             } catch (Exception e) {
-                System.err.println("❌ Erreur lors de l'envoi de l'email: " + e.getMessage());
-                e.printStackTrace();
+                System.err.println("❌ Erreur email: " + e.getMessage());
                 showToast("✓ Rendez-vous réservé ! (Email non envoyé)", ToastType.WARNING);
             }
 
-            // 3. Fermer le modal après 1,8 secondes
             new javafx.animation.Timeline(new javafx.animation.KeyFrame(
-                    Duration.seconds(1.8),
-                    e -> fermerModal()
+                    Duration.seconds(1.8), e -> fermerModal()
             )).play();
 
         } catch (SQLException e) {
@@ -354,12 +343,6 @@ public class PrendreRendezVousModalController {
     // ════════════════════════════════════════════════════════════════
     //  CONFIRMATION
     // ════════════════════════════════════════════════════════════════
-    // ════════════════════════════════════════════════════════════════
-//  CONFIRMATION
-// ════════════════════════════════════════════════════════════════
-    // ════════════════════════════════════════════════════════════════
-//  CONFIRMATION — Modal overlay moderne (design que tu veux garder)
-// ════════════════════════════════════════════════════════════════
     private void confirmerReservation() {
         if (disponibiliteSelectionnee == null) {
             showToast("⚠ Veuillez sélectionner un créneau disponible.", ToastType.WARNING);
@@ -377,13 +360,11 @@ public class PrendreRendezVousModalController {
                 .format(DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy", Locale.FRENCH));
         dateStr = dateStr.substring(0, 1).toUpperCase() + dateStr.substring(1);
 
-        // ── Construire le card overlay ────────────────────────────
         VBox card = new VBox(0);
         card.setMaxWidth(440);
         card.setStyle("-fx-background-color:#ffffff;-fx-background-radius:16;" +
                 "-fx-effect:dropshadow(gaussian,rgba(109,40,217,0.28),24,0,0,6);");
 
-        // Header
         VBox cardHeader = new VBox(3);
         cardHeader.setStyle("-fx-background-color:linear-gradient(to bottom right,#4c1d95,#7c3aed);" +
                 "-fx-padding:18 22 16 22;-fx-background-radius:16 16 0 0;");
@@ -393,7 +374,6 @@ public class PrendreRendezVousModalController {
         hSub.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:11px;-fx-text-fill:rgba(255,255,255,0.72);");
         cardHeader.getChildren().addAll(hTitle, hSub);
 
-        // Body
         VBox cardBody = new VBox(10);
         cardBody.setStyle("-fx-padding:18 22 14 22;");
 
@@ -405,7 +385,6 @@ public class PrendreRendezVousModalController {
                 rowDetail("📝  Motif", motifFinal, "#374151")
         );
 
-        // Footer
         HBox cardFooter = new HBox(10);
         cardFooter.setAlignment(Pos.CENTER_RIGHT);
         cardFooter.setStyle("-fx-padding:12 22 18 22;" +
@@ -430,51 +409,38 @@ public class PrendreRendezVousModalController {
         cardFooter.getChildren().addAll(btnNon, btnOui);
         card.getChildren().addAll(cardHeader, cardBody, cardFooter);
 
-        // Afficher l'overlay
-        confirmOverlay.getChildren().clear();  // ← Nettoie avant d'ajouter
+        confirmOverlay.getChildren().clear();
         confirmOverlay.getChildren().add(card);
         confirmOverlay.setVisible(true);
         confirmOverlay.setManaged(true);
         StackPane.setAlignment(card, Pos.CENTER);
 
-        // Fade-in
         FadeTransition ft = new FadeTransition(Duration.millis(180), card);
-        ft.setFromValue(0);
-        ft.setToValue(1);
-        ft.play();
+        ft.setFromValue(0); ft.setToValue(1); ft.play();
 
-        // Actions des boutons
         final String mf = motifFinal;
         final DisponibilitePsy dFinal = d;
         final int etudiantIdFinal = this.etudiantId;
 
         btnNon.setOnAction(e -> fermerOverlayConfirm(card));
-
         btnOui.setOnAction(e -> {
             fermerOverlayConfirm(card);
             effectuerReservation(dFinal, etudiantIdFinal, mf);
         });
-
-        // Cliquer à l'extérieur ferme aussi
         confirmOverlay.setOnMouseClicked(e -> {
-            if (e.getTarget() == confirmOverlay) {
-                fermerOverlayConfirm(card);
-            }
+            if (e.getTarget() == confirmOverlay) fermerOverlayConfirm(card);
         });
     }
 
-    private HBox rowDetail(String label, String value, String valueColor) {
+    private HBox rowDetail(String label, String value, String color) {
         HBox row = new HBox(10);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setStyle("-fx-padding:6 12;-fx-background-color:#f5f3ff;" +
-                "-fx-background-radius:8;");
+        row.setStyle("-fx-padding:6 12;-fx-background-color:#f5f3ff;-fx-background-radius:8;");
         Label lbl = new Label(label);
         lbl.setMinWidth(130);
-        lbl.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:11px;" +
-                "-fx-text-fill:#9ca3af;-fx-font-weight:bold;");
+        lbl.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:11px;-fx-text-fill:#9ca3af;-fx-font-weight:bold;");
         Label val = new Label(value);
-        val.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:12px;" +
-                "-fx-text-fill:" + valueColor + ";-fx-font-weight:bold;");
+        val.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:12px;-fx-text-fill:" + color + ";-fx-font-weight:bold;");
         val.setWrapText(true);
         row.getChildren().addAll(lbl, val);
         return row;
@@ -482,8 +448,7 @@ public class PrendreRendezVousModalController {
 
     private void fermerOverlayConfirm(VBox card) {
         FadeTransition ft = new FadeTransition(Duration.millis(150), card);
-        ft.setFromValue(1);
-        ft.setToValue(0);
+        ft.setFromValue(1); ft.setToValue(0);
         ft.setOnFinished(e -> {
             confirmOverlay.getChildren().remove(card);
             if (confirmOverlay.getChildren().isEmpty()) {
@@ -502,8 +467,7 @@ public class PrendreRendezVousModalController {
     private void showToast(String message, ToastType type) {
         if (toastContainer == null) {
             Alert alert = new Alert(type == ToastType.ERROR ? Alert.AlertType.ERROR :
-                    type == ToastType.WARNING ? Alert.AlertType.WARNING :
-                            Alert.AlertType.INFORMATION);
+                    type == ToastType.WARNING ? Alert.AlertType.WARNING : Alert.AlertType.INFORMATION);
             alert.setContentText(message);
             alert.show();
             return;
@@ -528,13 +492,11 @@ public class PrendreRendezVousModalController {
         StackPane.setAlignment(pill, Pos.BOTTOM_CENTER);
 
         FadeTransition fi = new FadeTransition(Duration.millis(200), pill);
-        fi.setFromValue(0);
-        fi.setToValue(1);
+        fi.setFromValue(0); fi.setToValue(1);
 
         FadeTransition fo = new FadeTransition(Duration.millis(400), pill);
         fo.setDelay(Duration.seconds(type == ToastType.SUCCESS ? 1.4 : 2.4));
-        fo.setFromValue(1);
-        fo.setToValue(0);
+        fo.setFromValue(1); fo.setToValue(0);
         fo.setOnFinished(e -> {
             toastContainer.getChildren().remove(pill);
             if (toastContainer.getChildren().isEmpty()) {
@@ -542,8 +504,7 @@ public class PrendreRendezVousModalController {
                 toastContainer.setManaged(false);
             }
         });
-        fi.play();
-        fo.play();
+        fi.play(); fo.play();
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -553,7 +514,6 @@ public class PrendreRendezVousModalController {
         if (psyNameCache.containsKey(userId)) {
             return psyNameCache.get(userId);
         }
-
         try {
             Psychologue psy = psychologueService.getPsychologueById(userId);
             if (psy != null) {
@@ -562,7 +522,7 @@ public class PrendreRendezVousModalController {
                 return nom;
             }
         } catch (Exception e) {
-            System.err.println("Erreur récupération psy ID " + userId + " : " + e.getMessage());
+            System.err.println("Erreur récupération psy ID " + userId);
         }
         String fallback = "Psy #" + userId;
         psyNameCache.put(userId, fallback);
@@ -570,8 +530,181 @@ public class PrendreRendezVousModalController {
     }
 
     private void fermerModal() {
-        if (modalStage != null) {
-            modalStage.close();
+        if (modalStage != null) modalStage.close();
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  DICTÉE VOCALE
+    // ════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════
+    //  DICTÉE VOCALE  — remplacer la méthode demarrerDictation()
+    //  existante par celle-ci dans PrendreRendezVousModalController
+    // ════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════
+    //  Remplacer UNIQUEMENT la méthode demarrerDictation() existante
+    //  dans PrendreRendezVousModalController par celle-ci
+    // ════════════════════════════════════════════════════════════════
+    private void demarrerDictation() {
+        if (!reconnaissanceService.isReady()) {
+            showToast("Service vocal non disponible. Vérifiez le modèle Vosk.", ToastType.ERROR);
+            return;
+        }
+
+        Stage dictationStage = new Stage();
+        dictationStage.setTitle("Dictée vocale");
+        dictationStage.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        dictationStage.initOwner(btnDictation.getScene().getWindow());
+        dictationStage.setResizable(false);
+
+        // ── Indicateur clignotant ────────────────────────────────────
+        Label lblIndicateur = new Label("⚪");
+        lblIndicateur.setStyle("-fx-font-size:30px;");
+
+        Label lblEtat = new Label("Cliquez sur Démarrer puis parlez");
+        lblEtat.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:13px;-fx-text-fill:#6b7280;");
+        lblEtat.setWrapText(true);
+        lblEtat.setMaxWidth(400);
+
+        // ── Zone résultat ────────────────────────────────────────────
+        TextArea txtResultat = new TextArea();
+        txtResultat.setPromptText("Le texte reconnu apparaîtra ici après l'arrêt...");
+        txtResultat.setPrefHeight(100);
+        txtResultat.setEditable(true);
+        txtResultat.setWrapText(true);
+        txtResultat.setStyle("-fx-background-color:#ffffff;-fx-border-color:#e0e7ff;" +
+                "-fx-border-radius:10;-fx-background-radius:10;" +
+                "-fx-font-family:'Segoe UI';-fx-font-size:13px;");
+
+        // ── Animation ────────────────────────────────────────────────
+        javafx.animation.Timeline clignotement = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(500),
+                        e -> lblIndicateur.setText(
+                                lblIndicateur.getText().equals("🔴") ? "⚪" : "🔴"))
+        );
+        clignotement.setCycleCount(javafx.animation.Timeline.INDEFINITE);
+
+        // ── Boutons ──────────────────────────────────────────────────
+        Button btnStart = new Button("▶  Démarrer");
+        btnStart.setStyle("-fx-background-color:#10b981;-fx-text-fill:white;" +
+                "-fx-font-weight:bold;-fx-padding:10 24;-fx-background-radius:8;-fx-cursor:hand;");
+
+        Button btnStop = new Button("⏹  Arrêter");
+        btnStop.setStyle("-fx-background-color:#ef4444;-fx-text-fill:white;" +
+                "-fx-font-weight:bold;-fx-padding:10 24;-fx-background-radius:8;-fx-cursor:hand;");
+        btnStop.setDisable(true);
+
+        Button btnValider = new Button("✓  Utiliser ce texte");
+        btnValider.setStyle("-fx-background-color:#6366f1;-fx-text-fill:white;" +
+                "-fx-font-weight:bold;-fx-padding:10 22;-fx-background-radius:8;-fx-cursor:hand;");
+        btnValider.setDisable(true);
+
+        Button btnFermerDictee = new Button("✕  Fermer");
+        btnFermerDictee.setStyle("-fx-background-color:#f3f4f6;-fx-text-fill:#6b7280;" +
+                "-fx-padding:10 20;-fx-background-radius:8;-fx-cursor:hand;");
+
+        // ── Démarrer ─────────────────────────────────────────────────
+        btnStart.setOnAction(e -> {
+            txtResultat.clear();
+            btnStart.setDisable(true);
+            btnStop.setDisable(false);
+            btnValider.setDisable(true);
+            lblIndicateur.setText("🔴");
+            lblEtat.setText("🎙 Écoute en cours... Parlez normalement en français");
+            lblEtat.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:13px;-fx-text-fill:#059669;");
+            clignotement.play();
+
+            // Démarrer la reconnaissance (non bloquant)
+            reconnaissanceService.demarrerReconnaissance();
+        });
+
+        // ── Arrêter ──────────────────────────────────────────────────
+        btnStop.setOnAction(e -> {
+            btnStop.setDisable(true);
+            clignotement.stop();
+            lblIndicateur.setText("⚪");
+            lblEtat.setText("⏳ Traitement en cours...");
+            lblEtat.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:13px;-fx-text-fill:#f59e0b;");
+
+            // CRITIQUE : arrêter dans un thread séparé (jamais sur le thread UI)
+            // sinon join(4000) gèle complètement l'interface
+            Thread stopThread = new Thread(() -> {
+                // Cet appel bloque jusqu'à 4s le temps de vider le buffer
+                String texte = reconnaissanceService.arreterReconnaissance();
+
+                // Retourner sur le thread UI pour mettre à jour l'affichage
+                javafx.application.Platform.runLater(() -> {
+                    btnStart.setDisable(false);
+
+                    if (texte != null && !texte.isEmpty()) {
+                        txtResultat.setText(texte);
+                        btnValider.setDisable(false);
+                        lblEtat.setText("✅ Texte reconnu ! Modifiez si nécessaire puis validez.");
+                        lblEtat.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:13px;" +
+                                "-fx-text-fill:#059669;-fx-font-weight:bold;");
+                    } else {
+                        lblEtat.setText("❌ Aucun texte reconnu. Réessayez en parlant plus fort et distinctement.");
+                        lblEtat.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:13px;-fx-text-fill:#ef4444;");
+                    }
+                });
+            }, "vosk-stop-thread");
+
+            stopThread.setDaemon(true);
+            stopThread.start();
+        });
+
+        // ── Valider ──────────────────────────────────────────────────
+        btnValider.setOnAction(e -> {
+            String texte = txtResultat.getText().trim();
+            if (!texte.isEmpty()) {
+                // Capitaliser la première lettre
+                String texteFormate = Character.toUpperCase(texte.charAt(0)) + texte.substring(1);
+                String actuel = txtMotif.getText().trim();
+                txtMotif.setText(actuel.isEmpty() ? texteFormate : actuel + " " + texteFormate);
+                showToast("Texte ajouté au motif !", ToastType.SUCCESS);
+            }
+            dictationStage.close();
+        });
+
+        // ── Fermer ───────────────────────────────────────────────────
+        btnFermerDictee.setOnAction(e -> {
+            arreterSiEnCours(clignotement);
+            dictationStage.close();
+        });
+
+        dictationStage.setOnCloseRequest(e -> arreterSiEnCours(clignotement));
+
+        // ── Layout ───────────────────────────────────────────────────
+        Label titre = new Label("🎤  Dictée vocale");
+        titre.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:17px;" +
+                "-fx-font-weight:bold;-fx-text-fill:#3730a3;");
+
+        Label conseil = new Label("Parlez distinctement • Phrases courtes • En français");
+        conseil.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:11px;-fx-text-fill:#9ca3af;");
+
+        javafx.scene.layout.HBox boxBtns = new javafx.scene.layout.HBox(14, btnStart, btnStop);
+        boxBtns.setAlignment(javafx.geometry.Pos.CENTER);
+
+        javafx.scene.layout.HBox boxActions = new javafx.scene.layout.HBox(14, btnValider, btnFermerDictee);
+        boxActions.setAlignment(javafx.geometry.Pos.CENTER);
+
+        javafx.scene.layout.VBox root = new javafx.scene.layout.VBox(16);
+        root.setAlignment(javafx.geometry.Pos.CENTER);
+        root.setStyle("-fx-background-color:#f0f4ff;-fx-padding:28 32;");
+        root.getChildren().addAll(titre, conseil, lblIndicateur, lblEtat,
+                boxBtns, txtResultat, boxActions);
+
+        javafx.scene.Scene scene = new javafx.scene.Scene(root, 480, 380);
+        dictationStage.setScene(scene);
+        dictationStage.showAndWait();
+    }
+
+    /** Arrête proprement si l'enregistrement est en cours */
+    private void arreterSiEnCours(javafx.animation.Timeline clignotement) {
+        if (reconnaissanceService.isRunning()) {
+            clignotement.stop();
+            Thread t = new Thread(() -> reconnaissanceService.arreterReconnaissance(), "vosk-cleanup");
+            t.setDaemon(true);
+            t.start();
         }
     }
 
