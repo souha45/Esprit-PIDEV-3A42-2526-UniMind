@@ -70,6 +70,17 @@
                             style="-fx-padding: 7 14 7 14; -fx-font-size: 12px;"/>
                 </VBox>
 
+                <!-- Export CSV button -->
+                <VBox spacing="3">
+                    <Label text=" " style="-fx-font-size: 11px;"/>
+                    <Button fx:id="btnExportCSV" text="📥  Exporter CSV"
+                            onAction="#onExportCSV"
+                            style="-fx-background-color: #10b981; -fx-text-fill: white;
+                                   -fx-font-size: 12px; -fx-font-weight: bold;
+                                   -fx-padding: 7 14 7 14; -fx-background-radius: 8;
+                                   -fx-cursor: hand;"/>
+                </VBox>
+
                 <Region HBox.hgrow="ALWAYS"/>
                 <VBox spacing="3" alignment="CENTER_RIGHT">
                     <Label text=" " style="-fx-font-size: 11px;"/>
@@ -198,7 +209,7 @@
                     </BarChart>
                 </VBox>
                 <VBox styleClass="chart-card" prefWidth="360">
-                    <Label text="🥧 Participations par statut" styleClass="chart-title"/>
+                    <Label text="🌼 Participations par statut" styleClass="chart-title"/>
                     <Label text="Répartition selon le statut" styleClass="chart-subtitle"/>
                     <PieChart fx:id="pieChartParticipations" VBox.vgrow="ALWAYS"
                               styleClass="custom-chart" animated="true"

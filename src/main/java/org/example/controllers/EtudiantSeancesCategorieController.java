@@ -23,6 +23,11 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
+import javafx.application.Platform;
+import javafx.scene.control.Slider;
+import javafx.util.Duration;
+import java.util.function.Function;
+
 public class EtudiantSeancesCategorieController implements Initializable {
 
     @FXML private Label lblNomCategorie;
@@ -175,7 +180,7 @@ public class EtudiantSeancesCategorieController implements Initializable {
 
         VBox content = new VBox(14);
         content.setPadding(new Insets(24));
-        content.setPrefWidth(560);
+        content.setPrefWidth(800);
         content.setStyle("-fx-background-color: white;");
 
         Label titre = new Label(seance.getTitre());
@@ -239,16 +244,8 @@ public class EtudiantSeancesCategorieController implements Initializable {
                         mediaBox.getChildren().addAll(audioIcon, audioLbl);
                     }
 
-                    HBox controls = new HBox(10);
-                    controls.setAlignment(Pos.CENTER);
-                    Button btnPlay = styledBtn("▶ Lecture", "#6366f1");
-                    Button btnPause = styledBtn("⏸ Pause", "#f59e0b");
-                    Button btnStop = styledBtn("⏹ Arrêt", "#ef4444");
-                    btnPlay.setOnAction(e -> player.play());
-                    btnPause.setOnAction(e -> player.pause());
-                    btnStop.setOnAction(e -> player.stop());
-                    controls.getChildren().addAll(btnPlay, btnPause, btnStop);
-                    mediaBox.getChildren().add(controls);
+                    // ✅ APRÈS — une seule ligne
+                    mediaBox.getChildren().add(buildMediaControls(player));
 
                     dialog.setOnCloseRequest(e -> player.stop());
                 } catch (Exception ex) {
@@ -293,6 +290,149 @@ public class EtudiantSeancesCategorieController implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private VBox buildMediaControls(MediaPlayer player) {
+
+        // ── Slider de progression ──────────────────────────────────────
+        Slider progressBar = new Slider(0, 1, 0);
+        progressBar.setPrefWidth(460);
+        progressBar.setMaxWidth(Double.MAX_VALUE);
+        progressBar.setStyle(
+                "-fx-accent: #6366f1;" +                    // couleur du remplissage
+                        "-fx-control-inner-background: #e0e7ff;"    // couleur du fond
+        );
+
+        // ── Labels de temps ───────────────────────────────────────────
+        Label lblCurrent = new Label("0:00");
+        lblCurrent.setStyle("-fx-font-size: 12px; -fx-text-fill: #6b7280; -fx-font-family: monospace;");
+        Label lblTotal = new Label("0:00");
+        lblTotal.setStyle("-fx-font-size: 12px; -fx-text-fill: #6b7280; -fx-font-family: monospace;");
+        Label lblSep = new Label("/");
+        lblSep.setStyle("-fx-font-size: 12px; -fx-text-fill: #9ca3af;");
+
+        // ── Boutons ───────────────────────────────────────────────────
+        Button btnPlayPause = new Button("▶");
+        Button btnStop      = new Button("⏹");
+        Button btnMinus10   = new Button("−10s");
+        Button btnPlus10    = new Button("+10s");
+
+        String baseBtn = "-fx-background-radius: 8; -fx-padding: 7 14 7 14; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;";
+        btnPlayPause.setStyle("-fx-background-color: #6366f1; -fx-text-fill: white; " + baseBtn);
+        btnStop     .setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; " + baseBtn);
+        btnMinus10  .setStyle("-fx-background-color: #e0e7ff; -fx-text-fill: #4338ca; " + baseBtn);
+        btnPlus10   .setStyle("-fx-background-color: #e0e7ff; -fx-text-fill: #4338ca; " + baseBtn);
+
+        btnPlayPause.setTooltip(new Tooltip("Lecture / Pause"));
+        btnStop     .setTooltip(new Tooltip("Arrêter"));
+        btnMinus10  .setTooltip(new Tooltip("Reculer de 10 secondes"));
+        btnPlus10   .setTooltip(new Tooltip("Avancer de 10 secondes"));
+
+        // ── Helpers ───────────────────────────────────────────────────
+        java.util.function.Function<Double, String> fmtTime = secs -> {
+            int s = secs.intValue();
+            return String.format("%d:%02d", s / 60, s % 60);
+        };
+
+        // ── Mettre à jour la barre depuis le player ───────────────────
+        final boolean[] userDragging = {false};
+
+        player.currentTimeProperty().addListener((obs, oldT, newT) -> {
+            if (!userDragging[0]) {
+                Duration total = player.getTotalDuration();
+                if (total != null && !total.isUnknown() && total.toSeconds() > 0) {
+                    double ratio = newT.toSeconds() / total.toSeconds();
+                    progressBar.setValue(ratio);
+                }
+                lblCurrent.setText(fmtTime.apply(newT.toSeconds()));
+            }
+        });
+
+        player.setOnReady(() -> {
+            Duration total = player.getTotalDuration();
+            if (total != null) {
+                lblTotal.setText(fmtTime.apply(total.toSeconds()));
+            }
+        });
+
+        player.setOnEndOfMedia(() -> {
+            btnPlayPause.setText("▶");
+            progressBar.setValue(0);
+            player.seek(Duration.ZERO);
+            player.stop();
+        });
+
+        // ── Seek par clic / drag sur la barre ─────────────────────────
+        progressBar.setOnMousePressed(e -> {
+            userDragging[0] = true;
+            Duration total = player.getTotalDuration();
+            if (total != null && !total.isUnknown()) {
+                double seekSec = progressBar.getValue() * total.toSeconds();
+                player.seek(Duration.seconds(seekSec));
+                lblCurrent.setText(fmtTime.apply(seekSec));
+            }
+        });
+        progressBar.setOnMouseDragged(e -> {
+            Duration total = player.getTotalDuration();
+            if (total != null && !total.isUnknown()) {
+                double seekSec = progressBar.getValue() * total.toSeconds();
+                player.seek(Duration.seconds(seekSec));
+                lblCurrent.setText(fmtTime.apply(seekSec));
+            }
+        });
+        progressBar.setOnMouseReleased(e -> userDragging[0] = false);
+
+        // ── Actions boutons ───────────────────────────────────────────
+        btnPlayPause.setOnAction(e -> {
+            if (player.getStatus() == MediaPlayer.Status.PLAYING) {
+                player.pause();
+                btnPlayPause.setText("▶");
+            } else {
+                player.play();
+                btnPlayPause.setText("⏸");
+            }
+        });
+
+        btnStop.setOnAction(e -> {
+            player.stop();
+            player.seek(Duration.ZERO);
+            btnPlayPause.setText("▶");
+            progressBar.setValue(0);
+            lblCurrent.setText("0:00");
+        });
+
+        btnMinus10.setOnAction(e -> {
+            Duration cur = player.getCurrentTime();
+            Duration target = cur.subtract(Duration.seconds(10));
+            player.seek(target.lessThan(Duration.ZERO) ? Duration.ZERO : target);
+        });
+
+        btnPlus10.setOnAction(e -> {
+            Duration cur = player.getCurrentTime();
+            Duration total = player.getTotalDuration();
+            Duration target = cur.add(Duration.seconds(10));
+            if (total != null && target.greaterThan(total)) target = total;
+            player.seek(target);
+        });
+
+        // ── Assemblage ────────────────────────────────────────────────
+        // Ligne 1 : barre de progression + temps
+        HBox timeRow = new HBox(6);
+        timeRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(progressBar, Priority.ALWAYS);
+        timeRow.getChildren().addAll(progressBar, lblCurrent, lblSep, lblTotal);
+
+        // Ligne 2 : boutons
+        HBox btnRow = new HBox(8);
+        btnRow.setAlignment(Pos.CENTER);
+        btnRow.getChildren().addAll(btnPlayPause, btnStop, btnMinus10, btnPlus10);
+
+        VBox controlsBox = new VBox(6, timeRow, btnRow);
+        controlsBox.setAlignment(Pos.CENTER);
+        controlsBox.setPadding(new Insets(6, 0, 0, 0));
+        controlsBox.setMaxWidth(Double.MAX_VALUE);
+
+        return controlsBox;
     }
 
     // ==================== HELPERS ====================
