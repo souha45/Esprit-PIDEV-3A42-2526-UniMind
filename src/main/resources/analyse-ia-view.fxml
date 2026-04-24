@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.AnalyseIAController"
+            stylesheets="@/css/traitements-suivis.css"
+            style="-fx-background-color: #f8fafc; -fx-padding: 0;">
+
+    <!-- Header avec dégradé -->
+    <top>
+        <VBox style="-fx-background-color: linear-gradient(to right, #8b5cf6, #7c3aed, #6d28d9); -fx-padding: 24 32;">
+            <HBox alignment="CENTER_LEFT" spacing="16">
+                <Label text="🤖" style="-fx-font-size: 32px; -fx-text-fill: white;"/>
+                <VBox spacing="4">
+                    <Label text="Analyse IA Intelligente"
+                           style="-fx-font-family: 'Segoe UI'; -fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                    <Label text="Rapport d'analyse de vos suivis thérapeutiques"
+                           style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px; -fx-text-fill: #e0e7ff;"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnFermer" text="✕"
+                        style="-fx-font-family: 'Segoe UI'; -fx-font-size: 18px; -fx-font-weight: bold;
+                              -fx-text-fill: white; -fx-background-color: transparent;
+                              -fx-border-color: white; -fx-border-radius: 20; -fx-border-width: 2;
+                              -fx-pref-width: 36; -fx-pref-height: 36; -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- Contenu principal -->
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true"
+                    style="-fx-background-color: transparent; -fx-padding: 24 32;">
+            <content>
+                <VBox spacing="24" style="-fx-max-width: 800px;">
+
+                    <!-- Carte Résumé Global -->
+                    <VBox styleClass="analyse-card" spacing="16" style="-fx-background-color: white; -fx-background-radius: 16; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(139, 92, 246, 0.1), 12, 0, 0, 4);">
+                        <HBox alignment="CENTER_LEFT" spacing="12">
+                            <Label text="📊" style="-fx-font-size: 24px;"/>
+                            <Label text="Résumé Global"
+                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                        </HBox>
+
+                        <HBox spacing="32" alignment="CENTER">
+                            <VBox alignment="CENTER" spacing="4">
+                                <Label fx:id="lblTotalTraitements" text="0"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #8b5cf6;"/>
+                                <Label text="Traitements"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                            </VBox>
+                            <VBox alignment="CENTER" spacing="4">
+                                <Label fx:id="lblTotalSuivis" text="0"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #0ea5e9;"/>
+                                <Label text="Suivis analysés"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                            </VBox>
+                            <VBox alignment="CENTER" spacing="4">
+                                <Label fx:id="lblTendanceGlobale" text="➡️"
+                                       style="-fx-font-size: 28px;"/>
+                                <Label fx:id="lblTendanceText" text="Stable"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                            </VBox>
+                        </HBox>
+
+                        <Label fx:id="lblDateAnalyse" text="Date: 24/04/2026"
+                               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px; -fx-text-fill: #94a3b8;"/>
+                    </VBox>
+
+                    <!-- Container pour les analyses individuelles -->
+                    <VBox fx:id="containerAnalyses" spacing="16">
+                        <!-- Les analyses individuelles seront ajoutées dynamiquement ici -->
+                    </VBox>
+
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+
+    <!-- Footer -->
+    <bottom>
+        <HBox style="-fx-background-color: white; -fx-padding: 16 32; -fx-border-color: #e2e8f0; -fx-border-width: 1 0 0 0;"
+              alignment="CENTER_RIGHT" spacing="12">
+            <Button fx:id="btnRafraichir" text="🔄 Rafraîchir l'analyse"
+                    styleClass="btn-primary"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

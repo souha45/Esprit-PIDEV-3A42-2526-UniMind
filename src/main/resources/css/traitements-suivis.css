@@ -1461,3 +1461,180 @@
     -fx-text-fill: #0ea5e9 !important;
     -fx-font-style: italic;
 }
+
+.btn-ia-small {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-padding: 6 12;
+    -fx-background-radius: 4;
+    -fx-background-color: linear-gradient(to right, #8b5cf6, #7c3aed);
+    -fx-text-fill: white;
+    -fx-border-color: transparent;
+    -fx-border-radius: 4;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(139, 92, 246, 0.3), 3.0, 0.0, 0.0, 1.0);
+}
+
+.btn-ia-small:hover {
+    -fx-background-color: linear-gradient(to right, #7c3aed, #6d28d9);
+    -fx-effect: dropshadow(gaussian, rgba(139, 92, 246, 0.4), 4.0, 0.0, 0.0, 1.0);
+}
+
+.btn-ia-small:pressed {
+    -fx-background-color: linear-gradient(to right, #6d28d9, #5b21b6);
+    -fx-effect: dropshadow(gaussian, rgba(139, 92, 246, 0.2), 2.0, 0.0, 0.0, 1.0);
+}
+
+/* ==================== STYLES POUR LA VUE D'ANALYSE IA ==================== */
+
+.analyse-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.08), 8, 0, 0, 2);
+    -fx-padding: 20;
+}
+
+.analyse-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(139, 92, 246, 0.15), 12, 0, 0, 4);
+}
+
+.analyse-header {
+    -fx-background-color: linear-gradient(to right, #8b5cf6, #7c3aed, #6d28d9);
+    -fx-background-radius: 12 12 0 0;
+    -fx-padding: 16 20;
+}
+
+.analyse-title {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.analyse-subtitle {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 12px;
+    -fx-text-fill: #e0e7ff;
+}
+
+.analyse-stat-box {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 8;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-padding: 12 16;
+    -fx-alignment: center;
+}
+
+.analyse-stat-value {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8b5cf6;
+}
+
+.analyse-stat-label {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 11px;
+    -fx-text-fill: #64748b;
+}
+
+.analyse-tendance-positive {
+    -fx-text-fill: #10b981;
+    -fx-font-weight: bold;
+}
+
+.analyse-tendance-negative {
+    -fx-text-fill: #ef4444;
+    -fx-font-weight: bold;
+}
+
+.analyse-tendance-stable {
+    -fx-text-fill: #64748b;
+    -fx-font-weight: bold;
+}
+
+.analyse-score-positive {
+    -fx-text-fill: #10b981;
+    -fx-font-weight: bold;
+}
+
+.analyse-score-negative {
+    -fx-text-fill: #ef4444;
+    -fx-font-weight: bold;
+}
+
+.analyse-score-neutral {
+    -fx-text-fill: #64748b;
+    -fx-font-weight: bold;
+}
+
+.analyse-risque-eleve {
+    -fx-text-fill: #ef4444;
+    -fx-font-weight: 600;
+}
+
+.analyse-risque-modere {
+    -fx-text-fill: #f59e0b;
+    -fx-font-weight: 600;
+}
+
+.analyse-risque-faible {
+    -fx-text-fill: #3b82f6;
+    -fx-font-weight: 600;
+}
+
+.analyse-risque-minimal {
+    -fx-text-fill: #10b981;
+    -fx-font-weight: 600;
+}
+
+.analyse-section-title {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #0ea5e9;
+}
+
+.analyse-item {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 11px;
+    -fx-text-fill: #64748b;
+    -fx-wrap-text: true;
+    -fx-padding: 2 0;
+}
+
+.analyse-close-btn {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-background-color: transparent;
+    -fx-border-color: white;
+    -fx-border-radius: 20;
+    -fx-border-width: 2;
+    -fx-pref-width: 36;
+    -fx-pref-height: 36;
+    -fx-cursor: hand;
+}
+
+.analyse-close-btn:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+}
+
+.analyse-close-btn:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+}
+
+.analyse-footer {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 16 32;
+}

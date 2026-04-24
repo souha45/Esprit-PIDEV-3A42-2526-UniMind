@@ -97,6 +97,7 @@
 
                 <Button fx:id="btnAppliquerFiltres" text="Appliquer" onAction="#handleAppliquerFiltres" styleClass="btn-primary-small"/>
                 <Button fx:id="btnReinitialiserFiltres" text="Réinitialiser" onAction="#handleReinitialiserFiltres" styleClass="btn-secondary-small"/>
+                <Button fx:id="btnAnalyseIA" text="🤖 Analyse IA" onAction="#handleAnalyseIA" styleClass="btn-ia-small"/>
 
                 <Region HBox.hgrow="ALWAYS"/>
             </HBox>

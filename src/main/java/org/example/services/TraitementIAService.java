@@ -1,14 +1,20 @@
 package org.example.services;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 
+import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
 import org.example.enums.CategorieTraitement;
 import org.example.enums.PrioriteTraitement;
+import org.example.enums.RessentiSuivi;
 import org.example.enums.StatutTraitement;
 
 /**
@@ -533,5 +539,415 @@ public class TraitementIAService {
             return false;
         }
         return true;
+    }
+
+    // =============================================
+    // ANALYSE IA DES SUIVIS
+    // =============================================
+
+    /**
+     * Résultat de l'analyse IA des suivis
+     */
+    public static class ResultatAnalyseSuivi {
+        private final String tendance;
+        private final double scoreProgression;
+        private final List<String> observations;
+        private final List<String> recommandations;
+        private final String resume;
+        private final String niveauRisque;
+
+        public ResultatAnalyseSuivi(String tendance, double scoreProgression,
+                                    List<String> observations, List<String> recommandations,
+                                    String resume, String niveauRisque) {
+            this.tendance = tendance;
+            this.scoreProgression = scoreProgression;
+            this.observations = observations;
+            this.recommandations = recommandations;
+            this.resume = resume;
+            this.niveauRisque = niveauRisque;
+        }
+
+        // Getters
+        public String getTendance() { return tendance; }
+        public double getScoreProgression() { return scoreProgression; }
+        public List<String> getObservations() { return observations; }
+        public List<String> getRecommandations() { return recommandations; }
+        public String getResume() { return resume; }
+        public String getNiveauRisque() { return niveauRisque; }
+    }
+
+    /**
+     * Analyse les suivis d'un étudiant pour un traitement donné
+     */
+    public ResultatAnalyseSuivi analyserSuivisEtudiant(List<SuiviTraitement> suivis, Traitement traitement) {
+        if (suivis == null || suivis.isEmpty()) {
+            return new ResultatAnalyseSuivi(
+                    "insuffisant",
+                    0.0,
+                    List.of("Aucun suivi disponible pour l'analyse"),
+                    List.of("Commencer à enregistrer des suivis réguliers"),
+                    "Pas assez de données pour analyser la progression",
+                    "inconnu"
+            );
+        }
+
+        // Trier les suivis par date (créer une nouvelle liste modifiable)
+        List<SuiviTraitement> suivisTries = new ArrayList<>(suivis);
+        suivisTries.sort((s1, s2) -> {
+            if (s1.getDateSuivi() == null && s2.getDateSuivi() == null) return 0;
+            if (s1.getDateSuivi() == null) return 1;
+            if (s2.getDateSuivi() == null) return -1;
+            return s1.getDateSuivi().compareTo(s2.getDateSuivi());
+        });
+
+        // Analyse de la progression
+        double scoreProgression = calculerScoreProgression(suivisTries);
+        String tendance = determinerTendance(scoreProgression);
+        String niveauRisque = evaluerNiveauRisque(suivisTries, scoreProgression);
+
+        // Générer les observations
+        List<String> observations = genererObservations(suivisTries, scoreProgression);
+
+        // Générer les recommandations
+        List<String> recommandations = genererRecommandations(suivisTries, traitement, scoreProgression, niveauRisque);
+
+        // Générer le résumé
+        String resume = genererResumeAnalyse(tendance, scoreProgression, niveauRisque, suivis.size());
+
+        return new ResultatAnalyseSuivi(tendance, scoreProgression, observations, recommandations, resume, niveauRisque);
+    }
+
+    /**
+     * Calcule le score de progression basé sur les suivis avec algorithme amélioré
+     */
+    private double calculerScoreProgression(List<SuiviTraitement> suivis) {
+        if (suivis.size() == 1) {
+            return 0.0; // Pas assez de données pour comparer
+        }
+
+        double scoreTotal = 0.0;
+        int comparaisonsValides = 0;
+
+        // Analyse progressive avec pondération
+        for (int i = 1; i < suivis.size(); i++) {
+            SuiviTraitement precedent = suivis.get(i - 1);
+            SuiviTraitement actuel = suivis.get(i);
+
+            double scorePaire = 0.0;
+            int facteursPaire = 0;
+
+            // 1. Comparaison du ressenti (poids: 40%)
+            if (precedent.getRessenti() != null && actuel.getRessenti() != null) {
+                double scoreRessenti = comparerRessenti(precedent.getRessenti(), actuel.getRessenti());
+                scorePaire += scoreRessenti * 0.4;
+                facteursPaire++;
+            }
+
+            // 2. Comparaison des observations (poids: 30%)
+            String obsPrecedente = precedent.getObservations() != null ? precedent.getObservations().toLowerCase() : "";
+            String obsActuelle = actuel.getObservations() != null ? actuel.getObservations().toLowerCase() : "";
+            if (!obsPrecedente.isEmpty() || !obsActuelle.isEmpty()) {
+                double scoreObservations = comparerObservationsAmelioree(obsPrecedente, obsActuelle);
+                scorePaire += scoreObservations * 0.3;
+                facteursPaire++;
+            }
+
+            // 3. Comparaison de l'évaluation (poids: 30%)
+            if (precedent.getEvaluation() != null && actuel.getEvaluation() != null) {
+                double scoreEvaluation = (actuel.getEvaluation() - precedent.getEvaluation()) / 10.0;
+                // Limiter l'impact des variations extrêmes
+                scoreEvaluation = Math.max(-1.0, Math.min(1.0, scoreEvaluation));
+                scorePaire += scoreEvaluation * 0.3;
+                facteursPaire++;
+            }
+
+            // Ajouter le score de la paire si on a des facteurs valides
+            if (facteursPaire > 0) {
+                scoreTotal += scorePaire;
+                comparaisonsValides++;
+            }
+        }
+
+        // Calcul du score moyen avec lissage
+        if (comparaisonsValides == 0) {
+            return 0.0;
+        }
+
+        double scoreMoyen = scoreTotal / comparaisonsValides;
+
+        // Appliquer un lissage pour éviter les variations trop brutales
+        return appliquerLissage(scoreMoyen);
+    }
+
+    /**
+     * Applique un lissage au score pour plus de stabilité
+     */
+    private double appliquerLissage(double score) {
+        // Seuils de lissage pour rendre l'analyse plus stable
+        if (Math.abs(score) < 0.1) {
+            return 0.0; // Considérer comme stable si variation très faible
+        } else if (Math.abs(score) < 0.3) {
+            return score * 0.7; // Réduire les variations faibles
+        } else if (Math.abs(score) < 0.5) {
+            return score * 0.85; // Léger lissage pour variations moyennes
+        }
+        return score; // Garder les variations fortes
+    }
+
+    /**
+     * Comparaison améliorée des observations avec analyse sémantique
+     */
+    private double comparerObservationsAmelioree(String obsPrecedente, String obsActuelle) {
+        if (obsPrecedente.isEmpty() && obsActuelle.isEmpty()) return 0.0;
+        if (obsPrecedente.isEmpty() || obsActuelle.isEmpty()) return 0.1;
+
+        // Mots-clés positifs d'amélioration
+        String[] motsPositifs = {
+                "mieux", "amélioré", "diminué", "réduit", "stable", "calme", "soulagé",
+                "progress", "avancé", "évolué", "maitrisé", "contrôlé", "géré"
+        };
+
+        // Mots-clés négatifs de détérioration
+        String[] motsNegatifs = {
+                "pire", "augmenté", "empiré", "difficile", "stressant", "anxieux",
+                "angoissant", "douloureux", "insupportable", "bloquant", "régressé"
+        };
+
+        // Compter les occurrences
+        int scorePositif = compterOccurrences(obsActuelle, motsPositifs) - compterOccurrences(obsPrecedente, motsPositifs);
+        int scoreNegatif = compterOccurrences(obsActuelle, motsNegatifs) - compterOccurrences(obsPrecedente, motsNegatifs);
+
+        // Analyse de la longueur (plus de détails = plus d'engagement)
+        int diffLongueur = obsActuelle.length() - obsPrecedente.length();
+        double scoreLongueur = diffLongueur > 20 ? 0.1 : diffLongueur < -20 ? -0.1 : 0.0;
+
+        // Score composite
+        double scoreFinal = (scorePositif - scoreNegatif) * 0.2 + scoreLongueur;
+
+        // Limiter le score
+        return Math.max(-1.0, Math.min(1.0, scoreFinal));
+    }
+
+    /**
+     * Compte les occurrences de mots-clés dans un texte
+     */
+    private int compterOccurrences(String texte, String[] motsCles) {
+        int count = 0;
+        for (String mot : motsCles) {
+            if (texte.contains(mot)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Compare deux niveaux de ressenti
+     */
+    private double comparerRessenti(RessentiSuivi ressentiPrecedent, RessentiSuivi ressentiActuel) {
+        Map<RessentiSuivi, Integer> niveauxRessenti = Map.of(
+                RessentiSuivi.TRES_DIFFICILE, 1,
+                RessentiSuivi.DIFFICILE, 2,
+                RessentiSuivi.NEUTRE, 3,
+                RessentiSuivi.BIEN, 4,
+                RessentiSuivi.TRES_BIEN, 5
+        );
+
+        int niveauPrecedent = niveauxRessenti.getOrDefault(ressentiPrecedent, 3);
+        int niveauActuel = niveauxRessenti.getOrDefault(ressentiActuel, 3);
+
+        return (niveauActuel - niveauPrecedent) / 4.0;
+    }
+
+    /**
+     * Compare les descriptions d'observations
+     */
+    private double comparerObservations(String observationsPrecedentes, String observationsActuelles) {
+        if (observationsPrecedentes == null || observationsActuelles == null) {
+            return 0.0;
+        }
+
+        // Analyse simple basée sur la longueur et les mots-clés
+        String[] motsClesAmelioration = {"mieux", "amélioré", "diminué", "réduit", "stable", "calme"};
+        String[] motsClesDetrioration = {"pire", "augmenté", "empiré", "difficile", "stressant", "anxieux"};
+
+        int scorePrecedent = compterMotsCles(observationsPrecedentes.toLowerCase(), motsClesDetrioration)
+                - compterMotsCles(observationsPrecedentes.toLowerCase(), motsClesAmelioration);
+        int scoreActuel = compterMotsCles(observationsActuelles.toLowerCase(), motsClesDetrioration)
+                - compterMotsCles(observationsActuelles.toLowerCase(), motsClesAmelioration);
+
+        return (scorePrecedent - scoreActuel) / 5.0;
+    }
+
+    /**
+     * Compte les occurrences de mots-clés dans un texte
+     */
+    private int compterMotsCles(String texte, String[] motsCles) {
+        int count = 0;
+        for (String mot : motsCles) {
+            if (texte.contains(mot)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Détermine la tendance basée sur le score de progression avec seuils améliorés
+     */
+    private String determinerTendance(double scoreProgression) {
+        // Seuils plus stricts pour éviter les variations aléatoires
+        if (scoreProgression > 0.4) {
+            return "amélioration";
+        } else if (scoreProgression < -0.4) {
+            return "détérioration";
+        } else {
+            return "stable";
+        }
+    }
+
+    /**
+     * Évalue le niveau de risque avec analyse améliorée
+     */
+    private String evaluerNiveauRisque(List<SuiviTraitement> suivis, double scoreProgression) {
+        // Considérer à la fois la progression et la régularité des suivis
+        int nombreSuivis = suivis.size();
+
+        if (scoreProgression < -0.6 && nombreSuivis >= 2) {
+            return "élevé";
+        } else if (scoreProgression < -0.3 && nombreSuivis >= 2) {
+            return "modéré";
+        } else if (scoreProgression < 0.3 || nombreSuivis < 2) {
+            return "faible";
+        } else {
+            return "minimal";
+        }
+    }
+
+    /**
+     * Génère les observations basées sur l'analyse
+     */
+    private List<String> genererObservations(List<SuiviTraitement> suivis, double scoreProgression) {
+        List<String> observations = new ArrayList<>();
+
+        // Observation sur la tendance
+        if (scoreProgression > 0.3) {
+            observations.add("📈 Progression positive détectée dans les suivis");
+        } else if (scoreProgression < -0.3) {
+            observations.add("📉 Régression observée nécessitant une attention");
+        } else {
+            observations.add("➡️ État stable des symptômes");
+        }
+
+        // Observation sur la régularité
+        if (suivis.size() >= 4) {
+            observations.add("✅ Bon suivi régulier du traitement");
+        } else if (suivis.size() >= 2) {
+            observations.add("⚠️ Suivi irrégulier, pourrait être amélioré");
+        } else {
+            observations.add("❌ Suivi insuffisant pour une évaluation complète");
+        }
+
+        // Observation sur le ressenti si disponible
+        Optional<SuiviTraitement> dernierSuivi = suivis.stream()
+                .filter(s -> s.getRessenti() != null)
+                .reduce((first, second) -> second);
+
+        if (dernierSuivi.isPresent()) {
+            RessentiSuivi ressenti = dernierSuivi.get().getRessenti();
+            if (ressenti == RessentiSuivi.TRES_BIEN || ressenti == RessentiSuivi.BIEN) {
+                observations.add("😊 Ressenti positif rapporté récemment");
+            } else if (ressenti == RessentiSuivi.DIFFICILE || ressenti == RessentiSuivi.TRES_DIFFICILE) {
+                observations.add("😟 Ressenti difficile nécessitant une attention");
+            }
+        }
+
+        return observations;
+    }
+
+    /**
+     * Génère les recommandations personnalisées
+     */
+    private List<String> genererRecommandations(List<SuiviTraitement> suivis, Traitement traitement,
+                                                double scoreProgression, String niveauRisque) {
+        List<String> recommandations = new ArrayList<>();
+
+        // Recommandations basées sur la progression avec seuils améliorés
+        if (scoreProgression > 0.4) {
+            recommandations.add("🎯 Excellente progression - continuer le traitement actuel");
+            recommandations.add("📊 Maintenir la fréquence des suivis actuels");
+            recommandations.add("🌟 Partager les positifs avec le psychologue");
+        } else if (scoreProgression < -0.4) {
+            recommandations.add("🚨 Nécessite une consultation rapide pour ajustement");
+            recommandations.add("🔄 Envisager une réévaluation du traitement");
+            recommandations.add("📝 Augmenter temporairement la fréquence des suivis");
+        } else {
+            recommandations.add("🔍 Analyser les facteurs influençant la stabilité");
+            recommandations.add("💬 Discuter des stratégies pour débloquer la progression");
+            recommandations.add("📈 Explorer de nouvelles approches si nécessaire");
+        }
+
+        // Recommandations basées sur le niveau de risque
+        switch (niveauRisque) {
+            case "élevé":
+                recommandations.add("⚡ Consultation urgente recommandée");
+                recommandations.add("📞 Contacter le psychologue dans les 48h");
+                break;
+            case "modéré":
+                recommandations.add("⏰ Consultation recommandée cette semaine");
+                break;
+            case "faible":
+                recommandations.add("📅 Maintenir le suivi régulier");
+                break;
+            case "minimal":
+                recommandations.add("✅ Continuer le traitement comme prévu");
+                break;
+        }
+
+        // Recommandations basées sur la régularité des suivis
+        if (suivis.size() < 3) {
+            recommandations.add("📝 Enregistrer des suivis plus fréquents (2-3 fois par semaine)");
+        }
+
+        // Recommandations basées sur la durée du traitement
+        LocalDate dateDebut = traitement.getDateDebut().toLocalDate();
+        long joursEcoules = ChronoUnit.DAYS.between(
+                dateDebut,
+                LocalDate.now()
+        );
+
+        if (joursEcoules > traitement.getDureeJours() * 0.8) {
+            recommandations.add("🏁 Préparer la fin du traitement et évaluation finale");
+        } else if (joursEcoules > traitement.getDureeJours() * 0.5) {
+            recommandations.add("🔍 Évaluer la mi-parcours du traitement");
+        }
+
+        return recommandations;
+    }
+
+    /**
+     * Génère un résumé de l'analyse
+     */
+    private String genererResumeAnalyse(String tendance, double scoreProgression,
+                                        String niveauRisque, int nombreSuivis) {
+        StringBuilder resume = new StringBuilder();
+
+        resume.append("Analyse IA basée sur ").append(nombreSuivis).append(" suivi(s) : ");
+
+        switch (tendance) {
+            case "amélioration":
+                resume.append("📈 Progression positive détectée (").append(String.format("%.1f", scoreProgression * 100)).append("% d'amélioration)");
+                break;
+            case "détérioration":
+                resume.append("📉 Régression observée (").append(String.format("%.1f", Math.abs(scoreProgression) * 100)).append("% de détérioration)");
+                break;
+            case "stable":
+                resume.append("➡️ État stable (").append(String.format("%.1f", Math.abs(scoreProgression) * 100)).append("% de variation)");
+                break;
+        }
+
+        resume.append(". Niveau de risque : ").append(niveauRisque).append(".");
+
+        return resume.toString();
     }
 }

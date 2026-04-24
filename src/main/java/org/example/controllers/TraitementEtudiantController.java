@@ -18,6 +18,7 @@ import org.example.enums.SaisiPar;
 import org.example.services.OrdonnancePDFService;
 import org.example.services.SuiviTraitementService;
 import org.example.services.TraitementEmailService;
+import org.example.services.TraitementIAService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
 
@@ -61,6 +62,8 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
     @FXML
     private Button btnReinitialiserFiltres;
     @FXML
+    private Button btnAnalyseIA;
+    @FXML
     private VBox cardsContainer;
     @FXML
     private Label lblStatus;
@@ -82,6 +85,7 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
 
     private TraitementService traitementService;
     private SuiviTraitementService suiviTraitementService;
+    private TraitementIAService traitementIAService;
     private List<Traitement> tousLesTraitements;
     private List<SuiviTraitement> tousLesSuivis;
     private List<VBox> toutesLesCartes;
@@ -97,6 +101,7 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         try {
             traitementService = new TraitementService();
             suiviTraitementService = new SuiviTraitementService();
+            traitementIAService = new TraitementIAService();
             toutesLesCartes = new ArrayList<>();
 
             initialiserFiltres();
@@ -757,8 +762,6 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             }
 
         } catch (Exception e) {
-            afficherToast(" Erreur d'export PDF: " + e.getMessage(), false);
-            e.printStackTrace();
         }
     }
 
@@ -784,11 +787,11 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
     }
 
     /**
-     * V\u00e9rifie si un nouveau suivi a \u00e9t\u00e9 ajout\u00e9 et envoie une notification au psychologue
+     * Vérifie si un nouveau suivi a été ajouté et envoie une notification au psychologue
      */
     private void verifierEtNotifierNouveauSuivi(Traitement traitement) {
         try {
-            // R\u00e9cup\u00e9rer les suivis actuels pour ce traitement
+            // Récupérer les suivis actuels pour ce traitement
             List<SuiviTraitement> suivisActuels = suiviTraitementService.afficher().stream()
                     .filter(s -> s.getTraitementId() == traitement.getTraitementId())
                     .sorted((s1, s2) -> {
@@ -800,7 +803,7 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             if (!suivisActuels.isEmpty()) {
                 SuiviTraitement dernierSuivi = suivisActuels.get(0);
 
-                // V\u00e9rifier si le suivi a \u00e9t\u00e9 ajout\u00e9 aujourd'hui par l'\u00e9tudiant
+                // Vérifier si le suivi a été ajouté aujourd'hui par l'étudiant
                 boolean estRecent = dernierSuivi.getDateSuivi() != null &&
                         dernierSuivi.getDateSuivi().toLocalDate().equals(LocalDate.now());
                 boolean estEtudiant = dernierSuivi.getSaisiPar() == SaisiPar.ETUDIANT;
@@ -812,15 +815,83 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
                             dernierSuivi, traitement, currentUser);
 
                     if (resultat.isSuccess()) {
-                        System.out.println(" Notification envoy\u00e9e au psychologue pour le nouveau suivi");
+                        System.out.println(" Notification envoyée au psychologue pour le nouveau suivi");
                     } else {
                         System.err.println(" Erreur envoi notification: " + resultat.getErrorMessage());
                     }
                 }
             }
         } catch (Exception e) {
-            System.err.println("Erreur lors de la v\u00e9rification du nouveau suivi: " + e.getMessage());
+            System.err.println("Erreur lors de la vérification du nouveau suivi: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void handleAnalyseIA() {
+        if (currentUser == null) {
+            afficherToast(" Utilisateur non connecté", false);
+            return;
+        }
+
+        if (traitementIAService == null) {
+            traitementIAService = new TraitementIAService();
+        }
+
+        try {
+            if (lblStatus != null) {
+                lblStatus.setText(" Analyse IA en cours...");
+            }
+
+            // Récupérer les traitements de l'étudiant
+            List<Traitement> traitementsEtudiant = tousLesTraitements.stream()
+                    .filter(t -> t.getEtudiantId() == currentUser.getUserId())
+                    .collect(Collectors.toList());
+
+            if (traitementsEtudiant.isEmpty()) {
+                afficherToast(" Aucun traitement trouvé pour l'analyse", true);
+                if (lblStatus != null) {
+                    lblStatus.setText("Aucun traitement trouvé");
+                }
+                return;
+            }
+
+            // Ouvrir la vue d'analyse IA personnalisée
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/analyse-ia-view.fxml"));
+            Parent root = loader.load();
+
+            AnalyseIAController controller = loader.getController();
+            controller.setDonneesAnalyse(traitementsEtudiant, tousLesSuivis);
+
+            Stage stage = new Stage();
+            stage.setTitle(" Analyse IA Intelligente");
+            stage.setScene(new Scene(root, 900, 700));
+            stage.setResizable(true);
+            stage.show();
+
+            if (lblStatus != null) {
+                lblStatus.setText(" Analyse IA ouverte - " + traitementsEtudiant.size() + " traitement(s)");
+            }
+
+            afficherToast(" Analyse IA lancée avec succès", true);
+
+        } catch (Exception e) {
+            String errorMsg = "Erreur lors de l'analyse IA: " + e.getMessage();
+            System.err.println(errorMsg);
+            e.printStackTrace();
+
+            if (lblStatus != null) {
+                lblStatus.setText(" Erreur analyse IA");
+            }
+
+            afficherToast(" Erreur lors de l'analyse IA", false);
+
+            // Afficher l'erreur dans une alerte
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erreur d'analyse IA");
+            alert.setHeaderText("Impossible d'effectuer l'analyse");
+            alert.setContentText(errorMsg);
+            alert.showAndWait();
         }
     }
 }
