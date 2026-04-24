@@ -3,14 +3,18 @@ package org.example.controllers.evenement;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
+import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import netscape.javascript.JSObject;
 import org.example.entities.Evenement;
 import org.example.enums.Role;
 import org.example.enums.StatutEvenement;
@@ -68,6 +72,10 @@ public class ModificationEvenementController {
     private TextField txtHeureLimite;
     @FXML
     private TextField txtLieu;
+    @FXML
+    private TextField txtLatitude;
+    @FXML
+    private TextField txtLongitude;
     @FXML
     private TextField txtCapacite;
     @FXML
@@ -142,6 +150,8 @@ public class ModificationEvenementController {
         if (txtHeureFin != null) txtHeureFin.setStyle("-fx-text-fill: #000000;");
         if (txtHeureLimite != null) txtHeureLimite.setStyle("-fx-text-fill: #000000;");
         if (txtLieu != null) txtLieu.setStyle("-fx-text-fill: #000000;");
+        if (txtLatitude != null) txtLatitude.setStyle("-fx-text-fill: #000000;");
+        if (txtLongitude != null) txtLongitude.setStyle("-fx-text-fill: #000000;");
         if (txtCapacite != null) txtCapacite.setStyle("-fx-text-fill: #000000;");
         if (txtImage != null) txtImage.setStyle("-fx-text-fill: #000000;");
         if (dateDebut != null) dateDebut.setStyle("-fx-text-fill: #000000;");
@@ -185,6 +195,12 @@ public class ModificationEvenementController {
         comboType.setValue(evenementCourant.getType());
         comboStatut.setValue(evenementCourant.getStatut());
         txtLieu.setText(evenementCourant.getLieu());
+        if (evenementCourant.getLatitude() != null) {
+            txtLatitude.setText(String.valueOf(evenementCourant.getLatitude()));
+        }
+        if (evenementCourant.getLongitude() != null) {
+            txtLongitude.setText(String.valueOf(evenementCourant.getLongitude()));
+        }
         txtCapacite.setText(String.valueOf(evenementCourant.getCapaciteMax()));
 
         // Sélectionner l'organisateur par son ID (seulement pour l'admin)
@@ -466,8 +482,25 @@ public class ModificationEvenementController {
         String nouvelleImage = txtImage.getText() != null && !txtImage.getText().trim().isEmpty() ? txtImage.getText().trim() : null;
         e.setImage(nouvelleImage != null ? nouvelleImage : evenementCourant.getImage());
 
-        e.setLatitude(evenementCourant.getLatitude());
-        e.setLongitude(evenementCourant.getLongitude());
+        // Récupérer les coordonnées si disponibles
+        Double latitude = null;
+        Double longitude = null;
+        if (txtLatitude.getText() != null && !txtLatitude.getText().trim().isEmpty()) {
+            try {
+                latitude = Double.parseDouble(txtLatitude.getText().trim());
+            } catch (NumberFormatException ex) {
+                latitude = null;
+            }
+        }
+        if (txtLongitude.getText() != null && !txtLongitude.getText().trim().isEmpty()) {
+            try {
+                longitude = Double.parseDouble(txtLongitude.getText().trim());
+            } catch (NumberFormatException ex) {
+                longitude = null;
+            }
+        }
+        e.setLatitude(latitude);
+        e.setLongitude(longitude);
 
         return e;
     }
@@ -587,6 +620,105 @@ public class ModificationEvenementController {
         @Override
         public String toString() {
             return fullName;
+        }
+    }
+
+    @FXML
+    private void ouvrirCarteLieu(ActionEvent event) {
+        // Créer une nouvelle fenêtre pour la carte
+        Stage mapStage = new Stage();
+        mapStage.setTitle("Sélectionner le lieu sur la carte");
+        mapStage.setWidth(900);
+        mapStage.setHeight(600);
+
+        // Créer un WebView pour afficher la carte
+        WebView webView = new WebView();
+        WebEngine webEngine = webView.getEngine();
+
+        // Charger le fichier HTML de la carte
+        String mapHtmlPath = getClass().getResource("/evenement/EventOpenStreetMap.html").toExternalForm();
+        webEngine.load(mapHtmlPath);
+
+        // Créer le bridge Java-JavaScript
+        webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+            if (newState == Worker.State.SUCCEEDED) {
+                System.out.println("Page HTML chargée avec succès");
+                
+                // Attendre un peu que le DOM soit complètement chargé
+                javafx.application.Platform.runLater(() -> {
+                    try {
+                        Thread.sleep(500); // Attendre 500ms
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    
+                    // Injecter le bridge JavaScript
+                    JSObject window = (JSObject) webEngine.executeScript("window");
+                    EventMapJavaBridge bridge = new EventMapJavaBridge(mapStage);
+                    window.setMember("javaBridge", bridge);
+                    System.out.println("Bridge Java injecté: " + bridge);
+                    
+                    // Vérifier que le bridge est accessible
+                    try {
+                        Object test = webEngine.executeScript("typeof window.javaBridge");
+                        System.out.println("Type de javaBridge: " + test);
+                        
+                        Object testMethod = webEngine.executeScript("typeof window.javaBridge.onLocationSelected");
+                        System.out.println("Type de onLocationSelected: " + testMethod);
+                    } catch (Exception e) {
+                        System.err.println("Erreur lors de la vérification du bridge: " + e.getMessage());
+                    }
+                });
+            }
+        });
+
+        // Créer la scène et afficher la fenêtre
+        javafx.scene.Scene scene = new javafx.scene.Scene(webView);
+        mapStage.setScene(scene);
+        mapStage.show();
+    }
+
+    /**
+     * Bridge Java pour communiquer avec JavaScript
+     * Doit être public pour être accessible depuis JavaScript
+     */
+    public class EventMapJavaBridge {
+        private final Stage mapStage;
+        
+        public EventMapJavaBridge(Stage mapStage) {
+            this.mapStage = mapStage;
+        }
+        
+        /**
+         * Méthode appelée depuis JavaScript
+         * Doit être publique
+         */
+        public void onLocationSelected(String address, double lat, double lng) {
+            System.out.println("=== Bridge Java appelé ===");
+            System.out.println("Adresse: " + address);
+            System.out.println("Latitude: " + lat);
+            System.out.println("Longitude: " + lng);
+            
+            // Mettre à jour les champs du formulaire
+            javafx.application.Platform.runLater(() -> {
+                if (txtLieu != null) {
+                    txtLieu.setText(address);
+                }
+                if (txtLatitude != null) {
+                    txtLatitude.setText(String.valueOf(lat));
+                }
+                if (txtLongitude != null) {
+                    txtLongitude.setText(String.valueOf(lng));
+                }
+                
+                System.out.println("Champs mis à jour avec succès");
+                
+                // Fermer la fenêtre de la carte
+                if (mapStage != null) {
+                    mapStage.close();
+                    System.out.println("Fenêtre de carte fermée");
+                }
+            });
         }
     }
 }

@@ -115,9 +115,17 @@
                     <VBox spacing="8">
                         <children>
                             <Label text="Lieu *" styleClass="form-label" />
-                            <TextField fx:id="txtLieu" promptText="Lieu de l'événement" prefWidth="400" styleClass="form-input" />
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <children>
+                                    <TextField fx:id="txtLieu" promptText="Lieu de l'événement" prefWidth="400" styleClass="form-input" HBox.hgrow="ALWAYS" />
+                                    <Button text="📍 Carte" onAction="#ouvrirCarteLieu" prefWidth="100" styleClass="btn-secondary" />
+                                </children>
+                            </HBox>
                             <Label fx:id="lblErreurLieu" text="Le lieu est obligatoire"
                                    styleClass="error-label" visible="false" />
+                            <!-- Champs cachés pour stocker les coordonnées -->
+                            <TextField fx:id="txtLatitude" visible="false" managed="false" />
+                            <TextField fx:id="txtLongitude" visible="false" managed="false" />
                         </children>
                     </VBox>
 
