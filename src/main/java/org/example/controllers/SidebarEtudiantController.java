@@ -444,6 +444,7 @@ public class SidebarEtudiantController {
     @FXML
     public void seDeconnecter() {
         NavigationContext.clear();
+        EtudiantSeancesController.CitationCache.clear();
         if (parentController != null) {
             // Délègue au parent qui gère la navigation vers login
             parentController.seDeconnecter();

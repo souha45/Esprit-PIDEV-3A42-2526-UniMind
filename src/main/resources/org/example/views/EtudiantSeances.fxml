@@ -3,6 +3,8 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
@@ -14,60 +16,153 @@
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="org.example.controllers.EtudiantSeancesController">
 
-    <!-- Sidebar à gauche -->
     <left>
         <fx:include source="/SidebarEtudiant.fxml" fx:id="sidebarEtudiant"/>
     </left>
 
-    <!-- Contenu principal (votre ancien ScrollPane) -->
     <center>
-        <ScrollPane styleClass="etudiant-scroll"
-                    stylesheets="/css/etudiant.css"
-                    fitToWidth="true" hbarPolicy="NEVER">
-            <VBox styleClass="etudiant-page" spacing="0">
+        <ScrollPane styleClass="etudiant-scroll" stylesheets="/css/etudiant.css"
+                    fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
 
-                <!-- HERO SECTION -->
-                <HBox styleClass="hero-section" spacing="20">
-                    <VBox.margin><Insets top="0"/></VBox.margin>
-                    <VBox styleClass="hero-card hero-card-purple" prefWidth="500" HBox.hgrow="ALWAYS" spacing="12">
-                        <Label text="🌸 Bienvenue dans l'espace Méditation" styleClass="hero-title"/>
-                        <Label text="Détendez-vous, méditez et échangez avec la communauté" styleClass="hero-subtitle"/>
-                        <Separator styleClass="hero-sep"/>
-                        <Label text="🌟  Améliorez votre bien-être mental" styleClass="hero-point"/>
-                        <Label text="Accédez à une collection de méditations guidées conçues pour réduire le stress, améliorer la concentration et favoriser le bien-être général. Nos séances sont adaptées à tous les niveaux, du débutant à l'expérimenté."
-                               styleClass="hero-text" wrapText="true"/>
-                    </VBox>
-                    <VBox styleClass="hero-card hero-card-teal" prefWidth="360" spacing="12">
-                        <Label text="💬 Forum Communautaire" styleClass="hero-title"/>
-                        <Label text="Échangez &amp; Partagez" styleClass="hero-subtitle"/>
-                        <Separator styleClass="hero-sep"/>
-                        <HBox spacing="10" alignment="CENTER_LEFT">
-                            <Label text="💬" style="-fx-font-size:18px;"/>
-                            <VBox spacing="2">
-                                <Label text="Communauté bienveillante" styleClass="hero-point"/>
-                                <Label text="Rejoignez une communauté d'étudiants partageant les mêmes intérêts."
-                                       styleClass="hero-text" wrapText="true"/>
+            <VBox styleClass="etudiant-page" spacing="0" fillWidth="true">
+
+                <!-- ══════ CITATION DU JOUR ══════ -->
+                <VBox fx:id="citationSection" styleClass="citation-section">
+                    <VBox.margin><Insets top="20" right="24" bottom="0" left="24"/></VBox.margin>
+
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="✨" style="-fx-font-size: 20px;"/>
+                        <Label text="Citation du jour" styleClass="citation-day-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="btnRefreshCitation" text="↻  Nouvelle"
+                                onAction="#onRefreshCitation"
+                                style="-fx-background-color: rgba(255,255,255,0.25);
+                                       -fx-text-fill: white; -fx-font-size: 11px;
+                                       -fx-font-weight: bold; -fx-background-radius: 20;
+                                       -fx-padding: 5 12 5 12; -fx-cursor: hand;
+                                       -fx-border-color: rgba(255,255,255,0.4);
+                                       -fx-border-radius: 20; -fx-border-width: 1;"/>
+                    </HBox>
+
+                    <Label fx:id="lblCitation" text="✦  Chargement de la citation..."
+                           styleClass="citation-text" wrapText="true"/>
+                    <Label fx:id="lblCitationAuteur" text="— Unimind"
+                           styleClass="citation-author"/>
+                </VBox>
+
+                <!-- ══════ HERO SECTION — cartes blanches ══════ -->
+                <HBox spacing="16" fillHeight="true">
+                    <VBox.margin><Insets top="20" right="24" bottom="0" left="24"/></VBox.margin>
+
+                    <!-- Carte Méditation -->
+                    <VBox styleClass="hero-white-card" HBox.hgrow="ALWAYS" spacing="14">
+                        <HBox alignment="CENTER_LEFT" spacing="12">
+                            <Label text="🌸" style="-fx-font-size: 30px;"/>
+                            <VBox spacing="3">
+                                <Label text="Bienvenue dans l'espace Méditation"
+                                       styleClass="hero-white-title"/>
+                                <Label text="Détendez-vous, méditez et progressez"
+                                       styleClass="hero-white-sub"/>
                             </VBox>
                         </HBox>
-                        <HBox spacing="10" alignment="CENTER_LEFT">
-                            <Label text="🌟" style="-fx-font-size:18px;"/>
-                            <VBox spacing="2">
-                                <Label text="Conseils &amp; Astuces" styleClass="hero-point"/>
+                        <Separator style="-fx-background-color: #e0e7ff;"/>
+
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <StackPane minWidth="36" minHeight="36"
+                                       style="-fx-background-color: #ede9fe; -fx-background-radius: 10;">
+                                <Label text="🌟" style="-fx-font-size: 17px;"/>
+                            </StackPane>
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="Bien-être mental" styleClass="hero-white-point"/>
+                                <Label text="Méditations guidées pour réduire le stress et améliorer la concentration."
+                                       styleClass="hero-white-desc" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <StackPane minWidth="36" minHeight="36"
+                                       style="-fx-background-color: #dbeafe; -fx-background-radius: 10;">
+                                <Label text="🎯" style="-fx-font-size: 17px;"/>
+                            </StackPane>
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="Tous niveaux" styleClass="hero-white-point"/>
+                                <Label text="Du débutant à l'expérimenté, trouvez votre séance idéale."
+                                       styleClass="hero-white-desc" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <StackPane minWidth="36" minHeight="36"
+                                       style="-fx-background-color: #dcfce7; -fx-background-radius: 10;">
+                                <Label text="⏱" style="-fx-font-size: 17px;"/>
+                            </StackPane>
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="À votre rythme" styleClass="hero-white-point"/>
+                                <Label text="Séances de 5 min à 1 heure selon votre disponibilité."
+                                       styleClass="hero-white-desc" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Carte Forum -->
+                    <VBox styleClass="hero-white-card hero-white-card-green" prefWidth="340" spacing="14">
+                        <HBox alignment="CENTER_LEFT" spacing="12">
+                            <Label text="💬" style="-fx-font-size: 30px;"/>
+                            <VBox spacing="3">
+                                <Label text="Forum Communautaire" styleClass="hero-white-title"/>
+                                <Label text="Échangez et partagez" styleClass="hero-white-sub"/>
+                            </VBox>
+                        </HBox>
+                        <Separator style="-fx-background-color: #bbf7d0;"/>
+
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <StackPane minWidth="36" minHeight="36"
+                                       style="-fx-background-color: #d1fae5; -fx-background-radius: 10;">
+                                <Label text="🤝" style="-fx-font-size: 17px;"/>
+                            </StackPane>
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="Communauté bienveillante" styleClass="hero-white-point"/>
+                                <Label text="Rejoignez des étudiants partageant les mêmes intérêts."
+                                       styleClass="hero-white-desc" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <StackPane minWidth="36" minHeight="36"
+                                       style="-fx-background-color: #fef3c7; -fx-background-radius: 10;">
+                                <Label text="💡" style="-fx-font-size: 17px;"/>
+                            </StackPane>
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="Conseils &amp; Astuces" styleClass="hero-white-point"/>
                                 <Label text="Découvrez des conseils pratiques pour améliorer votre pratique."
-                                       styleClass="hero-text" wrapText="true"/>
+                                       styleClass="hero-white-desc" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <StackPane minWidth="36" minHeight="36"
+                                       style="-fx-background-color: #fce7f3; -fx-background-radius: 10;">
+                                <Label text="🌸" style="-fx-font-size: 17px;"/>
+                            </StackPane>
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="Questions &amp; Réponses" styleClass="hero-white-point"/>
+                                <Label text="Posez vos questions et obtenez des réponses de la communauté."
+                                       styleClass="hero-white-desc" wrapText="true"/>
                             </VBox>
                         </HBox>
                     </VBox>
                 </HBox>
 
-                <!-- CATEGORIES SECTION -->
+                <!-- ══════ CATEGORIES ══════ -->
                 <VBox styleClass="section-container" spacing="16">
-                    <HBox alignment="CENTER_LEFT" spacing="16">
-                        <Label text="🗂 Catégories de Méditation" styleClass="section-title" HBox.hgrow="ALWAYS"/>
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="🗂  Catégories de Méditation"
+                               styleClass="section-title" HBox.hgrow="ALWAYS"/>
                     </HBox>
                     <HBox styleClass="search-box" alignment="CENTER_LEFT" spacing="8">
                         <Label text="🔍" styleClass="search-icon"/>
-                        <TextField fx:id="tfSearchCat" promptText="Rechercher une catégorie par nom ou description..."
+                        <TextField fx:id="tfSearchCat"
+                                   promptText="Rechercher une catégorie par nom ou description..."
                                    styleClass="search-field" HBox.hgrow="ALWAYS"
                                    onKeyReleased="#onSearchCategorie"/>
                     </HBox>
@@ -75,17 +170,21 @@
                               styleClass="categories-grid"/>
                 </VBox>
 
-                <!-- FORUM SECTION -->
+                <!-- ══════ FORUM ══════ -->
                 <VBox styleClass="section-container forum-section" spacing="16">
-                    <HBox alignment="CENTER_LEFT" spacing="16">
-                        <Label text="💬 Forum Communautaire — Toutes les discussions"
-                               styleClass="section-title" HBox.hgrow="ALWAYS"/>
-                        <Button text="✏  Nouveau post" styleClass="btn-primary" onAction="#openNewPostDialog"/>
+                    <HBox alignment="CENTER_LEFT" spacing="800">
+                        <Label text="💬  Forum — Toutes les discussions"
+                               styleClass="section-title" HBox.hgrow="ALWAYS" />
+                        <Button text="✏  Nouveau post" styleClass="btn-primary"
+                                onAction="#openNewPostDialog"/>
                     </HBox>
+
                     <VBox fx:id="postsContainer" spacing="12"/>
-                    <HBox alignment="CENTER">
+
+                    <HBox alignment="CENTER" style="-fx-padding: 0 0 8 0;">
                         <Button fx:id="btnLoadMore" text="↓  Charger plus de discussions"
-                                styleClass="btn-load-more" onAction="#loadMorePosts"/>
+                                styleClass="btn-load-more" onAction="#loadMorePosts"
+                                visible="false" managed="false"/>
                     </HBox>
                 </VBox>
 

@@ -548,3 +548,78 @@
     -fx-font-size: 12px;
     -fx-cursor: hand;
 }
+
+/* =============================================
+   CITATION DU JOUR
+   ============================================= */
+.citation-section {
+    -fx-background-color: linear-gradient(to right, #6366f1, #8b5cf6, #ec4899);
+    -fx-background-radius: 16;
+    -fx-padding: 18 22 18 22;
+    -fx-spacing: 10;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.3), 14, 0, 0, 4);
+}
+
+.citation-day-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: rgba(255,255,255,0.85);
+    -fx-letter-spacing: 1px;
+    -fx-text-transform: uppercase;
+}
+
+.citation-text {
+    -fx-font-size: 15px;
+    -fx-font-style: italic;
+    -fx-text-fill: white;
+    -fx-font-weight: 500;
+    -fx-line-spacing: 4;
+    -fx-padding: 8 0 4 0;
+}
+
+.citation-author {
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255,255,255,0.7);
+    -fx-font-weight: bold;
+}
+
+/* =============================================
+   HERO SECTION — CARTES BLANCHES
+   ============================================= */
+.hero-white-card {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 16;
+    -fx-padding: 22;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.09), 10, 0, 0, 3);
+}
+
+.hero-white-card-green {
+    -fx-border-color: #bbf7d0;
+    -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.09), 10, 0, 0, 3);
+}
+
+.hero-white-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3730a3;
+}
+
+.hero-white-sub {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6b7280;
+}
+
+.hero-white-point {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #374151;
+}
+
+.hero-white-desc {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6b7280;
+    -fx-line-spacing: 2;
+}
