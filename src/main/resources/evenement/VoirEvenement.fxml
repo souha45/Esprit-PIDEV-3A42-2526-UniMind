@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.web.WebView?>
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17.0.0" xmlns:fx="http://javafx.com/fxml/1"
@@ -91,6 +92,14 @@
                         <children>
                             <Label text="Lieu" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
                             <Label fx:id="lblLieu" text="-" style="-fx-font-size: 14px; -fx-text-fill: #000000;" />
+                        </children>
+                    </VBox>
+
+                    <!-- Carte du lieu -->
+                    <VBox spacing="5" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
+                        <children>
+                            <Label text="Localisation" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d;" />
+                            <WebView fx:id="mapView" prefHeight="300" prefWidth="700" />
                         </children>
                     </VBox>
 

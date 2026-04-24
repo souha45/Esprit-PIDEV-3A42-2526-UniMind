@@ -1,5 +1,7 @@
 package org.example.controllers.evenement;
 
+import javafx.application.Platform;
+import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -8,12 +10,15 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import org.example.entities.Evenement;
 import org.example.entities.Participation;
 import org.example.enums.Role;
 import org.example.services.EvenementService;
 import org.example.services.FavoriService;
 import org.example.services.ParticipationService;
+import org.example.services.evenement.EventNominatimService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
@@ -36,6 +41,7 @@ public class VoirEvenementController {
     private final ParticipationService participationService = new ParticipationService();
     private final FavoriService favoriService = new FavoriService();
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private final EventNominatimService nominatimService = new EventNominatimService();
 
     @FXML
     private Label lblTitre;
@@ -51,6 +57,8 @@ public class VoirEvenementController {
     private Label lblDateFin;
     @FXML
     private Label lblLieu;
+    @FXML
+    private WebView mapView;
     @FXML
     private TextArea txtDescription;
     @FXML
@@ -134,6 +142,9 @@ public class VoirEvenementController {
         lblLieu.setText(evenementCourant.getLieu() != null ? evenementCourant.getLieu() : "-");
         txtDescription.setText(evenementCourant.getDescription() != null ? evenementCourant.getDescription() : "");
 
+        // Charger la carte si les coordonnées sont disponibles
+        chargerCarte();
+
         // Afficher le nom de l'organisateur au lieu de l'ID
         try {
             String nomOrganisateur = evenementService.getNomOrganisateur(evenementCourant.getOrganisateurId());
@@ -183,6 +194,90 @@ public class VoirEvenementController {
 
         // Charger les avis
         chargerAvis();
+    }
+
+    private void chargerCarte() {
+        if (mapView == null) {
+            return;
+        }
+
+        if (evenementCourant == null) {
+            mapView.setVisible(false);
+            mapView.setManaged(false);
+            return;
+        }
+
+        Double latitude = evenementCourant.getLatitude();
+        Double longitude = evenementCourant.getLongitude();
+        String address = evenementCourant.getLieu();
+
+        // Afficher la carte même si les coordonnées ne sont pas disponibles : on tentera le géocodage
+        mapView.setVisible(true);
+        mapView.setManaged(true);
+
+        // Préparer l'adresse (popup) = texte exact du champ lieu
+        final String popupAddress = address != null ? address : "";
+
+        // Priorité: si on a des coordonnées stockées, elles représentent le lieu réellement choisi
+        // (évite les décalages/ambiguïtés de la recherche Nominatim)
+        if (latitude != null && longitude != null) {
+            afficherCarte(latitude, longitude, popupAddress);
+            return;
+        }
+
+        // 1) Priorité: géocoder le texte du lieu pour obtenir une position cohérente avec ce qui est affiché
+        if (address != null && !address.trim().isEmpty()) {
+            var task = nominatimService.searchLocationsAsync(address.trim());
+            task.setOnSucceeded(evt -> {
+                var suggestions = task.getValue();
+                if (suggestions != null && !suggestions.isEmpty()) {
+                    var best = suggestions.get(0);
+                    afficherCarte(best.getLatitude(), best.getLongitude(), popupAddress);
+                } else {
+                    mapView.setVisible(false);
+                    mapView.setManaged(false);
+                }
+            });
+            task.setOnFailed(evt -> {
+                mapView.setVisible(false);
+                mapView.setManaged(false);
+            });
+            Thread t = new Thread(task);
+            t.setDaemon(true);
+            t.start();
+            return;
+        }
+
+        // Si pas de coordonnées et pas de texte lieu exploitable
+        mapView.setVisible(false);
+        mapView.setManaged(false);
+    }
+
+    private void afficherCarte(double latitude, double longitude, String address) {
+        if (mapView == null) {
+            return;
+        }
+
+        Platform.runLater(() -> {
+            WebEngine webEngine = mapView.getEngine();
+            String mapHtmlPath = getClass().getResource("/evenement/EventOpenStreetMapView.html").toExternalForm();
+            webEngine.load(mapHtmlPath);
+
+            webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+                if (newState == Worker.State.SUCCEEDED) {
+                    String escapedAddress = address != null
+                            ? address.replace("\\", "\\\\")
+                            .replace("'", "\\'")
+                            .replace("\"", "\\\"")
+                            .replace("\n", "\\n")
+                            .replace("\r", "\\r")
+                            : "";
+
+                    String script = String.format("initMap(%f, %f, '%s')", latitude, longitude, escapedAddress);
+                    webEngine.executeScript(script);
+                }
+            });
+        });
     }
 
     private void verifierPermissions() {
