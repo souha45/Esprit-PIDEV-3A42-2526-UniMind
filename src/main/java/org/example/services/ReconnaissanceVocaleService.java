@@ -185,17 +185,54 @@ public class ReconnaissanceVocaleService {
     private String extraireTexte(String json, String cle) {
         if (json == null || json.isEmpty()) return "";
         try {
+            // Méthode plus robuste pour extraire le texte
             String tag = "\"" + cle + "\"";
             int idx = json.indexOf(tag);
             if (idx < 0) return "";
-            // Chercher le premier " après la clé et les caractères :, espace
             int debut = json.indexOf("\"", idx + tag.length() + 1);
             if (debut < 0) return "";
             debut++;
             int fin = json.indexOf("\"", debut);
             if (fin < 0) return "";
-            return json.substring(debut, fin).trim();
-        } catch (Exception e) { return ""; }
+
+            String extracted = json.substring(debut, fin);
+
+            // ✅ Convertir les séquences Unicode comme \u00e9 en caractères réels
+            extracted = unescapeUnicode(extracted);
+
+            return extracted.trim();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    /**
+     * Convertit les séquences Unicode (ex: \u00e9) en caractères réels
+     */
+    private String unescapeUnicode(String text) {
+        if (text == null) return "";
+
+        StringBuilder result = new StringBuilder();
+        int i = 0;
+        while (i < text.length()) {
+            char c = text.charAt(i);
+            if (c == '\\' && i + 1 < text.length() && text.charAt(i + 1) == 'u') {
+                // Séquence Unicode trouvée (ex: \u00e9)
+                String hex = text.substring(i + 2, Math.min(i + 6, text.length()));
+                try {
+                    int code = Integer.parseInt(hex, 16);
+                    result.append((char) code);
+                    i += 6;
+                } catch (NumberFormatException e) {
+                    result.append(c);
+                    i++;
+                }
+            } else {
+                result.append(c);
+                i++;
+            }
+        }
+        return result.toString();
     }
 
     public boolean isReady()   { return isModelLoaded; }
