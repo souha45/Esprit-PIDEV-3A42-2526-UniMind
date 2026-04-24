@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniMind - Sélection du lieu</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        .search-container {
+            margin-bottom: 15px;
+        }
+        #searchInput {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        #searchInput:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        .suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .suggestion-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .suggestion-item:hover {
+            background: #f0f0f0;
+        }
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .suggestion-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .suggestion-city {
+            font-size: 12px;
+            color: #666;
+        }
+        .selected-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e0e7ff;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+            display: none;
+        }
+        .selected-info h4 {
+            color: #6366f1;
+            margin-bottom: 5px;
+        }
+        .selected-info p {
+            color: #333;
+            font-size: 14px;
+        }
+        .btn-confirm {
+            margin-top: 15px;
+            padding: 12px 24px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            width: 100%;
+        }
+        .btn-confirm:hover {
+            background: #4f46e5;
+        }
+        .btn-confirm:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="search-container" style="position: relative;">
+        <input type="text" id="searchInput" placeholder="Rechercher un lieu (ex: Paris, Eiffel Tower...)">
+        <div id="suggestions" class="suggestions"></div>
+    </div>
+    
+    <div id="map"></div>
+    
+    <div id="selectedInfo" class="selected-info">
+        <h4>Lieu sélectionné :</h4>
+        <p id="selectedAddress"></p>
+    </div>
+    
+    <div id="debugInfo" style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 8px; font-size: 12px; display: none;">
+        <strong>Debug:</strong> <span id="debugText"></span>
+    </div>
+    
+    <button id="btnConfirm" class="btn-confirm" disabled>Confirmer le lieu</button>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let map;
+        let marker;
+        let selectedLocation = null;
+        let searchTimeout;
+
+        // Initialiser la carte
+        function initMap() {
+            map = L.map('map').setView([48.8566, 2.3522], 13); // Paris par défaut
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Clic sur la carte pour sélectionner un lieu
+            map.on('click', function(e) {
+                selectLocation(e.latlng.lat, e.latlng.lng);
+            });
+        }
+
+        // Sélectionner un lieu
+        function selectLocation(lat, lng, address = '') {
+            // Désactiver le bouton pendant le chargement
+            document.getElementById('btnConfirm').disabled = true;
+            document.getElementById('selectedInfo').style.display = 'none';
+            
+            // Supprimer le marqueur existant
+            if (marker) {
+                map.removeLayer(marker);
+            }
+
+            // Ajouter le nouveau marqueur
+            marker = L.marker([lat, lng]).addTo(map);
+            map.setView([lat, lng], 15);
+
+            // Si aucune adresse n'est fournie, faire un reverse geocoding
+            if (!address) {
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.display_name) {
+                            selectedLocation = {
+                                lat: lat,
+                                lng: lng,
+                                address: data.display_name
+                            };
+                            updateSelectedInfo();
+                        } else {
+                            // Fallback si pas d'adresse
+                            selectedLocation = {
+                                lat: lat,
+                                lng: lng,
+                                address: `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`
+                            };
+                            updateSelectedInfo();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur reverse geocoding:', error);
+                        // Utiliser les coordonnées comme fallback
+                        selectedLocation = {
+                            lat: lat,
+                            lng: lng,
+                            address: `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`
+                        };
+                        updateSelectedInfo();
+                    });
+            } else {
+                selectedLocation = {
+                    lat: lat,
+                    lng: lng,
+                    address: address
+                };
+                updateSelectedInfo();
+            }
+        }
+
+        function updateSelectedInfo() {
+            document.getElementById('selectedInfo').style.display = 'block';
+            document.getElementById('selectedAddress').textContent = selectedLocation.address;
+            document.getElementById('btnConfirm').disabled = false;
+        }
+
+        function showDebug(message) {
+            const debugDiv = document.getElementById('debugInfo');
+            const debugText = document.getElementById('debugText');
+            debugDiv.style.display = 'block';
+            debugText.textContent = message;
+        }
+
+        function hideDebug() {
+            document.getElementById('debugInfo').style.display = 'none';
+        }
+
+        // Recherche de lieux
+        function searchLocations(query) {
+            if (query.length < 3) {
+                document.getElementById('suggestions').style.display = 'none';
+                return;
+            }
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`)
+                .then(response => response.json())
+                .then(data => {
+                    displaySuggestions(data);
+                })
+                .catch(error => console.error('Erreur:', error));
+        }
+
+        // Afficher les suggestions
+        function displaySuggestions(data) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            suggestionsDiv.innerHTML = '';
+
+            if (data.length === 0) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                
+                const name = extractName(item.display_name);
+                const city = extractCity(item);
+                
+                div.innerHTML = `
+                    <div class="suggestion-name">${name}</div>
+                    ${city ? `<div class="suggestion-city">${city}</div>` : ''}
+                `;
+                
+                div.onclick = function() {
+                    selectLocation(parseFloat(item.lat), parseFloat(item.lon), item.display_name);
+                    document.getElementById('searchInput').value = item.display_name;
+                    suggestionsDiv.style.display = 'none';
+                };
+                
+                suggestionsDiv.appendChild(div);
+            });
+
+            suggestionsDiv.style.display = 'block';
+        }
+
+        function extractName(displayName) {
+            const parts = displayName.split(',');
+            return parts[0].trim();
+        }
+
+        function extractCity(item) {
+            if (item.address) {
+                return item.address.city || item.address.town || item.address.village || '';
+            }
+            return '';
+        }
+
+        // Event listener pour la recherche
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchLocations(e.target.value);
+            }, 300);
+        });
+
+        // Cacher les suggestions quand on clique ailleurs
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                document.getElementById('suggestions').style.display = 'none';
+            }
+        });
+
+        // Bouton confirmer
+        document.getElementById('btnConfirm').addEventListener('click', function() {
+            showDebug('Bouton confirmer cliqué');
+            showDebug('window.javaBridge existe: ' + (window.javaBridge !== undefined));
+            showDebug('Type de javaBridge: ' + typeof window.javaBridge);
+            
+            if (window.javaBridge) {
+                showDebug('Type de onLocationSelected: ' + typeof window.javaBridge.onLocationSelected);
+            }
+            
+            if (selectedLocation) {
+                showDebug('Lieu sélectionné: ' + selectedLocation.address);
+                
+                // Envoyer les données à JavaFX
+                if (window.javaBridge && typeof window.javaBridge.onLocationSelected === 'function') {
+                    showDebug('Bridge Java disponible, envoi des données...');
+                    try {
+                        window.javaBridge.onLocationSelected(
+                            selectedLocation.address,
+                            selectedLocation.lat,
+                            selectedLocation.lng
+                        );
+                        showDebug('Données envoyées avec succès !');
+                    } catch (error) {
+                        showDebug('Erreur: ' + error.message);
+                    }
+                } else {
+                    showDebug('ERREUR: Bridge Java ou méthode non disponible');
+                    alert('Erreur: Bridge Java non disponible. Veuillez réessayer.');
+                }
+            } else {
+                showDebug('ERREUR: Aucun lieu sélectionné');
+                alert('Veuillez d\'abord sélectionner un lieu sur la carte.');
+            }
+        });
+
+        // Initialiser
+        initMap();
+    </script>
+</body>
+</html>

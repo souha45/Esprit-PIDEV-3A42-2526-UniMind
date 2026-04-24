@@ -10,6 +10,7 @@ import java.sql.Statement;
 
 import org.example.entities.User;
 import org.example.utils.MyDataBase_Unimind;
+import org.example.utils.NavigationContext;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -441,6 +442,7 @@ public class SidebarEtudiantController {
 
     @FXML
     public void seDeconnecter() {
+        NavigationContext.clear();
         if (parentController != null) {
             // Délègue au parent qui gère la navigation vers login
             parentController.seDeconnecter();
