@@ -1,265 +1,698 @@
 package org.example.controllers;
 
+import com.github.sarxos.webcam.Webcam;
+import com.github.sarxos.webcam.WebcamPanel;
+import com.github.sarxos.webcam.WebcamResolution;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
+import javafx.scene.web.WebView;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.example.controllers.admin.AdminDashboardController;
-import org.example.controllers.DashboardEtudiantController;
-import org.example.controllers.DashboardPsychologueController;
-import org.example.controllers.DashboardResponsableController;
+import org.example.config.Config;
 import org.example.entities.User;
 import org.example.services.*;
+import org.example.utils.LocalCallbackServer;
 import org.example.utils.MyDataBase_Unimind;
+import org.example.utils.PasswordUtils;
 import org.example.utils.ValidationUtils;
-import org.example.utils.SessionManager;
 
+// ── Imports AWT UNIQUEMENT pour Swing/Webcam — PAS Button ni TextField ──
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.image.BufferedImage;
+// ────────────────────────────────────────────────────────────────────────
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.prefs.Preferences;
+
+/**
+ * LoginController — Toutes les erreurs corrigées :
+ *
+ *  1. btnOeilLogin          → javafx.scene.control.Button  (plus java.awt.Button)
+ *  2. togglePasswordVisibility → 100% JavaFX (TextField/PasswordField dans HBox)
+ *  3. passwordField.getParent() → HBox référencée via @FXML passwordBox
+ *  4. Suppression imports   → java.awt.Button et java.awt.TextField retirés
+ *  5. getCurrentPassword()  → lit le bon champ selon l'état de l'œil
+ *  6. Se souvenir de moi    → Preferences Java (persistant entre sessions)
+ *  7. SLF4J                 → ajouter slf4j-nop dans pom.xml (voir commentaire bas)
+ */
 public class LoginController {
 
-    // ── Champs FXML ───────────────────────────────────────────────────
-    @FXML private TextField     emailField;
-    @FXML private PasswordField passwordField;
-    @FXML private TextField     passwordVisible;
-    @FXML private Button        btnOeilLogin;
-    @FXML private HBox          passwordBox;
-
-    // Labels d'erreur inline (sous chaque champ)
-    @FXML private Label erreurEmail;      // sous emailField
-    @FXML private Label erreurPassword;   // sous passwordBox
-
-    // Message d'erreur global (identifiants incorrects / erreur serveur)
-    @FXML private Label messageErreur;
-
-    // ── État ──────────────────────────────────────────────────────────
-    private boolean passwordShown = false;
+    // ── Champs FXML — 100 % javafx.scene.control ─────────────────────
+    @FXML private javafx.scene.control.TextField     emailField;
+    @FXML private javafx.scene.control.PasswordField passwordField;
+    @FXML private javafx.scene.control.Button        loginButton;
+    @FXML private javafx.scene.control.Button        googleButton;
+    @FXML private javafx.scene.control.Button        facialButton;
+    @FXML private javafx.scene.control.Button        btnOeilLogin;  // ← JavaFX, pas AWT
+    @FXML private Hyperlink                           forgotPasswordLink;
+    @FXML private javafx.scene.control.Label         messageLabel;
+    @FXML private StackPane                           captchaContainer;
+    @FXML private javafx.scene.control.CheckBox       rememberMeCheck;
+    /**
+     * HBox déclarée dans le FXML autour du PasswordField + btnOeil :
+     *   <HBox fx:id="passwordBox" ...>
+     *     <PasswordField fx:id="passwordField" .../>
+     *     <Button fx:id="btnOeilLogin" .../>
+     *   </HBox>
+     */
+    @FXML private HBox passwordBox;
 
     // ── Services ──────────────────────────────────────────────────────
-    private final AdminService       adminService       = new AdminService();
-    private final EtudiantService    etudiantService    = new EtudiantService();
-    private final PsychologueService psychologueService = new PsychologueService();
-    private final ResponsableService responsableService = new ResponsableService();
+    private final CaptchaService           captchaService    = new CaptchaService();
+    private final EmailService             emailService      = new EmailService();
+    private final FacialRecognitionService facialService     = new FacialRecognitionService();
+    private final GoogleAuthService        googleAuthService = new GoogleAuthService();
+
+    // ── État interne ──────────────────────────────────────────────────
+    private String  currentCaptchaResponse = "";
+    private Webcam  webcam;
+    private Stage   facialStage;
+    private JFrame  webcamFrame;
+    private boolean passwordVisible = false;
+
+    // TextField JavaFX affiché à la place du PasswordField quand l'œil est actif
+    private javafx.scene.control.TextField visiblePasswordField;
+
+    // ── Préférences persistantes (Se souvenir de moi) ─────────────────
+    private static final Preferences prefs      = Preferences.userNodeForPackage(LoginController.class);
+    private static final String      PREF_EMAIL = "rem_email";
+    private static final String      PREF_PWD   = "rem_pwd";
+    private static final String      PREF_REM   = "rem_flag";
 
     // ══════════════════════════════════════════════════════════════════
-    //  STYLES — bordures normales / erreur
-    // ══════════════════════════════════════════════════════════════════
-
-    private static final String BORDER_NORMAL = "-fx-border-color: #DDD6FE;";
-    private static final String BORDER_ERROR  = "-fx-border-color: #DC2626;";
-
-    // ══════════════════════════════════════════════════════════════════
-    //  HELPERS — affichage des erreurs (null-safe)
-    // ══════════════════════════════════════════════════════════════════
-
-    /** Affiche un message d'erreur rouge sous le champ concerné. */
-    private void showFieldError(Label label, String msg) {
-        if (label == null) return;
-        label.setText("⚠  " + msg);
-        label.setVisible(true);
-        label.setManaged(true);
-    }
-
-    /** Cache le message d'erreur d'un champ. */
-    private void hideFieldError(Label label) {
-        if (label == null) return;
-        label.setText("");
-        label.setVisible(false);
-        label.setManaged(false);
-    }
-
-    /** Affiche le message d'erreur global (bannière rouge). */
-    private void showGlobalError(String msg) {
-        if (messageErreur == null) return;
-        messageErreur.setText("⚠  " + msg);
-        messageErreur.setVisible(true);
-        messageErreur.setManaged(true);
-    }
-
-    /** Cache le message d'erreur global. */
-    private void hideGlobalError() {
-        if (messageErreur == null) return;
-        messageErreur.setText("");
-        messageErreur.setVisible(false);
-        messageErreur.setManaged(false);
-    }
-
-    /** Applique une bordure rouge à un TextField. */
-    private void markError(TextField field) {
-        if (field == null) return;
-        String s = field.getStyle().replace(BORDER_NORMAL, "").replace(BORDER_ERROR, "");
-        field.setStyle(s + " " + BORDER_ERROR + " -fx-border-width: 1.5;");
-    }
-
-    /** Applique une bordure rouge au conteneur HBox du mot de passe. */
-    private void markBoxError(HBox box) {
-        if (box == null) return;
-        String s = box.getStyle().replace(BORDER_NORMAL, "").replace(BORDER_ERROR, "");
-        box.setStyle(s + " " + BORDER_ERROR + " -fx-border-width: 1.5;");
-    }
-
-    /** Remet la bordure normale à un TextField. */
-    private void resetError(TextField field) {
-        if (field == null) return;
-        String s = field.getStyle()
-                .replace(BORDER_ERROR, "")
-                .replace("-fx-border-color: #DC2626;", "")
-                .replace("-fx-border-width: 1.5;", "");
-        field.setStyle(s + " " + BORDER_NORMAL + " -fx-border-width: 1.5;");
-    }
-
-    /** Remet la bordure normale au conteneur HBox. */
-    private void resetBoxError(HBox box) {
-        if (box == null) return;
-        String s = box.getStyle()
-                .replace(BORDER_ERROR, "")
-                .replace("-fx-border-color: #DC2626;", "")
-                .replace("-fx-border-width: 1.5;", "");
-        box.setStyle(s + " " + BORDER_NORMAL + " -fx-border-width: 1.5;");
-    }
-
-    /** Efface toutes les erreurs et remet les styles normaux. */
-    private void clearAllErrors() {
-        hideFieldError(erreurEmail);
-        hideFieldError(erreurPassword);
-        hideGlobalError();
-        resetError(emailField);
-        resetBoxError(passwordBox);
-    }
-
-    // ══════════════════════════════════════════════════════════════════
-    //  TOGGLE — affichage mot de passe
+    //  INITIALISATION
     // ══════════════════════════════════════════════════════════════════
 
     @FXML
-    public void togglePasswordLogin() {
-        passwordShown = !passwordShown;
-        if (passwordShown) {
-            passwordVisible.setText(passwordField.getText());
-            passwordVisible.setVisible(true);  passwordVisible.setManaged(true);
-            passwordField.setVisible(false);   passwordField.setManaged(false);
-            btnOeilLogin.setText("🙈");
-        } else {
-            passwordField.setText(passwordVisible.getText());
-            passwordField.setVisible(true);    passwordField.setManaged(true);
-            passwordVisible.setVisible(false); passwordVisible.setManaged(false);
-            btnOeilLogin.setText("👁");
-        }
-    }
+    public void initialize() {
+        loadGoogleRecaptcha();
+        chargerIdentifiantsSauvegardes();
 
-    // ══════════════════════════════════════════════════════════════════
-    //  SE CONNECTER — validation complète
-    // ══════════════════════════════════════════════════════════════════
-
-    @FXML
-    public void seConnecter() {
-        // 1. Efface toutes les erreurs précédentes
-        clearAllErrors();
-
-        String email    = emailField.getText().trim();
-        String password = passwordShown
-                ? passwordVisible.getText().trim()
-                : passwordField.getText().trim();
-
-        boolean valid = true;
-
-        // ── Validation email ──────────────────────────────────────────
-        if (!ValidationUtils.isNonVide(email)) {
-            showFieldError(erreurEmail, "L'adresse email est obligatoire.");
-            markError(emailField);
-            valid = false;
-        } else if (!ValidationUtils.isEmailValide(email)) {
-            showFieldError(erreurEmail, ValidationUtils.messageEmail());
-            markError(emailField);
-            valid = false;
-        }
-
-        // ── Validation mot de passe ───────────────────────────────────
-        if (!ValidationUtils.isNonVide(password)) {
-            showFieldError(erreurPassword, "Le mot de passe est obligatoire.");
-            markBoxError(passwordBox);
-            valid = false;
-        }
-
-        // Si au moins un champ est invalide → on s'arrête ici
-        if (!valid) return;
-
-        // ── Tentative de connexion ────────────────────────────────────
         try {
-            User user = UserService.connexionGenerale(
-                    email, password,
-                    MyDataBase_Unimind.getInstance().getConnection(),
-                    adminService, etudiantService, psychologueService, responsableService);
+            LocalCallbackServer.startServer();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-            if (user == null) {
-                // Identifiants incorrects → bannière globale + rouge sur les deux champs
-                showGlobalError("Email ou mot de passe incorrect. Veuillez réessayer.");
-                markError(emailField);
-                markBoxError(passwordBox);
-                return;
+    // ══════════════════════════════════════════════════════════════════
+    //  SE SOUVENIR DE MOI
+    // ══════════════════════════════════════════════════════════════════
+
+    private void chargerIdentifiantsSauvegardes() {
+        if (prefs.getBoolean(PREF_REM, false)) {
+            emailField.setText(prefs.get(PREF_EMAIL, ""));
+            passwordField.setText(prefs.get(PREF_PWD, ""));
+            if (rememberMeCheck != null) rememberMeCheck.setSelected(true);
+        }
+    }
+
+    private void sauvegarderOuEffacerIdentifiants(String email, String pwd) {
+        if (rememberMeCheck != null && rememberMeCheck.isSelected()) {
+            prefs.putBoolean(PREF_REM, true);
+            prefs.put(PREF_EMAIL, email);
+            prefs.put(PREF_PWD, pwd);
+        } else {
+            prefs.putBoolean(PREF_REM, false);
+            prefs.remove(PREF_EMAIL);
+            prefs.remove(PREF_PWD);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  ŒIL — AFFICHER / MASQUER MOT DE PASSE  (100 % JavaFX)
+    //  Correction des 5 erreurs liées à togglePasswordVisibility
+    // ══════════════════════════════════════════════════════════════════
+
+    @FXML
+    public void togglePasswordVisibility() {
+
+        if (!passwordVisible) {
+            // ─── AFFICHER le mot de passe ─────────────────────────────
+            String currentPwd = passwordField.getText();
+
+            // Créer un TextField JavaFX qui imitera le PasswordField
+            visiblePasswordField = new javafx.scene.control.TextField(currentPwd);
+            visiblePasswordField.setStyle(
+                    "-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;" +
+                            "-fx-padding: 12 14; -fx-background-radius: 10 0 0 10;" +
+                            "-fx-border-color: transparent; -fx-background-color: transparent;"
+            );
+            // Faire grandir le TextField dans le HBox comme le PasswordField
+            HBox.setHgrow(visiblePasswordField, Priority.ALWAYS);
+
+            // Synchroniser la frappe → le PasswordField (source de vérité cachée)
+            visiblePasswordField.textProperty().addListener(
+                    (obs, oldVal, newVal) -> passwordField.setText(newVal)
+            );
+
+            // Cacher le PasswordField et insérer le TextField à l'index 0 dans passwordBox
+            passwordField.setVisible(false);
+            passwordField.setManaged(false);
+            passwordBox.getChildren().add(0, visiblePasswordField);
+
+            if (btnOeilLogin != null) btnOeilLogin.setText("🙈");
+            passwordVisible = true;
+
+        } else {
+            // ─── MASQUER le mot de passe ──────────────────────────────
+            if (visiblePasswordField != null) {
+                // Récupérer la valeur tapée avant de retirer le TextField
+                passwordField.setText(visiblePasswordField.getText());
+                passwordBox.getChildren().remove(visiblePasswordField);
+                visiblePasswordField = null;
             }
 
-            // ============================================================
-            // 🔥  LIGNE ICI ajouteé pour session de traitement🔥
-            // ============================================================
-            SessionManager.getInstance().initSession(user);
-            // ============================================================
+            // Ré-afficher le PasswordField
+            passwordField.setVisible(true);
+            passwordField.setManaged(true);
 
-            // ── Redirection selon le rôle ─────────────────────────────
-            Stage currentStage = (Stage) emailField.getScene().getWindow();
+            if (btnOeilLogin != null) btnOeilLogin.setText("👁");
+            passwordVisible = false;
+        }
+    }
 
-            switch (user.getRole()) {
+    /** Retourne le mot de passe courant depuis le champ actif. */
+    private String getCurrentPassword() {
+        if (passwordVisible && visiblePasswordField != null) {
+            return visiblePasswordField.getText();
+        }
+        return passwordField.getText();
+    }
 
-                case ADMIN -> {
-                    FXMLLoader loader = new FXMLLoader(
-                            getClass().getResource("/admin_dashboard.fxml"));
-                    Stage stage = new Stage();
-                    stage.setTitle("UniMind — Administration");
-                    stage.setScene(new Scene(loader.load(), 1200, 700));
-                    AdminDashboardController ctrl = loader.getController();
-                    ctrl.setUser(user);
-                    stage.show();
-                }
+    // ══════════════════════════════════════════════════════════════════
+    //  CAPTCHA Google reCAPTCHA v2
+    // ══════════════════════════════════════════════════════════════════
 
-                case ETUDIANT -> {
-                    FXMLLoader loader = new FXMLLoader(
-                            getClass().getResource("/dashboard_etudiant.fxml"));
-                    Stage stage = new Stage();
-                    stage.setTitle("UniMind — Espace Étudiant");
-                    stage.setScene(new Scene(loader.load(), 1000, 700));
-                    DashboardEtudiantController ctrl = loader.getController();
-                    ctrl.setUser(user);
-                    stage.show();
-                }
+    private void loadGoogleRecaptcha() {
+        if (captchaContainer == null) return;
 
-                case PSYCHOLOGUE -> {
-                    FXMLLoader loader = new FXMLLoader(
-                            getClass().getResource("/dashboard_psychologue.fxml"));
-                    Stage stage = new Stage();
-                    stage.setTitle("UniMind — Espace Psychologue");
-                    stage.setScene(new Scene(loader.load(), 1000, 700));
-                    DashboardPsychologueController ctrl = loader.getController();
-                    ctrl.setUser(user);
-                    stage.show();
-                }
+        WebView webView = new WebView();
+        String html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+                <style>
+                  body { margin:0; padding:0; display:flex; justify-content:center;
+                         align-items:center; min-height:100px; background:#F3F0FF; }
+                </style>
+            </head>
+            <body>
+                <div class="g-recaptcha"
+                     data-sitekey="%s"
+                     data-callback="onCaptchaSuccess">
+                </div>
+                <script>
+                    function onCaptchaSuccess(response) {
+                        window.location.href = 'callback://?captcha=' + encodeURIComponent(response);
+                    }
+                </script>
+            </body>
+            </html>
+            """.formatted(Config.RECAPTCHA_SITE_KEY);
 
-                case RESPONSABLE_ETUDIANT -> {
-                    FXMLLoader loader = new FXMLLoader(
-                            getClass().getResource("/dashboard_responsable.fxml"));
-                    Stage stage = new Stage();
-                    stage.setTitle("UniMind — Espace Responsable");
-                    stage.setScene(new Scene(loader.load(), 1000, 700));
-                    DashboardResponsableController ctrl = loader.getController();
-                    ctrl.setUser(user);
-                    stage.show();
-                }
+        webView.getEngine().loadContent(html);
+        webView.setPrefHeight(100);
+        webView.setPrefWidth(320);
+
+        webView.getEngine().locationProperty().addListener((obs, old, url) -> {
+            if (url != null && url.startsWith("callback://")) {
+                try {
+                    String query = url.split("\\?")[1];
+                    for (String param : query.split("&")) {
+                        if (param.startsWith("captcha=")) {
+                            currentCaptchaResponse = java.net.URLDecoder.decode(
+                                    param.substring(8), "UTF-8");
+                            System.out.println("✓ CAPTCHA validé");
+                        }
+                    }
+                } catch (Exception ignored) {}
             }
+        });
 
-            currentStage.close();
+        captchaContainer.getChildren().add(webView);
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  CONNEXION PRINCIPALE
+    // ══════════════════════════════════════════════════════════════════
+
+    @FXML
+    public void connecter() {
+        String email    = emailField.getText().trim();
+        String password = getCurrentPassword();      // ← utilise le champ actif
+
+//        // Vérification CAPTCHA
+//        if (currentCaptchaResponse.isEmpty() || !captchaService.verifyCaptcha(currentCaptchaResponse)) {
+//            setMessage("⚠ Veuillez valider le captcha.", true);
+//            return;
+//        }
+
+        if (!ValidationUtils.isNonVide(email) || !ValidationUtils.isNonVide(password)) {
+            setMessage("⚠ Email et mot de passe requis.", true);
+            return;
+        }
+
+        if (!ValidationUtils.isEmailValide(email)) {
+            setMessage(ValidationUtils.messageEmail(), true);
+            return;
+        }
+
+        loginButton.setDisable(true);
+        loginButton.setText("Connexion...");
+
+        Task<User> loginTask = new Task<>() {
+            @Override
+            protected User call() {
+                return authenticate(email, password);
+            }
+        };
+
+        loginTask.setOnSucceeded(event -> {
+            User user = loginTask.getValue();
+            if (user != null) {
+                if (!user.isActive() || !"actif".equalsIgnoreCase(user.getStatut())) {
+                    setMessage("⚠ Votre compte n'est pas encore activé par l'administrateur.", true);
+                } else if (!user.isVerified()) {
+                    setMessage("⚠ Vérifiez votre email (lien d'activation envoyé).", true);
+                } else {
+                    sauvegarderOuEffacerIdentifiants(email, password);
+                    setMessage("✓ Connexion réussie !", false);
+                    try {
+                        redirigerSelonRole(user);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else {
+                setMessage("✗ Email ou mot de passe incorrect.", true);
+            }
+            loginButton.setDisable(false);
+            loginButton.setText("Se connecter  →");
+        });
+
+        loginTask.setOnFailed(event -> {
+            setMessage("✗ Erreur : " + loginTask.getException().getMessage(), true);
+            loginButton.setDisable(false);
+            loginButton.setText("Se connecter  →");
+        });
+
+        new Thread(loginTask).start();
+    }
+
+    private User authenticate(String email, String password) {
+        try (Connection conn = MyDataBase_Unimind.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM user WHERE email = ?")) {
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next() && PasswordUtils.verifier(password, rs.getString("password"))) {
+                return mapUser(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private User mapUser(ResultSet rs) throws Exception {
+        User user = new User();
+        user.setUserId(rs.getInt("user_id"));
+        user.setNom(rs.getString("nom"));
+        user.setPrenom(rs.getString("prenom"));
+        user.setEmail(rs.getString("email"));
+        user.setCin(rs.getString("cin"));
+        user.setStatut(rs.getString("statut"));
+        user.setActive(rs.getBoolean("is_active"));
+        user.setVerified(rs.getBoolean("is_verified"));
+        user.setCreatedAt(rs.getTimestamp("created_at"));
+
+        // Normaliser "Responsable Etudiant" → "RESPONSABLE_ETUDIANT"
+        String role = rs.getString("role")
+                .toUpperCase()
+                .trim()
+                .replace(" ", "_");
+
+        switch (role) {
+            case "ADMIN"                  -> user.setRole(org.example.enums.Role.ADMIN);
+            case "ETUDIANT"               -> user.setRole(org.example.enums.Role.ETUDIANT);
+            case "PSYCHOLOGUE"            -> user.setRole(org.example.enums.Role.PSYCHOLOGUE);
+            default                       -> user.setRole(org.example.enums.Role.RESPONSABLE_ETUDIANT);
+        }
+        return user;
+    }
+
+    private void redirigerSelonRole(User user) throws Exception {
+        String fxml = switch (user.getRole()) {
+            case ADMIN               -> "/admin_dashboard.fxml";
+            case ETUDIANT            -> "/dashboard_etudiant.fxml";
+            case PSYCHOLOGUE         -> "/dashboard_psychologue.fxml";
+            default                  -> "/dashboard_responsable.fxml";
+        };
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+        Scene scene = new Scene(loader.load());
+        scene.getStylesheets().add(getClass().getResource("/css/etudiant.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/css/admin.css").toExternalForm());
+
+        Stage stage = (Stage) loginButton.getScene().getWindow();
+        stage.setScene(scene);
+        stage.setTitle("UniMind - " + user.getRole());
+        stage.setMaximized(true);
+
+        Object controller = loader.getController();
+        if (controller instanceof org.example.controllers.admin.AdminDashboardController) {
+            ((org.example.controllers.admin.AdminDashboardController) controller).setUser(user);
+        } else if (controller instanceof BaseDashboardController) {
+            ((BaseDashboardController) controller).setUser(user);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  MOT DE PASSE OUBLIÉ
+    // ══════════════════════════════════════════════════════════════════
+
+    @FXML
+    public void allerReinitialisationMdp() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/forgot_password.fxml"));
+            Stage stage = (Stage) loginButton.getScene().getWindow();
+            stage.setScene(new Scene(loader.load(), 500, 450));
+            stage.setTitle("UniMind - Mot de passe oublié");
+            stage.setResizable(false);
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir la page de réinitialisation.");
+        }
+    }
+
+    @FXML
+    public void motDePasseOublie() {
+        String email = emailField.getText().trim();
+        if (!ValidationUtils.isEmailValide(email)) {
+            showAlert(Alert.AlertType.WARNING, "Email requis",
+                    "Entrez votre email pour recevoir le lien de réinitialisation.");
+            return;
+        }
+
+        Task<Void> resetTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                try (Connection conn = MyDataBase_Unimind.getInstance().getConnection();
+                     PreparedStatement ps = conn.prepareStatement(
+                             "SELECT user_id, nom, prenom FROM user WHERE email = ?")) {
+                    ps.setString(1, email);
+                    ResultSet rs = ps.executeQuery();
+                    if (rs.next()) {
+                        int    userId = rs.getInt("user_id");
+                        String nom    = rs.getString("nom");
+                        String prenom = rs.getString("prenom");
+                        String token  = emailService.generateToken();
+                        emailService.storeResetToken(userId, token, conn);
+                        emailService.sendResetPasswordEmail(email, prenom + " " + nom, token);
+                    }
+                }
+                return null;
+            }
+        };
+
+        resetTask.setOnSucceeded(e ->
+                showAlert(Alert.AlertType.INFORMATION, "Email envoyé",
+                        "Un lien de réinitialisation a été envoyé à votre adresse email."));
+        resetTask.setOnFailed(e ->
+                showAlert(Alert.AlertType.ERROR, "Erreur",
+                        resetTask.getException().getMessage()));
+        new Thread(resetTask).start();
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  CONNEXION GOOGLE
+    // ══════════════════════════════════════════════════════════════════
+
+    @FXML
+    public void loginWithGoogle() {
+        try {
+            String loginUrl = googleAuthService.getLoginUrl();
+
+            Stage authStage = new Stage();
+            authStage.initModality(Modality.APPLICATION_MODAL);
+            authStage.setTitle("Connexion Google");
+            authStage.setWidth(500);
+            authStage.setHeight(600);
+
+            WebView webView = new WebView();
+            webView.getEngine().load(loginUrl);
+
+            webView.getEngine().locationProperty().addListener((obs, oldUrl, newUrl) -> {
+                if (newUrl != null && newUrl.startsWith("http://localhost:8080/callback")) {
+                    String code = extractCodeFromUrl(newUrl);
+                    if (code != null) {
+                        authStage.close();
+                        setMessage("Connexion Google en cours...", false);
+
+                        Task<GoogleAuthService.GoogleUserInfo> task = new Task<>() {
+                            @Override
+                            protected GoogleAuthService.GoogleUserInfo call() {
+                                return googleAuthService.exchangeCodeForUserInfo(code);
+                            }
+                        };
+
+                        task.setOnSucceeded(ev -> {
+                            GoogleAuthService.GoogleUserInfo info = task.getValue();
+                            if (info != null && info.email != null && !info.email.isEmpty()) {
+                                handleGoogleLogin(info);
+                            } else {
+                                setMessage("✗ Échec récupération infos Google.", true);
+                            }
+                        });
+                        task.setOnFailed(ev ->
+                                setMessage("✗ Erreur Google : " + task.getException().getMessage(), true));
+
+                        new Thread(task).start();
+                    }
+                }
+            });
+
+            authStage.setScene(new Scene(webView, 500, 600));
+            authStage.show();
 
         } catch (Exception e) {
-            showGlobalError("Erreur de connexion : " + e.getMessage());
             e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Erreur",
+                    "Impossible de lancer la connexion Google : " + e.getMessage());
+        }
+    }
+
+    private String extractCodeFromUrl(String url) {
+        try {
+            String[] parts = url.split("\\?");
+            if (parts.length > 1) {
+                for (String param : parts[1].split("&")) {
+                    if (param.startsWith("code=")) return param.substring(5);
+                }
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    private void handleGoogleLogin(GoogleAuthService.GoogleUserInfo userInfo) {
+        Task<User> task = new Task<>() {
+            @Override
+            protected User call() {
+                return findUserByEmail(userInfo.email);
+            }
+        };
+
+        task.setOnSucceeded(ev -> {
+            User existing = task.getValue();
+            if (existing != null) {
+                try {
+                    redirigerSelonRole(existing);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de charger l'interface.");
+                }
+            } else {
+                showGoogleSignupDialog(userInfo);
+            }
+        });
+        task.setOnFailed(ev ->
+                showAlert(Alert.AlertType.ERROR, "Erreur", task.getException().getMessage()));
+
+        new Thread(task).start();
+    }
+
+    private User findUserByEmail(String email) {
+        try (Connection conn = MyDataBase_Unimind.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM user WHERE email = ?")) {
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return mapUser(rs);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private void showGoogleSignupDialog(GoogleAuthService.GoogleUserInfo userInfo) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Nouveau compte");
+            alert.setHeaderText("Bienvenue " +
+                    (userInfo.givenName != null ? userInfo.givenName : "") + " !");
+            alert.setContentText("Aucun compte associé à :\n" + userInfo.email +
+                    "\n\nSouhaitez-vous créer un nouveau compte UniMind ?");
+
+            ButtonType btnCreer   = new ButtonType("Créer mon compte", ButtonBar.ButtonData.YES);
+            ButtonType btnAnnuler = new ButtonType("Annuler",          ButtonBar.ButtonData.CANCEL_CLOSE);
+            alert.getButtonTypes().setAll(btnCreer, btnAnnuler);
+
+            alert.showAndWait().ifPresent(response -> {
+                if (response == btnCreer) {
+                    try {
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/inscription.fxml"));
+                        Stage stage = new Stage();
+                        stage.setScene(new Scene(loader.load()));
+
+                        InscriptionController ctrl = loader.getController();
+                        if (ctrl != null) {
+                            ctrl.prefillWithGoogleInfo(
+                                    userInfo.email, userInfo.givenName, userInfo.familyName);
+                        }
+                        stage.setTitle("Compléter mon inscription");
+                        stage.show();
+                        ((Stage) loginButton.getScene().getWindow()).close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir l'inscription.");
+                    }
+                }
+            });
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  RECONNAISSANCE FACIALE (Webcam sarxos + Flask DeepFace)
+    // ══════════════════════════════════════════════════════════════════
+
+    @FXML
+    public void loginWithFacial() {
+        String email = emailField.getText().trim();
+        if (!ValidationUtils.isEmailValide(email)) {
+            showAlert(Alert.AlertType.WARNING, "Email requis",
+                    "Entrez votre email avant la reconnaissance faciale.");
+            return;
+        }
+
+        facialStage = new Stage();
+        facialStage.setTitle("Reconnaissance Faciale");
+        facialStage.initModality(Modality.APPLICATION_MODAL);
+
+        JPanel panel = new JPanel(new BorderLayout());
+
+        webcam = Webcam.getDefault();
+        if (webcam != null) {
+            webcam.setViewSize(WebcamResolution.VGA.getSize());
+            WebcamPanel webcamPanel = new WebcamPanel(webcam);
+            webcamPanel.setImageSizeDisplayed(true);
+            panel.add(webcamPanel, BorderLayout.CENTER);
+        } else {
+            JLabel errorLabel = new JLabel("Aucune webcam détectée", JLabel.CENTER);
+            panel.add(errorLabel, BorderLayout.CENTER);
+        }
+
+        JButton captureBtn = new JButton("📸  Capturer et Vérifier");
+        captureBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        captureBtn.setBackground(new Color(5, 150, 105));
+        captureBtn.setForeground(Color.WHITE);
+        captureBtn.setFocusPainted(false);
+        captureBtn.addActionListener(e -> captureAndVerify(email));
+        panel.add(captureBtn, BorderLayout.SOUTH);
+
+        webcamFrame = new JFrame("UniMind — Reconnaissance Faciale");
+        webcamFrame.add(panel);
+        webcamFrame.pack();
+        webcamFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        webcamFrame.setLocationRelativeTo(null);
+        webcamFrame.setVisible(true);
+
+        facialStage.setOnHidden(ev -> {
+            if (webcamFrame != null) webcamFrame.dispose();
+            if (webcam != null && webcam.isOpen()) webcam.close();
+        });
+
+        // Scène JavaFX vide (l'UI réelle est dans webcamFrame Swing)
+        facialStage.setScene(new Scene(new StackPane(), 1, 1));
+        facialStage.show();
+    }
+
+    private void captureAndVerify(String email) {
+        if (webcam == null || !webcam.isOpen()) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Webcam non disponible.");
+            return;
+        }
+
+        BufferedImage faceImage = webcam.getImage();
+        webcam.close();
+
+        Task<Boolean> verifyTask = new Task<>() {
+            @Override
+            protected Boolean call() throws Exception {
+                try (Connection conn = MyDataBase_Unimind.getInstance().getConnection();
+                     PreparedStatement ps = conn.prepareStatement(
+                             "SELECT user_id FROM user WHERE email = ?")) {
+                    ps.setString(1, email);
+                    ResultSet rs = ps.executeQuery();
+                    if (rs.next()) {
+                        return facialService.verifyFace(faceImage, rs.getInt("user_id"));
+                    }
+                }
+                return false;
+            }
+        };
+
+        verifyTask.setOnSucceeded(e -> {
+            if (Boolean.TRUE.equals(verifyTask.getValue())) {
+                if (facialStage != null) facialStage.close();
+                if (webcamFrame != null) webcamFrame.dispose();
+                connectWithEmail(email);
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Échec", "Visage non reconnu. Veuillez réessayer.");
+            }
+        });
+        verifyTask.setOnFailed(e ->
+                showAlert(Alert.AlertType.ERROR, "Erreur", verifyTask.getException().getMessage()));
+
+        new Thread(verifyTask).start();
+    }
+
+    private void connectWithEmail(String email) {
+        try (Connection conn = MyDataBase_Unimind.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM user WHERE email = ?")) {
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                User user = mapUser(rs);
+                Platform.runLater(() -> {
+                    try { redirigerSelonRole(user); }
+                    catch (Exception ex) { ex.printStackTrace(); }
+                });
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Erreur", e.getMessage());
         }
     }
 
@@ -271,22 +704,62 @@ public class LoginController {
     public void allerInscription() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/inscription.fxml"));
-            Stage stage = new Stage();
-            stage.setTitle("Inscription — UniMind");
-            stage.setScene(new Scene(loader.load(), 540, 600));
-            stage.show();
-            ((Stage) emailField.getScene().getWindow()).close();
+            Stage stage = (Stage) loginButton.getScene().getWindow();
+            stage.setScene(new Scene(loader.load(), 900, 700));
+            stage.setTitle("UniMind - Inscription");
         } catch (Exception e) {
-            showGlobalError("Erreur lors du chargement : " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    @FXML
-    public void allerReinitialisationMdp() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Mot de passe oublié");
-        alert.setHeaderText("Réinitialisation du mot de passe");
-        alert.setContentText("Un email de réinitialisation sera envoyé à l'adresse indiquée.");
-        alert.showAndWait();
+    // ══════════════════════════════════════════════════════════════════
+    //  UTILITAIRES
+    // ══════════════════════════════════════════════════════════════════
+
+    private void setMessage(String msg, boolean isError) {
+        if (messageLabel == null) return;
+        Platform.runLater(() -> {
+            messageLabel.setText(msg);
+            messageLabel.setStyle(isError
+                    ? "-fx-text-fill:#DC2626;-fx-font-size:12px;-fx-font-family:'Segoe UI';" +
+                    "-fx-background-color:#FEF2F2;-fx-background-radius:8;" +
+                    "-fx-padding:10 14;-fx-border-color:#FECACA;" +
+                    "-fx-border-radius:8;-fx-border-width:1;"
+                    : "-fx-text-fill:#059669;-fx-font-size:12px;-fx-font-family:'Segoe UI';" +
+                    "-fx-background-color:#ECFDF5;-fx-background-radius:8;" +
+                    "-fx-padding:10 14;-fx-border-color:#6EE7B7;" +
+                    "-fx-border-radius:8;-fx-border-width:1;"
+            );
+            messageLabel.setVisible(true);
+            messageLabel.setManaged(true);
+        });
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(type);
+            alert.setTitle(title);
+            alert.setHeaderText(null);
+            alert.setContentText(content);
+            alert.showAndWait();
+        });
     }
 }
+
+/*
+ * ══════════════════════════════════════════════════════════════════════
+ *  CORRECTION SLF4J — Ajouter dans pom.xml pour supprimer l'avertissement
+ * ══════════════════════════════════════════════════════════════════════
+ *
+ *  <dependency>
+ *      <groupId>org.slf4j</groupId>
+ *      <artifactId>slf4j-nop</artifactId>
+ *      <version>2.0.9</version>
+ *  </dependency>
+ *
+ * ══════════════════════════════════════════════════════════════════════
+ *  CORRECTION FacialRecognitionService — Remplacer les imports Apache HC5
+ *  par java.net.http (déjà dans le JDK, pas besoin de dépendance externe) :
+ *  Voir FacialRecognitionService_fixed.java
+ * ══════════════════════════════════════════════════════════════════════
+ */
