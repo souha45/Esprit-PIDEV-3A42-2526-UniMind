@@ -667,9 +667,9 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
 
     private void configurerColonneActions() {
         colActions.setCellFactory(param -> new TableCell<LigneSuiviGroupée, Void>() {
-            private final Button btnView = new Button("Afficher");
-            private final Button btnEdit = new Button("Modifier");
-            private final Button btnDelete = new Button("Supprimer");
+            private final Button btnView = new Button("👁️");
+            private final Button btnEdit = new Button("✏️");
+            private final Button btnDelete = new Button("🗑️");
             private final HBox container = new HBox(8, btnView, btnEdit, btnDelete);
 
             {

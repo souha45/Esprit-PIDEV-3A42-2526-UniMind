@@ -20,6 +20,7 @@ import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
 import org.example.entities.User;
 import org.example.services.EtudiantTraitementService;
+import org.example.services.OrdonnancePDFService;
 import org.example.services.SuiviTraitementService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
@@ -578,6 +579,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
         TableColumn<LigneGroupée, String> colDateDebut = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(7);
         TableColumn<LigneGroupée, String> colObjectif = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(8);
         TableColumn<LigneGroupée, String> colSuivis = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(9);
+        TableColumn<LigneGroupée, String> colActions = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(10);
 
         colEtudiant.setPrefWidth(180);
         colTitre.setPrefWidth(180);
@@ -589,6 +591,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
         colDateDebut.setPrefWidth(100);
         colObjectif.setPrefWidth(200);
         colSuivis.setPrefWidth(100);
+        colActions.setPrefWidth(320); // Espace suffisant pour 4 boutons
 
         // ===== COLONNE ÉTUDIANT (avec VBox stylisé) =====
         colEtudiant.setCellValueFactory(param -> {
@@ -959,9 +962,9 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
         SessionManager session = SessionManager.getInstance();
 
         colActions.setCellFactory(param -> new TableCell<LigneGroupée, Void>() {
-            private final Button btnView = new Button("Afficher");
-            private final Button btnEdit = new Button("Modifier");
-            private final Button btnDelete = new Button("Supprimer");
+            private final Button btnView = new Button("👁️");
+            private final Button btnEdit = new Button("✏️");
+            private final Button btnDelete = new Button("🗑️");
             private final Button btnTranslate = new Button("🌐");
             private final HBox container = new HBox(6, btnView, btnEdit, btnDelete, btnTranslate);
 
@@ -974,7 +977,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                 btnView.setPrefWidth(70);
                 btnEdit.setPrefWidth(70);
                 btnDelete.setPrefWidth(70);
-                btnTranslate.setPrefWidth(35);
+                btnTranslate.setPrefWidth(70);
 
                 btnView.setOnAction(event -> {
                     LigneGroupée ligne = getTableView().getItems().get(getIndex());
@@ -1112,6 +1115,58 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                     ));
                 }
             }
+        }
+    }
+
+    @FXML
+    private void handleExporterPDF() {
+        LigneGroupée selectedLigne = tableViewTraitements.getSelectionModel().getSelectedItem();
+
+        if (selectedLigne == null || selectedLigne.getTraitement() == null) {
+            afficherToast("⚠️ Veuillez sélectionner un traitement à exporter", false);
+            return;
+        }
+
+        try {
+            Traitement traitement = selectedLigne.getTraitement();
+
+            // Vérifier que l'utilisateur connecté est un psychologue
+            if (utilisateur == null) {
+                afficherToast("⚠️ Utilisateur non connecté", false);
+                return;
+            }
+
+            // Créer le service PDF et générer l'ordonnance
+            OrdonnancePDFService pdfService = new OrdonnancePDFService();
+            byte[] pdfBytes = pdfService.genererOrdonnancePDF(traitement, utilisateur);
+
+            // Choix du fichier de sauvegarde
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Enregistrer l'ordonnance PDF");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Fichier PDF", "*.pdf")
+            );
+
+            String nomFichier = pdfService.genererNomFichier(traitement);
+            fileChooser.setInitialFileName(nomFichier);
+
+            File file = fileChooser.showSaveDialog(tableViewTraitements.getScene().getWindow());
+
+            if (file != null) {
+                // Sauvegarder le PDF
+                try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file)) {
+                    fos.write(pdfBytes);
+                }
+
+                afficherToast("✓ Ordonnance exportée: " + file.getName(), true);
+                if (lblStatus != null) {
+                    lblStatus.setText("✓ Ordonnance exportée: " + file.getName());
+                }
+            }
+
+        } catch (Exception e) {
+            afficherToast("✗ Erreur d'export PDF: " + e.getMessage(), false);
+            e.printStackTrace();
         }
     }
 

@@ -589,21 +589,20 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         notesLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #374151;");
         notesLabel.setWrapText(true);
 
-        // Boutons Modifier/Supprimer
+        // Boutons d'action pour le suivi (uniquement pour les suivis de l'étudiant)
         HBox actionsBox = new HBox();
         actionsBox.setSpacing(10);
         actionsBox.setAlignment(Pos.CENTER_RIGHT);
 
-        Button btnModifier = new Button("Modifier");
-        Button btnSupprimer = new Button("Supprimer");
-
-        btnModifier.getStyleClass().addAll("table-action-button", "table-action-button-edit");
-        btnSupprimer.getStyleClass().addAll("table-action-button", "table-action-button-delete");
-
-        btnModifier.setPrefWidth(70);
-        btnSupprimer.setPrefWidth(70);
-
         if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
+            Button btnModifier = new Button("✏️");
+            Button btnSupprimer = new Button("🗑️");
+
+            btnModifier.getStyleClass().addAll("table-action-button", "table-action-button-edit");
+            btnSupprimer.getStyleClass().addAll("table-action-button", "table-action-button-delete");
+            btnModifier.setPrefWidth(70);
+            btnSupprimer.setPrefWidth(70);
+
             btnModifier.setOnAction(e -> ouvrirModificationSuivi(suivi));
             btnSupprimer.setOnAction(e -> supprimerSuivi(suivi));
             actionsBox.getChildren().addAll(btnModifier, btnSupprimer);

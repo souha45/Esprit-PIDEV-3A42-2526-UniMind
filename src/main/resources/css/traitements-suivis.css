@@ -331,41 +331,43 @@
 
 .table-action-button {
     -fx-background-color: transparent;
-    -fx-font-size: 12px;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
     -fx-padding: 5 10;
     -fx-cursor: hand;
     -fx-background-radius: 4;
     -fx-border-radius: 4;
+    -fx-border-width: 1;
 }
 
 .table-action-button-view {
     -fx-text-fill: #4f46e5;
     -fx-border-color: #c4b5fd;
-    -fx-border-width: 1;
 }
 
 .table-action-button-view:hover {
     -fx-background-color: #ede9fe;
+    -fx-text-fill: #4338ca;
 }
 
 .table-action-button-edit {
     -fx-text-fill: #d97706;
     -fx-border-color: #fcd34d;
-    -fx-border-width: 1;
 }
 
 .table-action-button-edit:hover {
     -fx-background-color: #fef3c7;
+    -fx-text-fill: #92400e;
 }
 
 .table-action-button-delete {
     -fx-text-fill: #dc2626;
     -fx-border-color: #fecaca;
-    -fx-border-width: 1;
 }
 
 .table-action-button-delete:hover {
     -fx-background-color: #fee2e2;
+    -fx-text-fill: #b91c1c;
 }
 
 /* =============================================
