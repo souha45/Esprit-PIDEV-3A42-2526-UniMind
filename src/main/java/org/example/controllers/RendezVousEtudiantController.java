@@ -56,6 +56,7 @@ public class RendezVousEtudiantController
     @FXML private Button btnFiltreTermine;
     @FXML private Button btnFiltreAnnule;
     @FXML private Button btnFiltreAbsent;
+    @FXML private Button btnAssistant;
 
     // ── Table ───────────────────────────────────────────────────────
     @FXML private TableView<RendezVousDetail>           tableViewRendezVous;
@@ -106,6 +107,14 @@ public class RendezVousEtudiantController
                 btnPrendreRdv.setStyle(btnPrendreRdv.getStyle().replace("#6366f1","#4f46e5")));
         btnPrendreRdv.setOnMouseExited(e ->
                 btnPrendreRdv.setStyle(btnPrendreRdv.getStyle().replace("#4f46e5","#6366f1")));
+
+        btnPrendreRdv.setOnAction(e -> prendreRendezVous());
+// ✅ AJOUTER
+        btnAssistant.setOnAction(e -> ouvrirAssistant());
+        btnAssistant.setOnMouseEntered(e ->
+                btnAssistant.setStyle(btnAssistant.getStyle().replace("#8b5cf6","#7c3aed")));
+        btnAssistant.setOnMouseExited(e ->
+                btnAssistant.setStyle(btnAssistant.getStyle().replace("#7c3aed","#8b5cf6")));
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -642,5 +651,31 @@ public class RendezVousEtudiantController
             case "absent"   -> new String[]{"#ffedd5","#c2410c","⚠ Absent"  };
             default         -> new String[]{"#f3f4f6","#6b7280", statut      };
         };
+    }
+
+    // ════════════════════════════════════════════════════════════════
+//  ASSISTANT VIRTUEL
+// ════════════════════════════════════════════════════════════════
+    private void ouvrirAssistant() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/AssistantModal.fxml"));
+            Stage assistantStage = new Stage();
+            Scene scene = new Scene(loader.load(), 400, 550);
+
+            assistantStage.initModality(Modality.WINDOW_MODAL);
+            assistantStage.initOwner(btnAssistant.getScene().getWindow());
+            assistantStage.setTitle("Assistant Unimind");
+            assistantStage.setScene(scene);
+            assistantStage.setResizable(false);
+
+            AssistantModalController controller = loader.getController();
+            controller.setModalStage(assistantStage);
+
+            assistantStage.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showToast("❌ Impossible d'ouvrir l'assistant", ToastType.ERROR);
+        }
     }
 }

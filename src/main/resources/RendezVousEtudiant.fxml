@@ -123,12 +123,20 @@
                                                  -fx-border-width:1;-fx-font-family:'Segoe UI';
                                                  -fx-font-size:12px;-fx-pref-height:38px;-fx-cursor:hand;"/>
                                 <Region HBox.hgrow="ALWAYS"/>
+                                <!-- ✅ AJOUTER LE BOUTON ASSISTANT -->
+                                <Button fx:id="btnAssistant" text="💬  Assistant"
+                                        style="-fx-background-color:#8b5cf6;-fx-text-fill:#ffffff;
+                   -fx-font-family:'Segoe UI';-fx-font-size:13px;
+                   -fx-font-weight:bold;-fx-padding:10 20;
+                   -fx-background-radius:10;-fx-cursor:hand;
+                   -fx-effect:dropshadow(gaussian,rgba(139,92,246,0.35),8,0,0,2);"/>
+
                                 <Button fx:id="btnPrendreRdv" text="＋  Prendre rendez-vous"
                                         style="-fx-background-color:#6366f1;-fx-text-fill:#ffffff;
-                                               -fx-font-family:'Segoe UI';-fx-font-size:13px;
-                                               -fx-font-weight:bold;-fx-padding:10 20;
-                                               -fx-background-radius:10;-fx-cursor:hand;
-                                               -fx-effect:dropshadow(gaussian,rgba(99,102,241,0.35),8,0,0,2);"/>
+                   -fx-font-family:'Segoe UI';-fx-font-size:13px;
+                   -fx-font-weight:bold;-fx-padding:10 20;
+                   -fx-background-radius:10;-fx-cursor:hand;
+                   -fx-effect:dropshadow(gaussian,rgba(99,102,241,0.35),8,0,0,2);"/>
                             </HBox>
 
                             <!-- Filtres statut -->

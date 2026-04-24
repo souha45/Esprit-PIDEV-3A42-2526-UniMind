@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="0"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.controllers.AssistantModalController"
+      prefWidth="400" prefHeight="560"
+      style="-fx-background-color: #f5f3ff;">
+
+    <!-- ── HEADER ── -->
+    <HBox alignment="CENTER_LEFT" spacing="10"
+          style="-fx-background-color: linear-gradient(to bottom right, #4c1d95, #7c3aed);
+                 -fx-padding: 16 18 14 18; -fx-background-radius: 0;">
+        <Label text="🤖" style="-fx-font-size: 24px;" />
+        <VBox spacing="2" HBox.hgrow="ALWAYS">
+            <Label text="Assistant Unimind"
+                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                          -fx-font-weight: bold; -fx-text-fill: #ffffff;" />
+            <Label text="Votre espace d'écoute et de bien-être"
+                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px;
+                          -fx-text-fill: rgba(255,255,255,0.70);" />
+        </VBox>
+        <!-- Statut en ligne -->
+        <HBox alignment="CENTER_LEFT" spacing="5">
+            <Label fx:id="lblStatutConnexion" text="● En ligne"
+                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px;
+                          -fx-text-fill: #6ee7b7;" />
+        </HBox>
+        <Button fx:id="btnFermer" text="✕"
+                style="-fx-background-color: rgba(255,255,255,0.15); -fx-text-fill: #ffffff;
+                       -fx-font-size: 13px; -fx-min-width: 26; -fx-min-height: 26;
+                       -fx-background-radius: 50; -fx-cursor: hand; -fx-border-width: 0;" />
+    </HBox>
+
+    <!-- ── ZONE CHAT ── -->
+    <ScrollPane fx:id="scrollPaneChat"
+                fitToWidth="true"
+                VBox.vgrow="ALWAYS"
+                style="-fx-background-color: #f5f3ff; -fx-background: #f5f3ff;
+                       -fx-border-width: 0; -fx-padding: 0;">
+        <VBox fx:id="chatContainer" spacing="10"
+              style="-fx-padding: 16 14 10 14; -fx-background-color: #f5f3ff;" />
+    </ScrollPane>
+
+    <!-- ── INDICATEUR FRAPPE ── -->
+    <HBox fx:id="boxTyping" alignment="CENTER_LEFT" spacing="6"
+          visible="false" managed="false"
+          style="-fx-padding: 4 20 2 20;">
+        <Label text="🤖" style="-fx-font-size: 13px;" />
+        <Label text="L'assistant réfléchit…"
+               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
+                      -fx-text-fill: #a78bfa; -fx-font-style: italic;" />
+    </HBox>
+
+    <!-- ── SÉPARATEUR ── -->
+    <Region minHeight="1" maxHeight="1"
+            style="-fx-background-color: #ede9fe;" />
+
+    <!-- ── SUGGESTIONS RAPIDES ── -->
+    <HBox fx:id="boxSuggestions" spacing="6"
+          style="-fx-padding: 8 14 6 14; -fx-background-color: #faf8ff;"
+          alignment="CENTER_LEFT">
+        <Button fx:id="btnSugg1" text="😔 Je me sens stressé"
+                style="-fx-background-color: #ede9fe; -fx-text-fill: #6366f1;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 10px;
+                       -fx-padding: 5 10; -fx-background-radius: 20; -fx-cursor: hand;" />
+        <Button fx:id="btnSugg2" text="😴 Troubles du sommeil"
+                style="-fx-background-color: #ede9fe; -fx-text-fill: #6366f1;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 10px;
+                       -fx-padding: 5 10; -fx-background-radius: 20; -fx-cursor: hand;" />
+        <Button fx:id="btnSugg3" text="💭 Conseils bien-être"
+                style="-fx-background-color: #ede9fe; -fx-text-fill: #6366f1;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 10px;
+                       -fx-padding: 5 10; -fx-background-radius: 20; -fx-cursor: hand;" />
+    </HBox>
+
+    <!-- ── ZONE DE SAISIE ── -->
+    <HBox spacing="8"
+          style="-fx-padding: 10 12 10 12; -fx-background-color: #ffffff;
+                 -fx-border-color: #ede9fe; -fx-border-width: 1 0 0 0;">
+        <TextField fx:id="txtMessageChat"
+                   promptText="Écrivez votre message…"
+                   HBox.hgrow="ALWAYS"
+                   style="-fx-background-color: #f5f3ff; -fx-border-color: #ddd6fe;
+                          -fx-border-radius: 20; -fx-background-radius: 20;
+                          -fx-padding: 9 14; -fx-font-family: 'Segoe UI';
+                          -fx-font-size: 13px; -fx-text-fill: #374151;
+                          -fx-prompt-text-fill: #c4b5fd;" />
+        <Button fx:id="btnEnvoyerChat" text="➤"
+                style="-fx-background-color: #7c3aed; -fx-text-fill: #ffffff;
+                       -fx-font-size: 15px; -fx-min-width: 38; -fx-min-height: 38;
+                       -fx-background-radius: 50; -fx-cursor: hand;
+                       -fx-effect: dropshadow(gaussian, rgba(124,58,237,0.30), 6, 0, 0, 2);" />
+    </HBox>
+
+    <!-- ── PIED DE PAGE ── -->
+    <HBox alignment="CENTER_RIGHT"
+          style="-fx-padding: 6 14 10 14; -fx-background-color: #ffffff;">
+        <Button fx:id="btnReinitialiser" text="🗑  Effacer la conversation"
+                style="-fx-background-color: transparent; -fx-text-fill: #c4b5fd;
+                       -fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
+                       -fx-cursor: hand; -fx-border-color: #ede9fe;
+                       -fx-border-width: 1; -fx-padding: 4 10; -fx-background-radius: 15;" />
+    </HBox>
+
+</VBox>
