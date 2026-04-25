@@ -111,10 +111,8 @@
                 </HBox>
 
                 <!-- CAPTCHA -->
-                <StackPane fx:id="captchaContainer" prefHeight="80"/>
-
-                <!-- Message d'erreur global -->
-                <Label fx:id="messageLabel"
+                <!-- CAPTCHA -->
+                <StackPane fx:id="captchaContainer" prefHeight="120" minHeight="120" maxHeight="120"/>                <Label fx:id="messageLabel"
                        text=""
                        wrapText="true"
                        style="-fx-text-fill: #DC2626; -fx-font-size: 12px;

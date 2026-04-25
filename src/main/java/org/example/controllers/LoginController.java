@@ -16,10 +16,7 @@ import javafx.stage.Stage;
 import org.example.config.Config;
 import org.example.entities.User;
 import org.example.services.*;
-import org.example.utils.LocalCallbackServer;
-import org.example.utils.MyDataBase_Unimind;
-import org.example.utils.PasswordUtils;
-import org.example.utils.ValidationUtils;
+import org.example.utils.*;
 
 // ── Imports AWT UNIQUEMENT pour Swing/Webcam — PAS Button ni TextField ──
 import javax.swing.JButton;
@@ -97,14 +94,13 @@ public class LoginController {
 
     @FXML
     public void initialize() {
-        loadGoogleRecaptcha();
-        chargerIdentifiantsSauvegardes();
-
         try {
             LocalCallbackServer.startServer();
         } catch (Exception e) {
             e.printStackTrace();
         }
+        loadGoogleRecaptcha();
+        chargerIdentifiantsSauvegardes();
     }
 
     // ══════════════════════════════════════════════════════════════════
@@ -198,68 +194,62 @@ public class LoginController {
 
     private void loadGoogleRecaptcha() {
         if (captchaContainer == null) return;
+        captchaContainer.getChildren().clear();
+
+        // S'assurer que le serveur est démarré
+        try { LocalCallbackServer.startServer(); } catch (Exception e) { e.printStackTrace(); }
 
         WebView webView = new WebView();
-        String html = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-                <style>
-                  body { margin:0; padding:0; display:flex; justify-content:center;
-                         align-items:center; min-height:100px; background:#F3F0FF; }
-                </style>
-            </head>
-            <body>
-                <div class="g-recaptcha"
-                     data-sitekey="%s"
-                     data-callback="onCaptchaSuccess">
-                </div>
-                <script>
-                    function onCaptchaSuccess(response) {
-                        window.location.href = 'callback://?captcha=' + encodeURIComponent(response);
-                    }
-                </script>
-            </body>
-            </html>
-            """.formatted(Config.RECAPTCHA_SITE_KEY);
+        webView.setPrefHeight(120);
+        webView.setPrefWidth(380);
+        webView.setMinHeight(120);
+        webView.setMaxHeight(120);
 
-        webView.getEngine().loadContent(html);
-        webView.setPrefHeight(100);
-        webView.setPrefWidth(320);
+        // Charger depuis le serveur HTTP — pas loadContent()
+        webView.getEngine().load("http://localhost:8080/captcha");
 
-        webView.getEngine().locationProperty().addListener((obs, old, url) -> {
-            if (url != null && url.startsWith("callback://")) {
-                try {
-                    String query = url.split("\\?")[1];
-                    for (String param : query.split("&")) {
-                        if (param.startsWith("captcha=")) {
-                            currentCaptchaResponse = java.net.URLDecoder.decode(
-                                    param.substring(8), "UTF-8");
-                            System.out.println("✓ CAPTCHA validé");
+        // Polling toutes les 500ms sur le token stocké dans LocalCallbackServer
+        javafx.animation.Timeline poll = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(
+                        javafx.util.Duration.millis(500),
+                        e -> {
+                            String token = LocalCallbackServer.lastHCaptchaToken;
+                            if (token != null && !token.isEmpty()
+                                    && !token.equals(currentCaptchaResponse)) {
+                                currentCaptchaResponse = token;
+                                System.out.println("✓ Token récupéré par polling, longueur: "
+                                        + token.length());
+                            }
                         }
-                    }
-                } catch (Exception ignored) {}
-            }
+                )
+        );
+        poll.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        poll.play();
+
+        captchaContainer.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene == null) poll.stop();
         });
 
         captchaContainer.getChildren().add(webView);
-    }
-
-    // ══════════════════════════════════════════════════════════════════
+    }   // ══════════════════════════════════════════════════════════════════
     //  CONNEXION PRINCIPALE
     // ══════════════════════════════════════════════════════════════════
+
 
     @FXML
     public void connecter() {
         String email    = emailField.getText().trim();
-        String password = getCurrentPassword();      // ← utilise le champ actif
+        String password = getCurrentPassword();
 
-//        // Vérification CAPTCHA
-//        if (currentCaptchaResponse.isEmpty() || !captchaService.verifyCaptcha(currentCaptchaResponse)) {
-//            setMessage("⚠ Veuillez valider le captcha.", true);
-//            return;
-//        }
+        System.out.println("DEBUG → currentCaptchaResponse = '" + currentCaptchaResponse + "'");
+
+        if (currentCaptchaResponse.isEmpty()
+                || !captchaService.verifyCaptcha(currentCaptchaResponse)) {
+            setMessage("⚠ Veuillez valider le captcha.", true);
+            return;
+        }
+
+        currentCaptchaResponse = "";
 
         if (!ValidationUtils.isNonVide(email) || !ValidationUtils.isNonVide(password)) {
             setMessage("⚠ Email et mot de passe requis.", true);
