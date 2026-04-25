@@ -424,6 +424,21 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         appliquerFiltres();
     }
 
+    private String getNomPsychologue(Integer psychologueId) {
+        try {
+            if (psychologueId == null || psychologueId == 0) return "Non assigné";
+            org.example.services.PsychologueService psychologueService = new org.example.services.PsychologueService();
+            User psychologue = psychologueService.getPsychologueById(psychologueId);
+            if (psychologue != null) {
+                return "Dr " + psychologue.getPrenom() + " " + psychologue.getNom();
+            }
+            return "Non assigné";
+        } catch (Exception e) {
+            System.err.println("Erreur récupération nom psychologue: " + e.getMessage());
+            return "Non assigné";
+        }
+    }
+
     private VBox creerCarteTraitement(Traitement traitement, List<SuiviTraitement> suivis, DateTimeFormatter dateFormatter) {
         VBox carte = new VBox();
         carte.setSpacing(12);
@@ -508,12 +523,15 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         Label dosageLabel = new Label("💊 Dosage: " + (traitement.getDosage() != null && !traitement.getDosage().isEmpty() ? traitement.getDosage() : "Non spécifié"));
         dosageLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #4b5563;");
 
+        Label psychologueLabel = new Label("👨‍⚕️ Psychologue: " + getNomPsychologue(traitement.getPsychologueId()));
+        psychologueLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #1e40af; -fx-font-weight: bold;");
+
         Text objectifText = new Text(traitement.getObjectifTherapeutique() != null && !traitement.getObjectifTherapeutique().isEmpty()
                 ? traitement.getObjectifTherapeutique() : "Aucun objectif spécifié");
         objectifText.setStyle("-fx-font-size: 12px; -fx-text-fill: #374151;");
         objectifText.setWrappingWidth(500);
 
-        details.getChildren().addAll(typeCategorie, dates, dosageLabel, objectifText);
+        details.getChildren().addAll(typeCategorie, dates, dosageLabel, psychologueLabel, objectifText);
 
         // Section suivis
         VBox suivisSection = new VBox();
