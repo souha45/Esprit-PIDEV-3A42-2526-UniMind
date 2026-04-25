@@ -1,20 +1,16 @@
 package org.example.controllers;
 
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.example.entities.DisponibilitePsy;
 import org.example.services.DisponibilitePsyService;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
@@ -74,7 +70,6 @@ public class CalendrierDisponibiliteEtudiantController {
     private void chargerCreneaux() {
         creneauxParJour.clear();
         try {
-            // Récupérer UNIQUEMENT les créneaux disponibles (statut = "disponible")
             List<DisponibilitePsy> liste = service.afficherDisponibilitesDisponibles();
             for (DisponibilitePsy d : liste) {
                 LocalDate jour = d.getDateDispo().toLocalDate();
@@ -136,7 +131,6 @@ public class CalendrierDisponibiliteEtudiantController {
         }
     }
 
-    // ── CELLULE POUR ÉTUDIANT (simple clic, pas de glisser-déposer) ──
     private VBox construireCellule(LocalDate date, List<DisponibilitePsy> creneaux, LocalDate today) {
         boolean estAujourdhui = date.equals(today);
         boolean estPasse = date.isBefore(today);
@@ -175,7 +169,7 @@ public class CalendrierDisponibiliteEtudiantController {
         }
         cellule.getChildren().add(topRow);
 
-        // Créneaux disponibles (UNIQUEMENT les DISPONIBLES)
+        // Créneaux disponibles
         VBox creneauxContainer = new VBox(2);
         for (DisponibilitePsy d : creneaux) {
             if ("disponible".equalsIgnoreCase(d.getStatut().toString())) {
@@ -196,7 +190,6 @@ public class CalendrierDisponibiliteEtudiantController {
         return cellule;
     }
 
-    // ── BOUTON POUR UN CRÉNEAU (simple clic = sélection) ──
     private Button construireBoutonCreneau(DisponibilitePsy d) {
         String debut = d.getHeureDebut().toString().substring(0, 5);
         String fin = d.getHeureFin().toString().substring(0, 5);
@@ -208,13 +201,12 @@ public class CalendrierDisponibiliteEtudiantController {
                 "-fx-font-size:10px;-fx-font-weight:bold;-fx-padding:4 6;-fx-background-radius:6;" +
                 "-fx-cursor:hand;");
 
-        // Tooltip avec détails
         String lieu = d.getLieu() != null && !d.getLieu().isEmpty() ? d.getLieu() : "En ligne";
         Tooltip.install(btn, new Tooltip(
                 d.getTypeConsult() + "\n📍 " + lieu + "\n" + debut + " – " + fin
         ));
 
-        // Clic = sélectionner et fermer
+        // ✅ CRUCIAL : le clic sélectionne le créneau ET ferme la fenêtre
         btn.setOnAction(e -> {
             if (onCreneauSelectionne != null) {
                 onCreneauSelectionne.accept(d);
@@ -226,8 +218,10 @@ public class CalendrierDisponibiliteEtudiantController {
     }
 
     private void fermer() {
-        if (modalStage != null) modalStage.close();
-        else if (gridCalendrier.getScene() != null)
+        if (modalStage != null) {
+            modalStage.close();
+        } else if (gridCalendrier.getScene() != null) {
             ((Stage) gridCalendrier.getScene().getWindow()).close();
+        }
     }
 }

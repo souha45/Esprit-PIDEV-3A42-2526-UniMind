@@ -175,29 +175,20 @@ public class PrendreRendezVousModalController {
     // ════════════════════════════════════════════════════════════════
     //  GRILLE
     // ════════════════════════════════════════════════════════════════
+    // Remplacer l'ancienne méthode construireGrille() par :
     private void construireGrille() {
-        gridCreneaux.getChildren().clear();
-        if (filteredList.isEmpty()) {
-            if (lblEmptyCreneaux != null) {
-                lblEmptyCreneaux.setVisible(true);
-                lblEmptyCreneaux.setManaged(true);
-            }
-            return;
-        }
-        if (lblEmptyCreneaux != null) {
-            lblEmptyCreneaux.setVisible(false);
-            lblEmptyCreneaux.setManaged(false);
-        }
-        for (DisponibilitePsy d : filteredList) {
-            gridCreneaux.getChildren().add(construireCarte(d));
-        }
+        reconstruireGrilleAvecSelection();
     }
 
     private VBox construireCarte(DisponibilitePsy dispo) {
         VBox carte = new VBox(6);
         carte.setPrefWidth(210);
         carte.setPrefHeight(118);
-        boolean selected = dispo.equals(disponibiliteSelectionnee);
+
+        // ✅ Vérifier si ce créneau est celui sélectionné
+        boolean selected = (disponibiliteSelectionnee != null &&
+                disponibiliteSelectionnee.getDispoId() == dispo.getDispoId());
+
         carte.setStyle(selected ? STYLE_CARTE_SELECTED : STYLE_CARTE_IDLE);
 
         HBox topRow = new HBox(6);
@@ -215,14 +206,14 @@ public class PrendreRendezVousModalController {
                 "-fx-font-size:10px;-fx-padding:2 7;-fx-background-radius:12;");
         topRow.getChildren().addAll(lPsy, badge);
 
-        LocalDate ld    = dispo.getDateDispo().toLocalDate();
+        LocalDate ld = dispo.getDateDispo().toLocalDate();
         String jourAbrg = ld.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.FRENCH);
         Label lDate = new Label(jourAbrg + " " + ld.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         lDate.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:13px;-fx-font-weight:bold;" +
                 "-fx-text-fill:" + (selected ? "#4c1d95" : "#1f2937") + ";");
 
         String debut = dispo.getHeureDebut().toString().substring(0, 5);
-        String fin   = dispo.getHeureFin().toString().substring(0, 5);
+        String fin = dispo.getHeureFin().toString().substring(0, 5);
         Label lHeure = new Label("🕐 " + debut + " – " + fin);
         lHeure.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:12px;-fx-font-weight:bold;" +
                 "-fx-text-fill:" + (selected ? "#7c3aed" : "#6366f1") + ";");
@@ -236,32 +227,34 @@ public class PrendreRendezVousModalController {
             carte.getChildren().addAll(topRow, lDate, lHeure);
         }
 
+        // ✅ Ajouter un badge "Sélectionné" si c'est le cas
         if (selected) {
-            Region sp = new Region();
-            VBox.setVgrow(sp, Priority.ALWAYS);
-            Label sl = new Label("✓ Sélectionné");
-            sl.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:10px;" +
-                    "-fx-text-fill:#7c3aed;-fx-font-weight:bold;");
-            carte.getChildren().addAll(sp, sl);
+            Region spacer = new Region();
+            VBox.setVgrow(spacer, Priority.ALWAYS);
+            Label selectedBadge = new Label("✓  Sélectionné");
+            selectedBadge.setStyle("-fx-background-color: #7c3aed; -fx-text-fill: white; " +
+                    "-fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 2 10; " +
+                    "-fx-background-radius: 12;");
+            carte.getChildren().addAll(spacer, selectedBadge);
         }
 
+        // Clic pour sélectionner (si pas déjà sélectionné)
         carte.setOnMouseClicked(e -> {
-            if (dispo.equals(disponibiliteSelectionnee)) {
-                deselectionner();
-            } else {
+            if (!selected) {
+                // Désélectionner l'ancien
                 disponibiliteSelectionnee = dispo;
                 afficherBandeau(dispo);
-                construireGrille();
+                reconstruireGrilleAvecSelection();
             }
         });
 
         carte.setOnMouseEntered(e -> {
-            if (!dispo.equals(disponibiliteSelectionnee)) {
+            if (!selected) {
                 carte.setStyle(STYLE_CARTE_HOVER);
             }
         });
         carte.setOnMouseExited(e -> {
-            if (!dispo.equals(disponibiliteSelectionnee)) {
+            if (!selected) {
                 carte.setStyle(STYLE_CARTE_IDLE);
             }
         });
@@ -273,12 +266,17 @@ public class PrendreRendezVousModalController {
     //  BANDEAU SÉLECTION
     // ════════════════════════════════════════════════════════════════
     private void afficherBandeau(DisponibilitePsy d) {
-        String debut  = d.getHeureDebut().toString().substring(0, 5);
-        String fin    = d.getHeureFin().toString().substring(0, 5);
-        String date   = d.getDateDispo().toLocalDate()
+        if (d == null) return;
+
+        String debut = d.getHeureDebut().toString().substring(0, 5);
+        String fin = d.getHeureFin().toString().substring(0, 5);
+        String date = d.getDateDispo().toLocalDate()
                 .format(DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy", Locale.FRENCH));
-        lblSelection.setText(getNomPsy(d.getUserId()) + "  ·  " + date
-                + "  ·  " + debut + " – " + fin + "  ·  " + d.getTypeConsult());
+        // Capitaliser la première lettre
+        date = date.substring(0, 1).toUpperCase() + date.substring(1);
+        String nomPsy = getNomPsy(d.getUserId());
+
+        lblSelection.setText(nomPsy + "  ·  " + date + "  ·  " + debut + " – " + fin + "  ·  " + d.getTypeConsult());
         boxSelection.setVisible(true);
         boxSelection.setManaged(true);
     }
@@ -728,6 +726,51 @@ public class PrendreRendezVousModalController {
         this.modalStage = stage;
     }
 
+
+    /**
+     * Reconstruit la grille et met en surbrillance le créneau sélectionné
+     */
+    private void reconstruireGrilleAvecSelection() {
+        gridCreneaux.getChildren().clear();
+
+        if (filteredList.isEmpty()) {
+            if (lblEmptyCreneaux != null) {
+                lblEmptyCreneaux.setVisible(true);
+                lblEmptyCreneaux.setManaged(true);
+            }
+            return;
+        }
+
+        if (lblEmptyCreneaux != null) {
+            lblEmptyCreneaux.setVisible(false);
+            lblEmptyCreneaux.setManaged(false);
+        }
+
+        for (DisponibilitePsy d : filteredList) {
+            VBox carte = construireCarte(d);
+
+            // ✅ Mettre en surbrillance si c'est le créneau sélectionné
+            if (disponibiliteSelectionnee != null && d.getDispoId() == disponibiliteSelectionnee.getDispoId()) {
+                carte.setStyle(STYLE_CARTE_SELECTED);
+                // Ajouter un indicateur visuel supplémentaire
+                Label selectedLabel = new Label("✓ SÉLECTIONNÉ");
+                selectedLabel.setStyle("-fx-background-color: #7c3aed; -fx-text-fill: white; " +
+                        "-fx-font-size: 9px; -fx-font-weight: bold; -fx-padding: 2 8; " +
+                        "-fx-background-radius: 10;");
+                carte.getChildren().add(selectedLabel);
+            }
+
+            gridCreneaux.getChildren().add(carte);
+        }
+
+        // Mettre à jour le label du nombre de créneaux
+        int nb = filteredList.size();
+        if (lblNbCreneaux != null) {
+            lblNbCreneaux.setText(nb + " créneau" + (nb > 1 ? "x" : "") + " disponible" + (nb > 1 ? "s" : ""));
+        }
+    }
+
+    // ✅ La méthode qui ouvre le calendrier
     private void ouvrirCalendrierEtudiant() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/CalendrierDisponibiliteEtudiant.fxml"));
@@ -743,12 +786,25 @@ public class PrendreRendezVousModalController {
             CalendrierDisponibiliteEtudiantController controller = loader.getController();
             controller.setModalStage(calendrierStage);
 
-            // Callback quand l'étudiant clique sur un créneau
+            // ✅ Callback amélioré
             controller.setOnCreneauSelectionne(dispo -> {
                 javafx.application.Platform.runLater(() -> {
+                    // 1. Stocker le créneau sélectionné
                     disponibiliteSelectionnee = dispo;
+
+                    // 2. Afficher le bandeau de sélection
                     afficherBandeau(dispo);
-                    construireGrille();
+
+                    // 3. 🔥 FORCER le rafraîchissement de la grille avec la sélection
+                    reconstruireGrilleAvecSelection();
+
+                    // 4. Optionnel : fermer le calendrier
+                    calendrierStage.close();
+
+                    // 5. Afficher un toast de confirmation
+                    showToast("✓ Créneau sélectionné : " + getNomPsy(dispo.getUserId()) + " - " +
+                            dispo.getDateDispo().toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) +
+                            " " + dispo.getHeureDebut().toString().substring(0,5) + "h", ToastType.SUCCESS);
                 });
             });
 
@@ -759,5 +815,6 @@ public class PrendreRendezVousModalController {
             showToast("❌ Impossible d'ouvrir le calendrier", ToastType.ERROR);
         }
     }
+
 
 }
