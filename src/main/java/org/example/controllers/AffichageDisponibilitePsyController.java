@@ -35,9 +35,13 @@ public class AffichageDisponibilitePsyController
     @FXML private TableColumn<DisponibilitePsy, String>    colStatut;
     @FXML private TableColumn<DisponibilitePsy, Void>      colAction;
 
+
+
     @FXML private Button    btnAjouter;
     @FXML private Label     lblStatut;
     @FXML private Label     lblDate;
+    @FXML private Button btnVueCalendrier;
+
 
     // Stat cards
     @FXML private Label lblStatTotal;
@@ -85,6 +89,11 @@ public class AffichageDisponibilitePsyController
                 btnAjouter.setStyle(btnAjouter.getStyle().replace("#6366f1", "#4f46e5")));
         btnAjouter.setOnMouseExited(e ->
                 btnAjouter.setStyle(btnAjouter.getStyle().replace("#4f46e5", "#6366f1")));
+        btnVueCalendrier.setOnAction(e -> ouvrirCalendrier());
+     btnVueCalendrier.setOnMouseEntered(e ->
+         btnVueCalendrier.setStyle(btnVueCalendrier.getStyle().replace("#8b5cf6","#7c3aed")));
+     btnVueCalendrier.setOnMouseExited(e ->
+         btnVueCalendrier.setStyle(btnVueCalendrier.getStyle().replace("#7c3aed","#8b5cf6")));
     }
 
     // ── Filtres ─────────────────────────────────────────────────────
@@ -523,5 +532,51 @@ public class AffichageDisponibilitePsyController
                 "-fx-border-radius: 12px; " +
                 "-fx-background-radius: 12px; " +
                 "-fx-padding: 20px;";
+    }
+    // ════════════════════════════════════════════════════════════════
+//  AJOUT dans AffichageDisponibilitePsyController.java
+//
+//  1. Ajouter le champ FXML en haut de la classe :
+//
+//     (il est déjà dans le FXML, il faut juste le déclarer)
+//
+//  2. Dans initialize(), ajouter après btnAjouter.setOnAction(...) :
+//     btnVueCalendrier.setOnAction(e -> ouvrirCalendrier());
+//     btnVueCalendrier.setOnMouseEntered(e ->
+//         btnVueCalendrier.setStyle(btnVueCalendrier.getStyle().replace("#8b5cf6","#7c3aed")));
+//     btnVueCalendrier.setOnMouseExited(e ->
+//         btnVueCalendrier.setStyle(btnVueCalendrier.getStyle().replace("#7c3aed","#8b5cf6")));
+//
+//  3. Ajouter la méthode ci-dessous dans la classe :
+// ════════════════════════════════════════════════════════════════
+
+    private void ouvrirCalendrier() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/CalendrierDisponibilite.fxml"));
+            Stage calendrierStage = new Stage();
+            Scene scene = new Scene(loader.load(), 1100, 720);
+
+            calendrierStage.initModality(javafx.stage.Modality.WINDOW_MODAL);
+            calendrierStage.initOwner(btnAjouter.getScene().getWindow());
+            calendrierStage.setTitle("Calendrier des disponibilités");
+            calendrierStage.setScene(scene);
+            calendrierStage.setResizable(true);
+            calendrierStage.setMinWidth(900);
+            calendrierStage.setMinHeight(600);
+
+            CalendrierDisponibiliteController ctrl = loader.getController();
+            ctrl.setCalendrierStage(calendrierStage);
+            ctrl.setUtilisateur(utilisateur);  // charge les créneaux + construit le calendrier
+
+            calendrierStage.showAndWait();
+
+            // Recharger la liste après fermeture (un créneau a pu être ajouté)
+            chargerDisponibilites();
+
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le calendrier");
+            e.printStackTrace();
+        }
     }
 }

@@ -17,46 +17,34 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 public class AjoutDisponibiliteController {
 
-    // ── FXML ────────────────────────────────────────────────────────
     @FXML private DatePicker datePicker;
-
-    // Spinners heure début
     @FXML private Spinner<Integer> spinnerHeureDebut;
     @FXML private Spinner<Integer> spinnerMinuteDebut;
     @FXML private Label            lblPreviewDebut;
-
-    // Spinners heure fin
     @FXML private Spinner<Integer> spinnerHeureFin;
     @FXML private Spinner<Integer> spinnerMinuteFin;
     @FXML private Label            lblPreviewFin;
-
-    // Type + lieu conditionnel
     @FXML private ComboBox<String> cbTypeConsult;
     @FXML private VBox             boxLieu;
     @FXML private TextField        txtLieu;
     @FXML private Button           btnOuvrirCarte;
-
-    // Boutons
-    @FXML private Button btnFermer;
-    @FXML private Button btnAnnuler;
-    @FXML private Button btnEnregistrer;
-
-    // ── Labels d'erreur inline ──────────────────────────────────────
+    @FXML private Button           btnFermer;
+    @FXML private Button           btnAnnuler;
+    @FXML private Button           btnEnregistrer;
     @FXML private Label errDate;
     @FXML private Label errHeureDebut;
     @FXML private Label errHeureFin;
     @FXML private Label errType;
     @FXML private Label errLieu;
 
-    // ── Services / données ──────────────────────────────────────────
     private DisponibilitePsyService disponibiliteService;
     private int   userIdConnecte;
     private Stage modalStage;
 
-    // ────────────────────────────────────────────────────────────────
     @FXML
     public void initialize() {
         disponibiliteService = new DisponibilitePsyService();
@@ -79,7 +67,7 @@ public class AjoutDisponibiliteController {
         spinnerMinuteDebut.valueProperty().addListener((o,ov,nv) -> cacherErreurSimple(errHeureDebut));
         spinnerHeureFin.valueProperty().addListener((o,ov,nv)    -> cacherErreurSimple(errHeureFin));
         spinnerMinuteFin.valueProperty().addListener((o,ov,nv)   -> cacherErreurSimple(errHeureFin));
-        cbTypeConsult.valueProperty().addListener((o,ov,nv)      -> {
+        cbTypeConsult.valueProperty().addListener((o,ov,nv) -> {
             cacherErreurSimple(errType);
             gererAffichageLieu(nv);
         });
@@ -94,18 +82,41 @@ public class AjoutDisponibiliteController {
                 btnEnregistrer.setStyle(btnEnregistrer.getStyle().replace("#6366f1","#4f46e5")));
         btnEnregistrer.setOnMouseExited(e ->
                 btnEnregistrer.setStyle(btnEnregistrer.getStyle().replace("#4f46e5","#6366f1")));
-
         btnOuvrirCarte.setOnMouseEntered(e ->
-                btnOuvrirCarte.setStyle("-fx-background-color: #4f46e5; -fx-text-fill: white; " +
-                        "-fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 8 15; " +
-                        "-fx-background-radius: 8; -fx-cursor: hand;"));
+                btnOuvrirCarte.setStyle("-fx-background-color:#4f46e5;-fx-text-fill:white;" +
+                        "-fx-font-size:13px;-fx-font-weight:bold;-fx-padding:8 15;" +
+                        "-fx-background-radius:8;-fx-cursor:hand;"));
         btnOuvrirCarte.setOnMouseExited(e ->
-                btnOuvrirCarte.setStyle("-fx-background-color: #6366f1; -fx-text-fill: white; " +
-                        "-fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 8 15; " +
-                        "-fx-background-radius: 8; -fx-cursor: hand;"));
+                btnOuvrirCarte.setStyle("-fx-background-color:#6366f1;-fx-text-fill:white;" +
+                        "-fx-font-size:13px;-fx-font-weight:bold;-fx-padding:8 15;" +
+                        "-fx-background-radius:8;-fx-cursor:hand;"));
     }
 
-    // ── Ouvre la carte ───────────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════════
+    //  PRÉ-REMPLISSAGE depuis le calendrier
+    // ════════════════════════════════════════════════════════════════
+
+    /** Pré-remplit la date. Appeler après FXMLLoader.load(). */
+    public void setDatePreRemplie(LocalDate date) {
+        if (date != null) datePicker.setValue(date);
+    }
+
+    /** Pré-remplit heure début et heure fin. Appeler après FXMLLoader.load(). */
+    public void setHeuresPreRemplies(LocalTime heureDebut, LocalTime heureFin) {
+        if (heureDebut != null) {
+            spinnerHeureDebut.getValueFactory().setValue(heureDebut.getHour());
+            spinnerMinuteDebut.getValueFactory().setValue(heureDebut.getMinute());
+        }
+        if (heureFin != null) {
+            spinnerHeureFin.getValueFactory().setValue(heureFin.getHour());
+            spinnerMinuteFin.getValueFactory().setValue(heureFin.getMinute());
+        }
+        mettreAJourPreviewDebut();
+        mettreAJourPreviewFin();
+    }
+
+    // ════════════════════════════════════════════════════════════════
+
     private void ouvrirCarte() {
         try {
             Stage carteStage = new Stage();
@@ -113,308 +124,197 @@ public class AjoutDisponibiliteController {
             carteStage.initModality(javafx.stage.Modality.WINDOW_MODAL);
             carteStage.initOwner(btnOuvrirCarte.getScene().getWindow());
 
-            WebView    webView    = new WebView();
-            WebEngine  webEngine  = webView.getEngine();
+            WebView   webView   = new WebView();
+            WebEngine webEngine = webView.getEngine();
 
             java.net.URL url = getClass().getResource("/carte.html");
             if (url == null) {
-                showAlert(Alert.AlertType.ERROR, "Erreur", "Fichier carte.html non trouvé dans resources/");
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Fichier carte.html non trouvé");
                 return;
             }
 
-            // ── Créer le bridge UNE SEULE FOIS avant le chargement ──
-            // IMPORTANT : on passe txtLieu et carteStage directement
             JavaBridge bridge = new JavaBridge(carteStage, txtLieu);
-
             webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
                 if (newState == Worker.State.SUCCEEDED) {
-                    // Platform.runLater garantit que window est prêt
                     javafx.application.Platform.runLater(() -> {
                         try {
                             JSObject window = (JSObject) webEngine.executeScript("window");
                             window.setMember("javaApp", bridge);
-                            System.out.println("[Carte] javaApp injecté avec succès");
                         } catch (Exception ex) {
-                            System.err.println("[Carte] Erreur injection javaApp : " + ex.getMessage());
+                            System.err.println("[Carte] " + ex.getMessage());
                         }
                     });
                 }
             });
 
             webEngine.load(url.toExternalForm());
-
-            VBox root   = new VBox(webView);
-            Scene scene = new Scene(root, 950, 700);
-            carteStage.setScene(scene);
+            VBox root = new VBox(webView);
+            carteStage.setScene(new Scene(root, 950, 700));
             carteStage.showAndWait();
 
         } catch (Exception e) {
-            e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir la carte : " + e.getMessage());
         }
     }
 
-    // ── PONT Java ↔ JavaScript ───────────────────────────────────────
-    // RÈGLES OBLIGATOIRES pour JSObject.setMember() :
-    //   1. La classe DOIT être public static (pas une inner class)
-    //   2. La méthode appelée depuis JS DOIT être public
     public static class JavaBridge {
-
         private final Stage     carteStage;
         private final TextField txtLieu;
 
-        public JavaBridge(Stage carteStage, TextField txtLieu) {
-            this.carteStage = carteStage;
-            this.txtLieu    = txtLieu;
-        }
+        public JavaBridge(Stage s, TextField t) { carteStage = s; txtLieu = t; }
 
-        // Appelée depuis JavaScript : window.javaApp.setSelectedAddress("...")
         public void setSelectedAddress(String address) {
-            System.out.println("[JavaBridge] Adresse reçue : " + address);
             javafx.application.Platform.runLater(() -> {
-                if (txtLieu != null) {
-                    txtLieu.setText(address);
-                    System.out.println("[JavaBridge] txtLieu mis à jour : " + address);
-                }
-                if (carteStage != null) {
-                    carteStage.close();
-                    System.out.println("[JavaBridge] Fenêtre carte fermée");
-                }
+                if (txtLieu    != null) txtLieu.setText(address);
+                if (carteStage != null) carteStage.close();
             });
         }
     }
 
-    // ────────────────────────────────────────────────────────────────
-
-    private void showAlert(Alert.AlertType type, String titre, String message) {
-        Alert alert = new Alert(type);
-        alert.setTitle(titre);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private void showAlert(Alert.AlertType type, String titre, String msg) {
+        Alert a = new Alert(type);
+        a.setTitle(titre); a.setHeaderText(null); a.setContentText(msg);
+        a.showAndWait();
     }
 
-    private void configurerSpinner(Spinner<Integer> spinner, int min, int max, int init) {
-        SpinnerValueFactory<Integer> factory =
+    private void configurerSpinner(Spinner<Integer> s, int min, int max, int init) {
+        SpinnerValueFactory<Integer> f =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(min, max, init);
-        factory.setConverter(new javafx.util.StringConverter<>() {
+        f.setConverter(new javafx.util.StringConverter<>() {
             @Override public String toString(Integer v) {
                 if (v == null || v == -1) return "--";
                 return String.format("%02d", v);
             }
-            @Override public Integer fromString(String s) {
+            @Override public Integer fromString(String str) {
                 try {
-                    String trimmed = s.trim();
-                    if ("--".equals(trimmed) || trimmed.isEmpty()) return -1;
-                    return Integer.parseInt(trimmed);
+                    String t = str.trim();
+                    if ("--".equals(t) || t.isEmpty()) return -1;
+                    return Integer.parseInt(t);
                 } catch (NumberFormatException e) { return init; }
             }
         });
-        spinner.setValueFactory(factory);
-        spinner.setEditable(true);
-        spinner.getEditor().focusedProperty().addListener((o, ov, nv) -> {
-            if (!nv) spinner.increment(0);
-        });
+        s.setValueFactory(f);
+        s.setEditable(true);
+        s.getEditor().focusedProperty().addListener((o, ov, nv) -> { if (!nv) s.increment(0); });
     }
 
     private void mettreAJourPreviewDebut() {
-        int heure  = spinnerHeureDebut.getValue();
-        int minute = spinnerMinuteDebut.getValue();
-        lblPreviewDebut.setText((heure == -1 || minute == -1)
-                ? "--:--" : String.format("%02d:%02d", heure, minute));
+        int h = spinnerHeureDebut.getValue(), m = spinnerMinuteDebut.getValue();
+        lblPreviewDebut.setText((h==-1||m==-1) ? "--:--" : String.format("%02d:%02d",h,m));
     }
 
     private void mettreAJourPreviewFin() {
-        int heure  = spinnerHeureFin.getValue();
-        int minute = spinnerMinuteFin.getValue();
-        lblPreviewFin.setText((heure == -1 || minute == -1)
-                ? "--:--" : String.format("%02d:%02d", heure, minute));
+        int h = spinnerHeureFin.getValue(), m = spinnerMinuteFin.getValue();
+        lblPreviewFin.setText((h==-1||m==-1) ? "--:--" : String.format("%02d:%02d",h,m));
     }
 
-    private void gererAffichageLieu(String typeChoisi) {
-        boolean presentiel = "Présentiel".equals(typeChoisi);
-        boxLieu.setVisible(presentiel);
-        boxLieu.setManaged(presentiel);
-        if (!presentiel) {
-            txtLieu.clear();
-            cacherErreurSimple(errLieu);
-        }
+    private void gererAffichageLieu(String t) {
+        boolean p = "Présentiel".equals(t);
+        boxLieu.setVisible(p); boxLieu.setManaged(p);
+        if (!p) { txtLieu.clear(); cacherErreurSimple(errLieu); }
     }
 
-    private void afficherErreur(Label errLabel, Control champ, String message) {
-        errLabel.setText("⚠ " + message);
-        errLabel.setVisible(true);
-        errLabel.setManaged(true);
-        if (champ != null) {
-            String baseStyle = champ.getStyle();
-            if (!baseStyle.contains("#ef4444")) {
-                champ.setStyle(baseStyle
-                        .replace("#e0e7ff", "#fca5a5")
-                        .replace("#f5f3ff", "#fff1f2"));
-            }
-        }
+    private void afficherErreur(Label l, Control c, String msg) {
+        l.setText("⚠ "+msg); l.setVisible(true); l.setManaged(true);
+        if (c!=null) { String s=c.getStyle(); if(!s.contains("#ef4444"))
+            c.setStyle(s.replace("#e0e7ff","#fca5a5").replace("#f5f3ff","#fff1f2")); }
     }
-
-    private void afficherErreurSimple(Label errLabel, String message) {
-        errLabel.setText("⚠ " + message);
-        errLabel.setVisible(true);
-        errLabel.setManaged(true);
+    private void afficherErreurSimple(Label l, String msg) {
+        l.setText("⚠ "+msg); l.setVisible(true); l.setManaged(true);
     }
-
-    private void cacherErreur(Label errLabel, Control champ) {
-        errLabel.setVisible(false);
-        errLabel.setManaged(false);
-        if (champ != null) {
-            champ.setStyle(champ.getStyle()
-                    .replace("#fca5a5", "#e0e7ff")
-                    .replace("#fff1f2", "#f5f3ff"));
-        }
+    private void cacherErreur(Label l, Control c) {
+        l.setVisible(false); l.setManaged(false);
+        if (c!=null) c.setStyle(c.getStyle().replace("#fca5a5","#e0e7ff").replace("#fff1f2","#f5f3ff"));
     }
-
-    private void cacherErreurSimple(Label errLabel) {
-        errLabel.setVisible(false);
-        errLabel.setManaged(false);
-    }
-
+    private void cacherErreurSimple(Label l) { l.setVisible(false); l.setManaged(false); }
     private void reinitialiserErreurs() {
-        cacherErreur(errDate, datePicker);
-        cacherErreurSimple(errHeureDebut);
-        cacherErreurSimple(errHeureFin);
-        cacherErreurSimple(errType);
-        cacherErreurSimple(errLieu);
+        cacherErreur(errDate,datePicker); cacherErreurSimple(errHeureDebut);
+        cacherErreurSimple(errHeureFin);  cacherErreurSimple(errType); cacherErreurSimple(errLieu);
     }
 
     private void enregistrerDisponibilite() {
         reinitialiserErreurs();
-        boolean valide = true;
+        boolean ok = true;
 
-        if (datePicker.getValue() == null) {
-            afficherErreur(errDate, datePicker, "Veuillez sélectionner une date.");
-            valide = false;
+        if (datePicker.getValue()==null) {
+            afficherErreur(errDate,datePicker,"Veuillez sélectionner une date."); ok=false;
         } else if (datePicker.getValue().isBefore(LocalDate.now())) {
-            afficherErreur(errDate, datePicker, "La date ne peut pas être dans le passé.");
-            valide = false;
+            afficherErreur(errDate,datePicker,"La date ne peut pas être dans le passé."); ok=false;
         }
-
-        if (spinnerHeureDebut.getValue() == -1 || spinnerMinuteDebut.getValue() == -1) {
-            afficherErreurSimple(errHeureDebut, "Veuillez sélectionner l'heure de début.");
-            valide = false;
+        if (spinnerHeureDebut.getValue()==-1||spinnerMinuteDebut.getValue()==-1) {
+            afficherErreurSimple(errHeureDebut,"Veuillez sélectionner l'heure de début."); ok=false;
         }
-
-        if (spinnerHeureFin.getValue() == -1 || spinnerMinuteFin.getValue() == -1) {
-            afficherErreurSimple(errHeureFin, "Veuillez sélectionner l'heure de fin.");
-            valide = false;
+        if (spinnerHeureFin.getValue()==-1||spinnerMinuteFin.getValue()==-1) {
+            afficherErreurSimple(errHeureFin,"Veuillez sélectionner l'heure de fin."); ok=false;
         }
-
-        if (valide) {
-            int debutMin = spinnerHeureDebut.getValue() * 60 + spinnerMinuteDebut.getValue();
-            int finMin   = spinnerHeureFin.getValue()   * 60 + spinnerMinuteFin.getValue();
-            if (debutMin >= finMin) {
-                afficherErreurSimple(errHeureFin,
-                        "L'heure de fin doit être après l'heure de début ("
-                                + lblPreviewDebut.getText() + " - " + lblPreviewFin.getText() + ").");
-                valide = false;
-            }
+        if (ok) {
+            int d=spinnerHeureDebut.getValue()*60+spinnerMinuteDebut.getValue();
+            int f=spinnerHeureFin.getValue()  *60+spinnerMinuteFin.getValue();
+            if (d>=f) { afficherErreurSimple(errHeureFin,
+                    "L'heure de fin doit être après l'heure de début ("
+                            +lblPreviewDebut.getText()+" - "+lblPreviewFin.getText()+")."); ok=false; }
         }
-
-        if (cbTypeConsult.getValue() == null) {
-            afficherErreurSimple(errType, "Veuillez sélectionner un type de consultation.");
-            valide = false;
+        if (cbTypeConsult.getValue()==null) {
+            afficherErreurSimple(errType,"Veuillez sélectionner un type de consultation."); ok=false;
         }
-
-        if ("Présentiel".equals(cbTypeConsult.getValue())) {
-            if (txtLieu.getText().trim().isEmpty()) {
-                afficherErreur(errLieu, txtLieu, "Veuillez saisir le lieu de consultation.");
-                valide = false;
-            }
+        if ("Présentiel".equals(cbTypeConsult.getValue())&&txtLieu.getText().trim().isEmpty()) {
+            afficherErreur(errLieu,txtLieu,"Veuillez saisir le lieu de consultation."); ok=false;
         }
-
-        if (!valide) return;
+        if (!ok) return;
 
         try {
-            LocalDate date = datePicker.getValue();
-            int hd = spinnerHeureDebut.getValue(), md = spinnerMinuteDebut.getValue();
-            int hf = spinnerHeureFin.getValue(),   mf = spinnerMinuteFin.getValue();
+            int hd=spinnerHeureDebut.getValue(), md=spinnerMinuteDebut.getValue();
+            int hf=spinnerHeureFin.getValue(),   mf=spinnerMinuteFin.getValue();
+            TypeConsultation type = "Présentiel".equals(cbTypeConsult.getValue())
+                    ? TypeConsultation.présentiel : TypeConsultation.en_ligne;
+            String lieu = type==TypeConsultation.présentiel ? txtLieu.getText().trim() : null;
 
-            Time heureDebutTime = Time.valueOf(String.format("%02d:%02d:00", hd, md));
-            Time heureFinTime   = Time.valueOf(String.format("%02d:%02d:00", hf, mf));
+            disponibiliteService.ajouter(new DisponibilitePsy(
+                    userIdConnecte, Date.valueOf(datePicker.getValue()),
+                    Time.valueOf(String.format("%02d:%02d:00",hd,md)),
+                    Time.valueOf(String.format("%02d:%02d:00",hf,mf)),
+                    type, lieu));
 
-            TypeConsultation typeConsult = "Présentiel".equals(cbTypeConsult.getValue())
-                    ? TypeConsultation.présentiel
-                    : TypeConsultation.en_ligne;
-
-            String lieu = typeConsult == TypeConsultation.présentiel
-                    ? txtLieu.getText().trim() : null;
-
-            DisponibilitePsy disponibilite = new DisponibilitePsy(
-                    userIdConnecte, Date.valueOf(date),
-                    heureDebutTime, heureFinTime, typeConsult, lieu);
-
-            disponibiliteService.ajouter(disponibilite);
-            afficherAlerteSucces(date, lieu);
-
+            afficherAlerteSucces(datePicker.getValue(), lieu);
         } catch (SQLException e) {
-            afficherAlerteErreur("Erreur SQL",
-                    "Une erreur est survenue lors de l'ajout de la disponibilité.", e.getMessage());
-            e.printStackTrace();
+            afficherAlerteErreur("Erreur SQL","Erreur lors de l'ajout.",e.getMessage());
         } catch (Exception e) {
-            afficherAlerteErreur("Erreur système", "Une erreur inattendue est survenue.", e.getMessage());
-            e.printStackTrace();
+            afficherAlerteErreur("Erreur système","Erreur inattendue.",e.getMessage());
         }
     }
 
-    private void fermerModal() {
-        if (modalStage != null) modalStage.close();
-    }
-
-    public void setUserId(int userId)      { this.userIdConnecte = userId; }
+    private void fermerModal() { if (modalStage!=null) modalStage.close(); }
+    public void setUserId(int id)          { this.userIdConnecte = id; }
     public void setModalStage(Stage stage) { this.modalStage = stage; }
 
     private void afficherAlerteSucces(LocalDate date, String lieu) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Unimind - Succès");
-        alert.setHeaderText("Disponibilité ajoutée avec succès !");
-        alert.setContentText(buildContenuSucces(date, lieu));
-        ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-        alert.getButtonTypes().setAll(okButton);
-        alert.getDialogPane().setStyle(getStyleAlerteSucces());
-        alert.showAndWait();
-        fermerModal();
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle("Unimind - Succès"); a.setHeaderText("Disponibilité ajoutée avec succès !");
+        a.setContentText(buildContenuSucces(date,lieu));
+        a.getButtonTypes().setAll(new ButtonType("OK", ButtonBar.ButtonData.OK_DONE));
+        a.getDialogPane().setStyle(getStyleSucces());
+        a.showAndWait(); fermerModal();
     }
-
-    private void afficherAlerteErreur(String titre, String header, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Unimind - " + titre);
-        alert.setHeaderText(header);
-        alert.setContentText(message);
-        ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-        alert.getButtonTypes().setAll(okButton);
-        alert.getDialogPane().setStyle(getStyleAlerteErreur());
-        alert.showAndWait();
+    private void afficherAlerteErreur(String titre, String header, String msg) {
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setTitle("Unimind - "+titre); a.setHeaderText(header); a.setContentText(msg);
+        a.getButtonTypes().setAll(new ButtonType("OK", ButtonBar.ButtonData.OK_DONE));
+        a.getDialogPane().setStyle(getStyleErreur()); a.showAndWait();
     }
-
     private String buildContenuSucces(LocalDate date, String lieu) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Votre créneau a été enregistré :\n\n");
-        sb.append("Date : ").append(date).append("\n");
-        sb.append("Horaire : ").append(lblPreviewDebut.getText())
-                .append(" - ").append(lblPreviewFin.getText()).append("\n");
-        sb.append("Type : ").append(cbTypeConsult.getValue());
-        if (lieu != null && !lieu.trim().isEmpty()) sb.append("\nLieu : ").append(lieu);
-        return sb.toString();
+        return "Votre créneau a été enregistré :\n\nDate : " + date
+                + "\nHoraire : " + lblPreviewDebut.getText() + " - " + lblPreviewFin.getText()
+                + "\nType : " + cbTypeConsult.getValue()
+                + (lieu!=null&&!lieu.isEmpty() ? "\nLieu : "+lieu : "");
     }
-
-    private String getStyleAlerteSucces() {
-        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; -fx-font-size: 14px; " +
-                "-fx-background-color: #f0fdf4; -fx-border-color: #86efac; " +
-                "-fx-border-width: 2px; -fx-border-radius: 12px; " +
-                "-fx-background-radius: 12px; -fx-padding: 20px;";
+    private String getStyleSucces() {
+        return "-fx-font-family:'Segoe UI';-fx-font-size:14px;-fx-background-color:#f0fdf4;" +
+                "-fx-border-color:#86efac;-fx-border-width:2px;-fx-border-radius:12px;" +
+                "-fx-background-radius:12px;-fx-padding:20px;";
     }
-
-    private String getStyleAlerteErreur() {
-        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; -fx-font-size: 14px; " +
-                "-fx-background-color: #fef2f2; -fx-border-color: #fca5a5; " +
-                "-fx-border-width: 2px; -fx-border-radius: 12px; " +
-                "-fx-background-radius: 12px; -fx-padding: 20px;";
+    private String getStyleErreur() {
+        return "-fx-font-family:'Segoe UI';-fx-font-size:14px;-fx-background-color:#fef2f2;" +
+                "-fx-border-color:#fca5a5;-fx-border-width:2px;-fx-border-radius:12px;" +
+                "-fx-background-radius:12px;-fx-padding:20px;";
     }
 }

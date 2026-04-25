@@ -159,6 +159,14 @@
                                    -fx-background-radius: 10; -fx-cursor: hand;
                                    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.35), 8, 0, 0, 2);" />
 
+                    <!-- ✅ AJOUTER CE BOUTON ICI -->
+                    <Button fx:id="btnVueCalendrier" text="📅  Vue calendrier"
+                            style="-fx-background-color: #8b5cf6; -fx-text-fill: #ffffff;
+               -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+               -fx-font-weight: bold; -fx-padding: 10 20;
+               -fx-background-radius: 10; -fx-cursor: hand;
+               -fx-effect: dropshadow(gaussian, rgba(139,92,246,0.35), 8, 0, 0, 2);" />
+
                 </HBox>
 
                 <!-- ── TABLE ── -->

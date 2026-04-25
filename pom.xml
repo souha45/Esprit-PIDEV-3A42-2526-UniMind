@@ -16,6 +16,19 @@
         <javafx.version>21.0.10</javafx.version>
     </properties>
 
+    <!-- ✅ AJOUTER LE REPOSITORY JCenter -->
+    <repositories>
+        <repository>
+            <id>maven-central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+        <repository>
+            <id>calendarfx-repo</id>
+            <url>https://raw.githubusercontent.com/calendarfx/calendarfx/mvn-repo</url>
+        </repository>
+    </repositories>
+
+
     <dependencies>
         <!-- MySQL Connector -->
         <dependency>
@@ -119,11 +132,14 @@
         </dependency>
 
         <!-- Pour traiter les réponses JSON -->
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20240303</version>
-        </dependency>
+        <!-- CalendarFX - Version plus récente sur Maven Central -->
+        <!--<dependency>
+            <groupId>com.calendarfx</groupId>
+            <artifactId>calendarfx</artifactId>
+            <version>11.13.0</version>
+        </dependency>-->
+
+
     </dependencies>
 
     <build>
