@@ -46,7 +46,7 @@ public class TraitementEmailService {
         this.smtpPassword = "zchq ocxh cjzn ywnu"; // Remplacer par le mot de passe d'application Gmail de 16 caractères
         // Pour désactiver les emails pendant les tests, mettez cette valeur à null ou vide
         // this.smtpPassword = null; // Désactive les envois d'emails
-        this.fromName = "Unimind - Plateforme de Suivi Thérapeutique";
+        this.fromName = "Unimind";
     }
 
     /**
