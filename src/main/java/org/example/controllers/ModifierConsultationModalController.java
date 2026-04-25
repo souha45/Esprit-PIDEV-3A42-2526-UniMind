@@ -13,6 +13,7 @@ import org.example.entities.Consultation;
 import org.example.entities.ConsultationDetail;
 import org.example.entities.User;
 import org.example.services.ConsultationService;
+import org.example.services.GeminiService;
 
 import java.sql.SQLException;
 
@@ -26,6 +27,7 @@ public class ModifierConsultationModalController {
     @FXML private Button    btnAnnuler;
     @FXML private Button    btnEnregistrer;
     @FXML private Button    btnEffacer;
+    @FXML private Button    btnGenererAvisIA;
 
     // Toast overlay injecté depuis le FXML
     @FXML private StackPane toastContainer;
@@ -33,10 +35,11 @@ public class ModifierConsultationModalController {
     // ========== VARIABLES ==========
     private final Button[]  etoiles = new Button[5];
     private ConsultationService  consultationService;
-    private ConsultationDetail   consultationDetail;
+    private ConsultationDetail   consultationDetail;  // ✅ CORRIGÉ : ConsultationDetail au lieu de RendezVousDetail
     private User                 utilisateur;
     private Stage                modalStage;
     private int                  noteActuelle = 0;
+    private Runnable             onSucces;
 
     // ========== EMOJI FONT ==========
     private static final String EMOJI_FONT;
@@ -58,6 +61,80 @@ public class ModifierConsultationModalController {
         btnAnnuler.setOnAction(e -> fermerModal());
         btnFermer.setOnAction(e -> fermerModal());
         if (btnEffacer != null) btnEffacer.setOnAction(e -> effacerNote());
+
+        // ✅ Action du bouton IA
+        if (btnGenererAvisIA != null) {
+            btnGenererAvisIA.setOnAction(e -> genererAvisAvecIA());
+            btnGenererAvisIA.setOnMouseEntered(ev ->
+                    btnGenererAvisIA.setStyle(btnGenererAvisIA.getStyle().replace("#8b5cf6", "#7c3aed")));
+            btnGenererAvisIA.setOnMouseExited(ev ->
+                    btnGenererAvisIA.setStyle(btnGenererAvisIA.getStyle().replace("#7c3aed", "#8b5cf6")));
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  GÉNÉRATION AVIS IA
+    // ══════════════════════════════════════════════════════════════
+    private void genererAvisAvecIA() {
+        if (consultationDetail == null) {
+            showToast("❌ Aucune consultation sélectionnée", ToastType.ERROR);
+            return;
+        }
+
+        String ancienTexte = txtAvis.getText();
+        txtAvis.setText("🤖 Génération de l'avis en cours...");
+        txtAvis.setDisable(true);
+        btnGenererAvisIA.setDisable(true);
+
+        StringBuilder contexte = new StringBuilder();
+
+        // ✅ Utilisation des bonnes méthodes de ConsultationDetail
+        contexte.append("Patient : ").append(consultationDetail.getEtudiantPrenom())
+                .append(" ").append(consultationDetail.getEtudiantNom()).append("\n");
+        contexte.append("Date de consultation : ").append(consultationDetail.getDateDispo().toLocalDate())
+                .append("\n");
+        contexte.append("Heure : ").append(consultationDetail.getHeureDebut().toString().substring(0, 5))
+                .append(" - ").append(consultationDetail.getHeureFin().toString().substring(0, 5)).append("\n");
+
+        String prompt = """
+            Tu es un assistant pour psychologue. Rédige un avis professionnel et bienveillant.
+            
+            Contexte de la consultation :
+            %s
+            
+            L'avis doit :
+            - Faire 3-5 phrases
+            - Être à la 2ème personne (tu)
+            - Être encourageant et empathique
+            - Proposer des pistes d'amélioration concrètes
+            - Terminer par une phrase d'encouragement
+            
+            N'inclus PAS de diagnostic médical.
+            """.formatted(contexte.toString());
+
+        new Thread(() -> {
+            try {
+                GeminiService geminiService = new GeminiService();
+                String avisGenere = geminiService.envoyerMessage(prompt, "");
+                avisGenere = avisGenere.replaceAll("^\"+|\"+$", "").trim();
+                final String avisFinal = avisGenere;
+
+                javafx.application.Platform.runLater(() -> {
+                    txtAvis.setText(avisFinal);
+                    txtAvis.setDisable(false);
+                    btnGenererAvisIA.setDisable(false);
+                    showToast("✅ Avis généré avec succès ! Vous pouvez le modifier.", ToastType.SUCCESS);
+                });
+            } catch (Exception e) {
+                javafx.application.Platform.runLater(() -> {
+                    txtAvis.setText(ancienTexte);
+                    txtAvis.setDisable(false);
+                    btnGenererAvisIA.setDisable(false);
+                    showToast("❌ Erreur : " + e.getMessage(), ToastType.ERROR);
+                });
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -121,26 +198,14 @@ public class ModifierConsultationModalController {
     // ══════════════════════════════════════════════════════════════
     //  ENREGISTREMENT
     // ══════════════════════════════════════════════════════════════
-
-
-
-    // Ajouter ce champ et ce setter dans ModifierConsultationModalController
-
-    private Runnable onSucces;
-
-    public void setOnSucces(Runnable callback) {
-        this.onSucces = callback;
-    }
-
-    // Puis dans enregistrerModification(), remplacer l'Alert et le fermerModal() par :
     private void enregistrerModification() {
         String avis = txtAvis.getText().trim();
         if (avis.isEmpty()) {
-            showToast("⚠  Veuillez saisir un avis avant d'enregistrer.", ToastType.WARNING);
+            showToast("⚠ Veuillez saisir un avis avant d'enregistrer.", ToastType.WARNING);
             return;
         }
         if (noteActuelle == 0) {
-            showToast("⚠  Veuillez sélectionner une note (1 à 5 étoiles).", ToastType.WARNING);
+            showToast("⚠ Veuillez sélectionner une note (1 à 5 étoiles).", ToastType.WARNING);
             return;
         }
         try {
@@ -155,15 +220,15 @@ public class ModifierConsultationModalController {
 
             consultationService.modifier(entity);
 
-            // Ferme le modal, puis déclenche le toast dans la page parente
             fermerModal();
             if (onSucces != null) onSucces.run();
 
         } catch (SQLException e) {
-            showToast("✗  Erreur : " + e.getMessage(), ToastType.ERROR);
+            showToast("✗ Erreur : " + e.getMessage(), ToastType.ERROR);
             e.printStackTrace();
         }
     }
+
     // ══════════════════════════════════════════════════════════════
     //  TOAST
     // ══════════════════════════════════════════════════════════════
@@ -176,7 +241,6 @@ public class ModifierConsultationModalController {
             case ERROR   -> "#ef4444";
         };
 
-        // ── Pill label ─────────────────────────────────────────
         Label pill = new Label(message);
         pill.setWrapText(true);
         pill.setMaxWidth(460);
@@ -192,11 +256,9 @@ public class ModifierConsultationModalController {
         toastContainer.setManaged(true);
         StackPane.setAlignment(pill, Pos.BOTTOM_CENTER);
 
-        // Fade-in
         FadeTransition fadeIn = new FadeTransition(Duration.millis(200), pill);
         fadeIn.setFromValue(0); fadeIn.setToValue(1);
 
-        // Fade-out après 2,2 s
         FadeTransition fadeOut = new FadeTransition(Duration.millis(400), pill);
         fadeOut.setDelay(Duration.seconds(type == ToastType.SUCCESS ? 1.2 : 2.2));
         fadeOut.setFromValue(1); fadeOut.setToValue(0);
@@ -219,9 +281,11 @@ public class ModifierConsultationModalController {
         if (modalStage != null) modalStage.close();
     }
 
-    // ══════════════════════════════════════════════════════════════
-    //  SETTERS
-    // ══════════════════════════════════════════════════════════════
+    public void setOnSucces(Runnable callback) {
+        this.onSucces = callback;
+    }
+
+    // ✅ CORRIGÉ : Utilise ConsultationDetail
     public void setConsultation(ConsultationDetail consultation) {
         this.consultationDetail = consultation;
 

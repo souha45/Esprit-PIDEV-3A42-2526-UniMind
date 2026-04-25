@@ -37,21 +37,27 @@
               style="-fx-padding:22 24 16 24;-fx-background-color:#f0f4ff;">
 
             <!-- Avis -->
+            <!-- Avis -->
             <VBox spacing="4">
-                <Label text="✏  Avis du psychologue"
-                       style="-fx-font-family:'Segoe UI';-fx-font-size:12px;
-                              -fx-font-weight:bold;-fx-text-fill:#6366f1;" />
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="✏  Avis du psychologue"
+                           style="-fx-font-family:'Segoe UI';-fx-font-size:12px;
+                      -fx-font-weight:bold;-fx-text-fill:#6366f1;" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button fx:id="btnGenererAvisIA" text="🤖  Générer un avis IA"
+                            style="-fx-background-color:#8b5cf6;-fx-text-fill:white;
+                       -fx-font-family:'Segoe UI';-fx-font-size:11px;-fx-font-weight:bold;
+                       -fx-padding:6 14;-fx-background-radius:20;-fx-cursor:hand;
+                       -fx-effect:dropshadow(gaussian,rgba(139,92,246,0.3),4,0,0,2);" />
+                </HBox>
                 <TextArea fx:id="txtAvis"
                           promptText="Saisissez votre avis détaillé sur la consultation..."
                           prefHeight="120" wrapText="true" maxWidth="Infinity"
                           style="-fx-background-color:#f5f3ff;-fx-border-color:#e0e7ff;
-                                 -fx-border-radius:10;-fx-background-radius:10;
-                                 -fx-border-width:1;-fx-font-family:'Segoe UI';
-                                 -fx-font-size:13px;-fx-text-fill:#374151;
-                                 -fx-prompt-text-fill:#c4b5fd;-fx-padding:12 14;" />
-                <Label text="🔒 Cet avis est confidentiel et visible uniquement par vous"
-                       style="-fx-font-family:'Segoe UI';-fx-font-size:11px;
-                              -fx-text-fill:#9ca3af;-fx-font-style:italic;" />
+                     -fx-border-radius:10;-fx-background-radius:10;
+                     -fx-border-width:1;-fx-font-family:'Segoe UI';
+                     -fx-font-size:13px;-fx-text-fill:#374151;
+                     -fx-prompt-text-fill:#c4b5fd;-fx-padding:12 14;" />
             </VBox>
 
             <!-- Note -->
