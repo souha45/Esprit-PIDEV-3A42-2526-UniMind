@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.example.enums.StatutParticipation;
 import org.example.services.EvenementService;
+import org.example.services.evenement.PdfExportServiceEvent;
 
 public class GestionParticipationController {
 
@@ -57,6 +58,8 @@ public class GestionParticipationController {
 
     @FXML
     private Button btnAjouter;
+    @FXML
+    private Button btnExportPdf;
 
     // Filtres avancés
     @FXML
@@ -93,6 +96,7 @@ public class GestionParticipationController {
 
     private ParticipationService participationService;
     private EvenementService evenementService;
+    private final PdfExportServiceEvent pdfExportService = new PdfExportServiceEvent();
     private ObservableList<ParticipationService.ParticipationAvecNoms> listeParticipations;
     private ObservableList<ParticipationService.ParticipationAvecNoms> listeFiltree;
 
@@ -451,6 +455,35 @@ public class GestionParticipationController {
     @FXML
     public void retourAccueil(ActionEvent event) throws IOException {
         NavigationContext.loadContentInCenter("/participation/GestionParticipation.fxml");
+    }
+
+    @FXML
+    private void exporterPdf() {
+        try {
+            // Créer un FileChooser pour choisir l'emplacement de sauvegarde
+            javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+            fileChooser.setTitle("Enregistrer la liste PDF");
+            fileChooser.getExtensionFilters().add(
+                new javafx.stage.FileChooser.ExtensionFilter("Fichiers PDF", "*.pdf")
+            );
+            fileChooser.setInitialFileName("liste_participations.pdf");
+
+            // Obtenir la fenêtre principale
+            javafx.stage.Window window = btnExportPdf.getScene().getWindow();
+            java.io.File file = fileChooser.showSaveDialog(window);
+
+            if (file != null) {
+                // Pour l'instant, générer une liste vide (à améliorer plus tard)
+                List<org.example.entities.Participation> participations = new ArrayList<>();
+                
+                // Générer le PDF
+                pdfExportService.exportParticipationsList(participations, file.getAbsolutePath());
+                
+                afficherAlerte("Succès", "La liste PDF a été générée avec succès !");
+            }
+        } catch (Exception e) {
+            afficherAlerte("Erreur", "Impossible de générer le PDF: " + e.getMessage());
+        }
     }
 
     private void afficherAlerte(String type, String message) {

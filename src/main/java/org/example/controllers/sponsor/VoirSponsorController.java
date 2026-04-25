@@ -10,6 +10,7 @@ import javafx.scene.image.ImageView;
 import org.example.entities.Sponsor;
 import org.example.enums.Role;
 import org.example.services.SponsorService;
+import org.example.services.evenement.PdfExportServiceEvent;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 import java.io.IOException;
@@ -21,6 +22,7 @@ public class VoirSponsorController {
 
     private Sponsor sponsorCourant;
     private final SponsorService sponsorService = new SponsorService();
+    private final PdfExportServiceEvent pdfExportService = new PdfExportServiceEvent();
 
     @FXML
     private Label lblNom;
@@ -46,6 +48,8 @@ public class VoirSponsorController {
     private Button btnModifier;
     @FXML
     private Button btnSupprimer;
+    @FXML
+    private Button btnExportPdf;
 
     public void setSponsor(Sponsor sponsor) {
         this.sponsorCourant = sponsor;
@@ -145,6 +149,32 @@ public class VoirSponsorController {
             }
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible de supprimer le sponsor: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void exporterPdf() {
+        try {
+            // Créer un FileChooser pour choisir l'emplacement de sauvegarde
+            javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+            fileChooser.setTitle("Enregistrer le rapport PDF");
+            fileChooser.getExtensionFilters().add(
+                new javafx.stage.FileChooser.ExtensionFilter("Fichiers PDF", "*.pdf")
+            );
+            fileChooser.setInitialFileName("rapport_sponsor_" + sponsorCourant.getSponsorId() + ".pdf");
+
+            // Obtenir la fenêtre principale
+            javafx.stage.Window window = btnExportPdf.getScene().getWindow();
+            java.io.File file = fileChooser.showSaveDialog(window);
+
+            if (file != null) {
+                // Générer le PDF
+                pdfExportService.exportSponsorRapport(sponsorCourant, file.getAbsolutePath());
+                
+                afficherAlerte("Succès", "Le rapport PDF a été généré avec succès !");
+            }
+        } catch (Exception e) {
+            afficherAlerte("Erreur", "Impossible de générer le PDF: " + e.getMessage());
         }
     }
 

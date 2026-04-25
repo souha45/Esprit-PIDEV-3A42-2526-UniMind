@@ -14,10 +14,13 @@ import org.example.enums.Role;
 import org.example.enums.TypeSponsor;
 import org.example.enums.StatutSponsor;
 import org.example.services.SponsorService;
+import org.example.services.evenement.PdfExportServiceEvent;
 import org.example.utils.SessionManager;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GestionSponsorController {
 
@@ -79,8 +82,11 @@ public class GestionSponsorController {
 
     @FXML
     private Label lblPageInfo;
+    @FXML
+    private Button btnExportPdf;
 
     private SponsorService sponsorService;
+    private final PdfExportServiceEvent pdfExportService = new PdfExportServiceEvent();
     private ObservableList<SponsorService.SponsorAvecInfos> listeSponsors;
     private ObservableList<SponsorService.SponsorAvecInfos> listeFiltree;
 
@@ -518,6 +524,35 @@ public class GestionSponsorController {
     @FXML
     public void retourAccueil(ActionEvent event) throws IOException {
         org.example.controllers.admin.AdminDashboardController.loadContent("/sponsor/GestionSponsor.fxml");
+    }
+
+    @FXML
+    private void exporterPdf() {
+        try {
+            // Créer un FileChooser pour choisir l'emplacement de sauvegarde
+            javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+            fileChooser.setTitle("Enregistrer la liste PDF");
+            fileChooser.getExtensionFilters().add(
+                new javafx.stage.FileChooser.ExtensionFilter("Fichiers PDF", "*.pdf")
+            );
+            fileChooser.setInitialFileName("liste_sponsors.pdf");
+
+            // Obtenir la fenêtre principale
+            javafx.stage.Window window = btnExportPdf.getScene().getWindow();
+            java.io.File file = fileChooser.showSaveDialog(window);
+
+            if (file != null) {
+                // Pour l'instant, générer une liste vide (à améliorer plus tard)
+                List<org.example.entities.Sponsor> sponsors = new ArrayList<>();
+                
+                // Générer le PDF
+                pdfExportService.exportSponsorsList(sponsors, file.getAbsolutePath());
+                
+                afficherAlerte("Succès", "La liste PDF a été générée avec succès !");
+            }
+        } catch (Exception e) {
+            afficherAlerte("Erreur", "Impossible de générer le PDF: " + e.getMessage());
+        }
     }
 
     private void afficherAlerte(String type, String message) {

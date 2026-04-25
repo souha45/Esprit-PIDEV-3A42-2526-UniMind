@@ -19,6 +19,7 @@ import org.example.services.EvenementService;
 import org.example.services.FavoriService;
 import org.example.services.ParticipationService;
 import org.example.services.evenement.EventNominatimService;
+import org.example.services.evenement.PdfExportServiceEvent;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
@@ -41,6 +42,7 @@ public class VoirEvenementController {
     private final EvenementService evenementService = new EvenementService();
     private final ParticipationService participationService = new ParticipationService();
     private final FavoriService favoriService = new FavoriService();
+    private final PdfExportServiceEvent pdfExportService = new PdfExportServiceEvent();
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private final EventNominatimService nominatimService = new EventNominatimService();
 
@@ -90,6 +92,8 @@ public class VoirEvenementController {
     private Label lblNbAvis;
     @FXML
     private Label lblAucunAvis;
+    @FXML
+    private Button btnExportPdf;
 
     @FXML
     private void initialize() {
@@ -759,6 +763,32 @@ public class VoirEvenementController {
 
         } catch (Exception e) {
             afficherAlerte("Erreur", "Impossible d'ouvrir le formulaire d'avis: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void exporterPdf() {
+        try {
+            // Créer un FileChooser pour choisir l'emplacement de sauvegarde
+            javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+            fileChooser.setTitle("Enregistrer le rapport PDF");
+            fileChooser.getExtensionFilters().add(
+                new javafx.stage.FileChooser.ExtensionFilter("Fichiers PDF", "*.pdf")
+            );
+            fileChooser.setInitialFileName("rapport_evenement_" + evenementCourant.getEvenementId() + ".pdf");
+
+            // Obtenir la fenêtre principale
+            javafx.stage.Window window = btnExportPdf.getScene().getWindow();
+            java.io.File file = fileChooser.showSaveDialog(window);
+
+            if (file != null) {
+                // Générer le PDF (pour l'instant sans liste de participants)
+                pdfExportService.exportEvenementRapport(evenementCourant, null, null, file.getAbsolutePath());
+                
+                afficherAlerte("Succès", "Le rapport PDF a été généré avec succès !");
+            }
+        } catch (Exception e) {
+            afficherAlerte("Erreur", "Impossible de générer le PDF: " + e.getMessage());
         }
     }
 }

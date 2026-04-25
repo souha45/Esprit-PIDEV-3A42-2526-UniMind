@@ -14,6 +14,7 @@ import org.example.enums.Role;
 import org.example.enums.TypeEvenement;
 import org.example.enums.StatutEvenement;
 import org.example.services.EvenementService;
+import org.example.services.evenement.PdfExportServiceEvent;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
@@ -22,6 +23,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class GestionEvenementController {
 
@@ -63,6 +65,8 @@ public class GestionEvenementController {
 
     @FXML
     private Button btnAjouter;
+    @FXML
+    private Button btnExportPdf;
 
     @FXML
     private ComboBox<TypeEvenement> comboType;
@@ -108,6 +112,7 @@ public class GestionEvenementController {
 
     // Formatter pour les dates
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private final PdfExportServiceEvent pdfExportService = new PdfExportServiceEvent();
 
     @FXML
     public void initialize() {
@@ -611,6 +616,37 @@ public class GestionEvenementController {
     @FXML
     public void retourAccueil(ActionEvent event) throws IOException {
         NavigationContext.loadContentInCenter("/evenement/GestionEvenement.fxml");
+    }
+
+    @FXML
+    private void exporterPdf() {
+        try {
+            // Créer un FileChooser pour choisir l'emplacement de sauvegarde
+            javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+            fileChooser.setTitle("Enregistrer la liste PDF");
+            fileChooser.getExtensionFilters().add(
+                new javafx.stage.FileChooser.ExtensionFilter("Fichiers PDF", "*.pdf")
+            );
+            fileChooser.setInitialFileName("liste_evenements.pdf");
+
+            // Obtenir la fenêtre principale
+            javafx.stage.Window window = btnExportPdf.getScene().getWindow();
+            java.io.File file = fileChooser.showSaveDialog(window);
+
+            if (file != null) {
+                // Convertir la liste filtrée en liste d'Evenement
+                List<org.example.entities.Evenement> evenements = listeFiltre.stream()
+                    .map(ea -> ea.getEvenement())
+                    .toList();
+                
+                // Générer le PDF
+                pdfExportService.exportEvenementsList(evenements, file.getAbsolutePath());
+                
+                afficherAlerte("Succès", "La liste PDF a été générée avec succès !");
+            }
+        } catch (Exception e) {
+            afficherAlerte("Erreur", "Impossible de générer le PDF: " + e.getMessage());
+        }
     }
 
     private void afficherAlerte(String type, String message) {
