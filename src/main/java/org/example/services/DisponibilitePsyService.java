@@ -8,6 +8,7 @@ import java.sql.Timestamp;
 
 import java.sql.*;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -113,7 +114,9 @@ public class DisponibilitePsyService  implements ICrud<DisponibilitePsy>{
     public List<DisponibilitePsy> afficherDisponibilitesDisponibles() throws SQLException {
         List<DisponibilitePsy> disponibilitesDisponibles = new ArrayList<>();
 
-        String sql = "SELECT * FROM disponibilite_psy WHERE statut = 'disponible'";
+        // ✅ Utilisation de CURDATE() pour la date du jour
+        String sql = "SELECT * FROM disponibilite_psy WHERE statut = 'disponible' AND date_dispo >= CURDATE() ORDER BY date_dispo ASC, heure_debut ASC";
+
         Statement statement = con.createStatement();
         ResultSet rs = statement.executeQuery(sql);
 
@@ -136,6 +139,7 @@ public class DisponibilitePsyService  implements ICrud<DisponibilitePsy>{
         return disponibilitesDisponibles;
     }
 
+// Appel : afficherDisponibilitesDisponibles(LocalDate.now())
 
     // Afficher uniquement les disponibilités disponibles (de psy concerné uniquement)
 
