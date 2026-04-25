@@ -1,8 +1,9 @@
 package org.example.controllers;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -1095,7 +1096,10 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
     }
 
     private void exporterVersCSV(File file) throws IOException {
-        try (FileWriter writer = new FileWriter(file)) {
+        // UTF-8 avec BOM pour Excel
+        try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8")) {
+            // BOM UTF-8 pour Excel
+            writer.write('\uFEFF');
             writer.write("Étudiant;Titre;Type;Catégorie;Durée;Statut;Priorité;Date Début;Objectif;Suivis\n");
 
             for (LigneGroupée ligne : lignesGroupéesList) {
