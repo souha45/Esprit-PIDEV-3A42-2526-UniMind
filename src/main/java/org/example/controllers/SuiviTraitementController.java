@@ -1,8 +1,9 @@
 package org.example.controllers;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -753,7 +754,6 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             long totalSuivis = lignes.stream().filter(l -> !l.estEntete()).count();
             lblCount.setText(totalSuivis + " suivi(s)");
             lblStatus.setText(totalSuivis + " suivi(s) affiché(s)");
-
         } catch (Exception e) {
             afficherToast("✗ Erreur: " + e.getMessage(), false);
         }
@@ -782,7 +782,10 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
     }
 
     private void exporterVersCSV(File file) throws IOException {
-        try (FileWriter writer = new FileWriter(file)) {
+        // UTF-8 avec BOM pour Excel
+        try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8")) {
+            // BOM UTF-8 pour Excel
+            writer.write('\uFEFF');
             writer.write("Étudiant;Traitement;Date suivi;Saisi par;Observations\n");
 
             for (LigneSuiviGroupée ligne : lignesSuivisGroupéesList) {
@@ -796,8 +799,13 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
                         }
                     }
                     String saisiPar = s.getSaisiPar() == SaisiPar.PSYCHOLOGUE ? "Psychologue" : "Étudiant";
+                    // Récupérer le nom de l'étudiant depuis le traitement
+                    String nomEtudiant = "";
+                    if (t != null) {
+                        nomEtudiant = getNomEtudiant(t.getEtudiantId());
+                    }
                     writer.write(String.format("%s;%s;%s;%s;%s\n",
-                            ligne.getNomEtudiant(),
+                            nomEtudiant,
                             t != null ? t.getTitre().replace(";", ",") : "",
                             s.getDateSuivi() != null ? s.getDateSuivi().toString() : "",
                             saisiPar,
@@ -808,6 +816,7 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
         }
     }
 
+// ... reste du code ...
     // ==================== NAVIGATION ====================
 
     @FXML private void handleAjouter() { ouvrirPageAjout(); }
