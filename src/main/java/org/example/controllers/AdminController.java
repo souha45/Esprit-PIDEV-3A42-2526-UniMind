@@ -9,7 +9,7 @@ import javafx.scene.layout.StackPane;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class Admincontroller implements Initializable {
+public class AdminController implements Initializable {
 
     @FXML private StackPane contentArea;
     @FXML private Button btnQuestionnaire;

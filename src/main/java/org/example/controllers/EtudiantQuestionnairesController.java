@@ -16,6 +16,7 @@ import org.example.entities.Questionnaire;
 import org.example.services.QuestionnaireServices;
 import org.example.services.ReponseQuestionnaireServices;
 import org.example.utils.LimiteQuestionnaire;
+import org.example.utils.NavigationContext;
 
 import java.net.URL;
 import java.sql.SQLException;
@@ -39,7 +40,6 @@ public class EtudiantQuestionnairesController implements Initializable {
         listQuestionnaire.setItems(filtered);
         listQuestionnaire.setCellFactory(lv -> new QuestionnaireCard());
 
-        // Recherche dynamique
         if (tfSearch != null) {
             tfSearch.textProperty().addListener((obs, old, val) -> {
                 String lower = val == null ? "" : val.toLowerCase().trim();
@@ -52,19 +52,13 @@ public class EtudiantQuestionnairesController implements Initializable {
             });
         }
 
-        // Afficher le nombre de passages restants aujourd'hui
         afficherPassagesRestants();
-
         loadData();
     }
 
-    // ══════════════════════════════════════════
-    //  AFFICHER PASSAGES RESTANTS
-    // ══════════════════════════════════════════
-
     private void afficherPassagesRestants() {
         try {
-            int userId =1;
+            int userId = LimiteQuestionnaire.getInstance().getUserId();
             int passages = reponseService.countPassagesAujourdhui(userId);
             int restants = 2 - passages;
 
@@ -80,10 +74,6 @@ public class EtudiantQuestionnairesController implements Initializable {
         }
     }
 
-    // ══════════════════════════════════════════
-    //  HANDLE REPONDRE
-    // ══════════════════════════════════════════
-
     @FXML
     public void handleRepondre() {
         Questionnaire selected = listQuestionnaire.getSelectionModel().getSelectedItem();
@@ -92,7 +82,6 @@ public class EtudiantQuestionnairesController implements Initializable {
             return;
         }
 
-        // ✅ Vérifier la limite AVANT de naviguer
         try {
             int userId = LimiteQuestionnaire.getInstance().getUserId();
             if (!reponseService.peutPasser(userId)) {
@@ -101,8 +90,7 @@ public class EtudiantQuestionnairesController implements Initializable {
                 alert.setHeaderText("🚫 Limite quotidienne atteinte");
                 alert.setContentText(
                         "Vous avez déjà passé 2 questionnaires aujourd'hui.\n" +
-                                "Revenez demain pour continuer !"
-                );
+                                "Revenez demain pour continuer !");
                 alert.showAndWait();
                 return;
             }
@@ -111,18 +99,16 @@ public class EtudiantQuestionnairesController implements Initializable {
             return;
         }
 
-        // ✅ Naviguer vers le questionnaire
         try {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/fxml/EtudiantRepondreView.fxml"));
-            Pane view = loader.load();
+            javafx.scene.Parent view = loader.load();
 
             EtudiantRepondreController controller = loader.getController();
             controller.setQuestionnaire(selected);
 
-            StackPane contentArea = (StackPane) listQuestionnaire
-                    .getScene().lookup("#contentArea");
-            contentArea.getChildren().setAll(view);
+            // ── Navigation via NavigationContext ──
+            NavigationContext.loadContentInCenter(view);
 
         } catch (Exception e) {
             setStatus("❌ Erreur navigation : " + e.getMessage(), false);
@@ -136,18 +122,18 @@ public class EtudiantQuestionnairesController implements Initializable {
 
     private static class QuestionnaireCard extends ListCell<Questionnaire> {
 
-        private final HBox root        = new HBox(14);
-        private final StackPane avatar = new StackPane();
-        private final Label avLetter   = new Label();
-        private final VBox info        = new VBox(5);
-        private final Label nomLbl     = new Label();
-        private final HBox botRow      = new HBox(6);
-        private final Label typeBadge  = new Label();
-        private final Label codeLbl    = new Label();
-        private final Region spacer    = new Region();
-        private final VBox rightBox    = new VBox(4);
-        private final Label nbreLbl    = new Label();
-        private final Label nbreText   = new Label("questions");
+        private final HBox      root      = new HBox(14);
+        private final StackPane avatar    = new StackPane();
+        private final Label     avLetter  = new Label();
+        private final VBox      info      = new VBox(5);
+        private final Label     nomLbl    = new Label();
+        private final HBox      botRow    = new HBox(6);
+        private final Label     typeBadge = new Label();
+        private final Label     codeLbl   = new Label();
+        private final Region    spacer    = new Region();
+        private final VBox      rightBox  = new VBox(4);
+        private final Label     nbreLbl   = new Label();
+        private final Label     nbreText  = new Label("questions");
 
         QuestionnaireCard() {
             Circle circle = new Circle(22);
@@ -161,7 +147,6 @@ public class EtudiantQuestionnairesController implements Initializable {
 
             typeBadge.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; " +
                     "-fx-padding: 2 10 2 10; -fx-background-radius: 20;");
-
             codeLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8;");
 
             Label dot = new Label("·");
@@ -169,7 +154,6 @@ public class EtudiantQuestionnairesController implements Initializable {
 
             botRow.getChildren().addAll(typeBadge, dot, codeLbl);
             botRow.setAlignment(Pos.CENTER_LEFT);
-
             info.getChildren().addAll(nomLbl, botRow);
             HBox.setHgrow(info, Priority.ALWAYS);
 
@@ -186,7 +170,6 @@ public class EtudiantQuestionnairesController implements Initializable {
             root.setPadding(new Insets(12, 16, 12, 16));
             root.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
                     "-fx-border-color: #ede9fe; -fx-border-radius: 12; -fx-border-width: 1;");
-
             setStyle("-fx-background-color: transparent; -fx-padding: 4 0 4 0;");
         }
 
@@ -221,19 +204,18 @@ public class EtudiantQuestionnairesController implements Initializable {
                 root.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
                         "-fx-border-color: #ede9fe; -fx-border-radius: 12; -fx-border-width: 1;");
             }
-
             setGraphic(root);
         }
 
         private String[] typeColors(String type) {
-            return switch (type) {
-                case "STRESS"     -> new String[]{"#fef3c7","#d97706","#fde68a","#92400e"};
-                case "ANXIETE"    -> new String[]{"#ede9fe","#7c3aed","#ddd6fe","#4c1d95"};
-                case "DEPRESSION" -> new String[]{"#fee2e2","#dc2626","#fecaca","#991b1b"};
-                case "SOMMEIL"    -> new String[]{"#e0f2fe","#0284c7","#bae6fd","#075985"};
-                case "BIEN_ETRE"  -> new String[]{"#dcfce7","#16a34a","#bbf7d0","#14532d"};
-                default           -> new String[]{"#f1f5f9","#475569","#e2e8f0","#334155"};
-            };
+            switch (type) {
+                case "STRESS":     return new String[]{"#fef3c7", "#d97706", "#fde68a", "#92400e"};
+                case "ANXIETE":    return new String[]{"#ede9fe", "#7c3aed", "#ddd6fe", "#4c1d95"};
+                case "DEPRESSION": return new String[]{"#fee2e2", "#dc2626", "#fecaca", "#991b1b"};
+                case "SOMMEIL":    return new String[]{"#e0f2fe", "#0284c7", "#bae6fd", "#075985"};
+                case "BIEN_ETRE":  return new String[]{"#dcfce7", "#16a34a", "#bbf7d0", "#14532d"};
+                default:           return new String[]{"#f1f5f9", "#475569", "#e2e8f0", "#334155"};
+            }
         }
     }
 
@@ -247,8 +229,10 @@ public class EtudiantQuestionnairesController implements Initializable {
     }
 
     private void setStatus(String msg, boolean success) {
-        lblStatus.setText(msg);
-        lblStatus.setStyle("-fx-font-size: 12px; -fx-text-fill: "
-                + (success ? "#22c55e" : "#ef4444") + ";");
+        if (lblStatus != null) {
+            lblStatus.setText(msg);
+            lblStatus.setStyle("-fx-font-size: 12px; -fx-text-fill: "
+                    + (success ? "#22c55e" : "#ef4444") + ";");
+        }
     }
 }

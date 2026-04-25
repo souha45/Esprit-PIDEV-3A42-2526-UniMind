@@ -341,7 +341,7 @@ public class SidebarEtudiantController {
             javafx.scene.Parent content = loader.load();
 
             Object controller = loader.getController();
-            // Passe l'utilisateur à la nouvelle page si elle implémente l'interface
+
             if (controller instanceof EtudiantPageController) {
                 ((EtudiantPageController) controller).setUtilisateur(resolveUser());
             }
@@ -354,7 +354,6 @@ public class SidebarEtudiantController {
             e.printStackTrace();
         }
     }
-
     /** Interface que chaque page-étudiant doit implémenter pour recevoir l'utilisateur. */
     public interface EtudiantPageController {
         void setUtilisateur(User user);

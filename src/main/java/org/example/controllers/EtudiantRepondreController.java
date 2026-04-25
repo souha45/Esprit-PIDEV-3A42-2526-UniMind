@@ -1,16 +1,18 @@
 package org.example.controllers;
 
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import org.example.entities.Question;
 import org.example.entities.Questionnaire;
 import org.example.entities.Reponsequestionnaire;
+import org.example.services.EmailServiceQuestionnaire;
 import org.example.services.QuestionServices;
 import org.example.services.ReponseQuestionnaireServices;
 import org.example.utils.LimiteQuestionnaire;
+import org.example.utils.NavigationContext;
+import org.example.utils.SessionManager;
 
 import java.net.URL;
 import java.sql.SQLException;
@@ -19,16 +21,17 @@ import java.util.*;
 public class EtudiantRepondreController implements Initializable {
 
     @FXML private Label lblTitreQuestionnaire;
-    @FXML private VBox questionsContainer;
+    @FXML private VBox  questionsContainer;
     @FXML private Label lblStatus;
 
     private Questionnaire questionnaire;
     private List<Question> questions;
+
     private final Map<Integer, String> reponsesChoisies = new HashMap<>();
     private final Map<Integer, Double> scoresChoisis    = new HashMap<>();
 
-    private final QuestionServices questionService        = new QuestionServices();
-    private final ReponseQuestionnaireServices repService = new ReponseQuestionnaireServices();
+    private final QuestionServices             questionService = new QuestionServices();
+    private final ReponseQuestionnaireServices repService      = new ReponseQuestionnaireServices();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {}
@@ -46,16 +49,14 @@ public class EtudiantRepondreController implements Initializable {
             questionsContainer.getChildren().clear();
 
             if (questions.isEmpty()) {
-                Label lblVide = new Label(
-                        "⚠️ Aucune question trouvée pour ce questionnaire.");
+                Label lblVide = new Label("⚠️ Aucune question trouvée pour ce questionnaire.");
                 lblVide.setStyle("-fx-text-fill: #f59e0b; -fx-font-size: 13px;");
                 questionsContainer.getChildren().add(lblVide);
                 return;
             }
 
             for (int i = 0; i < questions.size(); i++) {
-                questionsContainer.getChildren().add(
-                        buildQuestionBox(i + 1, questions.get(i)));
+                questionsContainer.getChildren().add(buildQuestionBox(i + 1, questions.get(i)));
             }
 
         } catch (SQLException e) {
@@ -146,9 +147,7 @@ public class EtudiantRepondreController implements Initializable {
 
         String niveau         = questionnaire.getNiveauScore((int) scoreTotale);
         String interpretation = questionnaire.interpreterScore((int) scoreTotale);
-
-        // ✅ Récupérer le userId depuis limitequestionnaire
-        int userId = LimiteQuestionnaire.getInstance().getUserId();
+        int    userId         = LimiteQuestionnaire.getInstance().getUserId();
 
         Reponsequestionnaire reponse = new Reponsequestionnaire(
                 scoreTotale,
@@ -159,12 +158,31 @@ public class EtudiantRepondreController implements Initializable {
                 scoreTotale >= questionnaire.getSeuilSevere(),
                 null,
                 questionnaire.getQuestionnaireId(),
-                userId  // ✅ userId au lieu de null
+                userId
         );
 
         try {
             repService.ajouter(reponse);
 
+            // ── Envoi email + confirmation ───────────────────────
+            String emailUser  = "";
+            boolean emailEnvoye = false;
+            try {
+                emailUser = SessionManager.getInstance().getCurrentUser().getEmail();
+                EmailServiceQuestionnaire.envoyerResultat(
+                        emailUser,
+                        questionnaire.getNom(),
+                        scoreTotale,
+                        niveau,
+                        interpretation
+                );
+                emailEnvoye = true;
+            } catch (Exception ex) {
+                System.out.println("⚠️ Email non envoyé : " + ex.getMessage());
+            }
+            // ────────────────────────────────────────────────────
+
+            // ── Alert avec confirmation email ────────────────────
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("✅ Résultat du Questionnaire");
             alert.setHeaderText("Questionnaire : " + questionnaire.getNom());
@@ -172,16 +190,20 @@ public class EtudiantRepondreController implements Initializable {
                     "🎯 Score Total : " + scoreTotale + "\n" +
                             "📊 Niveau      : " + niveau.toUpperCase() + "\n\n" +
                             "📝 Interprétation :\n" + interpretation + "\n\n" +
-                            "Vous allez être redirigé vers vos réponses."
+                            (emailEnvoye
+                                    ? "📧 Email de résultat envoyé à : " + emailUser + "\n\n"
+                                    : "⚠️ Email non envoyé.\n\n") +
+                            "Cliquez sur OK pour voir vos réponses."
             );
-            alert.showAndWait();
 
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/EtudiantMesReponsesView.fxml"));
-            Pane view = loader.load();
-            StackPane contentArea = (StackPane) questionsContainer
-                    .getScene().lookup("#contentArea");
-            contentArea.getChildren().setAll(view);
+            // ── Navigation APRÈS fermeture de l'Alert ────────────
+            alert.showAndWait().ifPresent(btn -> {
+                try {
+                    NavigationContext.loadContentInCenter("/fxml/EtudiantMesReponsesView.fxml");
+                } catch (Exception ex) {
+                    setStatus("❌ Erreur navigation : " + ex.getMessage(), false);
+                }
+            });
 
         } catch (Exception e) {
             if (e.getMessage() != null && e.getMessage().equals("LIMITE_QUOTIDIENNE")) {
@@ -199,12 +221,7 @@ public class EtudiantRepondreController implements Initializable {
     @FXML
     public void handleRetour() {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/EtudiantQuestionnairesView.fxml"));
-            Pane view = loader.load();
-            StackPane contentArea = (StackPane) questionsContainer
-                    .getScene().lookup("#contentArea");
-            contentArea.getChildren().setAll(view);
+            NavigationContext.loadContentInCenter("/fxml/EtudiantQuestionnairesView.fxml");
         } catch (Exception e) {
             System.out.println("Erreur retour : " + e.getMessage());
         }
