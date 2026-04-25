@@ -15,16 +15,22 @@ public class ParticipationService implements ICrud<Participation> {
 
     private final Connection connection;
     private final EventEmailService emailService;
-    private final EvenementService evenementService;
+    private EvenementService evenementService;
 
     public ParticipationService() {
         this.connection = MyDataBase_Unimind.getInstance().getConnection();
         this.emailService = new EventEmailService();
-        this.evenementService = new EvenementService();
 
         // Configuration de l'email (à remplacer par vos identifiants)
         this.emailService.setUsername("nadineeddouch07@gmail.com");
         this.emailService.setPassword("jttd apnv wxpj rxlt");
+    }
+
+    private EvenementService getEvenementService() {
+        if (evenementService == null) {
+            evenementService = new EvenementService();
+        }
+        return evenementService;
     }
 
     @Override
@@ -290,10 +296,55 @@ public class ParticipationService implements ICrud<Participation> {
     }
 
     /**
+     * Récupérer tous les participants d'un événement
+     */
+    public java.util.List<ParticipantInfo> getParticipantsByEvenementId(int evenementId) throws SQLException {
+        String sql = "SELECT p.etudiant_id, u.email, u.prenom, u.nom " +
+                     "FROM participation p " +
+                     "LEFT JOIN user u ON p.etudiant_id = u.user_id " +
+                     "WHERE p.evenement_id = ?";
+        java.util.List<ParticipantInfo> result = new java.util.ArrayList<>();
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, evenementId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ParticipantInfo info = new ParticipantInfo();
+                    info.setEtudiantId(rs.getInt("etudiant_id"));
+                    info.setEmail(rs.getString("email"));
+                    info.setPrenom(rs.getString("prenom"));
+                    info.setNom(rs.getString("nom"));
+                    result.add(info);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Classe interne pour les infos participant
+     */
+    public static class ParticipantInfo {
+        private int etudiantId;
+        private String email;
+        private String prenom;
+        private String nom;
+
+        public int getEtudiantId() { return etudiantId; }
+        public void setEtudiantId(int etudiantId) { this.etudiantId = etudiantId; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getPrenom() { return prenom; }
+        public void setPrenom(String prenom) { this.prenom = prenom; }
+        public String getNom() { return nom; }
+        public void setNom(String nom) { this.nom = nom; }
+    }
+
+    /**
      * Récupérer les détails de l'événement pour l'email
      */
     private Evenement getEvenementDetails(int evenementId) throws SQLException {
-        return evenementService.findById(evenementId);
+        return getEvenementService().findById(evenementId);
     }
 
     /**

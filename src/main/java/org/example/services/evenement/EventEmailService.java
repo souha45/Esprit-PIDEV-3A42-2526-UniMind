@@ -99,6 +99,24 @@ public class EventEmailService {
         return sendEmail(to, subject, content, true);
     }
 
+    /**
+     * Email de notification de modification d'événement
+     */
+    public boolean sendEventModificationEmail(String to, String participantName, String eventTitle, String eventDate, String eventLocation, String changes) {
+        String subject = "Modification de l'événement : " + eventTitle;
+        String content = buildEventModificationEmail(participantName, eventTitle, eventDate, eventLocation, changes);
+        return sendEmail(to, subject, content, true);
+    }
+
+    /**
+     * Email de notification d'annulation d'événement
+     */
+    public boolean sendEventCancellationEmail(String to, String participantName, String eventTitle) {
+        String subject = "Événement annulé : " + eventTitle;
+        String content = buildEventCancellationEmail(participantName, eventTitle);
+        return sendEmail(to, subject, content, true);
+    }
+
     private String buildInscriptionEmail(String participantName, String eventTitle, String eventDate, String eventLocation) {
         return "<!DOCTYPE html>" +
                 "<html>" +
@@ -162,6 +180,82 @@ public class EventEmailService {
                 "<p><strong>Événement :</strong> " + eventTitle + "</p>" +
                 "</div>" +
                 "<p>Nous espérons vous revoir à un prochain événement !</p>" +
+                "<p>Cordialement,<br>L'équipe UniMind</p>" +
+                "</div>" +
+                "</div>" +
+                "</body>" +
+                "</html>";
+    }
+
+    private String buildEventModificationEmail(String participantName, String eventTitle, String eventDate, String eventLocation, String changes) {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "<meta charset='UTF-8'>" +
+                "<style>" +
+                "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }" +
+                ".container { max-width: 600px; margin: 0 auto; padding: 20px; }" +
+                ".header { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }" +
+                ".content { background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 10px 10px; }" +
+                ".event-details { background: white; padding: 15px; margin: 15px 0; border-radius: 5px; border-left: 4px solid #fda085; }" +
+                ".event-details strong { color: #fda085; }" +
+                ".changes { background: #fff3cd; padding: 15px; margin: 15px 0; border-radius: 5px; border-left: 4px solid #ffc107; }" +
+                ".changes-item { margin: 8px 0; }" +
+                "</style>" +
+                "</head>" +
+                "<body>" +
+                "<div class='container'>" +
+                "<div class='header'>" +
+                "<h2>UniMind</h2>" +
+                "<p>Modification d'événement</p>" +
+                "</div>" +
+                "<div class='content'>" +
+                "<p>Bonjour <strong>" + participantName + "</strong>,</p>" +
+                "<p>L'événement auquel vous êtes inscrit a été modifié.</p>" +
+                "<div class='changes'>" +
+                "<p><strong>Changements :</strong></p>" +
+                changes +
+                "</div>" +
+                "<div class='event-details'>" +
+                "<p><strong>Événement :</strong> " + eventTitle + "</p>" +
+                "<p><strong>Date :</strong> " + eventDate + "</p>" +
+                "<p><strong>Lieu :</strong> " + eventLocation + "</p>" +
+                "</div>" +
+                "<p>Veuillez vérifier les nouvelles informations.</p>" +
+                "<p>Cordialement,<br>L'équipe UniMind</p>" +
+                "</div>" +
+                "</div>" +
+                "</body>" +
+                "</html>";
+    }
+
+    private String buildEventCancellationEmail(String participantName, String eventTitle) {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "<meta charset='UTF-8'>" +
+                "<style>" +
+                "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }" +
+                ".container { max-width: 600px; margin: 0 auto; padding: 20px; }" +
+                ".header { background: linear-gradient(135deg, #ff6b6b 0%, #ee5253 100%); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }" +
+                ".content { background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 10px 10px; }" +
+                ".event-details { background: white; padding: 15px; margin: 15px 0; border-radius: 5px; border-left: 4px solid #ee5253; }" +
+                ".event-details strong { color: #ee5253; }" +
+                "</style>" +
+                "</head>" +
+                "<body>" +
+                "<div class='container'>" +
+                "<div class='header'>" +
+                "<h2>UniMind</h2>" +
+                "<p>Événement annulé</p>" +
+                "</div>" +
+                "<div class='content'>" +
+                "<p>Bonjour <strong>" + participantName + "</strong>,</p>" +
+                "<p>Nous vous informons que l'événement suivant a été annulé.</p>" +
+                "<div class='event-details'>" +
+                "<p><strong>Événement :</strong> " + eventTitle + "</p>" +
+                "</div>" +
+                "<p>Nous nous excusons pour la gêne occasionnée.</p>" +
                 "<p>Cordialement,<br>L'équipe UniMind</p>" +
                 "</div>" +
                 "</div>" +

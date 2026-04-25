@@ -3,18 +3,34 @@ package org.example.services;
 import org.example.entities.Evenement;
 import org.example.enums.StatutEvenement;
 import org.example.enums.TypeEvenement;
+import org.example.services.evenement.EventEmailService;
 import org.example.utils.MyDataBase_Unimind;
 
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 public class EvenementService implements ICrud<Evenement> {
 
     private final Connection connection;
+    private final EventEmailService emailService;
+    private ParticipationService participationService;
 
     public EvenementService() {
         this.connection = MyDataBase_Unimind.getInstance().getConnection();
+        this.emailService = new EventEmailService();
+
+        // Configuration de l'email (à remplacer par vos identifiants)
+        this.emailService.setUsername("nadineeddouch07@gmail.com");
+        this.emailService.setPassword("jttd apnv wxpj rxlt");
+    }
+
+    private ParticipationService getParticipationService() {
+        if (participationService == null) {
+            participationService = new ParticipationService();
+        }
+        return participationService;
     }
 
     @Override
@@ -64,6 +80,11 @@ public class EvenementService implements ICrud<Evenement> {
     @Override
     public void modifier(Evenement e) throws SQLException {
         System.out.println("Modification de l'evenement ID: " + e.getEvenementId());
+
+        // Récupérer l'ancien événement avant modification
+        Evenement oldEvent = findById(e.getEvenementId());
+        StatutEvenement oldStatut = oldEvent != null ? oldEvent.getStatut() : null;
+
         String sql = "UPDATE evenement SET titre=?, description=?, type=?, date_debut=?, date_fin=?, lieu=?, capacite_max=?, nombre_inscrits=?, statut=?, date_limite_inscription=?, organisateur_id=?, updated_at=?, image=?, latitude=?, longitude=? " +
                 "WHERE evenement_id=?";
 
@@ -94,6 +115,160 @@ public class EvenementService implements ICrud<Evenement> {
             ps.setInt(16, e.getEvenementId());
             ps.executeUpdate();
             System.out.println("Evenement ID " + e.getEvenementId() + " modifie avec succes");
+        }
+
+        // Envoyer les emails aux participants si le statut a changé
+        if (oldStatut != null && e.getStatut() != null) {
+            if (oldStatut != e.getStatut()) {
+                // Le statut a changé
+                if (e.getStatut() == StatutEvenement.ANNULE) {
+                    // Événement annulé
+                    sendEventCancellationEmails(e.getEvenementId(), e.getTitre());
+                }
+            } else if (e.getStatut() != StatutEvenement.ANNULE) {
+                // Événement modifié (mais pas annulé)
+                sendEventModificationEmails(e.getEvenementId(), e.getTitre(), e.getDateDebut(), e.getLieu(), oldEvent, e);
+            }
+        }
+    }
+
+    /**
+     * Envoyer l'email de modification d'événement à tous les participants
+     */
+    private void sendEventModificationEmails(int evenementId, String eventTitle, Timestamp eventDate, String eventLocation, Evenement oldEvent, Evenement newEvent) {
+        try {
+            java.util.List<ParticipationService.ParticipantInfo> participants = getParticipationService().getParticipantsByEvenementId(evenementId);
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            String formattedDate = eventDate != null ? sdf.format(eventDate) : "Non spécifié";
+            String formattedLocation = eventLocation != null ? eventLocation : "Non spécifié";
+
+            // Détecter les changements
+            String changes = detectChanges(oldEvent, newEvent);
+
+            for (ParticipationService.ParticipantInfo participant : participants) {
+                String participantName = participant.getPrenom() + " " + participant.getNom();
+                emailService.sendEventModificationEmail(
+                    participant.getEmail(),
+                    participantName,
+                    eventTitle,
+                    formattedDate,
+                    formattedLocation,
+                    changes
+                );
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de l'envoi des emails de modification: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Détecter les changements entre l'ancien et le nouvel événement
+     */
+    private String detectChanges(Evenement oldEvent, Evenement newEvent) {
+        StringBuilder changes = new StringBuilder();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+        // Comparer le titre
+        if (!equals(oldEvent.getTitre(), newEvent.getTitre())) {
+            changes.append("<div class='changes-item'>");
+            changes.append("<strong>Titre :</strong> de ").append(oldEvent.getTitre()).append(" à ").append(newEvent.getTitre());
+            changes.append("</div>");
+        }
+
+        // Comparer la description
+        if (!equals(oldEvent.getDescription(), newEvent.getDescription())) {
+            changes.append("<div class='changes-item'>");
+            changes.append("<strong>Description :</strong> modifiée");
+            changes.append("</div>");
+        }
+
+        // Comparer la date de début
+        if (!equals(oldEvent.getDateDebut(), newEvent.getDateDebut())) {
+            String oldDate = oldEvent.getDateDebut() != null ? sdf.format(oldEvent.getDateDebut()) : "Non spécifié";
+            String newDate = newEvent.getDateDebut() != null ? sdf.format(newEvent.getDateDebut()) : "Non spécifié";
+            changes.append("<div class='changes-item'>");
+            changes.append("<strong>Date de début :</strong> de ").append(oldDate).append(" à ").append(newDate);
+            changes.append("</div>");
+        }
+
+        // Comparer la date de fin
+        if (!equals(oldEvent.getDateFin(), newEvent.getDateFin())) {
+            String oldDate = oldEvent.getDateFin() != null ? sdf.format(oldEvent.getDateFin()) : "Non spécifié";
+            String newDate = newEvent.getDateFin() != null ? sdf.format(newEvent.getDateFin()) : "Non spécifié";
+            changes.append("<div class='changes-item'>");
+            changes.append("<strong>Date de fin :</strong> de ").append(oldDate).append(" à ").append(newDate);
+            changes.append("</div>");
+        }
+
+        // Comparer le lieu
+        if (!equals(oldEvent.getLieu(), newEvent.getLieu())) {
+            changes.append("<div class='changes-item'>");
+            changes.append("<strong>Lieu :</strong> de ").append(oldEvent.getLieu()).append(" à ").append(newEvent.getLieu());
+            changes.append("</div>");
+        }
+
+        // Comparer la capacité
+        if (oldEvent.getCapaciteMax() != newEvent.getCapaciteMax()) {
+            changes.append("<div class='changes-item'>");
+            changes.append("<strong>Capacité :</strong> de ").append(oldEvent.getCapaciteMax()).append(" à ").append(newEvent.getCapaciteMax());
+            changes.append("</div>");
+        }
+
+        // Comparer la date limite d'inscription
+        if (!equals(oldEvent.getDateLimiteInscription(), newEvent.getDateLimiteInscription())) {
+            String oldDate = oldEvent.getDateLimiteInscription() != null ? sdf.format(oldEvent.getDateLimiteInscription()) : "Non spécifié";
+            String newDate = newEvent.getDateLimiteInscription() != null ? sdf.format(newEvent.getDateLimiteInscription()) : "Non spécifié";
+            changes.append("<div class='changes-item'>");
+            changes.append("<strong>Date limite d'inscription :</strong> de ").append(oldDate).append(" à ").append(newDate);
+            changes.append("</div>");
+        }
+
+        // Comparer le type
+        if (!equals(oldEvent.getType(), newEvent.getType())) {
+            changes.append("<div class='changes-item'>");
+            changes.append("<strong>Type :</strong> de ").append(oldEvent.getType()).append(" à ").append(newEvent.getType());
+            changes.append("</div>");
+        }
+
+        // Comparer les coordonnées
+        if (!equals(oldEvent.getLatitude(), newEvent.getLatitude()) || !equals(oldEvent.getLongitude(), newEvent.getLongitude())) {
+            changes.append("<div class='changes-item'>");
+            changes.append("<strong>Coordonnées :</strong> modifiées");
+            changes.append("</div>");
+        }
+
+        if (changes.length() == 0) {
+            changes.append("<div class='changes-item'>Aucun changement détecté</div>");
+        }
+
+        return changes.toString();
+    }
+
+    private boolean equals(Object a, Object b) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        return a.equals(b);
+    }
+
+    /**
+     * Envoyer l'email d'annulation d'événement à tous les participants
+     */
+    private void sendEventCancellationEmails(int evenementId, String eventTitle) {
+        try {
+            java.util.List<ParticipationService.ParticipantInfo> participants = getParticipationService().getParticipantsByEvenementId(evenementId);
+
+            for (ParticipationService.ParticipantInfo participant : participants) {
+                String participantName = participant.getPrenom() + " " + participant.getNom();
+                emailService.sendEventCancellationEmail(
+                    participant.getEmail(),
+                    participantName,
+                    eventTitle
+                );
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de l'envoi des emails d'annulation: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
