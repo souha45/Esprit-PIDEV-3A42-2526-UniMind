@@ -126,6 +126,21 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
     @Override
     public void setUtilisateur(User user) {
         this.currentUser = user;
+
+        // Initialiser les services si ce n'est pas déjà fait
+        if (traitementService == null) {
+            traitementService = new TraitementService();
+        }
+        if (suiviTraitementService == null) {
+            suiviTraitementService = new SuiviTraitementService();
+        }
+        if (traitementIAService == null) {
+            traitementIAService = new TraitementIAService();
+        }
+        if (toutesLesCartes == null) {
+            toutesLesCartes = new ArrayList<>();
+        }
+
         if (sidebarEtudiantController != null) {
             sidebarEtudiantController.setUtilisateur(user);
             sidebarEtudiantController.setActiveButtonByFxml("/traitement-etudiant-view.fxml");
@@ -791,9 +806,11 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             controller.setTraitement(traitement);
             controller.setUtilisateur(currentUser);
 
+            // ✅ Ouvrir dans une nouvelle fenêtre en plein écran
             Stage stage = new Stage();
-            stage.setTitle("Traduction - " + traitement.getTitre());
-            stage.setScene(new Scene(root, 1000, 700));
+            stage.setTitle("Traduction de Traitement");
+            stage.setScene(new Scene(root));
+            stage.setMaximized(true); // plein écran
             stage.show();
 
         } catch (Exception e) {

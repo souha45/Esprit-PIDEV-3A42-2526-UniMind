@@ -1,5 +1,17 @@
 package org.example.controllers;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.net.URL;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ResourceBundle;
+
+import org.example.entities.Traitement;
+import org.example.entities.User;
+import org.example.enums.Role;
+import org.example.services.TraitementTranslationService;
+
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
@@ -30,19 +42,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import org.example.entities.Traitement;
-import org.example.entities.User;
-import org.example.services.TraitementTranslationService;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ResourceBundle;
+import javafx.stage.Stage;
 
 public class TraitementTraductionController implements Initializable {
 
@@ -451,23 +451,9 @@ public class TraitementTraductionController implements Initializable {
 
     @FXML
     private void handleRetour() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-view.fxml"));
-            Parent root = loader.load();
-
-            TraitementController controller = loader.getController();
-            if (controller != null) {
-                controller.setUtilisateur(utilisateur);
-            }
-
-            Scene scene = btnRetour.getScene();
-            if (scene != null) {
-                scene.setRoot(root);
-            }
-
-        } catch (Exception e) {
-            afficherMessage("Erreur lors du retour : " + e.getMessage(), Alert.AlertType.ERROR);
-        }
+        // ✅ Simplement fermer cette fenêtre — la fenêtre principale reste intacte
+        Stage stage = (Stage) btnRetour.getScene().getWindow();
+        stage.close();
     }
 
     private void afficherMessage(String message, Alert.AlertType type) {

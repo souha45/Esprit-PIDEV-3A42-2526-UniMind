@@ -1335,12 +1335,16 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                 controller.setUtilisateur(utilisateur);
             }
 
-            Scene currentScene = tableViewTraitements.getScene();
-            if (currentScene != null) {
-                currentScene.setRoot(root);
-            }
+            // ✅ Ouvrir dans une nouvelle fenêtre en plein écran — comme pour l'étudiant
+            Stage stage = new Stage();
+            stage.setTitle("Traduction de Traitement");
+            stage.setScene(new Scene(root));
+            stage.setMaximized(true);
+            stage.show();
+
         } catch (Exception e) {
             afficherToast("✗ Erreur d'ouverture: " + e.getMessage(), false);
+            e.printStackTrace();
         }
     }
 

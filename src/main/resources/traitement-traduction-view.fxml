@@ -47,11 +47,10 @@
 
             <!-- Language Selection -->
             <VBox styleClass="language-section" spacing="10">
-                <Label text="Sélection de la langue de traduction" styleClass="section-title"/>
+                <Label text="Traduction automatique - Sélectionnez la langue cible" styleClass="section-title"/>
                 <HBox spacing="15" alignment="CENTER_LEFT">
-                    <ComboBox fx:id="cmbLangueSource" prefWidth="150" promptText="Langue source"/>
-                    <Label text="vers" styleClass="translation-arrow"/>
-                    <ComboBox fx:id="cmbLangueCible" prefWidth="150" promptText="Langue cible"/>
+                    <Label text="Détecter automatiquement →" styleClass="auto-detect-label"/>
+                    <ComboBox fx:id="cmbLangueCible" prefWidth="200" promptText="Langue cible"/>
                     <Button fx:id="btnTraduire" text="Traduire" onAction="#handleTraduire" styleClass="btn-primary"/>
                 </HBox>
             </VBox>
