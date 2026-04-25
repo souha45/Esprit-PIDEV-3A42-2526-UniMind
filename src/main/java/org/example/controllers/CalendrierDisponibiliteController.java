@@ -4,9 +4,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.example.entities.DisponibilitePsy;
@@ -32,21 +30,23 @@ public class CalendrierDisponibiliteController {
     @FXML private Button   btnMoisPrec;
     @FXML private Button   btnMoisSuiv;
     @FXML private Button   btnRetour;
+    @FXML private Label    lblSelection;
 
-    // ── Données ─────────────────────────────────────────────────────
     private DisponibilitePsyService service;
     private User utilisateur;
     private Stage calendrierStage;
 
     private YearMonth moisCourant = YearMonth.now();
-
-    // Map jour → liste de créneaux (pour affichage rapide)
     private Map<LocalDate, List<DisponibilitePsy>> creneauxParJour = new HashMap<>();
-
-    // Noms des jours (lundi en premier)
     private static final String[] JOURS = {"Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"};
 
-    // ────────────────────────────────────────────────────────────────
+    // Variables pour le glisser-déposer direct sur la cellule
+    private LocalDate dateEnSelection;
+    private int heureDebutSelection = -1;
+    private int heureFinSelection = -1;
+    private Label labelInfoActif;
+    private double debutY = 0;
+
     @FXML
     public void initialize() {
         service = new DisponibilitePsyService();
@@ -61,15 +61,14 @@ public class CalendrierDisponibiliteController {
         });
         btnRetour.setOnAction(e -> fermer());
 
-        // Hover navigation
-        styleHoverBtn(btnMoisPrec);
-        styleHoverBtn(btnMoisSuiv);
-        styleHoverBtn(btnRetour);
-
         construireEntetes();
+
+        if (lblSelection != null) {
+            lblSelection.setText("Cliquez et glissez verticalement sur un jour pour sélectionner une plage horaire");
+            lblSelection.setStyle("-fx-font-family:'Segoe UI'; -fx-font-size:11px; -fx-text-fill:#9ca3af; -fx-font-style:italic; -fx-padding:8 0 0 0;");
+        }
     }
 
-    // ── Injection utilisateur depuis le parent ───────────────────────
     public void setUtilisateur(User user) {
         this.utilisateur = user;
         chargerCreneaux();
@@ -80,13 +79,11 @@ public class CalendrierDisponibiliteController {
         this.calendrierStage = stage;
     }
 
-    // ── Chargement des créneaux depuis la BDD ───────────────────────
     private void chargerCreneaux() {
         creneauxParJour.clear();
         if (utilisateur == null) return;
         try {
-            List<DisponibilitePsy> liste =
-                    service.afficherDisponibilitesPsy(utilisateur.getUserId());
+            List<DisponibilitePsy> liste = service.afficherDisponibilitesPsy(utilisateur.getUserId());
             for (DisponibilitePsy d : liste) {
                 LocalDate jour = d.getDateDispo().toLocalDate();
                 creneauxParJour.computeIfAbsent(jour, k -> new ArrayList<>()).add(d);
@@ -96,46 +93,38 @@ public class CalendrierDisponibiliteController {
         }
     }
 
-    // ── Entêtes colonnes (Lun … Dim) ────────────────────────────────
     private void construireEntetes() {
         gridEntetes.getChildren().clear();
         for (int i = 0; i < 7; i++) {
             Label lbl = new Label(JOURS[i]);
             boolean weekend = (i == 5 || i == 6);
-            lbl.setStyle(
-                    "-fx-font-family:'Segoe UI'; -fx-font-size:12px; -fx-font-weight:bold;" +
-                            "-fx-text-fill:" + (weekend ? "#a5b4fc" : "#6366f1") + ";" +
-                            "-fx-alignment:CENTER; -fx-padding:4 0;");
+            lbl.setStyle("-fx-font-family:'Segoe UI'; -fx-font-size:12px; -fx-font-weight:bold;" +
+                    "-fx-text-fill:" + (weekend ? "#a5b4fc" : "#6366f1") + ";" +
+                    "-fx-alignment:CENTER; -fx-padding:4 0;");
             lbl.setMaxWidth(Double.MAX_VALUE);
             GridPane.setHgrow(lbl, Priority.ALWAYS);
             gridEntetes.add(lbl, i, 0);
         }
     }
 
-    // ── Construction de la grille pour le mois courant ──────────────
     private void rafraichir() {
-        // Label mois / année
-        String moisNom = moisCourant.getMonth()
-                .getDisplayName(TextStyle.FULL, Locale.FRENCH);
+        String moisNom = moisCourant.getMonth().getDisplayName(TextStyle.FULL, Locale.FRENCH);
         moisNom = Character.toUpperCase(moisNom.charAt(0)) + moisNom.substring(1);
         lblMoisAnnee.setText(moisNom + " " + moisCourant.getYear());
 
         gridCalendrier.getChildren().clear();
-        // Vider les contraintes de lignes existantes
         gridCalendrier.getRowConstraints().clear();
 
         LocalDate premier = moisCourant.atDay(1);
-        // Lundi = 1, donc décalage (lundi = col 0)
-        int decalage = premier.getDayOfWeek().getValue() - 1; // 0-6
-        int nbJours  = moisCourant.lengthOfMonth();
+        int decalage = premier.getDayOfWeek().getValue() - 1;
+        int nbJours = moisCourant.lengthOfMonth();
         int nbLignes = (int) Math.ceil((decalage + nbJours) / 7.0);
 
-        // Ajouter les RowConstraints pour que chaque ligne s'étende
         for (int r = 0; r < nbLignes; r++) {
             RowConstraints rc = new RowConstraints();
             rc.setVgrow(Priority.ALWAYS);
-            rc.setMinHeight(90);
-            rc.setPrefHeight(110);
+            rc.setMinHeight(100);
+            rc.setPrefHeight(120);
             gridCalendrier.getRowConstraints().add(rc);
         }
 
@@ -143,117 +132,153 @@ public class CalendrierDisponibiliteController {
 
         for (int jour = 1; jour <= nbJours; jour++) {
             LocalDate date = moisCourant.atDay(jour);
-            int cellIndex  = decalage + jour - 1;
-            int col        = cellIndex % 7;
-            int row        = cellIndex / 7;
+            int cellIndex = decalage + jour - 1;
+            int col = cellIndex % 7;
+            int row = cellIndex / 7;
 
-            List<DisponibilitePsy> creneaux =
-                    creneauxParJour.getOrDefault(date, Collections.emptyList());
+            List<DisponibilitePsy> creneaux = creneauxParJour.getOrDefault(date, Collections.emptyList());
 
             VBox cellule = construireCellule(date, creneaux, today);
             gridCalendrier.add(cellule, col, row);
         }
     }
 
-    // ── Construit une cellule jour ───────────────────────────────────
-    private VBox construireCellule(LocalDate date,
-                                   List<DisponibilitePsy> creneaux,
-                                   LocalDate today) {
+    // ── CELLULE AVEC GLISSER-DÉPOSER DIRECT ──────────────────────────
+    private VBox construireCellule(LocalDate date, List<DisponibilitePsy> creneaux, LocalDate today) {
         boolean estAujourdhui = date.equals(today);
-        boolean estPasse      = date.isBefore(today);
-        boolean weekend       = (date.getDayOfWeek() == DayOfWeek.SATURDAY
-                || date.getDayOfWeek() == DayOfWeek.SUNDAY);
+        boolean estPasse = date.isBefore(today);
+        boolean weekend = (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY);
 
-        // ── Fond de la cellule ───────────────────────────────────────
         String bgColor;
-        if (estAujourdhui)       bgColor = "#eef2ff";
-        else if (estPasse)       bgColor = "#f9fafb";
-        else if (weekend)        bgColor = "#f5f3ff";
-        else                     bgColor = "#ffffff";
+        if (estAujourdhui) bgColor = "#eef2ff";
+        else if (estPasse) bgColor = "#f9fafb";
+        else if (weekend) bgColor = "#f5f3ff";
+        else bgColor = "#ffffff";
 
-        String bordure = estAujourdhui
-                ? "-fx-border-color: #6366f1; -fx-border-width: 2;"
-                : "-fx-border-color: #e0e7ff; -fx-border-width: 1;";
+        String bordure = estAujourdhui ? "-fx-border-color: #6366f1; -fx-border-width: 2;" : "-fx-border-color: #e0e7ff; -fx-border-width: 1;";
 
         VBox cellule = new VBox(3);
         cellule.setMaxWidth(Double.MAX_VALUE);
         cellule.setMaxHeight(Double.MAX_VALUE);
-        cellule.setStyle(
-                "-fx-background-color:" + bgColor + ";" +
-                        bordure +
-                        "-fx-background-radius:10; -fx-border-radius:10; -fx-padding:6 8;");
+        cellule.setStyle("-fx-background-color:" + bgColor + ";" + bordure +
+                "-fx-background-radius:10; -fx-border-radius:10; -fx-padding:6 4;");
 
-        // ── Numéro du jour ───────────────────────────────────────────
+        // Numéro du jour
         HBox topRow = new HBox();
         topRow.setAlignment(Pos.CENTER_LEFT);
+        topRow.setStyle("-fx-padding:0 0 4 2;");
 
         Label lblJour = new Label(String.valueOf(date.getDayOfMonth()));
-        lblJour.setStyle(
-                "-fx-font-family:'Segoe UI'; -fx-font-size:13px; -fx-font-weight:bold;" +
-                        "-fx-text-fill:" + (estAujourdhui ? "#6366f1"
-                        : estPasse      ? "#d1d5db"
-                        : weekend       ? "#8b5cf6"
-                        : "#374151") + ";");
+        lblJour.setStyle("-fx-font-family:'Segoe UI'; -fx-font-size:12px; -fx-font-weight:bold;" +
+                "-fx-text-fill:" + (estAujourdhui ? "#6366f1" : estPasse ? "#d1d5db" : weekend ? "#8b5cf6" : "#374151") + ";");
 
         if (estAujourdhui) {
-            // Badge rond pour aujourd'hui
             StackPane badge = new StackPane(lblJour);
-            badge.setStyle("-fx-background-color:#6366f1; -fx-background-radius:50;" +
-                    "-fx-min-width:24; -fx-min-height:24; -fx-max-width:24; -fx-max-height:24;");
-            lblJour.setStyle("-fx-font-family:'Segoe UI'; -fx-font-size:12px;" +
-                    "-fx-font-weight:bold; -fx-text-fill:white;");
+            badge.setStyle("-fx-background-color:#6366f1; -fx-background-radius:50; -fx-min-width:22; -fx-min-height:22;");
+            lblJour.setStyle("-fx-text-fill:white; -fx-font-size:11px;");
             topRow.getChildren().add(badge);
         } else {
             topRow.getChildren().add(lblJour);
         }
 
-        // Icône "+" si futur et pas de créneaux (cliquable)
-        if (!estPasse && creneaux.isEmpty()) {
-            Region spacer = new Region();
-            HBox.setHgrow(spacer, Priority.ALWAYS);
-            Label plus = new Label("+");
-            plus.setStyle("-fx-font-size:14px; -fx-text-fill:#c4b5fd; -fx-cursor:hand;");
-            topRow.getChildren().addAll(spacer, plus);
-        }
+        // Label d'info pour la sélection en cours
+        Label lblInfo = new Label("");
+        lblInfo.setStyle("-fx-font-size:9px; -fx-text-fill:#8b5cf6; -fx-padding:2; -fx-background-color:#ede9fe; -fx-background-radius:8;");
+        lblInfo.setAlignment(Pos.CENTER);
+        lblInfo.setMaxWidth(Double.MAX_VALUE);
+        lblInfo.setVisible(false);
 
         cellule.getChildren().add(topRow);
 
-        // ── Créneaux du jour ─────────────────────────────────────────
+        // Créneaux existants
+        VBox creneauxContainer = new VBox(2);
         for (DisponibilitePsy d : creneaux) {
             Label chip = construireChipCreneau(d);
-            cellule.getChildren().add(chip);
+            creneauxContainer.getChildren().add(chip);
         }
+        cellule.getChildren().add(creneauxContainer);
+        cellule.getChildren().add(lblInfo);
 
-        // ── Clic sur cellule = ouvrir formulaire (si futur) ─────────
+        // Gestion du glisser-déposer sur la cellule entière (sauf si date passée)
         if (!estPasse) {
-            cellule.setOnMouseClicked(e -> ouvrirFormulaireAjout(date, null, null));
-            cellule.setOnMouseEntered(ev -> {
-                if (!estAujourdhui)
-                    cellule.setStyle(cellule.getStyle()
-                            .replace(bgColor, "#ede9fe")
-                            .replace("#e0e7ff", "#a5b4fc"));
-                cellule.setStyle(cellule.getStyle() + "-fx-cursor:hand;");
+            cellule.setOnMousePressed(event -> {
+                dateEnSelection = date;
+                debutY = event.getY();
+                double hauteur = cellule.getHeight();
+                heureDebutSelection = 8 + (int)((debutY / hauteur) * 12);
+                heureDebutSelection = Math.max(8, Math.min(19, heureDebutSelection));
+                heureFinSelection = heureDebutSelection + 1;
+                afficherInfoSelection(date, lblInfo);
+                event.consume();
             });
-            cellule.setOnMouseExited(ev ->
-                    cellule.setStyle(
-                            "-fx-background-color:" + bgColor + ";" +
-                                    bordure +
-                                    "-fx-background-radius:10; -fx-border-radius:10; -fx-padding:6 8; -fx-cursor:default;")
-            );
 
-            Tooltip.install(cellule, new Tooltip(
-                    "Cliquez pour ajouter une disponibilité le "
-                            + date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
+            cellule.setOnMouseDragged(event -> {
+                if (dateEnSelection != null && dateEnSelection.equals(date)) {
+                    double y = event.getY();
+                    double hauteur = cellule.getHeight();
+                    int nouvelleHeure = 8 + (int)((y / hauteur) * 12);
+                    nouvelleHeure = Math.max(8, Math.min(20, nouvelleHeure));
+
+                    if (nouvelleHeure < heureDebutSelection) {
+                        heureDebutSelection = nouvelleHeure;
+                        heureFinSelection = heureDebutSelection + 1;
+                    } else if (nouvelleHeure >= heureFinSelection) {
+                        heureFinSelection = nouvelleHeure;
+                        if (heureFinSelection > heureDebutSelection + 3) heureFinSelection = heureDebutSelection + 3;
+                    }
+
+                    heureDebutSelection = Math.max(8, Math.min(19, heureDebutSelection));
+                    heureFinSelection = Math.max(heureDebutSelection + 1, Math.min(20, heureFinSelection));
+
+                    afficherInfoSelection(date, lblInfo);
+                    event.consume();
+                }
+            });
+
+            cellule.setOnMouseReleased(event -> {
+                if (dateEnSelection != null && heureDebutSelection != -1 && heureFinSelection != -1) {
+                    ouvrirFormulaireAvecCreneau(date,
+                            LocalTime.of(heureDebutSelection, 0),
+                            LocalTime.of(heureFinSelection, 0));
+                }
+                reinitialiserSelection(lblInfo);
+                event.consume();
+            });
+
+            // Tooltip informatif
+            Tooltip.install(cellule, new Tooltip("Glissez verticalement pour sélectionner une plage horaire\n(déroulez de 8h à 20h)"));
         }
 
         return cellule;
     }
 
-    // ── Chip coloré pour un créneau ──────────────────────────────────
+    private void afficherInfoSelection(LocalDate date, Label lblInfo) {
+        if (lblInfo != null) {
+            lblInfo.setText(String.format("📌 %02d:00 - %02d:00", heureDebutSelection, heureFinSelection));
+            lblInfo.setVisible(true);
+        }
+        if (lblSelection != null) {
+            lblSelection.setText(String.format("Sélection : %s de %02d:00 à %02d:00",
+                    date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), heureDebutSelection, heureFinSelection));
+        }
+    }
+
+    private void reinitialiserSelection(Label lblInfo) {
+        if (lblInfo != null) {
+            lblInfo.setVisible(false);
+        }
+        if (lblSelection != null) {
+            lblSelection.setText("Cliquez et glissez verticalement sur un jour pour sélectionner une plage horaire");
+        }
+        dateEnSelection = null;
+        heureDebutSelection = -1;
+        heureFinSelection = -1;
+    }
+
     private Label construireChipCreneau(DisponibilitePsy d) {
         String statut = d.getStatut().toString().toLowerCase();
-        String debut  = d.getHeureDebut().toString().substring(0, 5);
-        String fin    = d.getHeureFin().toString().substring(0, 5);
+        String debut = d.getHeureDebut().toString().substring(0, 5);
+        String fin = d.getHeureFin().toString().substring(0, 5);
 
         String bg, fg;
         switch (statut) {
@@ -264,79 +289,62 @@ public class CalendrierDisponibiliteController {
         }
 
         Label chip = new Label(debut + "–" + fin);
-        chip.setStyle(
-                "-fx-background-color:" + bg + "; -fx-text-fill:" + fg + ";" +
-                        "-fx-font-family:'Segoe UI'; -fx-font-size:9px; -fx-font-weight:bold;" +
-                        "-fx-padding:2 6; -fx-background-radius:20; -fx-cursor:hand;");
         chip.setMaxWidth(Double.MAX_VALUE);
+        chip.setAlignment(Pos.CENTER);
+        chip.setStyle("-fx-background-color:" + bg + "; -fx-text-fill:" + fg + ";" +
+                "-fx-font-family:'Segoe UI'; -fx-font-size:9px; -fx-font-weight:bold;" +
+                "-fx-padding:2 4; -fx-background-radius:12; -fx-cursor:hand;");
 
-        String type = d.getTypeConsult().toString();
-        String lieu = (d.getLieu() != null && !d.getLieu().isEmpty()) ? d.getLieu() : "En ligne";
-        Tooltip.install(chip, new Tooltip(
-                debut + " – " + fin + "\n" + type + "\n" + lieu + "\nStatut : " + statut));
+        Tooltip.install(chip, new Tooltip(debut + " – " + fin + "\n" + d.getTypeConsult() + "\n" +
+                (d.getLieu() != null ? d.getLieu() : "En ligne") + "\nStatut : " + statut));
 
-        // Clic sur chip = ouvrir formulaire pré-rempli avec les horaires du créneau
         LocalTime hDebut = d.getHeureDebut().toLocalTime();
-        LocalTime hFin   = d.getHeureFin().toLocalTime();
-        LocalDate jour   = d.getDateDispo().toLocalDate();
+        LocalTime hFin = d.getHeureFin().toLocalTime();
+        LocalDate jour = d.getDateDispo().toLocalDate();
         chip.setOnMouseClicked(ev -> {
-            ev.consume(); // ne pas propager au parent (cellule)
-            ouvrirFormulaireAjout(jour, hDebut, hFin);
+            ev.consume();
+            ouvrirFormulaireAvecCreneau(jour, hDebut, hFin);
         });
 
         return chip;
     }
 
-    // ── Ouvre le formulaire d'ajout pré-rempli ───────────────────────
-    private void ouvrirFormulaireAjout(LocalDate date,
-                                       LocalTime heureDebut,
-                                       LocalTime heureFin) {
+    private void ouvrirFormulaireAvecCreneau(LocalDate date, LocalTime heureDebut, LocalTime heureFin) {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/AjoutDisponibiliteModal.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/AjoutDisponibiliteModal.fxml"));
             Stage modalStage = new Stage();
-            Scene scene      = new Scene(loader.load());
+            Scene scene = new Scene(loader.load());
 
             modalStage.initModality(javafx.stage.Modality.WINDOW_MODAL);
-            modalStage.initOwner(calendrierStage != null
-                    ? calendrierStage
-                    : gridCalendrier.getScene().getWindow());
+            modalStage.initOwner(calendrierStage != null ? calendrierStage : gridCalendrier.getScene().getWindow());
             modalStage.setTitle("Nouvelle disponibilité");
             modalStage.setScene(scene);
             modalStage.setResizable(false);
 
-            AjoutDisponibiliteController ctrl = loader.getController();
-            ctrl.setUserId(utilisateur.getUserId());
-            ctrl.setModalStage(modalStage);
-
-            // ── Pré-remplissage ──────────────────────────────────────
-            ctrl.setDatePreRemplie(date);
-            if (heureDebut != null) ctrl.setHeuresPreRemplies(heureDebut, heureFin);
+            AjoutDisponibiliteController controller = loader.getController();
+            controller.setUserId(utilisateur.getUserId());
+            controller.setModalStage(modalStage);
+            controller.setDatePreRemplie(date);
+            controller.setHeuresPreRemplies(heureDebut, heureFin);
 
             modalStage.showAndWait();
 
-            // Recharger les créneaux après ajout éventuel
             chargerCreneaux();
             rafraichir();
 
         } catch (IOException e) {
             e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erreur");
+            alert.setHeaderText(null);
+            alert.setContentText("Impossible d'ouvrir le formulaire");
+            alert.showAndWait();
         }
     }
 
-    // ── Fermer la fenêtre calendrier ─────────────────────────────────
     private void fermer() {
         if (calendrierStage != null) calendrierStage.close();
         else if (gridCalendrier.getScene() != null)
             ((Stage) gridCalendrier.getScene().getWindow()).close();
-    }
-
-    private void styleHoverBtn(Button btn) {
-        btn.setOnMouseEntered(e -> btn.setStyle(btn.getStyle()
-                .replace("rgba(255,255,255,0.15)", "rgba(255,255,255,0.30)")
-                .replace("rgba(255,255,255,0.20)", "rgba(255,255,255,0.35)")));
-        btn.setOnMouseExited(e -> btn.setStyle(btn.getStyle()
-                .replace("rgba(255,255,255,0.30)", "rgba(255,255,255,0.15)")
-                .replace("rgba(255,255,255,0.35)", "rgba(255,255,255,0.20)")));
     }
 }

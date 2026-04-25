@@ -8,6 +8,10 @@
             style="-fx-background-color: #f0f4ff;">
 
     <!-- ══ HEADER ══ -->
+    <!-- Message d'info pour le glisser-déposer -->
+    <Label fx:id="lblSelection"
+           style="-fx-font-family:'Segoe UI'; -fx-font-size:11px;
+              -fx-text-fill:#9ca3af; -fx-font-style:italic; -fx-padding:8 0 0 0;" />
     <top>
         <VBox style="-fx-background-color: linear-gradient(to right, #4c1d95, #6366f1);
                      -fx-padding: 18 24 16 24;" spacing="10">
