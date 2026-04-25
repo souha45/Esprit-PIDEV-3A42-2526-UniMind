@@ -41,6 +41,29 @@
                         </children>
                     </VBox>
 
+                    <!-- Section IA -->
+                    <VBox spacing="8" styleClass="ai-section">
+                        <children>
+                            <Label text="🤖 Génération IA" styleClass="form-label" style="-fx-text-fill: #667eea; -fx-font-weight: bold;" />
+                            <TextField fx:id="txtTopicAi" promptText="Sujet de l'événement (ex: intelligence artificielle)" prefWidth="400" styleClass="form-input" />
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <children>
+                                    <Button text="✨ Générer avec IA" onAction="#genererAvecIA" styleClass="btn-primary" />
+                                    <CheckBox fx:id="chkGenererDescription" text="Générer aussi la description" styleClass="form-checkbox" />
+                                </children>
+                            </HBox>
+                            <VBox spacing="4" fx:id="vboxResultatsIA" visible="false">
+                                <children>
+                                    <Label text="Titres suggérés :" styleClass="form-label" />
+                                    <ComboBox fx:id="comboTitresIA" prefWidth="400" styleClass="form-input" />
+                                    <Button text="Appliquer ce titre" onAction="#appliquerTitreIA" styleClass="btn-secondary" />
+                                </children>
+                            </VBox>
+                            <Label fx:id="lblErreurIA" text="Erreur lors de la génération IA" styleClass="error-label" visible="false" />
+                            <ProgressIndicator fx:id="progressIA" visible="false" prefWidth="20" prefHeight="20" />
+                        </children>
+                    </VBox>
+
                     <HBox spacing="20" alignment="CENTER">
                         <children>
                             <VBox spacing="8" prefWidth="200">

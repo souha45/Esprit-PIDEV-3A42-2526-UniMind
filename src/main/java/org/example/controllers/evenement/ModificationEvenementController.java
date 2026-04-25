@@ -20,6 +20,7 @@ import org.example.enums.Role;
 import org.example.enums.StatutEvenement;
 import org.example.enums.TypeEvenement;
 import org.example.services.EvenementService;
+import org.example.services.evenement.EventAiGeneratorService;
 import org.example.utils.MyDataBase_Unimind;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
@@ -40,6 +41,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ModificationEvenementController {
 
@@ -114,7 +116,22 @@ public class ModificationEvenementController {
     @FXML
     private Label lblSucces;
 
+    // Champs IA
+    @FXML
+    private TextField txtTopicAi;
+    @FXML
+    private CheckBox chkGenererDescription;
+    @FXML
+    private ComboBox<String> comboTitresIA;
+    @FXML
+    private VBox vboxResultatsIA;
+    @FXML
+    private Label lblErreurIA;
+    @FXML
+    private ProgressIndicator progressIA;
+
     private final EvenementService evenementService = new EvenementService();
+    private final EventAiGeneratorService aiGeneratorService = new EventAiGeneratorService();
     private boolean isAdmin = false;
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
@@ -692,6 +709,63 @@ public class ModificationEvenementController {
         javafx.scene.Scene scene = new javafx.scene.Scene(webView);
         mapStage.setScene(scene);
         mapStage.show();
+    }
+
+    /**
+     * Générer des suggestions avec l'IA
+     */
+    @FXML
+    private void genererAvecIA() {
+        String topic = txtTopicAi.getText().trim();
+        if (topic.isEmpty()) {
+            lblErreurIA.setText("Veuillez entrer un sujet");
+            lblErreurIA.setVisible(true);
+            return;
+        }
+
+        lblErreurIA.setVisible(false);
+        progressIA.setVisible(true);
+        vboxResultatsIA.setVisible(false);
+
+        // Exécuter dans un thread séparé pour ne pas bloquer l'UI
+        new Thread(() -> {
+            try {
+                String type = comboType.getValue() != null ? comboType.getValue().getDbValue() : "";
+                Map<String, Object> result = aiGeneratorService.generate(type, "", topic, "", "fr");
+
+                List<String> titles = (List<String>) result.get("titles");
+                String description = (String) result.get("description");
+
+                // Mettre à jour l'UI sur le thread JavaFX
+                javafx.application.Platform.runLater(() -> {
+                    progressIA.setVisible(false);
+                    comboTitresIA.setItems(FXCollections.observableArrayList(titles));
+                    vboxResultatsIA.setVisible(true);
+
+                    // Si la case est cochée, appliquer aussi la description
+                    if (chkGenererDescription.isSelected() && description != null && !description.isEmpty()) {
+                        txtDescription.setText(description);
+                    }
+                });
+            } catch (Exception e) {
+                javafx.application.Platform.runLater(() -> {
+                    progressIA.setVisible(false);
+                    lblErreurIA.setText("Erreur: " + e.getMessage());
+                    lblErreurIA.setVisible(true);
+                });
+            }
+        }).start();
+    }
+
+    /**
+     * Appliquer le titre sélectionné depuis l'IA
+     */
+    @FXML
+    private void appliquerTitreIA() {
+        String selectedTitle = comboTitresIA.getValue();
+        if (selectedTitle != null && !selectedTitle.isEmpty()) {
+            txtTitre.setText(selectedTitle);
+        }
     }
 
     /**
