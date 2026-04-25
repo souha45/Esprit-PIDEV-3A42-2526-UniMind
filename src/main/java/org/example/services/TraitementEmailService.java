@@ -185,6 +185,28 @@ public class TraitementEmailService {
     }
 
     /**
+     * Envoie un email au psychologue quand un étudiant modifie un suivi
+     */
+    public EmailResult envoyerNotificationModificationSuiviPsychologue(SuiviTraitement suivi, Traitement traitement, User etudiant) {
+        try {
+            PsychologueService psychologueService = new PsychologueService();
+            User psychologue = psychologueService.getPsychologueById(traitement.getPsychologueId());
+
+            if (psychologue == null) {
+                return new EmailResult(false, "Psychologue non trouvé pour l'ID: " + traitement.getPsychologueId());
+            }
+
+            String subject = "Suivi modifié - " + traitement.getTitre();
+            String body = creerEmailModificationSuiviPsychologue(suivi, traitement, etudiant, psychologue);
+
+            return sendEmail(psychologue.getEmail(), subject, body);
+
+        } catch (Exception e) {
+            return new EmailResult(false, "Erreur envoi email modification suivi psychologue: " + e.getMessage());
+        }
+    }
+
+    /**
      * Envoie un email au psychologue quand un étudiant ajoute un suivi
      */
     public EmailResult envoyerNotificationNouveauSuiviPsychologue(SuiviTraitement suivi, Traitement traitement, User etudiant) {
@@ -655,6 +677,71 @@ public class TraitementEmailService {
         html.append("<ul>");
         html.append("<li>Consulter les observations du patient</li>");
         html.append("<li>Évaluer l'évolution du traitement</li>");
+        html.append("<li>Contacter le patient si nécessaire</li>");
+        html.append("</ul>");
+
+        html.append("</div>");
+
+        html.append("<div class='footer'>");
+        html.append("<p>Connectez-vous à votre espace Unimind pour plus de détails.</p>");
+        html.append("<p>Ce message a été généré automatiquement.</p>");
+        html.append("</div>");
+
+        html.append("</body></html>");
+        return html.toString();
+    }
+
+    /**
+     * Crée le contenu de l'email pour notification modification suivi au psychologue
+     */
+    private String creerEmailModificationSuiviPsychologue(SuiviTraitement suivi, Traitement traitement, User etudiant, User psychologue) {
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head><meta charset='UTF-8'>");
+        html.append("<style>body{font-family:Arial,sans-serif;margin:20px;color:#333;}");
+        html.append(".header{background:#f59e0b;color:white;padding:20px;border-radius:8px;margin-bottom:20px;}");
+        html.append(".content{background:#f9fafb;padding:20px;border-radius:8px;}");
+        html.append(".info-box{background:#fef3c7;padding:15px;border-radius:6px;margin:10px 0;}");
+        html.append(".footer{margin-top:20px;font-size:12px;color:#666;}</style></head><body>");
+
+        html.append("<div class='header'>");
+        html.append("<h2>✏️ Suivi Modifié</h2>");
+        html.append("<p>Bonjour Dr ").append(psychologue.getPrenom()).append(",</p>");
+        html.append("</div>");
+
+        html.append("<div class='content'>");
+        html.append("<p>Votre patient ").append(etudiant.getPrenom()).append(" ").append(etudiant.getNom());
+        html.append(" a modifié un suivi pour son traitement.</p>");
+
+        html.append("<div class='info-box'>");
+        html.append("<h3>Traitement : ").append(traitement.getTitre()).append("</h3>");
+        html.append("<p><strong>Date du suivi :</strong> ");
+        if (suivi.getDateSuivi() != null) {
+            html.append(suivi.getDateSuivi().toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        } else {
+            html.append("Date non spécifiée");
+        }
+        html.append("</p>");
+        html.append("<p><strong>Modifié le :</strong> ");
+        if (suivi.getUpdatedAt() != null) {
+            html.append(suivi.getUpdatedAt().toLocalDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy à HH:mm")));
+        } else {
+            html.append("Date de modification non spécifiée");
+        }
+        html.append("</p>");
+        html.append("<p><strong>Saisi par :</strong> Étudiant</p>");
+        html.append("</div>");
+
+        if (suivi.getObservations() != null && !suivi.getObservations().isEmpty()) {
+            html.append("<p><strong>Nouvelles observations du patient :</strong></p>");
+            html.append("<div style='background:#f3f4f6;padding:15px;border-radius:6px;font-style:italic;'>");
+            html.append("<p>").append(suivi.getObservations()).append("</p>");
+            html.append("</div>");
+        }
+
+        html.append("<p><strong>Actions recommandées :</strong></p>");
+        html.append("<ul>");
+        html.append("<li>Consulter les observations mises à jour du patient</li>");
+        html.append("<li>Évaluer les changements dans le suivi</li>");
         html.append("<li>Contacter le patient si nécessaire</li>");
         html.append("</ul>");
 
