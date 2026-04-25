@@ -217,36 +217,52 @@ public class TraitementTraductionController implements Initializable {
     }
 
     private void afficherChampResultat(String nomChamp, String traduit, String original) {
-        VBox champBox = new VBox(8);
-        champBox.setStyle("-fx-background-color: white; -fx-padding: 15; -fx-border-radius: 10; -fx-background-radius: 10; -fx-border-color: #e5e7eb; -fx-border-width: 1;");
+        VBox champBox = new VBox(12);
+        champBox.setStyle("-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12; -fx-border-color: #e5e7eb; -fx-border-width: 1; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 4, 0, 0, 2);");
 
-        Label nomLabel = new Label(nomChamp);
-        nomLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #4f46e5; -fx-font-size: 14px;");
+        // En-tête du champ avec icône
+        HBox headerBox = new HBox(10);
+        headerBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label iconLabel = new Label("📋");
+        iconLabel.setStyle("-fx-font-size: 16px;");
+        Label nomLabel = new Label(nomChamp.toUpperCase());
+        nomLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #4f46e5; -fx-font-size: 16px;");
+        headerBox.getChildren().addAll(iconLabel, nomLabel);
 
-        HBox valeursBox = new HBox(20);
+        // Conteneur principal pour original et traduction
+        VBox contenuBox = new VBox(15);
 
-        VBox originalBox = new VBox(5);
-        originalBox.setPrefWidth(300);
-        Label originalLabel = new Label("ORIGINAL");
-        originalLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-weight: bold;");
+        // Section Original
+        VBox originalBox = new VBox(8);
+        originalBox.setStyle("-fx-background-color: #f8fafc; -fx-padding: 15; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-color: #e2e8f0;");
+        Label originalLabel = new Label("📝 TEXTE ORIGINAL");
+        originalLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b; -fx-font-weight: bold;");
         Label originalText = new Label(original != null && !original.isEmpty() ? original : "Non spécifié");
-        originalText.setStyle("-fx-font-size: 13px; -fx-text-fill: #374151; -fx-background-color: #f9fafb; -fx-padding: 10; -fx-border-radius: 6; -fx-background-radius: 6; -fx-wrap-text: true;");
+        originalText.setStyle("-fx-font-size: 14px; -fx-text-fill: #1e293b; -fx-line-spacing: 2; -fx-wrap-text: true;");
         originalText.setWrapText(true);
-        originalText.setMaxWidth(280);
+        originalText.setMinHeight(Label.USE_PREF_SIZE);
         originalBox.getChildren().addAll(originalLabel, originalText);
 
-        VBox traduitBox = new VBox(5);
-        traduitBox.setPrefWidth(300);
-        Label traduitLabel = new Label("TRADUIT");
-        traduitLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #059669; -fx-font-weight: bold;");
+        // Flèche de traduction
+        HBox flecheBox = new HBox();
+        flecheBox.setAlignment(javafx.geometry.Pos.CENTER);
+        Label flecheLabel = new Label("⬇️ TRADUCTION ⬇️");
+        flecheLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #6366f1; -fx-font-weight: bold; -fx-padding: 8;");
+        flecheBox.getChildren().add(flecheLabel);
+
+        // Section Traduit
+        VBox traduitBox = new VBox(8);
+        traduitBox.setStyle("-fx-background-color: linear-gradient(to bottom, #f0fdf4, #dcfce7); -fx-padding: 15; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-color: #22c55e; -fx-border-width: 1;");
+        Label traduitLabel = new Label("✅ TEXTE TRADUIT");
+        traduitLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #15803d; -fx-font-weight: bold;");
         Label traduitText = new Label(traduit != null ? traduit : "En attente de traduction...");
-        traduitText.setStyle("-fx-font-size: 13px; -fx-text-fill: #059669; -fx-background-color: #ecfdf5; -fx-padding: 10; -fx-border-radius: 6; -fx-background-radius: 6; -fx-border-color: #10b981; -fx-border-width: 1; -fx-wrap-text: true;");
+        traduitText.setStyle("-fx-font-size: 14px; -fx-text-fill: #166534; -fx-font-weight: 500; -fx-line-spacing: 2; -fx-wrap-text: true;");
         traduitText.setWrapText(true);
-        traduitText.setMaxWidth(280);
+        traduitText.setMinHeight(Label.USE_PREF_SIZE);
         traduitBox.getChildren().addAll(traduitLabel, traduitText);
 
-        valeursBox.getChildren().addAll(originalBox, traduitBox);
-        champBox.getChildren().addAll(nomLabel, valeursBox);
+        contenuBox.getChildren().addAll(originalBox, flecheBox, traduitBox);
+        champBox.getChildren().addAll(headerBox, contenuBox);
 
         containerResultats.getChildren().add(champBox);
     }
