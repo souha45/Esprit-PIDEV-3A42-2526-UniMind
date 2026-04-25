@@ -539,8 +539,6 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
         }
     }
 
-    // ==================== CONFIGURATION DES COLONNES ====================
-
     private void configurerColonnes() {
         tableViewSuiviTraitements.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
@@ -571,24 +569,14 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
                     LigneSuiviGroupée ligne = getTableRow().getItem();
                     setText(item);
                     if (ligne.estEnteteEtudiant()) {
-                        setStyle("-fx-background-color: #ede9fe; -fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #4f46e5; -fx-padding: 12 8;");
+                        setStyle("-fx-background-color: #ecfdf5; -fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #059669; -fx-padding: 12 8;");
                     } else if (ligne.estEnteteTraitement()) {
-                        setStyle("-fx-background-color: #f5f3ff; -fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #6366f1; -fx-padding: 10 8 10 25;");
+                        setStyle("-fx-background-color: #fef9c3; -fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #a16207; -fx-padding: 10 8 10 25;");
                     } else {
                         setStyle("-fx-background-color: white; -fx-padding: 10 8 10 35; -fx-font-size: 12px;");
                     }
                 }
             }
-        });
-
-        // Colonne Date Suivi
-        colDateSuivi.setCellValueFactory(param -> {
-            LigneSuiviGroupée ligne = param.getValue();
-            SuiviTraitement suivi = ligne.getPremierSuivi();
-            if (suivi != null && !ligne.estEntete()) {
-                return new javafx.beans.property.SimpleStringProperty(suivi.getDateSuivi() != null ? suivi.getDateSuivi().toString() : "");
-            }
-            return new javafx.beans.property.SimpleStringProperty("");
         });
 
         // Colonne Saisi Par
