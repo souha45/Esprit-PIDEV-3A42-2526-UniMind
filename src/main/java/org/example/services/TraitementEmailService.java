@@ -163,6 +163,28 @@ public class TraitementEmailService {
     }
 
     /**
+     * Envoie un email à l'étudiant quand un psychologue modifie un traitement
+     */
+    public EmailResult envoyerNotificationModificationTraitementEtudiant(Traitement traitement, User psychologue) {
+        try {
+            EtudiantTraitementService etudiantService = new EtudiantTraitementService();
+            Etudiant etudiant = etudiantService.trouverParId(traitement.getEtudiantId());
+
+            if (etudiant == null) {
+                return new EmailResult(false, "Étudiant non trouvé pour l'ID: " + traitement.getEtudiantId());
+            }
+
+            String subject = "Traitement modifié - " + traitement.getTitre();
+            String body = creerEmailModificationTraitementEtudiant(traitement, psychologue, etudiant);
+
+            return sendEmail(etudiant.getEmail(), subject, body);
+
+        } catch (Exception e) {
+            return new EmailResult(false, "Erreur envoi email modification traitement étudiant: " + e.getMessage());
+        }
+    }
+
+    /**
      * Envoie un email au psychologue quand un étudiant ajoute un suivi
      */
     public EmailResult envoyerNotificationNouveauSuiviPsychologue(SuiviTraitement suivi, Traitement traitement, User etudiant) {
@@ -523,6 +545,61 @@ public class TraitementEmailService {
             html.append("<p>").append(traitement.getObjectifTherapeutique()).append("</p>");
         }
 
+        html.append("</div>");
+
+        html.append("<div class='footer'>");
+        html.append("<p>Connectez-vous à votre espace Unimind pour suivre votre traitement.</p>");
+        html.append("<p>Ce message a été généré automatiquement.</p>");
+        html.append("</div>");
+
+        html.append("</body></html>");
+        return html.toString();
+    }
+
+    /**
+     * Crée le contenu de l'email pour notification modification traitement à l'étudiant
+     */
+    private String creerEmailModificationTraitementEtudiant(Traitement traitement, User psychologue, Etudiant etudiant) {
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head><meta charset='UTF-8'>");
+        html.append("<style>body{font-family:Arial,sans-serif;margin:20px;color:#333;}");
+        html.append(".header{background:#f59e0b;color:white;padding:20px;border-radius:8px;margin-bottom:20px;}");
+        html.append(".content{background:#f9fafb;padding:20px;border-radius:8px;}");
+        html.append(".info-box{background:#fef3c7;padding:15px;border-radius:6px;margin:10px 0;}");
+        html.append(".footer{margin-top:20px;font-size:12px;color:#666;}</style></head><body>");
+
+        html.append("<div class='header'>");
+        html.append("<h2>✏️ Traitement Modifié</h2>");
+        html.append("<p>Bonjour ").append(etudiant.getPrenom()).append(",</p>");
+        html.append("</div>");
+
+        html.append("<div class='content'>");
+        html.append("<p>Dr ").append(psychologue.getPrenom()).append(" ").append(psychologue.getNom());
+        html.append(" a modifié votre traitement.</p>");
+
+        html.append("<div class='info-box'>");
+        html.append("<h3>").append(traitement.getTitre()).append("</h3>");
+        html.append("<p><strong>Catégorie :</strong> ").append(traitement.getCategorie()).append("</p>");
+        html.append("<p><strong>Type :</strong> ").append(traitement.getType()).append("</p>");
+        html.append("<p><strong>Statut :</strong> ").append(traitement.getStatut()).append("</p>");
+        html.append("<p><strong>Priorité :</strong> ").append(traitement.getPriorite()).append("</p>");
+        html.append("<p><strong>Durée :</strong> ").append(traitement.getDureeJours()).append(" jour(s)</p>");
+        if (traitement.getDosage() != null && !traitement.getDosage().isEmpty()) {
+            html.append("<p><strong>Dosage :</strong> ").append(traitement.getDosage()).append("</p>");
+        }
+        html.append("</div>");
+
+        if (traitement.getDescription() != null && !traitement.getDescription().isEmpty()) {
+            html.append("<p><strong>Description :</strong></p>");
+            html.append("<p>").append(traitement.getDescription()).append("</p>");
+        }
+
+        if (traitement.getObjectifTherapeutique() != null && !traitement.getObjectifTherapeutique().isEmpty()) {
+            html.append("<p><strong>Objectifs thérapeutiques :</strong></p>");
+            html.append("<p>").append(traitement.getObjectifTherapeutique()).append("</p>");
+        }
+
+        html.append("<p><strong>Veuillez consulter les détails mis à jour dans votre espace Unimind.</strong></p>");
         html.append("</div>");
 
         html.append("<div class='footer'>");
