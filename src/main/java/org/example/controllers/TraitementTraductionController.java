@@ -47,7 +47,6 @@ import java.util.ResourceBundle;
 public class TraitementTraductionController implements Initializable {
 
     @FXML private Label lblStatus;
-    @FXML private ComboBox<String> cmbLangueSource;
     @FXML private ComboBox<String> cmbLangueCible;
     @FXML private Button btnTraduire;
     @FXML private Button btnImprimer;
@@ -88,8 +87,6 @@ public class TraitementTraductionController implements Initializable {
                 "中文 (zh)"
         );
 
-        cmbLangueSource.setItems(languesDisponibles);
-        cmbLangueSource.setValue("Français (fr)");
         cmbLangueCible.setItems(languesDisponibles);
         cmbLangueCible.setValue("English (en)");
 
@@ -149,16 +146,17 @@ public class TraitementTraductionController implements Initializable {
             return;
         }
 
-        String selected = cmbLangueCible.getValue();
+        final String selected = cmbLangueCible.getValue();
         if (selected == null) {
             afficherMessage("Veuillez sélectionner une langue", Alert.AlertType.WARNING);
             return;
         }
 
-        String langueCode = getCodeLangue(selected);
-        String langueSourceCode = getCodeLangue(cmbLangueSource.getValue());
+        final String langueCode = getCodeLangue(selected);
+        // Toujours utiliser la détection automatique pour la langue source
+        final String langueSourceCode = "auto";
 
-        lblStatus.setText("🔄 Traduction en cours vers " + selected + "...");
+        lblStatus.setText("🔄 Traduction automatique en cours vers " + selected + "...");
         btnTraduire.setDisable(true);
 
         new Thread(() -> {
@@ -195,36 +193,18 @@ public class TraitementTraductionController implements Initializable {
         }
 
         try {
-            if (sourceLang.equals("fr") && targetLang.equals("en")) {
-                return simulerTraductionFrEn(texte);
+            // Utiliser le service de traduction complet
+            var result = translationService.translateText(texte, targetLang, sourceLang);
+            if (result.isSuccess()) {
+                return result.getTranslatedText();
+            } else {
+                System.err.println("Erreur traduction: " + result.getError());
+                return texte;
             }
-            return texte + " (traduit)";
         } catch (Exception e) {
             System.err.println("Erreur traduction: " + e.getMessage());
             return texte;
         }
-    }
-
-    private String simulerTraductionFrEn(String texte) {
-        Map<String, String> dict = new HashMap<>();
-        dict.put("Thérapie", "Therapy");
-        dict.put("Comportementale", "Behavioral");
-        dict.put("Cognitive", "Cognitive");
-        dict.put("Emotionnelle", "Emotional");
-        dict.put("relaxation", "Relaxation");
-        dict.put("Amélioration", "Improvement");
-        dict.put("sommeil", "Sleep");
-        dict.put("Travail", "Work");
-        dict.put("sur", "on");
-        dict.put("les", "the");
-        dict.put("comportements", "behaviors");
-        dict.put("impulsifs", "impulsive");
-
-        String resultat = texte;
-        for (Map.Entry<String, String> entry : dict.entrySet()) {
-            resultat = resultat.replace(entry.getKey(), entry.getValue());
-        }
-        return resultat;
     }
 
     private void afficherResultatsTraduction() {
@@ -316,7 +296,7 @@ public class TraitementTraductionController implements Initializable {
     private void genererPDF(File file) throws Exception {
         String selected = cmbLangueCible.getValue();
         String langueNom = selected != null ? selected : "langue cible";
-        String langueSourceNom = cmbLangueSource.getValue();
+        String langueSourceNom = "Auto-détection";
 
         PdfWriter writer = new PdfWriter(new FileOutputStream(file));
         PdfDocument pdfDoc = new PdfDocument(writer);
