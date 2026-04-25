@@ -1,19 +1,30 @@
 package org.example.services;
 
 import org.example.entities.Participation;
+import org.example.entities.Evenement;
 import org.example.enums.StatutParticipation;
+import org.example.services.evenement.EventEmailService;
 import org.example.utils.MyDataBase_Unimind;
 
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ParticipationService implements ICrud<Participation> {
 
     private final Connection connection;
+    private final EventEmailService emailService;
+    private final EvenementService evenementService;
 
     public ParticipationService() {
         this.connection = MyDataBase_Unimind.getInstance().getConnection();
+        this.emailService = new EventEmailService();
+        this.evenementService = new EvenementService();
+
+        // Configuration de l'email (à remplacer par vos identifiants)
+        this.emailService.setUsername("nadineeddouch07@gmail.com");
+        this.emailService.setPassword("jttd apnv wxpj rxlt");
     }
 
     @Override
@@ -56,6 +67,9 @@ public class ParticipationService implements ICrud<Participation> {
                     System.out.println("ID genere pour la participation: " + p.getParticipationId());
                 }
             }
+
+            // Envoyer l'email de confirmation d'inscription
+            sendInscriptionEmail(p.getEtudiantId(), p.getEvenementId());
         }
     }
 
@@ -96,10 +110,31 @@ public class ParticipationService implements ICrud<Participation> {
 
     @Override
     public void supprimer(int id) throws SQLException {
+        // Récupérer les détails de la participation avant suppression pour l'email
+        String selectSql = "SELECT etudiant_id, evenement_id FROM participation WHERE participation_id=?";
+        int etudiantId = -1;
+        int evenementId = -1;
+
+        try (PreparedStatement ps = connection.prepareStatement(selectSql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    etudiantId = rs.getInt("etudiant_id");
+                    evenementId = rs.getInt("evenement_id");
+                }
+            }
+        }
+
+        // Supprimer la participation
         String sql = "DELETE FROM participation WHERE participation_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, id);
             ps.executeUpdate();
+        }
+
+        // Envoyer l'email de confirmation d'annulation
+        if (etudiantId != -1 && evenementId != -1) {
+            sendAnnulationEmail(etudiantId, evenementId);
         }
     }
 
@@ -220,6 +255,95 @@ public class ParticipationService implements ICrud<Participation> {
             }
         }
         return result;
+    }
+
+    /**
+     * Récupérer l'email d'un utilisateur par son ID
+     */
+    private String getUserEmail(int userId) throws SQLException {
+        String sql = "SELECT email FROM user WHERE user_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("email");
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Récupérer le nom complet d'un utilisateur par son ID
+     */
+    private String getUserName(int userId) throws SQLException {
+        String sql = "SELECT prenom, nom FROM user WHERE user_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("prenom") + " " + rs.getString("nom");
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Récupérer les détails de l'événement pour l'email
+     */
+    private Evenement getEvenementDetails(int evenementId) throws SQLException {
+        return evenementService.findById(evenementId);
+    }
+
+    /**
+     * Envoyer l'email de confirmation d'inscription
+     */
+    private void sendInscriptionEmail(int etudiantId, int evenementId) {
+        try {
+            String email = getUserEmail(etudiantId);
+            String participantName = getUserName(etudiantId);
+            Evenement evenement = getEvenementDetails(evenementId);
+
+            if (email != null && participantName != null && evenement != null) {
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+                String eventDate = evenement.getDateDebut() != null ? sdf.format(evenement.getDateDebut()) : "Non spécifié";
+                String eventLocation = evenement.getLieu() != null ? evenement.getLieu() : "Non spécifié";
+
+                emailService.sendInscriptionConfirmation(
+                    email,
+                    participantName,
+                    evenement.getTitre(),
+                    eventDate,
+                    eventLocation
+                );
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de l'envoi de l'email d'inscription: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Envoyer l'email de confirmation d'annulation
+     */
+    private void sendAnnulationEmail(int etudiantId, int evenementId) {
+        try {
+            String email = getUserEmail(etudiantId);
+            String participantName = getUserName(etudiantId);
+            Evenement evenement = getEvenementDetails(evenementId);
+
+            if (email != null && participantName != null && evenement != null) {
+                emailService.sendAnnulationConfirmation(
+                    email,
+                    participantName,
+                    evenement.getTitre()
+                );
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de l'envoi de l'email d'annulation: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
