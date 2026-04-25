@@ -464,20 +464,29 @@ public class AjoutEvenementController {
         // Récupérer les coordonnées si disponibles
         Double latitude = null;
         Double longitude = null;
-        if (txtLatitude.getText() != null && !txtLatitude.getText().trim().isEmpty()) {
+        System.out.println("=== DEBUG creerEvenement ===");
+        System.out.println("txtLatitude field: " + (txtLatitude != null ? txtLatitude.getText() : "FIELD IS NULL"));
+        System.out.println("txtLongitude field: " + (txtLongitude != null ? txtLongitude.getText() : "FIELD IS NULL"));
+        if (txtLatitude != null && txtLatitude.getText() != null && !txtLatitude.getText().trim().isEmpty()) {
             try {
                 latitude = Double.parseDouble(txtLatitude.getText().trim());
+                System.out.println("Latitude parsée: " + latitude);
             } catch (NumberFormatException e) {
+                System.out.println("ERREUR parsing latitude: " + txtLatitude.getText());
                 latitude = null;
             }
         }
-        if (txtLongitude.getText() != null && !txtLongitude.getText().trim().isEmpty()) {
+        if (txtLongitude != null && txtLongitude.getText() != null && !txtLongitude.getText().trim().isEmpty()) {
             try {
                 longitude = Double.parseDouble(txtLongitude.getText().trim());
+                System.out.println("Longitude parsée: " + longitude);
             } catch (NumberFormatException e) {
+                System.out.println("ERREUR parsing longitude: " + txtLongitude.getText());
                 longitude = null;
             }
         }
+        System.out.println("Latitude finale: " + latitude + ", Longitude finale: " + longitude);
+        System.out.println("Lieu: " + lieu);
         
         return new Evenement(
                 titre,
@@ -579,6 +588,22 @@ public class AjoutEvenementController {
                     }
                 });
             }
+        });
+
+        // Quand le WebView est redimensionné, Leaflet doit recalculer la taille
+        webView.widthProperty().addListener((obsW, oldW, newW) -> {
+            javafx.application.Platform.runLater(() -> {
+                try {
+                    webEngine.executeScript("if(typeof fixSize==='function')fixSize();");
+                } catch (Exception ignored) {}
+            });
+        });
+        webView.heightProperty().addListener((obsH, oldH, newH) -> {
+            javafx.application.Platform.runLater(() -> {
+                try {
+                    webEngine.executeScript("if(typeof fixSize==='function')fixSize();");
+                } catch (Exception ignored) {}
+            });
         });
 
         // Créer la scène et afficher la fenêtre

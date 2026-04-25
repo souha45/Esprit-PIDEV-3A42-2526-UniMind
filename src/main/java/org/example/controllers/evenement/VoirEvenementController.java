@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class VoirEvenementController {
 
@@ -211,6 +212,11 @@ public class VoirEvenementController {
         Double longitude = evenementCourant.getLongitude();
         String address = evenementCourant.getLieu();
 
+        System.out.println("=== DEBUG VoirEvenement chargerCarte ===");
+        System.out.println("Lieu: " + address);
+        System.out.println("Latitude stockée: " + latitude);
+        System.out.println("Longitude stockée: " + longitude);
+
         // Afficher la carte même si les coordonnées ne sont pas disponibles : on tentera le géocodage
         mapView.setVisible(true);
         mapView.setManaged(true);
@@ -273,9 +279,26 @@ public class VoirEvenementController {
                             .replace("\r", "\\r")
                             : "";
 
-                    String script = String.format("initMap(%f, %f, '%s')", latitude, longitude, escapedAddress);
+                    String script = String.format(Locale.US, "initMap(%f, %f, '%s')", latitude, longitude, escapedAddress);
                     webEngine.executeScript(script);
                 }
+            });
+
+            // Quand le WebView est redimensionné par le layout JavaFX (ScrollPane, VBox),
+            // Leaflet doit recalculer la taille de la carte sinon les tuiles sont décalées/grises
+            mapView.widthProperty().addListener((obsW, oldW, newW) -> {
+                Platform.runLater(() -> {
+                    try {
+                        webEngine.executeScript("if(typeof fixSize==='function')fixSize();");
+                    } catch (Exception ignored) {}
+                });
+            });
+            mapView.heightProperty().addListener((obsH, oldH, newH) -> {
+                Platform.runLater(() -> {
+                    try {
+                        webEngine.executeScript("if(typeof fixSize==='function')fixSize();");
+                    } catch (Exception ignored) {}
+                });
             });
         });
     }

@@ -672,6 +672,22 @@ public class ModificationEvenementController {
             }
         });
 
+        // Quand le WebView est redimensionné, Leaflet doit recalculer la taille
+        webView.widthProperty().addListener((obsW, oldW, newW) -> {
+            javafx.application.Platform.runLater(() -> {
+                try {
+                    webEngine.executeScript("if(typeof fixSize==='function')fixSize();");
+                } catch (Exception ignored) {}
+            });
+        });
+        webView.heightProperty().addListener((obsH, oldH, newH) -> {
+            javafx.application.Platform.runLater(() -> {
+                try {
+                    webEngine.executeScript("if(typeof fixSize==='function')fixSize();");
+                } catch (Exception ignored) {}
+            });
+        });
+
         // Créer la scène et afficher la fenêtre
         javafx.scene.Scene scene = new javafx.scene.Scene(webView);
         mapStage.setScene(scene);
