@@ -1,9 +1,14 @@
 package org.example.controllers;
 
+import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import netscape.javascript.JSObject;
 import org.example.enums.TypeConsultation;
 import org.example.entities.DisponibilitePsy;
 import org.example.services.DisponibilitePsyService;
@@ -32,6 +37,7 @@ public class ModifierDisponibiliteController {
     @FXML private ComboBox<String> cbTypeConsult;
     @FXML private VBox             boxLieu;
     @FXML private TextField        txtLieu;
+    @FXML private Button           btnOuvrirCarte;  // ← NOUVEAU
 
     // Boutons
     @FXML private Button btnFermer;
@@ -86,19 +92,106 @@ public class ModifierDisponibiliteController {
         btnEnregistrer.setOnAction(e -> enregistrerModification());
         btnAnnuler.setOnAction(e     -> fermerModal());
         btnFermer.setOnAction(e      -> fermerModal());
+        btnOuvrirCarte.setOnAction(e -> ouvrirCarte());  // ← NOUVEAU
 
         // ── Hover ────────────────────────────────────────────────────
         btnEnregistrer.setOnMouseEntered(e ->
                 btnEnregistrer.setStyle(btnEnregistrer.getStyle().replace("#6366f1","#4f46e5")));
         btnEnregistrer.setOnMouseExited(e ->
                 btnEnregistrer.setStyle(btnEnregistrer.getStyle().replace("#4f46e5","#6366f1")));
+
+        // ← NOUVEAU : Hover pour le bouton carte
+        btnOuvrirCarte.setOnMouseEntered(e ->
+                btnOuvrirCarte.setStyle("-fx-background-color:#4f46e5; -fx-text-fill:white; " +
+                        "-fx-font-size:13px; -fx-font-weight:bold; -fx-padding:8 15; " +
+                        "-fx-background-radius:8; -fx-cursor:hand;"));
+        btnOuvrirCarte.setOnMouseExited(e ->
+                btnOuvrirCarte.setStyle("-fx-background-color:#6366f1; -fx-text-fill:white; " +
+                        "-fx-font-size:13px; -fx-font-weight:bold; -fx-padding:8 15; " +
+                        "-fx-background-radius:8; -fx-cursor:hand;"));
+    }
+
+    // ── OUVERTURE DE LA CARTE (NOUVEAU) ───────────────────────────────
+    private void ouvrirCarte() {
+        try {
+            Stage carteStage = new Stage();
+            carteStage.setTitle("Sélectionner un lieu sur la carte");
+            carteStage.initModality(javafx.stage.Modality.WINDOW_MODAL);
+            carteStage.initOwner(btnOuvrirCarte.getScene().getWindow());
+
+            WebView   webView   = new WebView();
+            WebEngine webEngine = webView.getEngine();
+
+            java.net.URL url = getClass().getResource("/carte.html");
+            if (url == null) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Fichier carte.html non trouvé dans resources/");
+                return;
+            }
+
+            // Créer le bridge Java ↔ JavaScript
+            JavaBridge bridge = new JavaBridge(carteStage, txtLieu);
+
+            webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+                if (newState == Worker.State.SUCCEEDED) {
+                    javafx.application.Platform.runLater(() -> {
+                        try {
+                            JSObject window = (JSObject) webEngine.executeScript("window");
+                            window.setMember("javaApp", bridge);
+                            System.out.println("[Carte] javaApp injecté avec succès");
+                        } catch (Exception ex) {
+                            System.err.println("[Carte] Erreur injection : " + ex.getMessage());
+                        }
+                    });
+                }
+            });
+
+            webEngine.load(url.toExternalForm());
+            VBox root = new VBox(webView);
+            Scene scene = new Scene(root, 950, 700);
+            carteStage.setScene(scene);
+            carteStage.showAndWait();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir la carte : " + e.getMessage());
+        }
+    }
+
+    // ── PONT JAVA ↔ JAVASCRIPT (identique à AjoutDisponibiliteController) ──
+    public static class JavaBridge {
+        private final Stage     carteStage;
+        private final TextField txtLieu;
+
+        public JavaBridge(Stage carteStage, TextField txtLieu) {
+            this.carteStage = carteStage;
+            this.txtLieu    = txtLieu;
+        }
+
+        public void setSelectedAddress(String address) {
+            javafx.application.Platform.runLater(() -> {
+                if (txtLieu != null) {
+                    txtLieu.setText(address);
+                    System.out.println("[JavaBridge] Adresse mise à jour : " + address);
+                }
+                if (carteStage != null) {
+                    carteStage.close();
+                }
+            });
+        }
+    }
+
+    private void showAlert(Alert.AlertType type, String titre, String msg) {
+        Alert a = new Alert(type);
+        a.setTitle(titre);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
     }
 
     // ── Configuration Spinner ────────────────────────────────────────
     private void configurerSpinner(Spinner<Integer> spinner, int min, int max, int init) {
         SpinnerValueFactory<Integer> factory =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(min, max, init);
-        // Afficher "--" pour valeur vide (-1), sinon 2 chiffres
         factory.setConverter(new javafx.util.StringConverter<>() {
             @Override public String toString(Integer v) {
                 if (v == null || v == -1) return "--";
@@ -115,9 +208,8 @@ public class ModifierDisponibiliteController {
         });
         spinner.setValueFactory(factory);
         spinner.setEditable(true);
-        // Valider saisie manuelle à la perte de focus
         spinner.getEditor().focusedProperty().addListener((o, ov, nv) -> {
-            if (!nv) spinner.increment(0); // force commit
+            if (!nv) spinner.increment(0);
         });
     }
 
@@ -125,7 +217,6 @@ public class ModifierDisponibiliteController {
     private void mettreAJourPreviewDebut() {
         int heure = spinnerHeureDebut.getValue();
         int minute = spinnerMinuteDebut.getValue();
-
         if (heure == -1 || minute == -1) {
             lblPreviewDebut.setText("--:--");
         } else {
@@ -136,7 +227,6 @@ public class ModifierDisponibiliteController {
     private void mettreAJourPreviewFin() {
         int heure = spinnerHeureFin.getValue();
         int minute = spinnerMinuteFin.getValue();
-
         if (heure == -1 || minute == -1) {
             lblPreviewFin.setText("--:--");
         } else {
@@ -199,27 +289,23 @@ public class ModifierDisponibiliteController {
         cacherErreurSimple(errLieu);
     }
 
-    // ── Chargement des données existantes ────────────────────────────────
+    // ── Chargement des données existantes ────────────────────────────
     public void setDisponibiliteAModifier(DisponibilitePsy disponibilite) {
         this.disponibiliteAModifier = disponibilite;
 
         if (disponibilite != null) {
-            // 1. Date
             datePicker.setValue(disponibilite.getDateDispo().toLocalDate());
 
-            // 2. Heure début
             String heureDebutStr = disponibilite.getHeureDebut().toString();
             String[] debutParts = heureDebutStr.split(":");
             spinnerHeureDebut.getValueFactory().setValue(Integer.parseInt(debutParts[0]));
             spinnerMinuteDebut.getValueFactory().setValue(Integer.parseInt(debutParts[1]));
 
-            // 3. Heure fin
             String heureFinStr = disponibilite.getHeureFin().toString();
             String[] finParts = heureFinStr.split(":");
             spinnerHeureFin.getValueFactory().setValue(Integer.parseInt(finParts[0]));
             spinnerMinuteFin.getValueFactory().setValue(Integer.parseInt(finParts[1]));
 
-            // 4. Type de consultation
             String typeConsult = disponibilite.getTypeConsult().toString();
             if ("présentiel".equals(typeConsult)) {
                 cbTypeConsult.setValue("Présentiel");
@@ -227,13 +313,8 @@ public class ModifierDisponibiliteController {
                 cbTypeConsult.setValue("En ligne");
             }
 
-            // 5. Lieu
             txtLieu.setText(disponibilite.getLieu());
-
-            // 6. Afficher le lieu si présentiel
             gererAffichageLieu(cbTypeConsult.getValue());
-
-            // 7. Mettre à jour les previews
             mettreAJourPreviewDebut();
             mettreAJourPreviewFin();
         }
@@ -244,7 +325,6 @@ public class ModifierDisponibiliteController {
         reinitialiserErreurs();
         boolean valide = true;
 
-        // 1. Date
         if (datePicker.getValue() == null) {
             afficherErreur(errDate, datePicker, "Veuillez sélectionner une date.");
             valide = false;
@@ -253,7 +333,6 @@ public class ModifierDisponibiliteController {
             valide = false;
         }
 
-        // 2. Validation des heures non vides
         if (spinnerHeureDebut.getValue() == -1 || spinnerMinuteDebut.getValue() == -1) {
             afficherErreurSimple(errHeureDebut, "Veuillez sélectionner l'heure de début.");
             valide = false;
@@ -264,11 +343,9 @@ public class ModifierDisponibiliteController {
             valide = false;
         }
 
-        // 3. Cohérence heure début < heure fin (seulement si les heures sont valides)
         if (valide) {
             int debutMin = spinnerHeureDebut.getValue() * 60 + spinnerMinuteDebut.getValue();
             int finMin   = spinnerHeureFin.getValue()   * 60 + spinnerMinuteFin.getValue();
-
             if (debutMin >= finMin) {
                 afficherErreurSimple(errHeureFin,
                         "L'heure de fin doit être après l'heure de début ("
@@ -277,13 +354,11 @@ public class ModifierDisponibiliteController {
             }
         }
 
-        // 4. Type
         if (cbTypeConsult.getValue() == null) {
             afficherErreurSimple(errType, "Veuillez sélectionner un type de consultation.");
             valide = false;
         }
 
-        // 5. Lieu (si présentiel)
         if ("Présentiel".equals(cbTypeConsult.getValue())) {
             if (txtLieu.getText().trim().isEmpty()) {
                 afficherErreur(errLieu, txtLieu, "Veuillez saisir le lieu de consultation.");
@@ -293,9 +368,8 @@ public class ModifierDisponibiliteController {
 
         if (!valide) return;
 
-        // ── Tout est valide → enregistrement ────────────────────────
         try {
-            LocalDate date        = datePicker.getValue();
+            LocalDate date = datePicker.getValue();
             int hd = spinnerHeureDebut.getValue(), md = spinnerMinuteDebut.getValue();
             int hf = spinnerHeureFin.getValue(),   mf = spinnerMinuteFin.getValue();
 
@@ -310,21 +384,17 @@ public class ModifierDisponibiliteController {
                     ? txtLieu.getText().trim()
                     : null;
 
-            // Mettre à jour l'objet
             disponibiliteAModifier.setDateDispo(Date.valueOf(date));
             disponibiliteAModifier.setHeureDebut(heureDebutTime);
             disponibiliteAModifier.setHeureFin(heureFinTime);
             disponibiliteAModifier.setTypeConsult(typeConsult);
             disponibiliteAModifier.setLieu(lieu);
 
-            // Sauvegarder en base
             disponibiliteService.modifier(disponibiliteAModifier);
-
-            // Alerte succès personnalisée
             afficherAlerteSucces(date, lieu);
 
         } catch (SQLException e) {
-            afficherAlerteErreur("Erreur SQL", "Une erreur est survenue lors de la modification de la disponibilité.", e.getMessage());
+            afficherAlerteErreur("Erreur SQL", "Une erreur est survenue lors de la modification.", e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
             afficherAlerteErreur("Erreur système", "Une erreur inattendue est survenue.", e.getMessage());
@@ -341,26 +411,14 @@ public class ModifierDisponibiliteController {
         this.modalStage = stage;
     }
 
-    // ===== ALERTES PERSONNALISÉES =====
-
     private void afficherAlerteSucces(LocalDate date, String lieu) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Unimind - Succès");
         alert.setHeaderText("Disponibilité modifiée avec succès !");
-
-        // Contenu formaté avec style
-        String contenu = buildContenuSucces(date, lieu);
-        alert.setContentText(contenu);
-
-        // Personnaliser les boutons
+        alert.setContentText(buildContenuSucces(date, lieu));
         ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
         alert.getButtonTypes().setAll(okButton);
-
-        // Appliquer le style personnalisé
-        DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.setStyle(getStyleAlerteSucces());
-
-        // Centrer et afficher
+        alert.getDialogPane().setStyle(getStyleAlerteSucces());
         alert.showAndWait();
         fermerModal();
     }
@@ -370,15 +428,9 @@ public class ModifierDisponibiliteController {
         alert.setTitle("Unimind - " + titre);
         alert.setHeaderText(header);
         alert.setContentText(message);
-
-        // Personnaliser les boutons
         ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
         alert.getButtonTypes().setAll(okButton);
-
-        // Appliquer le style personnalisé
-        DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.setStyle(getStyleAlerteErreur());
-
+        alert.getDialogPane().setStyle(getStyleAlerteErreur());
         alert.showAndWait();
     }
 
@@ -389,33 +441,23 @@ public class ModifierDisponibiliteController {
         sb.append("Horaire : ").append(lblPreviewDebut.getText())
                 .append(" - ").append(lblPreviewFin.getText()).append("\n");
         sb.append("Type : ").append(cbTypeConsult.getValue());
-
         if (lieu != null && !lieu.trim().isEmpty()) {
             sb.append("\nLieu : ").append(lieu);
         }
-
         return sb.toString();
     }
 
     private String getStyleAlerteSucces() {
-        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; " +
-                "-fx-font-size: 14px; " +
-                "-fx-background-color: #f0fdf4; " +
-                "-fx-border-color: #86efac; " +
-                "-fx-border-width: 2px; " +
-                "-fx-border-radius: 12px; " +
-                "-fx-background-radius: 12px; " +
-                "-fx-padding: 20px;";
+        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; -fx-font-size: 14px; " +
+                "-fx-background-color: #f0fdf4; -fx-border-color: #86efac; " +
+                "-fx-border-width: 2px; -fx-border-radius: 12px; " +
+                "-fx-background-radius: 12px; -fx-padding: 20px;";
     }
 
     private String getStyleAlerteErreur() {
-        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; " +
-                "-fx-font-size: 14px; " +
-                "-fx-background-color: #fef2f2; " +
-                "-fx-border-color: #fca5a5; " +
-                "-fx-border-width: 2px; " +
-                "-fx-border-radius: 12px; " +
-                "-fx-background-radius: 12px; " +
-                "-fx-padding: 20px;";
+        return "-fx-font-family: 'Segoe UI', Arial, sans-serif; -fx-font-size: 14px; " +
+                "-fx-background-color: #fef2f2; -fx-border-color: #fca5a5; " +
+                "-fx-border-width: 2px; -fx-border-radius: 12px; " +
+                "-fx-background-radius: 12px; -fx-padding: 20px;";
     }
 }

@@ -178,22 +178,30 @@
             </VBox>
 
             <!-- Lieu (conditionnel) -->
+            <!-- Lieu (conditionnel) avec bouton carte -->
             <VBox fx:id="boxLieu" spacing="4" visible="false" managed="false">
-                <Label text="&#x1f4cd;  Lieu de consultation  *"
+                <Label text="📍  Lieu de consultation  *"
                        style="-fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
-                          -fx-font-weight: bold; -fx-text-fill: #6366f1;" />
-                <TextField fx:id="txtLieu"
-                           promptText="Ex : Salle 12, Bâtiment A, Campus..."
-                           maxWidth="Infinity"
-                           style="-fx-background-color: #f5f3ff; -fx-border-color: #e0e7ff;
-                              -fx-border-radius: 10; -fx-background-radius: 10;
-                              -fx-border-width: 1; -fx-font-family: 'Segoe UI';
-                              -fx-font-size: 13px; -fx-text-fill: #374151;
-                              -fx-prompt-text-fill: #c4b5fd; -fx-padding: 10 14;
-                              -fx-pref-height: 38px;" />
+                  -fx-font-weight: bold; -fx-text-fill: #6366f1;" />
+                <HBox spacing="10">
+                    <TextField fx:id="txtLieu"
+                               promptText="Ex : Salle 12, Bâtiment A, Campus..."
+                               HBox.hgrow="ALWAYS"
+                               style="-fx-background-color: #f5f3ff; -fx-border-color: #e0e7ff;
+                          -fx-border-radius: 10; -fx-background-radius: 10;
+                          -fx-border-width: 1; -fx-font-family: 'Segoe UI';
+                          -fx-font-size: 13px; -fx-text-fill: #374151;
+                          -fx-prompt-text-fill: #c4b5fd; -fx-padding: 10 14;
+                          -fx-pref-height: 38px;" />
+                    <Button fx:id="btnOuvrirCarte" text="🌍 Carte"
+                            style="-fx-background-color: #6366f1; -fx-text-fill: white;
+                       -fx-font-size: 13px; -fx-font-weight: bold;
+                       -fx-padding: 8 15; -fx-background-radius: 8;
+                       -fx-cursor: hand;" />
+                </HBox>
                 <Label fx:id="errLieu" text=""
                        style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
-                          -fx-text-fill: #ef4444;" visible="false" managed="false" />
+                  -fx-text-fill: #ef4444;" visible="false" managed="false" />
             </VBox>
 
         </VBox>
