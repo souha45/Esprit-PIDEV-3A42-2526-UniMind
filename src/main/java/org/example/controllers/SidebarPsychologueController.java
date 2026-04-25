@@ -121,7 +121,7 @@ public class SidebarPsychologueController {
         btnRendezVous.setOnAction(e -> naviguer("/RendezVousPsy.fxml", "Rendez-vous", btnRendezVous));
         btnConsultations.setOnAction(e -> naviguer("/ConsultationsPsy.fxml", "Consultations", btnConsultations));
         btnTraitements.setOnAction(e -> naviguer("/traitement-view.fxml", "Traitements", btnTraitements));
-        btnPatients.setOnAction(e -> naviguer("/Patients.fxml", "Patients", btnPatients));
+        btnPatients.setOnAction(e -> naviguer("/StatistiquesPsy.fxml", "Patients", btnPatients));
         btnProfil.setOnAction(e -> ouvrirProfil());
         btnDeconnexion.setOnAction(e -> seDeconnecter());
 
@@ -284,7 +284,7 @@ public class SidebarPsychologueController {
             case "/ConsultationsPsy.fxml"          -> setActiveButton(btnConsultations);
             case "/traitement-view.fxml"      -> setActiveButton(btnTraitements);
             case "/suivi-traitement-view.fxml" -> setActiveButton(btnTraitements);
-            case "/Patients.fxml"                  -> setActiveButton(btnPatients);
+            case "/StatistiquesPsy.fxml"                  -> setActiveButton(btnPatients);
         }
     }
 
