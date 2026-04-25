@@ -736,3 +736,103 @@
     -fx-text-fill: #6b7280;
     -fx-padding: 4 0 0 0;
 }
+
+/* =============================================
+   AI SECTION - Design moderne et joyeux
+   ============================================= */
+.ai-section {
+    -fx-background-color: linear-gradient(to right, #f0f9ff, #fdf4ff);
+    -fx-background-radius: 16;
+    -fx-border-color: #c4b5fd;
+    -fx-border-width: 2;
+    -fx-border-radius: 16;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(168, 85, 247, 0.15), 12, 0, 4, 4);
+}
+
+.ai-section .form-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #7c3aed;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 8 0;
+}
+
+.ai-section .form-input {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #a78bfa;
+    -fx-border-width: 2;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 12 16 12 16;
+    -fx-font-size: 14px;
+    -fx-effect: dropshadow(gaussian, rgba(168, 85, 247, 0.08), 6, 0, 0, 2);
+}
+
+.ai-section .form-input:focused {
+    -fx-border-color: #7c3aed;
+    -fx-background-color: #faf5ff;
+    -fx-effect: dropshadow(gaussian, rgba(124, 58, 237, 0.2), 8, 0, 0, 3);
+}
+
+.ai-section .btn-primary {
+    -fx-background-color: linear-gradient(to right, #8b5cf6, #a78bfa);
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 24 12 24;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(139, 92, 246, 0.4), 10, 0, 0, 4);
+}
+
+.ai-section .btn-primary:hover {
+    -fx-background-color: linear-gradient(to right, #7c3aed, #8b5cf6);
+    -fx-effect: dropshadow(gaussian, rgba(124, 58, 237, 0.5), 12, 0, 0, 5);
+}
+
+.ai-section .btn-secondary {
+    -fx-background-color: #ede9fe;
+    -fx-text-fill: #7c3aed;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-padding: 10 20 10 20;
+    -fx-background-radius: 10;
+    -fx-border-color: #c4b5fd;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+
+.ai-section .btn-secondary:hover {
+    -fx-background-color: #ddd6fe;
+    -fx-border-color: #a78bfa;
+}
+
+.ai-section .form-checkbox {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 13px;
+}
+
+.ai-section .form-checkbox .box {
+    -fx-background-color: #f3e8ff;
+    -fx-border-color: #c4b5fd;
+    -fx-border-width: 2;
+    -fx-border-radius: 6;
+}
+
+.ai-section .form-checkbox:selected .box {
+    -fx-background-color: #8b5cf6;
+    -fx-border-color: #7c3aed;
+}
+
+.ai-section .form-checkbox:selected .mark {
+    -fx-background-color: #ffffff;
+}
+
+.ai-section ProgressIndicator {
+    -fx-progress-color: #8b5cf6;
+}
+
+.ai-section .error-label {
+    -fx-text-fill: #dc2626;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+}
