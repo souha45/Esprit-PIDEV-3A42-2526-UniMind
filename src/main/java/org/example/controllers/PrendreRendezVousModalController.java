@@ -9,6 +9,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.example.entities.DisponibilitePsy;
@@ -16,7 +17,10 @@ import org.example.entities.Psychologue;
 import org.example.entities.Etudiant;
 import org.example.entities.RendezVous;
 import org.example.services.*;
+import javafx.stage.Stage;
+import javafx.fxml.FXMLLoader;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -43,6 +47,7 @@ public class PrendreRendezVousModalController {
     @FXML private Button           btnAnnuler;
     @FXML private Button           btnConfirmer;
     @FXML private Button           btnDictation;
+    @FXML private Button btnVueCalendrier;
 
     // ── Toast + Overlay ─────────────────────────────────────────────
     @FXML private StackPane toastContainer;
@@ -121,6 +126,12 @@ public class PrendreRendezVousModalController {
                 btnDictation.setStyle(btnDictation.getStyle().replace("#6366f1","#4f46e5")));
         btnDictation.setOnMouseExited(e ->
                 btnDictation.setStyle(btnDictation.getStyle().replace("#4f46e5","#6366f1")));
+
+        btnVueCalendrier.setOnAction(e -> ouvrirCalendrierEtudiant());
+        btnVueCalendrier.setOnMouseEntered(e ->
+                btnVueCalendrier.setStyle(btnVueCalendrier.getStyle().replace("#8b5cf6","#7c3aed")));
+        btnVueCalendrier.setOnMouseExited(e ->
+                btnVueCalendrier.setStyle(btnVueCalendrier.getStyle().replace("#7c3aed","#8b5cf6")));
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -716,4 +727,37 @@ public class PrendreRendezVousModalController {
     public void setModalStage(Stage stage) {
         this.modalStage = stage;
     }
+
+    private void ouvrirCalendrierEtudiant() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/CalendrierDisponibiliteEtudiant.fxml"));
+            Stage calendrierStage = new Stage();
+            Scene scene = new Scene(loader.load());
+
+            calendrierStage.initModality(Modality.WINDOW_MODAL);
+            calendrierStage.initOwner(btnVueCalendrier.getScene().getWindow());
+            calendrierStage.setTitle("Calendrier des disponibilités");
+            calendrierStage.setScene(scene);
+            calendrierStage.setResizable(false);
+
+            CalendrierDisponibiliteEtudiantController controller = loader.getController();
+            controller.setModalStage(calendrierStage);
+
+            // Callback quand l'étudiant clique sur un créneau
+            controller.setOnCreneauSelectionne(dispo -> {
+                javafx.application.Platform.runLater(() -> {
+                    disponibiliteSelectionnee = dispo;
+                    afficherBandeau(dispo);
+                    construireGrille();
+                });
+            });
+
+            calendrierStage.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showToast("❌ Impossible d'ouvrir le calendrier", ToastType.ERROR);
+        }
+    }
+
 }

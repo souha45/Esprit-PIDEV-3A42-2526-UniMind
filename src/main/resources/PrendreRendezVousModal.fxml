@@ -71,6 +71,12 @@
                                                -fx-border-width:1;-fx-font-family:'Segoe UI';
                                                -fx-font-size:12px;-fx-pref-height:34px;-fx-cursor:hand;"/>
                         </VBox>
+                        <!-- Dans la HBox des filtres, après datePickerFiltre -->
+                        <Button fx:id="btnVueCalendrier" text="📅 Vue calendrier"
+                                style="-fx-background-color: #8b5cf6; -fx-text-fill: #ffffff;
+               -fx-font-family: 'Segoe UI'; -fx-font-size: 12px;
+               -fx-font-weight: bold; -fx-padding: 8 16;
+               -fx-background-radius: 8; -fx-cursor: hand;"/>
                     </HBox>
                 </VBox>
 
