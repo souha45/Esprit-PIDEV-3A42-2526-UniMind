@@ -184,15 +184,17 @@ public class PrendreRendezVousModalController {
         VBox carte = new VBox(6);
         carte.setPrefWidth(210);
         carte.setPrefHeight(118);
+        carte.setUserData(dispo); // Stocker l'objet pour référence
 
-        // ✅ Vérifier si ce créneau est celui sélectionné
         boolean selected = (disponibiliteSelectionnee != null &&
                 disponibiliteSelectionnee.getDispoId() == dispo.getDispoId());
 
         carte.setStyle(selected ? STYLE_CARTE_SELECTED : STYLE_CARTE_IDLE);
 
+        // ── HEADER ────────────────────────────────────────────────────
         HBox topRow = new HBox(6);
         topRow.setAlignment(Pos.CENTER_LEFT);
+
         Label lPsy = new Label(getNomPsy(dispo.getUserId()));
         lPsy.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:11px;-fx-font-weight:bold;" +
                 "-fx-text-fill:" + (selected ? "#4c1d95" : "#374151") + ";");
@@ -206,18 +208,21 @@ public class PrendreRendezVousModalController {
                 "-fx-font-size:10px;-fx-padding:2 7;-fx-background-radius:12;");
         topRow.getChildren().addAll(lPsy, badge);
 
+        // ── DATE ──────────────────────────────────────────────────────
         LocalDate ld = dispo.getDateDispo().toLocalDate();
         String jourAbrg = ld.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.FRENCH);
         Label lDate = new Label(jourAbrg + " " + ld.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         lDate.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:13px;-fx-font-weight:bold;" +
                 "-fx-text-fill:" + (selected ? "#4c1d95" : "#1f2937") + ";");
 
+        // ── HORAIRE ───────────────────────────────────────────────────
         String debut = dispo.getHeureDebut().toString().substring(0, 5);
         String fin = dispo.getHeureFin().toString().substring(0, 5);
         Label lHeure = new Label("🕐 " + debut + " – " + fin);
         lHeure.setStyle("-fx-font-family:'Segoe UI';-fx-font-size:12px;-fx-font-weight:bold;" +
                 "-fx-text-fill:" + (selected ? "#7c3aed" : "#6366f1") + ";");
 
+        // ── LIEU ──────────────────────────────────────────────────────
         String lieu = dispo.getLieu();
         if (presentiel && lieu != null && !lieu.isEmpty()) {
             Label lLieu = new Label("📍 " + (lieu.length() > 22 ? lieu.substring(0, 22) + "…" : lieu));
@@ -227,18 +232,19 @@ public class PrendreRendezVousModalController {
             carte.getChildren().addAll(topRow, lDate, lHeure);
         }
 
-        // ✅ Ajouter un badge "Sélectionné" si c'est le cas
+        // ── BADGE SÉLECTIONNÉ (un SEUL endroit) ───────────────────────
         if (selected) {
             Region spacer = new Region();
             VBox.setVgrow(spacer, Priority.ALWAYS);
+
             Label selectedBadge = new Label("✓  Sélectionné");
             selectedBadge.setStyle("-fx-background-color: #7c3aed; -fx-text-fill: white; " +
-                    "-fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 2 10; " +
+                    "-fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 3 12; " +
                     "-fx-background-radius: 12;");
             carte.getChildren().addAll(spacer, selectedBadge);
         }
 
-        // Clic pour sélectionner (si pas déjà sélectionné)
+        // ── CLIC ──────────────────────────────────────────────────────
         carte.setOnMouseClicked(e -> {
             if (!selected) {
                 // Désélectionner l'ancien
@@ -747,19 +753,7 @@ public class PrendreRendezVousModalController {
         }
 
         for (DisponibilitePsy d : filteredList) {
-            VBox carte = construireCarte(d);
-
-            // ✅ Mettre en surbrillance si c'est le créneau sélectionné
-            if (disponibiliteSelectionnee != null && d.getDispoId() == disponibiliteSelectionnee.getDispoId()) {
-                carte.setStyle(STYLE_CARTE_SELECTED);
-                // Ajouter un indicateur visuel supplémentaire
-                Label selectedLabel = new Label("✓ SÉLECTIONNÉ");
-                selectedLabel.setStyle("-fx-background-color: #7c3aed; -fx-text-fill: white; " +
-                        "-fx-font-size: 9px; -fx-font-weight: bold; -fx-padding: 2 8; " +
-                        "-fx-background-radius: 10;");
-                carte.getChildren().add(selectedLabel);
-            }
-
+            VBox carte = construireCarte(d);  // La carte gère elle-même son badge
             gridCreneaux.getChildren().add(carte);
         }
 
