@@ -303,10 +303,43 @@ public class CalendrierDisponibiliteController {
         LocalDate jour = d.getDateDispo().toLocalDate();
         chip.setOnMouseClicked(ev -> {
             ev.consume();
-            ouvrirFormulaireAvecCreneau(jour, hDebut, hFin);
+            ouvrirFormulaireModification(d);  // ← NOUVELLE MÉTHODE
         });
 
         return chip;
+    }
+
+    // 2. AJOUTER la nouvelle méthode ouvrirFormulaireModification()
+    private void ouvrirFormulaireModification(DisponibilitePsy dispo) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ModifierDisponibiliteModal.fxml"));
+            Stage modalStage = new Stage();
+            Scene scene = new Scene(loader.load());
+
+            modalStage.initModality(javafx.stage.Modality.WINDOW_MODAL);
+            modalStage.initOwner(calendrierStage != null ? calendrierStage : gridCalendrier.getScene().getWindow());
+            modalStage.setTitle("Modifier la disponibilité");
+            modalStage.setScene(scene);
+            modalStage.setResizable(false);
+
+            ModifierDisponibiliteController controller = loader.getController();
+            controller.setDisponibiliteAModifier(dispo);  // Passer l'objet complet
+            controller.setModalStage(modalStage);
+
+            modalStage.showAndWait();
+
+            // Rafraîchir après modification
+            chargerCreneaux();
+            rafraichir();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erreur");
+            alert.setHeaderText(null);
+            alert.setContentText("Impossible d'ouvrir le formulaire de modification");
+            alert.showAndWait();
+        }
     }
 
     private void ouvrirFormulaireAvecCreneau(LocalDate date, LocalTime heureDebut, LocalTime heureFin) {

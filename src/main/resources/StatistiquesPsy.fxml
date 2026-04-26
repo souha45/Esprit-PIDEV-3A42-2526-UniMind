@@ -228,7 +228,6 @@
                     </HBox>
 
                     <!-- ── ROW 2 : Évolution RDV par mois + Répartition statuts ── -->
-                    <!-- ── ROW 2 : Évolution RDV par mois + Répartition statuts ── -->
                     <HBox spacing="20" fillHeight="true" VBox.vgrow="ALWAYS">
                         <!-- Graphique évolution RDV (BarChart) - prend 60% -->
                         <VBox spacing="8" HBox.hgrow="ALWAYS" prefWidth="400"
@@ -268,7 +267,7 @@
                  -fx-border-width: 1; -fx-border-radius: 14;
                  -fx-effect: dropshadow(gaussian, rgba(109,40,217,0.08), 10, 0, 0, 3);">
                             <HBox alignment="CENTER_LEFT" spacing="8">
-                                <Label text="🥧  Répartition des statuts RDV"
+                                <Label text="📊  Répartition des statuts RDV"
                                        style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
                           -fx-font-weight: bold; -fx-text-fill: #4c1d95;" />
                                 <Region HBox.hgrow="ALWAYS" />
