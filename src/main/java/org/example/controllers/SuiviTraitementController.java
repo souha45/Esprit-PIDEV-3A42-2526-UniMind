@@ -774,72 +774,6 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
 
     private void configurerColonneActions() {
         colActions.setCellFactory(param -> new TableCell<LigneSuiviGroupée, Void>() {
-            private final Button btnView = new Button("👁️");
-            private final Button btnEdit = new Button("✏️");
-            private final Button btnDelete = new Button("🗑️");
-
-            {
-                btnView.setStyle("-fx-background-color: #eff6ff; -fx-text-fill: #1d4ed8; " +
-                        "-fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold; " +
-                        "-fx-padding: 6 12; -fx-cursor: hand;");
-                btnEdit.setStyle("-fx-background-color: #fef9c3; -fx-text-fill: #a16207; " +
-                        "-fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold; " +
-                        "-fx-padding: 6 12; -fx-cursor: hand;");
-                btnDelete.setStyle("-fx-background-color: #fef2f2; -fx-text-fill: #dc2626; " +
-                        "-fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold; " +
-                        "-fx-padding: 6 10; -fx-cursor: hand;");
-
-                btnView.setOnAction(event -> {
-                    LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
-                    if (ligne.getSuivi() != null && !ligne.estEntete()) {
-                        ouvrirPageAffichage(ligne.getSuivi());
-                    }
-                });
-
-                btnEdit.setOnAction(event -> {
-                    LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
-                    if (ligne.getSuivi() != null && !ligne.estEntete()) {
-                        SuiviTraitement suivi = ligne.getSuivi();
-                        if (utilisateur != null && "PSYCHOLOGUE".equals(utilisateur.getRole())) {
-                            if (suivi.getSaisiPar() == SaisiPar.PSYCHOLOGUE) {
-                                ouvrirPageModification(suivi);
-                            } else {
-                                afficherToast("✗ Vous ne pouvez pas modifier le suivi de l'étudiant", false);
-                            }
-                        } else if (utilisateur != null && "ETUDIANT".equals(utilisateur.getRole())) {
-                            if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
-                                ouvrirPageModification(suivi);
-                            } else {
-                                afficherToast("✗ Vous ne pouvez pas modifier le suivi du psychologue", false);
-                            }
-                        } else {
-                            ouvrirPageModification(suivi);
-                        }
-                    }
-                });
-
-                btnDelete.setOnAction(event -> {
-                    LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
-                    if (ligne.getSuivi() != null && !ligne.estEntete()) {
-                        SuiviTraitement suivi = ligne.getSuivi();
-                        if (utilisateur != null && "PSYCHOLOGUE".equals(utilisateur.getRole())) {
-                            if (suivi.getSaisiPar() == SaisiPar.PSYCHOLOGUE) {
-                                supprimerSuivi(suivi);
-                            } else {
-                                afficherToast("✗ Vous ne pouvez pas supprimer le suivi de l'étudiant", false);
-                            }
-                        } else if (utilisateur != null && "ETUDIANT".equals(utilisateur.getRole())) {
-                            if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
-                                supprimerSuivi(suivi);
-                            } else {
-                                afficherToast("✗ Vous ne pouvez pas supprimer le suivi du psychologue", false);
-                            }
-                        } else {
-                            supprimerSuivi(suivi);
-                        }
-                    }
-                });
-            }
 
             @Override
             protected void updateItem(Void item, boolean empty) {
@@ -865,26 +799,58 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
                     return;
                 }
 
-                boolean estPsychologue = (utilisateur != null && "PSYCHOLOGUE".equals(utilisateur.getRole()));
-                boolean estEtudiant = (utilisateur != null && "ETUDIANT".equals(utilisateur.getRole()));
+                boolean estPsychologue = (utilisateur != null &&
+                        "PSYCHOLOGUE".equals(utilisateur.getRole().name().trim()));
+                boolean estEtudiant = (utilisateur != null &&
+                        "ETUDIANT".equals(utilisateur.getRole().name().trim()));
+
+                // ✅ Recréer les boutons à chaque appel pour éviter les conflits de cellules
+                Button btnView   = new Button("👁️");
+                Button btnEdit   = new Button("✏️");
+                Button btnDelete = new Button("🗑️");
+
+                btnView.setStyle("-fx-background-color: #eff6ff; -fx-text-fill: #1d4ed8; " +
+                        "-fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold; " +
+                        "-fx-padding: 6 12; -fx-cursor: hand;");
+                btnEdit.setStyle("-fx-background-color: #fef9c3; -fx-text-fill: #a16207; " +
+                        "-fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold; " +
+                        "-fx-padding: 6 12; -fx-cursor: hand;");
+                btnDelete.setStyle("-fx-background-color: #fef2f2; -fx-text-fill: #dc2626; " +
+                        "-fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold; " +
+                        "-fx-padding: 6 10; -fx-cursor: hand;");
+
+                btnView.setOnAction(event -> {
+                    if (suivi != null) ouvrirPageAffichage(suivi);
+                });
+
+                btnEdit.setOnAction(event -> {
+                    if (suivi != null) ouvrirPageModification(suivi);
+                });
+
+                btnDelete.setOnAction(event -> {
+                    if (suivi != null) supprimerSuivi(suivi);
+                });
 
                 HBox container = new HBox(6);
                 container.setAlignment(Pos.CENTER);
 
-                // Le bouton Afficher est TOUJOURS présent
+                // 👁️ Bouton Afficher toujours visible
                 container.getChildren().add(btnView);
 
-                // Pour le psychologue : ajouter Modifier/Supprimer SEULEMENT si c'est SON suivi
-                if (estPsychologue && suivi.getSaisiPar() == SaisiPar.PSYCHOLOGUE) {
-                    container.getChildren().addAll(btnEdit, btnDelete);
-                }
-                // Pour l'étudiant : ajouter Modifier/Supprimer SEULEMENT si c'est SON suivi
-                else if (estEtudiant && suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
-                    container.getChildren().addAll(btnEdit, btnDelete);
-                }
-                // Si ce n'est ni psychologue ni étudiant (admin par exemple)
-                else if (!estPsychologue && !estEtudiant) {
-                    container.getChildren().addAll(btnEdit, btnDelete);
+                if (estPsychologue) {
+                    // ✅ Psy : Modifier/Supprimer UNIQUEMENT sur SES propres suivis
+                    if (suivi.getSaisiPar() == SaisiPar.PSYCHOLOGUE) {
+                        container.getChildren().addAll(btnEdit, btnDelete);
+                    }
+                    // ❌ Suivi ETUDIANT → bouton 👁️ uniquement
+
+                } else if (estEtudiant) {
+                    // ✅ Étudiant : Modifier/Supprimer UNIQUEMENT sur SES propres suivis
+                    if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
+                        container.getChildren().addAll(btnEdit, btnDelete);
+                    }
+                    // ❌ Suivi PSYCHOLOGUE → bouton 👁️ uniquement
+
                 }
 
                 setGraphic(container);
