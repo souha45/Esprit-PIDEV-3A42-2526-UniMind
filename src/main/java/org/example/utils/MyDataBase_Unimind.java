@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class MyDataBase_Unimind {
     final String USERNAME = "root";
-    final String URL = "jdbc:mysql://localhost:3306/unimind_db";
+    final String URL = "jdbc:mysql://localhost:3306/unimind_db?useUnicode=true&characterEncoding=UTF-8";
     final String PASSWORD = "";
 
     Connection connection;

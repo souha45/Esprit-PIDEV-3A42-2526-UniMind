@@ -623,3 +623,148 @@
     -fx-text-fill: #6b7280;
     -fx-line-spacing: 2;
 }
+
+/* =============================================
+   FORUM AVANCÉ — RÉACTIONS & MODÉRATION
+   ============================================= */
+
+/* Barre de réactions */
+.reaction-bar {
+    -fx-spacing: 6;
+    -fx-padding: 6 0 4 0;
+    -fx-alignment: CENTER_LEFT;
+}
+
+/* Bouton réaction normal */
+.reaction-btn {
+    -fx-font-size: 13px;
+    -fx-padding: 3 10 3 10;
+    -fx-cursor: hand;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-background-color: #f3f4f6;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1;
+}
+
+.reaction-btn:hover {
+    -fx-background-color: #ede9fe;
+    -fx-border-color: #c4b5fd;
+    -fx-scale-x: 1.08;
+    -fx-scale-y: 1.08;
+}
+
+/* Bouton réaction sélectionné (déjà cliqué) */
+.reaction-btn-selected {
+    -fx-background-color: #ede9fe;
+    -fx-border-color: #6366f1;
+    -fx-border-width: 1.5;
+    -fx-font-weight: bold;
+}
+
+/* Barre de formatage du post */
+.format-bar {
+    -fx-spacing: 6;
+    -fx-padding: 4 0 4 0;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.format-btn {
+    -fx-background-color: #f3f4f6;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 4 10 4 10;
+    -fx-cursor: hand;
+    -fx-font-size: 12px;
+}
+
+.format-btn:hover {
+    -fx-background-color: #ede9fe;
+    -fx-border-color: #c4b5fd;
+}
+
+/* Barre d'émojis */
+.emoji-bar {
+    -fx-spacing: 4;
+    -fx-padding: 2 0 2 0;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.emoji-btn {
+    -fx-background-color: transparent;
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+    -fx-padding: 2 4 2 4;
+    -fx-background-radius: 6;
+}
+
+.emoji-btn:hover {
+    -fx-background-color: #f3f4f6;
+}
+
+/* Aperçu du fichier joint */
+.media-preview {
+    -fx-background-color: #f8f7ff;
+    -fx-background-radius: 8;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-padding: 8 12 8 12;
+    -fx-spacing: 8;
+}
+
+.media-preview-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #6366f1;
+    -fx-font-weight: bold;
+}
+
+/* Message d'erreur de modération */
+.moderation-error {
+    -fx-background-color: #fef2f2;
+    -fx-background-radius: 8;
+    -fx-border-color: #fca5a5;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-padding: 10 14 10 14;
+    -fx-text-fill: #dc2626;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* Badge infraction */
+.infraction-badge {
+    -fx-background-color: #fef2f2;
+    -fx-text-fill: #dc2626;
+    -fx-font-size: 11px;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 20;
+    -fx-border-color: #fca5a5;
+    -fx-border-width: 1;
+    -fx-border-radius: 20;
+}
+
+/* Carte commentaire améliorée */
+.comment-card {
+    -fx-padding: 10 10 10 16;
+    -fx-background-color: #f8f7ff;
+    -fx-background-radius: 8;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-spacing: 6;
+}
+
+.comment-card:hover {
+    -fx-border-color: #c4b5fd;
+    -fx-background-color: #f5f3ff;
+}
+
+/* Image attachée dans un post */
+.post-image {
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.1), 6, 0, 0, 2);
+}

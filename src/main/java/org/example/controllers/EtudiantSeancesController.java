@@ -8,22 +8,23 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
+import javafx.stage.FileChooser;
 import org.example.entities.*;
-import org.example.enums.TypeFichier;
 import org.example.services.*;
 import org.example.services.GeminiRecommandationService.Recommandation;
 import org.example.utils.Session;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -34,15 +35,12 @@ import java.util.stream.Collectors;
 public class EtudiantSeancesController implements Initializable,
         SidebarEtudiantController.EtudiantPageController {
 
-    // ── FXML injections ──────────────────────────────────────────────────
     @FXML private SidebarEtudiantController sidebarEtudiantController;
     @FXML private FlowPane categoriesGrid;
     @FXML private TextField tfSearchCat;
     @FXML private VBox postsContainer;
     @FXML private Button btnLoadMore;
     @FXML private BorderPane mainLayout;
-
-    // Citation
     @FXML private Label lblCitation;
     @FXML private Label lblCitationAuteur;
     @FXML private Button btnRefreshCitation;
@@ -56,21 +54,29 @@ public class EtudiantSeancesController implements Initializable,
     @FXML private Label lblChargement;
     @FXML private VBox  recommandationsContainer;
 
-    // ── Services ─────────────────────────────────────────────────────────
-    private final CategorieMeditationServices catService   = new CategorieMeditationServices();
-    private final SeanceMeditationServices    seanceService = new SeanceMeditationServices();
-    private final PostServices                postService  = new PostServices();
-    private final CommentaireServices         commentaireService = new CommentaireServices();
-    private final EtudiantService             etudiantService   = new EtudiantService();
+    // Services
+    private final CategorieMeditationServices catService     = new CategorieMeditationServices();
+    private final SeanceMeditationServices    seanceService  = new SeanceMeditationServices();
+    private final PostServices                postService    = new PostServices();
+    private final CommentaireServices         commService    = new CommentaireServices();
+    private final EtudiantService             etudiantService= new EtudiantService();
+    private final ReactionService             reactionService= new ReactionService();
+    private final ModerationService           moderationSvc  = new ModerationService();
+    private final EmailService                emailService   = new EmailService();
     private final GeminiRecommandationService geminiService     = new GeminiRecommandationService();
 
-    // ── État ─────────────────────────────────────────────────────────────
+
     private User currentUser;
     private List<CategorieMeditation> allCategories = new ArrayList<>();
-    private List<Post> allPosts = new ArrayList<>();
-    private int postsPage = 0;
+    private List<Post>                allPosts       = new ArrayList<>();
+    private int  postsPage = 0;
     private static final int POSTS_PER_PAGE = 5;
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+    private static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+    // Tailles maximales pour les médias
+    private static final long MAX_IMAGE_SIZE = 5L  * 1024 * 1024;  // 5 MB
+    private static final long MAX_VIDEO_SIZE = 50L * 1024 * 1024;  // 50 MB
+    private static final long MAX_FILE_SIZE  = 20L * 1024 * 1024;  // 20 MB
 
     // Émotion sélectionnée
     private String emotionSelectionnee = null;
@@ -91,13 +97,12 @@ public class EtudiantSeancesController implements Initializable,
             new String[]{"La paix vient de l'intérieur. Ne la cherchez pas à l'extérieur.", "Bouddha"},
             new String[]{"Chaque jour est une nouvelle chance de changer votre vie.", "Anonyme"},
             new String[]{"Respirez. Vous êtes exactement là où vous devez être.", "Anonyme"},
-            new String[]{"Le bonheur n'est pas quelque chose de prêt à l'emploi. Il vient de vos propres actions.", "Dalaï Lama"},
-            new String[]{"Prenez soin de votre corps, c'est le seul endroit où vous devez vivre.", "Jim Rohn"}
+            new String[]{"Le bonheur vient de vos propres actions.", "Dalaï Lama"},
+            new String[]{"Prenez soin de votre corps, c'est le seul endroit où vous devez vivre.", "Jim Rohn"},
+            new String[]{"Vous n'avez pas à être parfait pour être incroyable.", "Anonyme"},
+            new String[]{"Chaque moment est un nouveau départ.", "T.S. Eliot"},
+            new String[]{"Croyez en vous et tout devient possible.", "Anonyme"}
     );
-
-    // ═════════════════════════════════════════════════════════════════════
-    //  INIT
-    // ═════════════════════════════════════════════════════════════════════
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -601,12 +606,12 @@ public class EtudiantSeancesController implements Initializable,
         row.getChildren().addAll(ic, lb); return row;
     }
 
-    // ═════════════════════════════════════════════════════════════════════
-    //  CITATION DU JOUR (inchangé)
-    // ═════════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════
+    //  CITATION
+    // ══════════════════════════════════════════════════
 
     private void loadCitationDuJour() {
-        lblCitation.setText("✦  Chargement de la citation...");
+        lblCitation.setText("✦  Chargement...");
         lblCitationAuteur.setText("");
         btnRefreshCitation.setDisable(true);
         String today = LocalDate.now().toString();
@@ -615,18 +620,12 @@ public class EtudiantSeancesController implements Initializable,
             btnRefreshCitation.setDisable(false);
             return;
         }
-        fetchAndDisplay(false);
+        fetchAndDisplay();
     }
 
-    private void loadCitationRandom() {
-        lblCitation.setText("✦  Chargement..."); lblCitationAuteur.setText("");
-        btnRefreshCitation.setDisable(true);
-        fetchAndDisplay(true);
-    }
-
-    private void fetchAndDisplay(boolean forceRandom) {
+    private void fetchAndDisplay() {
         CompletableFuture.supplyAsync(this::fetchRandom)
-                .whenComplete((result, error) -> Platform.runLater(() -> {
+                .whenComplete((result, err) -> Platform.runLater(() -> {
                     btnRefreshCitation.setDisable(false);
                     if (result != null && result.length == 2 && result[0] != null && !result[0].isBlank()) {
                         CitationCache.set(LocalDate.now().toString(), result[0], result[1]);
@@ -642,108 +641,109 @@ public class EtudiantSeancesController implements Initializable,
         try {
             URL url = new URL("https://zenquotes.io/api/random");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET"); conn.setConnectTimeout(5000); conn.setReadTimeout(5000);
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(5000); conn.setReadTimeout(5000);
             conn.setRequestProperty("User-Agent", "UnimindApp/1.0");
             if (conn.getResponseCode() == 200) {
-                InputStream is = conn.getInputStream();
-                String json = new String(is.readAllBytes(), StandardCharsets.UTF_8); is.close(); conn.disconnect();
-                String q = extractJsonField(json, "\"q\":\"", "\"");
-                String a = extractJsonField(json, "\"a\":\"", "\"");
+                String json = new String(conn.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+                conn.disconnect();
+                String q = extractJson(json, "\"q\":\"", "\"");
+                String a = extractJson(json, "\"a\":\"", "\"");
                 if (q != null && !q.isBlank()) return new String[]{q, a != null ? a : "Anonyme"};
             }
-            conn.disconnect();
         } catch (Exception e) { System.err.println("ZenQuotes: " + e.getMessage()); }
         return null;
     }
 
-    private String extractJsonField(String json, String start, String end) {
+    private String extractJson(String json, String start, String end) {
         try {
             int s = json.indexOf(start); if (s == -1) return null;
-            s += start.length(); int e = json.indexOf(end, s); if (e == -1) return null;
-            return json.substring(s, e).replace("\\\"","\"").replace("\\n"," ").replace("\\u2019","'").replace("\\u2014","—");
-        } catch (Exception e) { return null; }
+            s += start.length();
+            int e = json.indexOf(end, s); if (e == -1) return null;
+            return json.substring(s, e).replace("\\\"","\"").replace("\\n"," ").replace("\\r","");
+        } catch (Exception ex) { return null; }
     }
 
-    private void afficherCitation(String quote, String author) {
-        lblCitation.setText("« " + quote + " »");
-        lblCitationAuteur.setText("— " + (author != null && !author.isBlank() ? author : "Anonyme"));
+    private void afficherCitation(String q, String a) {
+        lblCitation.setText("« " + q + " »");
+        lblCitationAuteur.setText("— " + (a != null && !a.isBlank() ? a : "Anonyme"));
     }
 
-    @FXML private void onRefreshCitation() { CitationCache.clear(); loadCitationRandom(); }
+    @FXML private void onRefreshCitation() { CitationCache.clear(); fetchAndDisplay(); }
 
     public static class CitationCache {
         private static String date, quote, author;
-        static void set(String d, String q, String a) { date = d; quote = q; author = a; }
-        static void clear() { date = null; quote = null; author = null; }
-        static String getDate()   { return date; }
-        static String getQuote()  { return quote; }
-        static String getAuthor() { return author; }
+        public static void set(String d, String q, String a) { date=d; quote=q; author=a; }
+        public static void clear() { date=null; quote=null; author=null; }
+        public static String getDate() { return date; }
+        public static String getQuote() { return quote; }
+        public static String getAuthor() { return author; }
     }
 
-    // ═════════════════════════════════════════════════════════════════════
-    //  CATEGORIES (inchangé)
-    // ═════════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════
+    //  CATEGORIES
+    // ══════════════════════════════════════════════════
 
     private void loadCategories() {
         try { allCategories = catService.afficher(); renderCategories(allCategories); }
         catch (SQLException e) { e.printStackTrace(); }
     }
 
-    private void renderCategories(List<CategorieMeditation> categories) {
+    private void renderCategories(List<CategorieMeditation> cats) {
         categoriesGrid.getChildren().clear();
-        for (CategorieMeditation cat : categories)
-            categoriesGrid.getChildren().add(buildCategoryCard(cat));
-        if (categories.isEmpty()) {
-            Label empty = new Label("Aucune catégorie trouvée.");
-            empty.setStyle("-fx-text-fill: #9ca3af; -fx-font-size: 14px;");
-            categoriesGrid.getChildren().add(empty);
+        if (cats.isEmpty()) {
+            Label l = new Label("Aucune catégorie."); l.setStyle("-fx-text-fill:#9ca3af;");
+            categoriesGrid.getChildren().add(l); return;
         }
+        cats.forEach(c -> categoriesGrid.getChildren().add(buildCategoryCard(c)));
     }
 
     private VBox buildCategoryCard(CategorieMeditation cat) {
-        VBox card = new VBox(10);
-        card.getStyleClass().add("cat-card");
+        VBox card = new VBox(10); card.getStyleClass().add("cat-card");
         card.setPrefWidth(280); card.setMaxWidth(280);
 
-        StackPane iconContainer = new StackPane();
-        iconContainer.setAlignment(Pos.CENTER); iconContainer.setPrefHeight(70);
+        StackPane iconBox = new StackPane(); iconBox.setAlignment(Pos.CENTER); iconBox.setPrefHeight(70);
         if (cat.getIconUrl() != null && !cat.getIconUrl().isBlank()) {
             try {
-                javafx.scene.image.ImageView iv = new javafx.scene.image.ImageView();
-                javafx.scene.image.Image img = new javafx.scene.image.Image(cat.getIconUrl(), 60, 60, true, true, true);
-                img.errorProperty().addListener((obs, o, h) -> { if (h) { Label fb = new Label("🌸"); fb.setStyle("-fx-font-size:36px;"); iconContainer.getChildren().setAll(fb); } });
+                ImageView iv = new ImageView();
+                Image img = new Image(cat.getIconUrl(), 60, 60, true, true, true);
+                img.errorProperty().addListener((obs,ov,err) -> {
+                    if (err) { Label l=new Label("🌸"); l.setStyle("-fx-font-size:36px;"); iconBox.getChildren().setAll(l); }
+                });
                 iv.setImage(img); iv.setFitWidth(60); iv.setFitHeight(60); iv.setPreserveRatio(true);
-                iconContainer.getChildren().add(iv);
-            } catch (Exception e) { Label fb = new Label("🌸"); fb.setStyle("-fx-font-size:36px;"); iconContainer.getChildren().add(fb); }
-        } else { Label e = new Label("🌸"); e.setStyle("-fx-font-size:36px;"); iconContainer.getChildren().add(e); }
+                iconBox.getChildren().add(iv);
+            } catch (Exception e) { Label l=new Label("🌸"); l.setStyle("-fx-font-size:36px;"); iconBox.getChildren().add(l); }
+        } else { Label l=new Label("🌸"); l.setStyle("-fx-font-size:36px;"); iconBox.getChildren().add(l); }
 
         Label nom = new Label(cat.getNom()); nom.getStyleClass().add("cat-name"); nom.setWrapText(true);
-        String dt = cat.getDescription() != null && !cat.getDescription().isBlank() ? cat.getDescription() : "Aucune description";
-        Label desc = new Label(dt.length() > 80 ? dt.substring(0, 80) + "..." : dt);
+        String dt = cat.getDescription()!=null&&!cat.getDescription().isBlank() ? cat.getDescription() : "Aucune description";
+        Label desc = new Label(dt.length()>80?dt.substring(0,80)+"...":dt);
         desc.getStyleClass().add("cat-desc"); desc.setWrapText(true);
 
-        int nbSeances = 0;
-        try { nbSeances = (int) seanceService.afficher().stream().filter(s -> s.getCategorieId() == cat.getCategorieId() && s.isIsActive()).count(); } catch (SQLException ignored) {}
+        int ns=0,np=0;
+        try {
+            ns=(int)seanceService.afficher().stream().filter(s->s.getCategorieId()==cat.getCategorieId()&&s.isIsActive()).count();
+            np=(int)postService.afficher().stream().filter(p->p.getCategorieId()==cat.getCategorieId()).count();
+        } catch (SQLException ignored) {}
 
-        Label seancesLbl = new Label("🎵 " + nbSeances + " séances");
-        seancesLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#6366f1;-fx-font-weight:bold;");
+        HBox stats = new HBox(16); stats.setAlignment(Pos.CENTER_LEFT);
+        Label sl = new Label("🎵 "+ns+" séances"); sl.setStyle("-fx-font-size:12px;-fx-text-fill:#6366f1;-fx-font-weight:bold;");
+        Label pl = new Label("💬 "+np+" posts"); pl.setStyle("-fx-font-size:12px;-fx-text-fill:#10b981;-fx-font-weight:bold;");
+        stats.getChildren().addAll(sl,pl);
 
-        Button btnExplorer = new Button("🔍  Explorer");
-        btnExplorer.getStyleClass().add("btn-explorer");
-        btnExplorer.setMaxWidth(Double.MAX_VALUE);
-        btnExplorer.setOnAction(e -> openSeancesCategorie(cat));
+        Button btnEx = new Button("🔍  Explorer"); btnEx.getStyleClass().add("btn-explorer");
+        btnEx.setMaxWidth(Double.MAX_VALUE); btnEx.setOnAction(e->openSeancesCategorie(cat));
 
-        card.getChildren().addAll(iconContainer, nom, desc, seancesLbl, btnExplorer);
+        card.getChildren().addAll(iconBox,nom,desc,stats,btnEx);
         return card;
     }
 
     @FXML private void onSearchCategorie() {
         String q = tfSearchCat.getText().trim().toLowerCase();
-        if (q.isEmpty()) { renderCategories(allCategories); return; }
-        renderCategories(allCategories.stream()
-                .filter(c -> (c.getNom() != null && c.getNom().toLowerCase().contains(q))
-                        || (c.getDescription() != null && c.getDescription().toLowerCase().contains(q)))
-                .collect(Collectors.toList()));
+        renderCategories(q.isEmpty() ? allCategories : allCategories.stream()
+                                                       .filter(c->(c.getNom()!=null&&c.getNom().toLowerCase().contains(q))
+                                                                  ||(c.getDescription()!=null&&c.getDescription().toLowerCase().contains(q)))
+                                                       .collect(Collectors.toList()));
     }
 
     private void openSeancesCategorie(CategorieMeditation cat) {
@@ -751,240 +751,720 @@ public class EtudiantSeancesController implements Initializable,
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/views/EtudiantSeancesCategorie.fxml"));
             Node page = loader.load();
             EtudiantSeancesCategorieController ctrl = loader.getController();
-            ctrl.setUtilisateur(currentUser);
-            ctrl.initWithCategorie(cat);
+            ctrl.setUtilisateur(currentUser); ctrl.initWithCategorie(cat);
             BorderPane root = (BorderPane) categoriesGrid.getScene().lookup("#mainLayout");
-            if (root == null && categoriesGrid.getScene().getRoot() instanceof BorderPane bp) root = bp;
-            if (root != null) root.setCenter(page);
+            if (root==null && categoriesGrid.getScene().getRoot() instanceof BorderPane bp) root=bp;
+            if (root!=null) root.setCenter(page);
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    // ═════════════════════════════════════════════════════════════════════
-    //  FORUM / POSTS (inchangé — copié tel quel)
-    // ═════════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════
+    //  POSTS
+    // ══════════════════════════════════════════════════
 
     private void loadPosts() {
         try {
             allPosts = postService.afficher();
-            allPosts.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
-            postsPage = 0; postsContainer.getChildren().clear(); renderNextPosts();
+            allPosts.sort((a,b)->b.getCreatedAt().compareTo(a.getCreatedAt()));
+            postsPage=0; postsContainer.getChildren().clear(); renderNextPosts();
         } catch (SQLException e) { e.printStackTrace(); }
     }
 
     private void renderNextPosts() {
-        int start = postsPage * POSTS_PER_PAGE, end = Math.min(start + POSTS_PER_PAGE, allPosts.size());
-        for (int i = start; i < end; i++) postsContainer.getChildren().add(buildPostCard(allPosts.get(i)));
+        int start=postsPage*POSTS_PER_PAGE, end=Math.min(start+POSTS_PER_PAGE,allPosts.size());
+        for (int i=start;i<end;i++) postsContainer.getChildren().add(buildPostCard(allPosts.get(i)));
         postsPage++;
-        boolean hasMore = end < allPosts.size();
-        btnLoadMore.setVisible(hasMore); btnLoadMore.setManaged(hasMore);
+        boolean more = end<allPosts.size();
+        btnLoadMore.setVisible(more); btnLoadMore.setManaged(more);
     }
 
     @FXML private void loadMorePosts() { renderNextPosts(); }
 
     private VBox buildPostCard(Post post) {
-        int uid = currentUser != null ? currentUser.getUserId() : -1;
-        boolean isMine = post.getUserId() == uid;
+        int uid = currentUser!=null ? currentUser.getUserId() : -1;
+        boolean isMyPost = post.getUserId()==uid;
+
         VBox card = new VBox(10); card.getStyleClass().add("post-card");
 
-        HBox header = new HBox(10); header.setAlignment(Pos.CENTER_LEFT);
+        // ── Header ──
         String authorName = "Anonyme";
-        if (!post.isIsAnonyme()) { try { User a = etudiantService.getUserById(post.getUserId()); if (a != null) authorName = a.getPrenom() + " " + a.getNom(); } catch (SQLException ignored) {} }
-
-        Label avatar = new Label(post.isIsAnonyme() ? "🎭" : "👤"); avatar.setStyle("-fx-font-size:22px;");
-        VBox authorInfo = new VBox(2);
-        Label authorLbl = new Label(authorName); authorLbl.setStyle("-fx-font-weight:bold;-fx-font-size:13px;-fx-text-fill:#374151;");
-        String catName = allCategories.stream().filter(c -> c.getCategorieId() == post.getCategorieId()).map(CategorieMeditation::getNom).findFirst().orElse("—");
-        String dateStr = post.getUpdatedAt() != null ? (post.getUpdatedAt().equals(post.getCreatedAt()) ? "Créé le " : "Modifié le ") + DATE_FORMAT.format(post.getUpdatedAt()) : "";
-        Label metaLbl = new Label("🗂️ " + catName + "  •  " + dateStr); metaLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#9ca3af;");
-        authorInfo.getChildren().addAll(authorLbl, metaLbl);
-
-        Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
-        HBox actions = new HBox(6); actions.setAlignment(Pos.CENTER_RIGHT);
-        if (isMine) {
-            Button btnEdit = new Button("✏️"); btnEdit.getStyleClass().addAll("btn-icon","btn-edit"); btnEdit.setOnAction(e -> openEditPostDialog(post, card));
-            Button btnDel  = new Button("🗑️"); btnDel.getStyleClass().addAll("btn-icon","btn-delete"); btnDel.setOnAction(e -> deletePost(post, card));
-            actions.getChildren().addAll(btnEdit, btnDel);
+        if (!post.isIsAnonyme()) {
+            try { User a=etudiantService.getUserById(post.getUserId()); if(a!=null) authorName=a.getPrenom()+" "+a.getNom(); }
+            catch (SQLException ignored) {}
         }
-        header.getChildren().addAll(avatar, authorInfo, spacer, actions);
+        Label avatar = new Label(post.isIsAnonyme()?"🎭":"👤"); avatar.setStyle("-fx-font-size:22px;");
+        Label authorLbl = new Label(authorName); authorLbl.setStyle("-fx-font-weight:bold;-fx-font-size:13px;-fx-text-fill:#374151;");
+        String catName = allCategories.stream().filter(c->c.getCategorieId()==post.getCategorieId())
+                .map(CategorieMeditation::getNom).findFirst().orElse("—");
+        String dateStr = post.getUpdatedAt()!=null
+                ? (post.getUpdatedAt().equals(post.getCreatedAt())?"Créé le ":"Modifié le ")+DATE_FMT.format(post.getUpdatedAt()):"";
+        Label metaLbl = new Label("🗂 "+catName+"  •  "+dateStr); metaLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#9ca3af;");
+        VBox authorInfo = new VBox(2, authorLbl, metaLbl);
 
+        HBox actBtns = new HBox(6); actBtns.setAlignment(Pos.CENTER_RIGHT);
+        if (isMyPost) {
+            Button btnE = new Button("✏"); btnE.getStyleClass().addAll("btn-icon","btn-edit"); btnE.setTooltip(new Tooltip("Modifier")); btnE.setOnAction(e->openEditPostDialog(post,card));
+            Button btnD = new Button("🗑"); btnD.getStyleClass().addAll("btn-icon","btn-delete"); btnD.setTooltip(new Tooltip("Supprimer")); btnD.setOnAction(e->deletePost(post,card));
+            actBtns.getChildren().addAll(btnE,btnD);
+        }
+        Region sp = new Region(); HBox.setHgrow(sp,Priority.ALWAYS);
+        HBox header = new HBox(10,avatar,authorInfo,sp,actBtns); header.setAlignment(Pos.CENTER_LEFT);
+
+        // ── Titre & Contenu ──
         Label title = new Label(post.getTitre()); title.setStyle("-fx-font-size:16px;-fx-font-weight:bold;-fx-text-fill:#3730a3;"); title.setWrapText(true);
-        Label content = new Label(post.getContenu()); content.setStyle("-fx-font-size:13px;-fx-text-fill:#4b5563;"); content.setWrapText(true);
 
-        VBox commentsSection = new VBox(8); commentsSection.setStyle("-fx-padding:10 0 0 0;");
-        int[] nbC = {0}; try { nbC[0] = commentaireService.getCommentairesByPost(post.getPostId()).size(); } catch (SQLException ignored) {}
+        // Rendu du texte formaté (gras/italique/souligné via marqueurs)
+        javafx.scene.text.TextFlow contentLbl = buildFormattedLabel(post.getContenu());
 
-        HBox commentHeader = new HBox(10); commentHeader.setAlignment(Pos.CENTER_LEFT);
-        Label nbCommLbl = new Label("💬 " + nbC[0] + " commentaire(s)"); nbCommLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#6b7280;");
+        // ── Médias attachés ──
+        VBox mediaBox = buildMediaPreview(post.getPostId());
+
+        // ── Réactions ──
+        HBox reactionsBar = buildReactionBar(post.getPostId(), true, -1);
+
+        // ── Commentaires ──
+        int[] nbComm = {0};
+        try { nbComm[0]=commService.getCommentairesByPost(post.getPostId()).size(); } catch (SQLException ignored) {}
+        Label nbCommLbl = new Label("💬 "+nbComm[0]+" commentaire(s)"); nbCommLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#6b7280;");
         Button btnToggle = new Button("▼ Voir les commentaires"); btnToggle.getStyleClass().add("btn-toggle-comments");
-        Button btnAddComment = new Button("➕ Commenter"); btnAddComment.getStyleClass().add("btn-comment");
-        Region sp2 = new Region(); HBox.setHgrow(sp2, Priority.ALWAYS);
-        commentHeader.getChildren().addAll(nbCommLbl, sp2, btnToggle, btnAddComment);
+        Button btnAddComm = new Button("➕ Commenter"); btnAddComm.getStyleClass().add("btn-comment");
+        Region sp2 = new Region(); HBox.setHgrow(sp2,Priority.ALWAYS);
+        HBox commHeader = new HBox(10,nbCommLbl,sp2,btnToggle,btnAddComm); commHeader.setAlignment(Pos.CENTER_LEFT);
 
-        VBox commentsBody = new VBox(8); commentsBody.setVisible(false); commentsBody.setManaged(false);
-        btnToggle.setOnAction(e -> {
-            boolean showing = commentsBody.isVisible();
-            if (!showing) { loadComments(post, commentsBody, nbCommLbl); btnToggle.setText("▲ Masquer"); }
-            else { btnToggle.setText("▼ Voir les commentaires"); }
-            commentsBody.setVisible(!showing); commentsBody.setManaged(!showing);
+        VBox commBody = new VBox(8); commBody.setVisible(false); commBody.setManaged(false);
+        btnToggle.setOnAction(e->{
+            boolean show=commBody.isVisible();
+            if(!show){loadComments(post,commBody,nbCommLbl); btnToggle.setText("▲ Masquer");}
+            else btnToggle.setText("▼ Voir les commentaires");
+            commBody.setVisible(!show); commBody.setManaged(!show);
         });
-        btnAddComment.setOnAction(e -> openAddCommentForm(post, commentsBody, commentsSection, nbCommLbl, btnToggle));
+        btnAddComm.setOnAction(e->openAddCommentDialog(post,commBody,nbCommLbl,btnToggle));
 
-        commentsSection.getChildren().addAll(commentHeader, commentsBody);
-        card.getChildren().addAll(header, title, content, new Separator(), commentsSection);
+        VBox commSection = new VBox(8,commHeader,commBody); commSection.setStyle("-fx-padding:10 0 0 0;");
+        card.getChildren().addAll(header,title,contentLbl);
+        if (!mediaBox.getChildren().isEmpty()) card.getChildren().add(mediaBox);
+        card.getChildren().addAll(reactionsBar,new Separator(),commSection);
         return card;
     }
 
-    private void loadComments(Post post, VBox commentsBody, Label nbCommLbl) {
-        commentsBody.getChildren().clear();
+    // ══════════════════════════════════════════════════
+    //  TEXTE FORMATÉ (Gras **text**, Italique _text_, Souligné __text__)
+    // ══════════════════════════════════════════════════
+
+    private javafx.scene.text.TextFlow buildFormattedLabel(String text) {
+        javafx.scene.text.TextFlow flow = new javafx.scene.text.TextFlow();
+        flow.setStyle("-fx-line-spacing: 4;");
+        flow.setPrefWidth(Double.MAX_VALUE);
+
+        if (text == null || text.isBlank()) return flow;
+
+        // Parser les marqueurs un par un
+        int i = 0;
+        while (i < text.length()) {
+
+            // Gras : **texte**
+            if (text.startsWith("**", i)) {
+                int end = text.indexOf("**", i + 2);
+                if (end != -1) {
+                    javafx.scene.text.Text t = new javafx.scene.text.Text(text.substring(i + 2, end));
+                    t.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-fill: #374151;");
+                    flow.getChildren().add(t);
+                    i = end + 2; continue;
+                }
+            }
+
+            // Souligné : __texte__
+            if (text.startsWith("__", i)) {
+                int end = text.indexOf("__", i + 2);
+                if (end != -1) {
+                    javafx.scene.text.Text t = new javafx.scene.text.Text(text.substring(i + 2, end));
+                    t.setStyle("-fx-underline: true; -fx-font-size: 13px; -fx-fill: #374151;");
+                    flow.getChildren().add(t);
+                    i = end + 2; continue;
+                }
+            }
+
+            // Italique : _texte_
+            if (text.charAt(i) == '_') {
+                int end = text.indexOf('_', i + 1);
+                if (end != -1) {
+                    javafx.scene.text.Text t = new javafx.scene.text.Text(text.substring(i + 1, end));
+                    t.setStyle("-fx-font-style: italic; -fx-font-size: 13px; -fx-fill: #374151;");
+                    flow.getChildren().add(t);
+                    i = end + 1; continue;
+                }
+            }
+
+            // Code : `texte`
+            if (text.charAt(i) == '`') {
+                int end = text.indexOf('`', i + 1);
+                if (end != -1) {
+                    javafx.scene.text.Text t = new javafx.scene.text.Text(text.substring(i + 1, end));
+                    t.setStyle("-fx-font-family: 'Courier New'; -fx-font-size: 12px; " +
+                            "-fx-fill: #6366f1; -fx-background-color: #f0f0f0;");
+                    flow.getChildren().add(t);
+                    i = end + 1; continue;
+                }
+            }
+
+            // Texte normal : accumuler jusqu'au prochain marqueur
+            int next = text.length();
+            int b = text.indexOf("**", i);
+            int u = text.indexOf("__", i);
+            int it = text.indexOf('_', i);
+            int co = text.indexOf('`', i);
+            for (int n : new int[]{b, u, it, co}) if (n > i) next = Math.min(next, n);
+
+            javafx.scene.text.Text t = new javafx.scene.text.Text(text.substring(i, next));
+            t.setStyle("-fx-font-size: 13px; -fx-fill: #374151;");
+            flow.getChildren().add(t);
+            i = next;
+        }
+        return flow;
+    }
+
+    // ══════════════════════════════════════════════════
+    //  MÉDIAS ATTACHÉS
+    // ══════════════════════════════════════════════════
+
+    private VBox buildMediaPreview(int postId) {
+        VBox box = new VBox(8);
         try {
-            List<Commentaire> comments = commentaireService.getCommentairesByPost(post.getPostId());
-            nbCommLbl.setText("💬 " + comments.size() + " commentaire(s)");
-            for (Commentaire c : comments) commentsBody.getChildren().add(buildCommentCard(c, post, commentsBody, nbCommLbl));
-            if (comments.isEmpty()) { Label e = new Label("Aucun commentaire."); e.setStyle("-fx-font-size:12px;-fx-text-fill:#9ca3af;-fx-padding:8 0 0 16;"); commentsBody.getChildren().add(e); }
+            String sql = "SELECT * FROM `post_media` WHERE `post_id` = ?";
+            java.sql.Connection con =
+                    org.example.utils.MyDataBase_Unimind.getInstance().getConnection();
+            java.sql.PreparedStatement ps = con.prepareStatement(sql);
+            ps.setInt(1, postId);
+            java.sql.ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                String type   = rs.getString("type");
+                String chemin = rs.getString("chemin");
+                String nom    = rs.getString("nom");
+                long   taille = rs.getLong("taille");
+
+                if ("IMAGE".equals(type)) {
+                    try {
+                        javafx.scene.image.ImageView iv = new javafx.scene.image.ImageView();
+                        javafx.scene.image.Image img =
+                                new javafx.scene.image.Image(
+                                        new java.io.File(chemin).toURI().toString(),
+                                        400, 250, true, true);
+                        iv.setImage(img);
+                        iv.setFitWidth(400); iv.setFitHeight(250);
+                        iv.setPreserveRatio(true);
+                        iv.setStyle("-fx-background-radius:10;");
+                        box.getChildren().add(iv);
+                    } catch (Exception ignored) {
+                        box.getChildren().add(buildFileChip("🖼️", nom, taille));
+                    }
+                } else if ("VIDEO".equals(type)) {
+                    box.getChildren().add(buildFileChip("🎬", nom, taille));
+                } else {
+                    box.getChildren().add(buildFileChip("📎", nom, taille));
+                }
+            }
+            rs.close(); ps.close();
+        } catch (java.sql.SQLException e) {
+            System.err.println("Erreur chargement media: " + e.getMessage());
+        }
+        return box;
+    }
+
+    // ── Chip pour fichier non-image ──
+    private HBox buildFileChip(String icon, String nom, long taille) {
+        HBox chip = new HBox(8);
+        chip.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        chip.setStyle("-fx-background-color:#f5f3ff;-fx-background-radius:8;" +
+                "-fx-border-color:#e0e7ff;-fx-border-width:1;-fx-border-radius:8;" +
+                "-fx-padding:6 12 6 12;");
+        Label ico  = new Label(icon); ico.setStyle("-fx-font-size:16px;");
+        Label name = new Label(nom + "  (" + (taille/1024) + " Ko)");
+        name.setStyle("-fx-font-size:12px;-fx-text-fill:#6366f1;-fx-font-weight:bold;");
+        chip.getChildren().addAll(ico, name);
+        return chip;
+    }
+
+    // ══════════════════════════════════════════════════
+    //  BARRE DE RÉACTIONS
+    // ══════════════════════════════════════════════════
+
+    private HBox buildReactionBar(int entityId, boolean isPost, int commId) {
+        HBox bar = new HBox(6); bar.setAlignment(Pos.CENTER_LEFT);
+        bar.setStyle("-fx-padding: 6 0 4 0;");
+
+        int targetId = isPost ? entityId : commId;
+        int uid = currentUser!=null ? currentUser.getUserId() : -1;
+
+        String myReaction = null;
+        Map<String,Integer> compteurs = new LinkedHashMap<>();
+        try {
+            if (isPost) { myReaction=reactionService.getReactionPost(entityId,uid); compteurs=reactionService.getCompteursPost(entityId); }
+            else { myReaction=reactionService.getReactionCommentaire(commId,uid); compteurs=reactionService.getCompteursCommentaire(commId); }
+        } catch (SQLException ignored) {}
+
+        Map<String,Integer> finalCompteurs = compteurs;
+        String finalMyReaction = myReaction;
+
+        for (String reaction : ReactionService.REACTIONS) {
+            int count = finalCompteurs.getOrDefault(reaction, 0);
+            boolean isSelected = reaction.equals(finalMyReaction);
+
+            Button btn = new Button(reaction + (count > 0 ? " " + count : ""));
+            btn.setStyle(
+                    "-fx-font-size: 13px; -fx-padding: 3 8 3 8; -fx-cursor: hand; " +
+                            "-fx-background-radius: 20; -fx-border-radius: 20; " +
+                            (isSelected
+                                    ? "-fx-background-color: #ede9fe; -fx-border-color: #6366f1; -fx-border-width: 1.5;"
+                                    : "-fx-background-color: #f3f4f6; -fx-border-color: #e5e7eb; -fx-border-width: 1;")
+            );
+
+            btn.setOnAction(e -> {
+                if (uid < 0) { showAlert("Connectez-vous pour réagir."); return; }
+                try {
+                    if (isPost) reactionService.toggleReactionPost(entityId, uid, reaction);
+                    else        reactionService.toggleReactionCommentaire(commId, uid, reaction);
+                    // Rafraîchir la barre de réactions
+                    HBox newBar = buildReactionBar(entityId, isPost, commId);
+                    VBox parent = (VBox) bar.getParent();
+                    int idx = parent.getChildren().indexOf(bar);
+                    if (idx >= 0) parent.getChildren().set(idx, newBar);
+                } catch (SQLException ex) { ex.printStackTrace(); }
+            });
+
+            bar.getChildren().add(btn);
+        }
+        return bar;
+    }
+
+    // ══════════════════════════════════════════════════
+    //  COMMENTAIRES
+    // ══════════════════════════════════════════════════
+
+    private void loadComments(Post post, VBox body, Label nbLbl) {
+        body.getChildren().clear();
+        try {
+            List<Commentaire> comms = commService.getCommentairesByPost(post.getPostId());
+            nbLbl.setText("💬 "+comms.size()+" commentaire(s)");
+            if (comms.isEmpty()) {
+                Label l=new Label("Aucun commentaire."); l.setStyle("-fx-font-size:12px;-fx-text-fill:#9ca3af;-fx-padding:8 0 0 16;");
+                body.getChildren().add(l);
+            } else comms.forEach(c->body.getChildren().add(buildCommentCard(c,post,body,nbLbl)));
         } catch (SQLException e) { e.printStackTrace(); }
     }
 
-    private HBox buildCommentCard(Commentaire c, Post post, VBox commentsBody, Label nbCommLbl) {
-        int uid = currentUser != null ? currentUser.getUserId() : -1;
-        boolean isMine = c.getUserId() == uid;
-        HBox row = new HBox(10); row.setAlignment(Pos.TOP_LEFT);
-        row.setStyle("-fx-padding:8 8 8 16;-fx-background-color:#f8f7ff;-fx-background-radius:8;-fx-border-color:#e0e7ff;-fx-border-width:1;-fx-border-radius:8;");
-        Label avatar = new Label(c.isIsAnonyme() ? "🎭" : "👤"); avatar.setStyle("-fx-font-size:18px;");
-        VBox body = new VBox(3); HBox.setHgrow(body, Priority.ALWAYS);
-        String authorName = "Anonyme";
-        if (!c.isIsAnonyme()) { try { User a = etudiantService.getUserById(c.getUserId()); if (a != null) authorName = a.getPrenom() + " " + a.getNom(); } catch (SQLException ignored) {} }
-        HBox cH = new HBox(8); cH.setAlignment(Pos.CENTER_LEFT);
-        Label aL = new Label(authorName); aL.setStyle("-fx-font-weight:bold;-fx-font-size:12px;-fx-text-fill:#374151;");
-        Label dL = new Label(c.getUpdatedAt() != null ? DATE_FORMAT.format(c.getUpdatedAt()) : ""); dL.setStyle("-fx-font-size:10px;-fx-text-fill:#9ca3af;");
-        Region sp = new Region(); HBox.setHgrow(sp, Priority.ALWAYS);
-        if (isMine) {
-            Button bE = new Button("✏️"); bE.setStyle("-fx-background-color:transparent;-fx-cursor:hand;-fx-font-size:12px;"); bE.setOnAction(e -> openEditCommentDialog(c, post, commentsBody, nbCommLbl));
-            Button bD = new Button("🗑️"); bD.setStyle("-fx-background-color:transparent;-fx-cursor:hand;-fx-font-size:12px;"); bD.setOnAction(e -> deleteComment(c, post, commentsBody, nbCommLbl));
-            cH.getChildren().addAll(aL, dL, sp, bE, bD);
-        } else { cH.getChildren().addAll(aL, dL); }
-        Label cL = new Label(c.getContenu()); cL.setStyle("-fx-font-size:13px;-fx-text-fill:#4b5563;"); cL.setWrapText(true);
-        body.getChildren().addAll(cH, cL); row.getChildren().addAll(avatar, body);
-        return row;
+    private VBox buildCommentCard(Commentaire c, Post post, VBox body, Label nbLbl) {
+        int uid = currentUser!=null ? currentUser.getUserId() : -1;
+        boolean isMe = c.getUserId()==uid;
+
+        VBox card = new VBox(6);
+        card.setStyle("-fx-padding:10 10 10 16;-fx-background-color:#f8f7ff;-fx-background-radius:8;-fx-border-color:#e0e7ff;-fx-border-width:1;-fx-border-radius:8;");
+
+        String authorName="Anonyme";
+        if(!c.isIsAnonyme()){
+            try{User a=etudiantService.getUserById(c.getUserId()); if(a!=null) authorName=a.getPrenom()+" "+a.getNom();}
+            catch(SQLException ignored){}
+        }
+
+        Label avatar=new Label(c.isIsAnonyme()?"🎭":"👤"); avatar.setStyle("-fx-font-size:18px;");
+        Label authorLbl=new Label(authorName); authorLbl.setStyle("-fx-font-weight:bold;-fx-font-size:12px;-fx-text-fill:#374151;");
+        String ds=c.getUpdatedAt()!=null?(!c.getUpdatedAt().equals(c.getCreatedAt())?"modifié le ":"")+DATE_FMT.format(c.getUpdatedAt()):"";
+        Label dateLbl=new Label(ds); dateLbl.setStyle("-fx-font-size:10px;-fx-text-fill:#9ca3af;");
+
+        Region sp=new Region(); HBox.setHgrow(sp,Priority.ALWAYS);
+        HBox cHeader=new HBox(8,avatar,authorLbl,dateLbl,sp);
+
+        if(isMe){
+            Button bE=new Button("✏"); bE.setStyle("-fx-background-color:transparent;-fx-cursor:hand;-fx-font-size:12px;"); bE.setOnAction(e->openEditCommentDialog(c,post,body,nbLbl));
+            Button bD=new Button("🗑"); bD.setStyle("-fx-background-color:transparent;-fx-cursor:hand;-fx-font-size:12px;"); bD.setOnAction(e->deleteComment(c,post,body,nbLbl));
+            cHeader.getChildren().addAll(bE,bD);
+        }
+        cHeader.setAlignment(Pos.CENTER_LEFT);
+
+        Label contentLbl=new Label(c.getContenu()); contentLbl.setStyle("-fx-font-size:13px;-fx-text-fill:#4b5563;"); contentLbl.setWrapText(true);
+
+        // Réactions du commentaire
+        HBox reactionBar = buildReactionBar(post.getPostId(), false, c.getCommentaireId());
+
+        card.getChildren().addAll(cHeader,contentLbl,reactionBar);
+        return card;
     }
+
+    // ══════════════════════════════════════════════════
+    //  DIALOG POST (avec formatage + médias)
+    // ══════════════════════════════════════════════════
 
     @FXML private void openNewPostDialog() { showPostDialog(null, null); }
     private void openEditPostDialog(Post post, VBox card) { showPostDialog(post, card); }
 
     private void showPostDialog(Post existing, VBox cardToReplace) {
-        boolean isEdit = existing != null;
+        boolean isEdit = existing!=null;
+
+        // ── Champs du formulaire ──
         ComboBox<String> cbCat = new ComboBox<>();
-        Map<String, Integer> catMap = new LinkedHashMap<>();
-        allCategories.forEach(c -> catMap.put(c.getNom(), c.getCategorieId()));
+        Map<String,Integer> catMap = new LinkedHashMap<>();
+        allCategories.forEach(c->catMap.put(c.getNom(),c.getCategorieId()));
         cbCat.setItems(javafx.collections.FXCollections.observableArrayList(catMap.keySet()));
         cbCat.setPromptText("Choisir une catégorie..."); cbCat.setMaxWidth(Double.MAX_VALUE); cbCat.getStyleClass().add("filter-combo");
-        TextField tfT = new TextField(); tfT.setPromptText("Titre (min 4 caractères)"); tfT.getStyleClass().add("form-input");
-        TextArea taC = new TextArea(); taC.setPromptText("Votre message..."); taC.setPrefRowCount(4); taC.setWrapText(true); taC.getStyleClass().add("form-textarea");
-        CheckBox cbA = new CheckBox("Publier anonymement"); cbA.setStyle("-fx-font-size:13px;-fx-text-fill:#374151;");
-        Label errT = errLbl(), errC = errLbl(), errCat = errLbl();
-        if (isEdit) { tfT.setText(existing.getTitre()); taC.setText(existing.getContenu()); cbA.setSelected(existing.isIsAnonyme()); allCategories.stream().filter(c -> c.getCategorieId() == existing.getCategorieId()).findFirst().ifPresent(c -> cbCat.setValue(c.getNom())); }
-        VBox content = new VBox(12); content.setPadding(new Insets(20,24,8,24)); content.setPrefWidth(460);
-        Label title = new Label(isEdit ? "✏️  Modifier le post" : "✏️  Nouveau post"); title.getStyleClass().add("form-title");
-        content.getChildren().addAll(title, new Separator(), fGroup("Catégorie *", cbCat, errCat), fGroup("Titre *", tfT, errT), fGroup("Contenu *", taC, errC), cbA);
-        Dialog<ButtonType> dialog = new Dialog<>(); DialogPane dp = dialog.getDialogPane();
-        dp.setContent(content); try { dp.getStylesheets().add(getClass().getResource("/css/etudiant.css").toExternalForm()); } catch (Exception ignored) {}
-        dp.setStyle("-fx-background-color:white;");
-        ButtonType btnP = new ButtonType(isEdit ? "✓ Enregistrer" : "📢 Publier", ButtonBar.ButtonData.OK_DONE);
-        ButtonType btnA = new ButtonType("✕ Annuler", ButtonBar.ButtonData.CANCEL_CLOSE);
-        dp.getButtonTypes().addAll(btnP, btnA);
-        ((Button) dp.lookupButton(btnP)).setStyle("-fx-background-color:#6366f1;-fx-text-fill:white;-fx-font-weight:bold;-fx-background-radius:8;-fx-padding:9 20;");
-        ((Button) dp.lookupButton(btnA)).setStyle("-fx-background-color:#f3f4f6;-fx-text-fill:#6b7280;-fx-background-radius:8;-fx-padding:9 20;");
-        ((Button) dp.lookupButton(btnP)).addEventFilter(javafx.event.ActionEvent.ACTION, ev -> {
-            boolean valid = true;
-            if (cbCat.getValue() == null) { showErr(errCat, "⚠ Catégorie obligatoire."); valid = false; }
-            if (tfT.getText().trim().length() < 4) { showErr(errT, "⚠ Titre min 4 caractères."); valid = false; }
-            if (taC.getText().trim().length() < 4) { showErr(errC, "⚠ Contenu min 4 caractères."); valid = false; }
-            if (!valid) ev.consume();
+
+        TextField tfTitre = new TextField(); tfTitre.setPromptText("Titre (min 4 caractères)"); tfTitre.getStyleClass().add("form-input");
+
+        // ── Barre d'outils de formatage ──
+        TextArea taContenu = new TextArea(); taContenu.setPromptText("Votre message..."); taContenu.setPrefRowCount(5); taContenu.setWrapText(true); taContenu.getStyleClass().add("form-textarea");
+
+        HBox formatBar = buildFormatBar(taContenu);
+
+        // ── Émojis rapides ──
+        HBox emojiBar = buildEmojiBar(taContenu);
+
+        // ── Fichier média ──
+        Label lblMedia = new Label("Aucun fichier sélectionné"); lblMedia.setStyle("-fx-font-size:11px;-fx-text-fill:#9ca3af;");
+        final File[] selectedFile = {null};
+        Button btnChooseFile = new Button("📎 Joindre un fichier");
+        btnChooseFile.setStyle("-fx-background-color:#ede9fe;-fx-text-fill:#6366f1;-fx-background-radius:8;-fx-padding:7 14 7 14;-fx-cursor:hand;-fx-font-size:12px;");
+        btnChooseFile.setOnAction(e->{
+            FileChooser fc = new FileChooser();
+            fc.setTitle("Choisir un fichier");
+            fc.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("Images", "*.jpg","*.jpeg","*.png","*.gif","*.webp"),
+                    new FileChooser.ExtensionFilter("Vidéos", "*.mp4","*.avi","*.mov"),
+                    new FileChooser.ExtensionFilter("Fichiers", "*.pdf","*.doc","*.docx","*.txt","*.zip")
+            );
+            File f = fc.showOpenDialog(taContenu.getScene().getWindow());
+            if (f!=null){
+                long maxSize = f.getName().matches(".*\\.(mp4|avi|mov)") ? MAX_VIDEO_SIZE
+                        : f.getName().matches(".*\\.(jpg|jpeg|png|gif|webp)") ? MAX_IMAGE_SIZE : MAX_FILE_SIZE;
+                if (f.length()>maxSize){
+                    showAlert("⚠️ Fichier trop volumineux. Max: "+(maxSize/1024/1024)+" MB");
+                } else {
+                    selectedFile[0]=f;
+                    lblMedia.setText("📎 "+f.getName()+" ("+(f.length()/1024)+" Ko)");
+                    lblMedia.setStyle("-fx-font-size:11px;-fx-text-fill:#6366f1;");
+                }
+            }
         });
-        dialog.showAndWait().ifPresent(btn -> {
-            if (btn == btnP) {
-                try {
-                    Post p = isEdit ? existing : new Post();
-                    p.setTitre(tfT.getText().trim()); p.setContenu(taC.getText().trim()); p.setIsAnonyme(cbA.isSelected());
-                    p.setCategorieId(catMap.get(cbCat.getValue()));
-                    int uid = currentUser != null ? currentUser.getUserId() : Session.getInstance().getCurrentUser().getUserId();
-                    p.setUserId(uid);
-                    if (isEdit) postService.modifier(p); else postService.ajouter(p);
-                    loadPosts();
-                } catch (SQLException e) { e.printStackTrace(); }
+        HBox mediaRow = new HBox(10,btnChooseFile,lblMedia); mediaRow.setAlignment(Pos.CENTER_LEFT);
+
+        CheckBox cbAnonyme = new CheckBox("Publier anonymement"); cbAnonyme.setStyle("-fx-font-size:13px;-fx-text-fill:#374151;");
+        Label errTitre=errLbl(), errContenu=errLbl(), errCat=errLbl(), errMod=errLbl();
+
+        if(isEdit){
+            tfTitre.setText(existing.getTitre());
+            taContenu.setText(existing.getContenu());
+            cbAnonyme.setSelected(existing.isIsAnonyme());
+            allCategories.stream().filter(c->c.getCategorieId()==existing.getCategorieId())
+                    .findFirst().ifPresent(c->cbCat.setValue(c.getNom()));
+        }
+
+        VBox content = new VBox(10);
+        content.setPadding(new Insets(20,24,8,24)); content.setPrefWidth(520);
+        Label dlgTitle = new Label(isEdit?"✏  Modifier le post":"✏  Nouveau post"); dlgTitle.getStyleClass().add("form-title");
+
+        content.getChildren().addAll(dlgTitle,new Separator(),
+                fGroup("Catégorie *",cbCat,errCat),
+                fGroup("Titre *",tfTitre,errTitre),
+                new Label("Contenu * — Mise en forme :") {{ setStyle("-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#6366f1;"); }},
+                formatBar, emojiBar,
+                taContenu, errContenu,
+                fGroup("Pièce jointe (Image ≤5MB, Vidéo ≤50MB, Fichier ≤20MB)",mediaRow,null),
+                cbAnonyme, errMod
+        );
+
+        ScrollPane scroll = new ScrollPane(content); scroll.setFitToWidth(true); scroll.setStyle("-fx-background-color:transparent;"); scroll.setPrefHeight(500);
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        DialogPane dp = dialog.getDialogPane();
+        dp.setContent(scroll);
+        dp.getStylesheets().add(getClass().getResource("/css/etudiant.css").toExternalForm());
+        dp.setStyle("-fx-background-color:white;");
+
+        ButtonType btnPub = new ButtonType(isEdit?"✓ Enregistrer":"📢 Publier", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnAnn = new ButtonType("✕ Annuler", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dp.getButtonTypes().addAll(btnPub,btnAnn);
+        styleDialogButtons(dp,btnPub,btnAnn);
+
+        ((Button)dp.lookupButton(btnPub)).addEventFilter(javafx.event.ActionEvent.ACTION, ev -> {
+            boolean valid=true;
+            if(cbCat.getValue()==null){ showErr(errCat,"⚠ Catégorie obligatoire."); valid=false; }
+            if(tfTitre.getText().trim().length()<4){ showErr(errTitre,"⚠ Titre min 4 caractères."); valid=false; }
+            String contenuText = taContenu.getText().trim();
+            if(contenuText.length()<4){ showErr(errContenu,"⚠ Contenu min 4 caractères."); valid=false; }
+            if(!valid){ ev.consume(); return; }
+
+            // ── MODÉRATION ──
+            if (currentUser!=null) {
+                ModerationService.ResultatModeration res = moderationSvc.verifierEtGerer(
+                        contenuText + " " + tfTitre.getText().trim(), currentUser, contenuText);
+                if (!res.estValide()) {
+                    showErr(errMod, "🚫 Votre message contient des termes inappropriés. Publication refusée.");
+                    ev.consume(); return;
+                }
+            }
+        });
+
+        Optional<ButtonType> result = dialog.showAndWait();
+        if(result.isPresent() && result.get()==btnPub){
+            try{
+                Post post = isEdit ? existing : new Post();
+                post.setTitre(tfTitre.getText().trim());
+                post.setContenu(taContenu.getText().trim());
+                post.setIsAnonyme(cbAnonyme.isSelected());
+                post.setCategorieId(catMap.get(cbCat.getValue()));
+                post.setUserId(currentUser!=null?currentUser.getUserId():Session.getInstance().getCurrentUser().getUserId());
+                if (isEdit) postService.modifier(post);
+                else        postService.ajouter(post); // ← maintenant post.getPostId() est correct
+
+// ✅ Copier le fichier ET enregistrer en base
+                if (selectedFile[0] != null) {
+                    String cheminCopie = copierMedia(selectedFile[0], post.getPostId());
+                    if (cheminCopie != null) {
+                        enregistrerMediaEnBase(post.getPostId(), selectedFile[0], cheminCopie);
+                    }
+                }
+                loadPosts();
+            } catch(SQLException e){ e.printStackTrace(); }
+        }
+    }
+
+    private void enregistrerMediaEnBase(int postId, File source, String chemin) {
+        try {
+            String nom  = source.getName();
+            String ext  = nom.toLowerCase();
+            String type = ext.matches(".*\\.(jpg|jpeg|png|gif|webp)") ? "IMAGE"
+                    : ext.matches(".*\\.(mp4|avi|mov)")            ? "VIDEO"
+                      : "FICHIER";
+
+            String sql = "INSERT INTO `post_media` " +
+                    "(`post_id`, `chemin`, `type`, `nom`, `taille`) " +
+                    "VALUES (?, ?, ?, ?, ?)";
+            java.sql.Connection con =
+                    org.example.utils.MyDataBase_Unimind.getInstance().getConnection();
+            java.sql.PreparedStatement ps = con.prepareStatement(sql);
+            ps.setInt(1, postId);
+            ps.setString(2, chemin);
+            ps.setString(3, type);
+            ps.setString(4, nom);
+            ps.setLong(5, source.length());
+            ps.executeUpdate();
+            ps.close();
+
+            System.out.println("Media enregistre en base: " + nom + " [" + type + "]");
+        } catch (java.sql.SQLException e) {
+            System.err.println("Erreur enregistrement media: " + e.getMessage());
+        }
+    }
+
+    // ── Barre de formatage (Gras, Italique, Souligné) ──
+    private HBox buildFormatBar(TextArea ta) {
+        HBox bar = new HBox(6); bar.setAlignment(Pos.CENTER_LEFT);
+        String btnStyle = "-fx-background-color:#f3f4f6;-fx-border-color:#e0e7ff;-fx-border-width:1;-fx-border-radius:6;-fx-background-radius:6;-fx-padding:4 10 4 10;-fx-cursor:hand;-fx-font-size:12px;";
+
+        Button btnB = new Button("B"); btnB.setStyle(btnStyle+"-fx-font-weight:bold;");
+        btnB.setTooltip(new Tooltip("Gras — entoure la sélection de **...**"));
+        btnB.setOnAction(e->insererFormatage(ta,"**","**"));
+
+        Button btnI = new Button("I"); btnI.setStyle(btnStyle+"-fx-font-style:italic;");
+        btnI.setTooltip(new Tooltip("Italique — entoure la sélection de _..._"));
+        btnI.setOnAction(e->insererFormatage(ta,"_","_"));
+
+        Button btnU = new Button("U"); btnU.setStyle(btnStyle+"-fx-underline:true;");
+        btnU.setTooltip(new Tooltip("Souligné — entoure la sélection de __...__"));
+        btnU.setOnAction(e->insererFormatage(ta,"__","__"));
+
+        Button btnCode = new Button("< >"); btnCode.setStyle(btnStyle);
+        btnCode.setTooltip(new Tooltip("Code — entoure de `...`"));
+        btnCode.setOnAction(e->insererFormatage(ta,"`","`"));
+
+        Label hint = new Label("Sélectionnez du texte puis cliquez pour formater");
+        hint.setStyle("-fx-font-size:10px;-fx-text-fill:#9ca3af;");
+
+        bar.getChildren().addAll(btnB,btnI,btnU,btnCode,hint);
+        return bar;
+    }
+
+    private void insererFormatage(TextArea ta, String debut, String fin) {
+        String selected = ta.getSelectedText();
+        if (selected==null||selected.isEmpty()){
+            int pos=ta.getCaretPosition();
+            ta.insertText(pos,debut+"texte"+fin);
+        } else {
+            int start=ta.getSelection().getStart(), end=ta.getSelection().getEnd();
+            ta.replaceText(start,end,debut+selected+fin);
+        }
+    }
+
+    // ── Barre d'émojis rapides ──
+    private HBox buildEmojiBar(TextArea ta) {
+        HBox bar = new HBox(4); bar.setAlignment(Pos.CENTER_LEFT);
+        bar.setStyle("-fx-padding:2 0 2 0;");
+        String[] emojis = {"😊","🙏","❤","🌸","✨","💪","👏","🤔","😂","🌟"};
+        for (String emoji : emojis) {
+            Button b = new Button(emoji);
+            b.setStyle("-fx-background-color:transparent;-fx-font-size:16px;-fx-cursor:hand;-fx-padding:2 4 2 4;");
+            b.setOnAction(e->ta.insertText(ta.getCaretPosition(),emoji));
+            bar.getChildren().add(b);
+        }
+        return bar;
+    }
+
+    // ── Copier le média dans un dossier local ──
+    private String copierMedia(File source, int postId) {
+        try {
+            Path dir = Paths.get(System.getProperty("user.home"), "unimind_media", "posts");
+            Files.createDirectories(dir);
+
+            String nomFichier = source.getName();
+            String ext = nomFichier.contains(".")
+                    ? nomFichier.substring(nomFichier.lastIndexOf('.'))
+                    : "";
+            Path dest = dir.resolve("post_" + postId + "_" + System.currentTimeMillis() + ext);
+            Files.copy(source.toPath(), dest, StandardCopyOption.REPLACE_EXISTING);
+
+            System.out.println("Media copie: " + dest.toAbsolutePath());
+            return dest.toAbsolutePath().toString();
+        } catch (IOException e) {
+            System.err.println("Erreur copie media: " + e.getMessage());
+            return null;
+        }
+    }
+
+    // ══════════════════════════════════════════════════
+    //  DIALOG COMMENTAIRE (avec modération + email notif)
+    // ══════════════════════════════════════════════════
+
+    private void openAddCommentDialog(Post post, VBox body, Label nbLbl, Button btnToggle) {
+        TextArea ta = new TextArea(); ta.setPromptText("Votre commentaire..."); ta.setPrefRowCount(3); ta.setWrapText(true); ta.getStyleClass().add("form-textarea");
+        HBox emojiBar = buildEmojiBar(ta);
+        CheckBox cbAnon = new CheckBox("Publier anonymement"); cbAnon.setStyle("-fx-font-size:13px;-fx-text-fill:#374151;");
+        Label errComm=errLbl(), errMod=errLbl();
+
+        VBox content=new VBox(10); content.setPadding(new Insets(20,24,8,24)); content.setPrefWidth(440);
+        Label dlgTitle=new Label("💬  Ajouter un commentaire"); dlgTitle.getStyleClass().add("form-title");
+        content.getChildren().addAll(dlgTitle,new Separator(),
+                new Label("Commentaire *"){{setStyle("-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#6366f1;");}},
+                emojiBar, ta, errComm, cbAnon, errMod);
+
+        Dialog<ButtonType> dialog=new Dialog<>();
+        DialogPane dp=dialog.getDialogPane(); dp.setContent(content);
+        dp.getStylesheets().add(getClass().getResource("/css/etudiant.css").toExternalForm());
+        dp.setStyle("-fx-background-color:white;");
+        ButtonType btnPub=new ButtonType("📢 Publier",ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnAnn=new ButtonType("✕ Annuler",ButtonBar.ButtonData.CANCEL_CLOSE);
+        dp.getButtonTypes().addAll(btnPub,btnAnn);
+        styleDialogButtons(dp,btnPub,btnAnn);
+
+        ((Button)dp.lookupButton(btnPub)).addEventFilter(javafx.event.ActionEvent.ACTION,ev->{
+            if(ta.getText().trim().length()<4){showErr(errComm,"⚠ Min 4 caractères."); ev.consume(); return;}
+            if(currentUser!=null){
+                ModerationService.ResultatModeration res=moderationSvc.verifierEtGerer(ta.getText().trim(),currentUser,ta.getText().trim());
+                if(!res.estValide()){showErr(errMod,"🚫 Termes inappropriés détectés. Publication refusée."); ev.consume();}
+            }
+        });
+
+        dialog.showAndWait().ifPresent(btn->{
+            if(btn==btnPub){
+                try{
+                    Commentaire c=new Commentaire();
+                    c.setContenu(ta.getText().trim());
+                    c.setIsAnonyme(cbAnon.isSelected());
+                    c.setPostId(post.getPostId());
+                    c.setUserId(currentUser!=null?currentUser.getUserId():Session.getInstance().getCurrentUser().getUserId());
+                    commService.ajouter(c);
+
+                    // ── NOTIFICATION EMAIL au propriétaire du post ──
+                    envoyerNotificationReponse(post,c,cbAnon.isSelected());
+
+                    body.setVisible(true); body.setManaged(true); btnToggle.setText("▲ Masquer");
+                    loadComments(post,body,nbLbl);
+                }catch(SQLException e){e.printStackTrace();}
+            }
+        });
+    }
+
+    /** Envoie un email au propriétaire du post si ce n'est pas lui qui commente */
+    private void envoyerNotificationReponse(Post post, Commentaire comm, boolean commAuteurAnonyme) {
+        if (currentUser==null) return;
+        int postOwnerId = post.getUserId();
+        if (postOwnerId==currentUser.getUserId()) return; // ne pas se notifier soi-même
+
+        new Thread(()->{
+            try{
+                User postOwner = etudiantService.getUserById(postOwnerId);
+                if(postOwner==null||postOwner.getEmail()==null) return;
+                String prenomAuteur = commAuteurAnonyme ? "Anonyme" : currentUser.getPrenom();
+                emailService.sendNotificationReponse(
+                        postOwner.getEmail(),
+                        postOwner.getPrenom(),
+                        prenomAuteur,
+                        commAuteurAnonyme,
+                        post.getTitre(),
+                        comm.getContenu()
+                );
+            } catch(SQLException e){ System.err.println("Notification email: "+e.getMessage()); }
+        }).start();
+    }
+
+    private void openEditCommentDialog(Commentaire c, Post post, VBox body, Label nbLbl) {
+        TextArea ta=new TextArea(c.getContenu()); ta.setPrefRowCount(3); ta.setWrapText(true); ta.getStyleClass().add("form-textarea");
+        CheckBox cbAnon=new CheckBox("Publier anonymement"); cbAnon.setSelected(c.isIsAnonyme()); cbAnon.setStyle("-fx-font-size:13px;-fx-text-fill:#374151;");
+        Label errMod=errLbl();
+
+        VBox content=new VBox(12); content.setPadding(new Insets(20,24,8,24)); content.setPrefWidth(420);
+        Label dlgTitle=new Label("✏  Modifier le commentaire"); dlgTitle.getStyleClass().add("form-title");
+        content.getChildren().addAll(dlgTitle,new Separator(),fGroup("Commentaire *",ta,null),cbAnon,errMod);
+
+        Dialog<ButtonType> dialog=new Dialog<>();
+        DialogPane dp=dialog.getDialogPane(); dp.setContent(content);
+        dp.getStylesheets().add(getClass().getResource("/css/etudiant.css").toExternalForm());
+        dp.setStyle("-fx-background-color:white;");
+        ButtonType btnSave=new ButtonType("✓ Enregistrer",ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnCancel=new ButtonType("✕ Annuler",ButtonBar.ButtonData.CANCEL_CLOSE);
+        dp.getButtonTypes().addAll(btnSave,btnCancel);
+        styleDialogButtons(dp,btnSave,btnCancel);
+
+        ((Button)dp.lookupButton(btnSave)).addEventFilter(javafx.event.ActionEvent.ACTION,ev->{
+            if(currentUser!=null){
+                ModerationService.ResultatModeration res=moderationSvc.verifierEtGerer(ta.getText().trim(),currentUser,ta.getText().trim());
+                if(!res.estValide()){showErr(errMod,"🚫 Termes inappropriés. Modification refusée."); ev.consume();}
+            }
+        });
+
+        dialog.showAndWait().ifPresent(btn->{
+            if(btn==btnSave){
+                try{ c.setContenu(ta.getText().trim()); c.setIsAnonyme(cbAnon.isSelected()); commService.modifier(c); loadComments(post,body,nbLbl);}
+                catch(SQLException e){e.printStackTrace();}
             }
         });
     }
 
     private void deletePost(Post post, VBox card) {
-        Alert a = new Alert(Alert.AlertType.CONFIRMATION); a.setTitle("Supprimer"); a.setHeaderText(null); a.setContentText("Supprimer ce post ?");
-        a.showAndWait().ifPresent(btn -> { if (btn == ButtonType.OK) { try { postService.supprimer(post.getPostId()); postsContainer.getChildren().remove(card); } catch (SQLException e) { e.printStackTrace(); } } });
+        Alert a=new Alert(Alert.AlertType.CONFIRMATION); a.setHeaderText(null);
+        a.setContentText("Supprimer ce post ? Cette action est irréversible.");
+        a.showAndWait().ifPresent(btn->{ if(btn==ButtonType.OK){ try{ postService.supprimer(post.getPostId()); postsContainer.getChildren().remove(card); }catch(SQLException e){e.printStackTrace();} }});
     }
 
-    private void openAddCommentForm(Post post, VBox commentsBody, VBox commentsSection, Label nbCommLbl, Button btnToggle) {
-        TextArea ta = new TextArea(); ta.setPromptText("Votre commentaire..."); ta.setPrefRowCount(3); ta.setWrapText(true); ta.getStyleClass().add("form-textarea");
-        CheckBox cb = new CheckBox("Anonymement"); cb.setStyle("-fx-font-size:13px;-fx-text-fill:#374151;");
-        Label err = errLbl();
-        VBox content = new VBox(12); content.setPadding(new Insets(20,24,8,24)); content.setPrefWidth(420);
-        Label title = new Label("💬  Ajouter un commentaire"); title.getStyleClass().add("form-title");
-        content.getChildren().addAll(title, new Separator(), fGroup("Commentaire *", ta, err), cb);
-        Dialog<ButtonType> dialog = new Dialog<>(); DialogPane dp = dialog.getDialogPane();
-        dp.setContent(content); try { dp.getStylesheets().add(getClass().getResource("/css/etudiant.css").toExternalForm()); } catch (Exception ignored) {} dp.setStyle("-fx-background-color:white;");
-        ButtonType btnP = new ButtonType("📢 Publier", ButtonBar.ButtonData.OK_DONE), btnA = new ButtonType("✕ Annuler", ButtonBar.ButtonData.CANCEL_CLOSE);
-        dp.getButtonTypes().addAll(btnP, btnA);
-        ((Button) dp.lookupButton(btnP)).setStyle("-fx-background-color:#6366f1;-fx-text-fill:white;-fx-font-weight:bold;-fx-background-radius:8;-fx-padding:9 20;");
-        ((Button) dp.lookupButton(btnA)).setStyle("-fx-background-color:#f3f4f6;-fx-text-fill:#6b7280;-fx-background-radius:8;-fx-padding:9 20;");
-        ((Button) dp.lookupButton(btnP)).addEventFilter(javafx.event.ActionEvent.ACTION, ev -> { if (ta.getText().trim().length() < 4) { showErr(err, "⚠ Min 4 caractères."); ev.consume(); } });
-        dialog.showAndWait().ifPresent(btn -> {
-            if (btn == btnP) {
-                try {
-                    Commentaire c = new Commentaire(); c.setContenu(ta.getText().trim()); c.setIsAnonyme(cb.isSelected()); c.setPostId(post.getPostId());
-                    int uid = currentUser != null ? currentUser.getUserId() : Session.getInstance().getCurrentUser().getUserId(); c.setUserId(uid);
-                    commentaireService.ajouter(c); commentsBody.setVisible(true); commentsBody.setManaged(true); btnToggle.setText("▲ Masquer"); loadComments(post, commentsBody, nbCommLbl);
-                } catch (SQLException e) { e.printStackTrace(); }
-            }
-        });
+    private void deleteComment(Commentaire c, Post post, VBox body, Label nbLbl) {
+        Alert a=new Alert(Alert.AlertType.CONFIRMATION); a.setHeaderText(null); a.setContentText("Supprimer ce commentaire ?");
+        a.showAndWait().ifPresent(btn->{ if(btn==ButtonType.OK){ try{ commService.supprimer(c.getCommentaireId()); loadComments(post,body,nbLbl); }catch(SQLException e){e.printStackTrace();} }});
     }
 
-    private void openEditCommentDialog(Commentaire c, Post post, VBox commentsBody, Label nbCommLbl) {
-        TextArea ta = new TextArea(c.getContenu()); ta.setPrefRowCount(3); ta.setWrapText(true); ta.getStyleClass().add("form-textarea");
-        CheckBox cb = new CheckBox("Anonymement"); cb.setSelected(c.isIsAnonyme()); cb.setStyle("-fx-font-size:13px;-fx-text-fill:#374151;");
-        Label err = errLbl();
-        VBox content = new VBox(12); content.setPadding(new Insets(20,24,8,24)); content.setPrefWidth(420);
-        Label title = new Label("✏️  Modifier"); title.getStyleClass().add("form-title");
-        content.getChildren().addAll(title, new Separator(), fGroup("Commentaire *", ta, err), cb);
-        Dialog<ButtonType> dialog = new Dialog<>(); DialogPane dp = dialog.getDialogPane();
-        dp.setContent(content); try { dp.getStylesheets().add(getClass().getResource("/css/etudiant.css").toExternalForm()); } catch (Exception ignored) {} dp.setStyle("-fx-background-color:white;");
-        ButtonType btnS = new ButtonType("✓ Enregistrer", ButtonBar.ButtonData.OK_DONE), btnA = new ButtonType("✕ Annuler", ButtonBar.ButtonData.CANCEL_CLOSE);
-        dp.getButtonTypes().addAll(btnS, btnA);
-        ((Button) dp.lookupButton(btnS)).setStyle("-fx-background-color:#6366f1;-fx-text-fill:white;-fx-font-weight:bold;-fx-background-radius:8;-fx-padding:9 20;");
-        ((Button) dp.lookupButton(btnA)).setStyle("-fx-background-color:#f3f4f6;-fx-text-fill:#6b7280;-fx-background-radius:8;-fx-padding:9 20;");
-        dialog.showAndWait().ifPresent(btn -> { if (btn == btnS) { try { c.setContenu(ta.getText().trim()); c.setIsAnonyme(cb.isSelected()); commentaireService.modifier(c); loadComments(post, commentsBody, nbCommLbl); } catch (SQLException e) { e.printStackTrace(); } } });
-    }
-
-    private void deleteComment(Commentaire c, Post post, VBox commentsBody, Label nbCommLbl) {
-        Alert a = new Alert(Alert.AlertType.CONFIRMATION); a.setHeaderText(null); a.setContentText("Supprimer ce commentaire ?");
-        a.showAndWait().ifPresent(btn -> { if (btn == ButtonType.OK) { try { commentaireService.supprimer(c.getCommentaireId()); loadComments(post, commentsBody, nbCommLbl); } catch (SQLException e) { e.printStackTrace(); } } });
-    }
-
-    // ═════════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════
     //  HELPERS
-    // ═════════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════
 
-    private VBox fGroup(String labelText, Node field, Label errLabel) {
-        VBox g = new VBox(5);
-        Label lbl = new Label(labelText); lbl.getStyleClass().add("form-label");
-        g.getChildren().addAll(lbl, field);
-        if (errLabel != null) g.getChildren().add(errLabel);
-        return g;
+    private void styleDialogButtons(DialogPane dp, ButtonType ok, ButtonType cancel) {
+        ((Button)dp.lookupButton(ok)).setStyle("-fx-background-color:#6366f1;-fx-text-fill:white;-fx-font-weight:bold;-fx-background-radius:8;-fx-padding:9 20 9 20;");
+        ((Button)dp.lookupButton(cancel)).setStyle("-fx-background-color:#f3f4f6;-fx-text-fill:#6b7280;-fx-background-radius:8;-fx-padding:9 20 9 20;");
     }
 
-    private Label errLbl() {
-        Label l = new Label(); l.setStyle("-fx-text-fill:#ef4444;-fx-font-size:11px;");
-        l.setVisible(false); l.setManaged(false); return l;
+    private VBox fGroup(String lbl, Node field, Label err) {
+        VBox g=new VBox(5); Label l=new Label(lbl); l.getStyleClass().add("form-label");
+        g.getChildren().addAll(l,field); if(err!=null) g.getChildren().add(err); return g;
     }
 
+    private Label errLbl() { Label l=new Label(); l.setStyle("-fx-text-fill:#ef4444;-fx-font-size:11px;"); l.setVisible(false); l.setManaged(false); return l; }
     private void showErr(Label l, String msg) { l.setText(msg); l.setVisible(true); l.setManaged(true); }
-
+    private void showAlert(String msg) { new Alert(Alert.AlertType.WARNING,msg,ButtonType.OK).showAndWait(); }
     private Label recBadge(String text, String bg, String fg) {
         Label l = new Label(text);
         l.setStyle("-fx-background-color:" + bg + ";-fx-text-fill:" + fg + ";-fx-padding:4 10;-fx-background-radius:8;-fx-font-size:12px;-fx-font-weight:bold;");

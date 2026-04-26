@@ -121,7 +121,7 @@ public class MesFavorisSeancesController implements SidebarEtudiantController.Et
         HBox infoRow = new HBox(8, duree, niveau);
 
         // ✅ Bouton retirer des favoris
-        Button btnFavori = new Button("❤️");
+        Button btnFavori = new Button("❤");
         btnFavori.setStyle("-fx-background-color: transparent; -fx-font-size: 22px; -fx-cursor: hand; -fx-padding: 0;");
         btnFavori.setTooltip(new Tooltip("Retirer des favoris"));
         btnFavori.setOnAction(e -> {
