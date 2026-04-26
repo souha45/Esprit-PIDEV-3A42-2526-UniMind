@@ -80,13 +80,13 @@
             <version>3.0.1</version>
         </dependency>
 
-        <!-- ✅ JavaMail — javax (compatible avec ton code) -->
-
+        <!-- JavaMail -->
         <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
             <version>1.6.2</version>
         </dependency>
+
     </dependencies>
 
     <build>
@@ -113,8 +113,13 @@
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>org.example.main.MainApp</mainClass>
+                    <!-- ✅ Passe la clé Groq comme propriété système au lancement -->
+                    <options>
+                        <option>-DGROQ_API_KEY=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</option>
+                    </options>
                 </configuration>
             </plugin>
+
         </plugins>
     </build>
 

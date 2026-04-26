@@ -1,16 +1,55 @@
 package org.example.services;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 import java.util.Scanner;
 
 public class OpenAIService {
 
-    private static final String API_KEY = "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";
     private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
-    private static final String MODEL = "llama-3.3-70b-versatile";
+    private static final String MODEL   = "llama-3.3-70b-versatile";
+
+    // Charge la clé depuis plusieurs sources (ordre de priorité)
+    private static final String API_KEY = chargerCle();
+
+    private static String chargerCle() {
+        // 1. Propriété système : -DGROQ_API_KEY=... dans pom.xml (priorité haute)
+        String sysProp = System.getProperty("GROQ_API_KEY");
+        if (sysProp != null && !sysProp.isBlank()) {
+            System.out.println("✅ Clé chargée depuis propriété système (pom.xml)");
+            return sysProp;
+        }
+
+        // 2. Variable d'environnement OS
+        String envKey = System.getenv("GROQ_API_KEY");
+        if (envKey != null && !envKey.isBlank()) {
+            System.out.println("✅ Clé chargée depuis variable d'environnement");
+            return envKey;
+        }
+
+        // 3. Fichier config.properties dans les ressources (non versionné)
+        try (InputStream is = OpenAIService.class.getResourceAsStream("/config.properties")) {
+            if (is != null) {
+                Properties props = new Properties();
+                props.load(is);
+                String key = props.getProperty("groq.api.key");
+                if (key != null && !key.isBlank() && !key.equals("VOTRE_CLE_ICI")) {
+                    System.out.println("✅ Clé chargée depuis config.properties");
+                    return key;
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("⚠ config.properties non trouvé : " + e.getMessage());
+        }
+
+        System.out.println("❌ Aucune clé GROQ_API_KEY trouvée !");
+        return null;
+    }
 
     public static String analyserReponses(
             String nomQuestionnaire, String typeQuestionnaire,
@@ -26,8 +65,15 @@ public class OpenAIService {
 
     private static String appellerGroq(
             String nomQ, String typeQ, double score, String niveau, String interpretation) {
+
+        if (API_KEY == null || API_KEY.isBlank()) {
+            return "❌ Clé API non configurée.\n"
+                    + "Dans pom.xml → plugin javafx → options :\n"
+                    + "<option>-DGROQ_API_KEY=votre_cle</option>";
+        }
+
         try {
-            System.out.println("=== Appel Groq API ===");
+            System.out.println("=== Appel Groq API === modèle: " + MODEL);
 
             URL url = new URL(API_URL);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -49,7 +95,7 @@ public class OpenAIService {
             String body = "{"
                     + "\"model\": \"" + MODEL + "\","
                     + "\"messages\": ["
-                    + "{\"role\": \"system\", \"content\": \"Tu es un assistant psychologique bienveillant.\"},"
+                    + "{\"role\": \"system\", \"content\": \"Tu es un assistant psychologique bienveillant spécialisé dans le bien-être des étudiants.\"},"
                     + "{\"role\": \"user\", \"content\": " + toJsonString(userMessage) + "}"
                     + "],"
                     + "\"max_tokens\": 500,"
@@ -88,46 +134,30 @@ public class OpenAIService {
 
                 System.out.println("❌ Erreur HTTP " + code + " : " + errBody);
 
-                if (code == 401) return "❌ Clé API invalide ou expirée. Renouvelez-la sur https://console.groq.com";
+                if (code == 401) return "❌ Clé API invalide ou expirée.\nRenouvelez-la sur https://console.groq.com";
                 if (code == 429) return "⏳ Limite d'appels atteinte. Réessayez dans quelques secondes.";
+                if (code == 400) return "❌ Requête invalide (400). Vérifiez le modèle ou la clé API.";
                 return "❌ Erreur serveur (" + code + "). Vérifiez votre connexion.";
             }
 
         } catch (java.net.UnknownHostException e) {
-            System.out.println("❌ Pas de connexion : " + e.getMessage());
             return "🔌 Pas de connexion internet. Vérifiez votre réseau.";
         } catch (java.net.SocketTimeoutException e) {
-            System.out.println("❌ Timeout : " + e.getMessage());
             return "⏳ Délai dépassé. Réessayez dans quelques instants.";
         } catch (Exception e) {
-            System.out.println("❌ Erreur : " + e.getClass().getName() + " — " + e.getMessage());
             e.printStackTrace();
             return "❌ Erreur : " + e.getMessage();
         }
     }
 
-    /**
-     * Extrait le texte du champ "content" dans la réponse JSON Groq.
-     * Supporte "content":"..." ET "content": "..." (avec espace).
-     */
     private static String extraireContenu(String json) {
         try {
-            // Chercher "content" puis sauter jusqu'au premier guillemet ouvrant
             int idx = json.indexOf("\"content\"");
-            if (idx == -1) {
-                System.out.println("⚠ Champ 'content' introuvable");
-                return null;
-            }
-            // Avancer après "content"
-            idx += 9; // longueur de "content"
-            // Sauter : espaces, deux-points, espaces
+            if (idx == -1) return null;
+            idx += 9;
             while (idx < json.length() && (json.charAt(idx) == ':' || json.charAt(idx) == ' ')) idx++;
-            // On doit être sur le guillemet ouvrant
-            if (idx >= json.length() || json.charAt(idx) != '"') {
-                System.out.println("⚠ Format inattendu, char trouvé: '" + json.charAt(idx) + "'");
-                return null;
-            }
-            idx++; // sauter le guillemet ouvrant
+            if (idx >= json.length() || json.charAt(idx) != '"') return null;
+            idx++;
 
             StringBuilder result = new StringBuilder();
             while (idx < json.length()) {
@@ -143,7 +173,7 @@ public class OpenAIService {
                         default:   result.append(next); idx += 2; continue;
                     }
                 }
-                if (c == '"') break; // fin du contenu
+                if (c == '"') break;
                 result.append(c);
                 idx++;
             }
@@ -152,7 +182,6 @@ public class OpenAIService {
             return contenu.isBlank() ? null : contenu;
 
         } catch (Exception e) {
-            System.out.println("❌ Erreur extraction : " + e.getMessage());
             return null;
         }
     }
