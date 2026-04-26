@@ -89,6 +89,19 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
     @FXML private SidebarPsychologueController sidebarPsyController;
     @FXML private StackPane toastContainer;
 
+    // ==================== PAGINATION ====================
+    @FXML private ComboBox<String> cmbItemsPerPage;
+    @FXML private Button btnFirstPage;
+    @FXML private Button btnPrevPage;
+    @FXML private Button btnNextPage;
+    @FXML private Button btnLastPage;
+    @FXML private Label lblPageInfo;
+    @FXML private Label lblTotalPagesInfo;
+
+    private List<LigneGroupée> toutesLesLignes;
+    private int currentPage = 0;
+    private int itemsPerPage = 10;
+
     private TraitementService traitementService;
     private EtudiantTraitementService etudiantTraitementService;
     private SuiviTraitementService suiviTraitementService;
@@ -192,9 +205,11 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             cacheNbSuivis = new HashMap<>();
             tousLesTraitementsFiltres = new ArrayList<>();
             cacheNomsEtudiants = new HashMap<>();
+            toutesLesLignes = new ArrayList<>();
 
             initialiserFiltres();
             initialiserTri();
+            initialiserPagination();
             configurerColonnes();
 
             isInitialized = true;
@@ -291,6 +306,92 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
         cmbTri.setValue("📅 Date (plus récent)");
     }
 
+    // ==================== PAGINATION ====================
+
+    private void initialiserPagination() {
+        cmbItemsPerPage.getItems().addAll("10", "20", "50", "100");
+        cmbItemsPerPage.setValue("10");
+
+        cmbItemsPerPage.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                itemsPerPage = Integer.parseInt(newVal);
+                currentPage = 0;
+                appliquerPagination();
+            }
+        });
+    }
+
+    private void appliquerPagination() {
+        if (toutesLesLignes == null || toutesLesLignes.isEmpty()) {
+            tableViewTraitements.setItems(FXCollections.observableArrayList());
+            lblPageInfo.setText("Page 0 / 0");
+            lblTotalPagesInfo.setText("0 ligne(s)");
+            btnFirstPage.setDisable(true);
+            btnPrevPage.setDisable(true);
+            btnNextPage.setDisable(true);
+            btnLastPage.setDisable(true);
+            return;
+        }
+
+        int totalPages = (int) Math.ceil((double) toutesLesLignes.size() / itemsPerPage);
+
+        if (totalPages == 0) totalPages = 1;
+
+        if (currentPage >= totalPages) {
+            currentPage = Math.max(0, totalPages - 1);
+        }
+
+        int fromIndex = currentPage * itemsPerPage;
+        int toIndex = Math.min(fromIndex + itemsPerPage, toutesLesLignes.size());
+
+        List<LigneGroupée> pageLignes = toutesLesLignes.subList(fromIndex, toIndex);
+        lignesGroupéesList = FXCollections.observableArrayList(pageLignes);
+        tableViewTraitements.setItems(lignesGroupéesList);
+
+        lblPageInfo.setText("Page " + (currentPage + 1) + " / " + totalPages);
+        lblTotalPagesInfo.setText(toutesLesLignes.size() + " ligne(s)");
+
+        btnFirstPage.setDisable(currentPage == 0);
+        btnPrevPage.setDisable(currentPage == 0);
+        btnNextPage.setDisable(currentPage >= totalPages - 1);
+        btnLastPage.setDisable(currentPage >= totalPages - 1);
+
+        long totalTraitements = toutesLesLignes.stream().filter(l -> l.getTraitement() != null).count();
+        lblCount.setText(totalTraitements + " traitement(s)");
+    }
+
+    @FXML
+    private void handleFirstPage() {
+        currentPage = 0;
+        appliquerPagination();
+    }
+
+    @FXML
+    private void handlePrevPage() {
+        if (currentPage > 0) {
+            currentPage--;
+            appliquerPagination();
+        }
+    }
+
+    @FXML
+    private void handleNextPage() {
+        int totalPages = (int) Math.ceil((double) toutesLesLignes.size() / itemsPerPage);
+        if (currentPage < totalPages - 1) {
+            currentPage++;
+            appliquerPagination();
+        }
+    }
+
+    @FXML
+    private void handleLastPage() {
+        int totalPages = (int) Math.ceil((double) toutesLesLignes.size() / itemsPerPage);
+        if (totalPages > 0) {
+            currentPage = totalPages - 1;
+            appliquerPagination();
+        }
+    }
+
     // ==================== CHARGEMENT DES DONNÉES ====================
 
     private void chargerDonnees() {
@@ -324,12 +425,11 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             traitementsFiltres = appliquerTri(traitementsFiltres);
             mettreAJourStatistiques(tousLesTraitementsFiltres);
 
-            List<LigneGroupée> lignes = creerLignesGroupées(traitementsFiltres);
-            lignesGroupéesList = FXCollections.observableArrayList(lignes);
-            tableViewTraitements.setItems(lignesGroupéesList);
+            toutesLesLignes = creerLignesGroupées(traitementsFiltres);
+            currentPage = 0;
+            appliquerPagination();
 
-            long totalTraitements = lignes.stream().filter(l -> l.getTraitement() != null).count();
-            if (lblCount != null) lblCount.setText(totalTraitements + " traitement(s)");
+            long totalTraitements = toutesLesLignes.stream().filter(l -> l.getTraitement() != null).count();
             if (lblStatus != null) lblStatus.setText(totalTraitements + " traitement(s) affiché(s)");
 
             System.out.println("✅ Chargement terminé: " + totalTraitements + " traitements affichés");
@@ -379,12 +479,11 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             traitementsFiltres = appliquerTri(traitementsFiltres);
             mettreAJourStatistiques(tousLesTraitementsFiltres);
 
-            List<LigneGroupée> lignes = creerLignesGroupées(traitementsFiltres);
-            lignesGroupéesList = FXCollections.observableArrayList(lignes);
-            tableViewTraitements.setItems(lignesGroupéesList);
+            toutesLesLignes = creerLignesGroupées(traitementsFiltres);
+            currentPage = 0;
+            appliquerPagination();
 
-            long totalTraitements = lignes.stream().filter(l -> l.getTraitement() != null).count();
-            if (lblCount != null) lblCount.setText(totalTraitements + " traitement(s)");
+            long totalTraitements = toutesLesLignes.stream().filter(l -> l.getTraitement() != null).count();
             if (lblStatus != null) lblStatus.setText(totalTraitements + " traitement(s) affiché(s)");
 
             System.out.println("✅ Chargement terminé: " + totalTraitements + " traitements affichés");
@@ -580,7 +679,6 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
         TableColumn<LigneGroupée, String> colDateDebut = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(7);
         TableColumn<LigneGroupée, String> colObjectif = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(8);
         TableColumn<LigneGroupée, String> colSuivis = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(9);
-        TableColumn<LigneGroupée, String> colActions = (TableColumn<LigneGroupée, String>) tableViewTraitements.getColumns().get(10);
 
         colEtudiant.setPrefWidth(180);
         colTitre.setPrefWidth(180);
@@ -592,7 +690,6 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
         colDateDebut.setPrefWidth(100);
         colObjectif.setPrefWidth(200);
         colSuivis.setPrefWidth(100);
-        colActions.setPrefWidth(320); // Espace suffisant pour 4 boutons
 
         // ===== COLONNE ÉTUDIANT (avec VBox stylisé) =====
         colEtudiant.setCellValueFactory(param -> {
@@ -959,6 +1056,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
 
         configurerColonneActions();
     }
+
     private void configurerColonneActions() {
         SessionManager session = SessionManager.getInstance();
 
@@ -1052,6 +1150,8 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
 
     private void appliquerFiltres() {
         if (tousLesTraitementsFiltres == null || tousLesTraitementsFiltres.isEmpty()) {
+            toutesLesLignes = new ArrayList<>();
+            appliquerPagination();
             return;
         }
 
@@ -1060,13 +1160,11 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             traitementsFiltres = appliquerRechercheEtFiltres(traitementsFiltres);
             traitementsFiltres = appliquerTri(traitementsFiltres);
 
-            List<LigneGroupée> lignes = creerLignesGroupées(traitementsFiltres);
-            lignesGroupéesList = FXCollections.observableArrayList(lignes);
-            tableViewTraitements.setItems(lignesGroupéesList);
+            toutesLesLignes = creerLignesGroupées(traitementsFiltres);
+            currentPage = 0;
+            appliquerPagination();
 
-            long totalTraitements = lignes.stream().filter(l -> l.getTraitement() != null).count();
-            if (lblCount != null) lblCount.setText(totalTraitements + " traitement(s)");
-            if (lblStatus != null) lblStatus.setText(totalTraitements + " traitement(s) affiché(s)");
+            if (lblStatus != null) lblStatus.setText(toutesLesLignes.stream().filter(l -> l.getTraitement() != null).count() + " traitement(s) après filtrage");
 
         } catch (SQLException e) {
             afficherToast("✗ Erreur: " + e.getMessage(), false);
@@ -1096,13 +1194,11 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
     }
 
     private void exporterVersCSV(File file) throws IOException {
-        // UTF-8 avec BOM pour Excel
         try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8")) {
-            // BOM UTF-8 pour Excel
             writer.write('\uFEFF');
             writer.write("Étudiant;Titre;Type;Catégorie;Durée;Statut;Priorité;Date Début;Objectif;Suivis\n");
 
-            for (LigneGroupée ligne : lignesGroupéesList) {
+            for (LigneGroupée ligne : toutesLesLignes) {
                 if (ligne.getTraitement() != null) {
                     Traitement t = ligne.getTraitement();
                     writer.write(String.format("%s;%s;%s;%s;%d;%s;%s;%s;%s;%d\n",
@@ -1134,17 +1230,14 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
         try {
             Traitement traitement = selectedLigne.getTraitement();
 
-            // Vérifier que l'utilisateur connecté est un psychologue
             if (utilisateur == null) {
                 afficherToast("⚠️ Utilisateur non connecté", false);
                 return;
             }
 
-            // Créer le service PDF et générer l'ordonnance
             OrdonnancePDFService pdfService = new OrdonnancePDFService();
             byte[] pdfBytes = pdfService.genererOrdonnancePDF(traitement, utilisateur);
 
-            // Choix du fichier de sauvegarde
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Enregistrer l'ordonnance PDF");
             fileChooser.getExtensionFilters().add(
@@ -1157,7 +1250,6 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             File file = fileChooser.showSaveDialog(tableViewTraitements.getScene().getWindow());
 
             if (file != null) {
-                // Sauvegarder le PDF
                 try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file)) {
                     fos.write(pdfBytes);
                 }
@@ -1177,6 +1269,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
     // ==================== NAVIGATION ====================
 
     @FXML private void handleAjouter() { ouvrirPageAjout(); }
+
     @FXML private void handleRafraichir() {
         prechargerNomsEtudiants();
         if (utilisateur != null) {
@@ -1335,7 +1428,6 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                 controller.setUtilisateur(utilisateur);
             }
 
-            // ✅ Ouvrir dans une nouvelle fenêtre en plein écran — comme pour l'étudiant
             Stage stage = new Stage();
             stage.setTitle("Traduction de Traitement");
             stage.setScene(new Scene(root));
