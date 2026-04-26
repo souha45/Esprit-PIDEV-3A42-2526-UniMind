@@ -13,7 +13,7 @@ public class GeminiService {
 
     // ✅ Utilise la MÊME version que FlutterFlow (gemini-2.5-flash)
     private static final String API_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
     private final String       apiKey;
     private final OkHttpClient client;
