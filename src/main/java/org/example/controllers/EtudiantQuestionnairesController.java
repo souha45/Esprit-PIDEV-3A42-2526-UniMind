@@ -16,7 +16,6 @@ import org.example.entities.Questionnaire;
 import org.example.services.QuestionnaireServices;
 import org.example.services.ReponseQuestionnaireServices;
 import org.example.utils.LimiteQuestionnaire;
-import org.example.utils.NavigationContext;
 
 import java.net.URL;
 import java.sql.SQLException;
@@ -28,11 +27,31 @@ public class EtudiantQuestionnairesController implements Initializable {
     @FXML private ListView<Questionnaire> listQuestionnaire;
     @FXML private TextField tfSearch;
     @FXML private Label lblStatus;
+    @FXML private Button btnFR;
+    @FXML private Button btnEN;
+    @FXML private Button btnAR;
+
+    private StackPane contentArea;
+    private String langueActuelle = "FR";
+
+    private static final String STYLE_LANG_ACTIVE =
+            "-fx-background-color: #7c3aed; -fx-text-fill: white; " +
+                    "-fx-font-size: 12px; -fx-font-weight: bold; " +
+                    "-fx-padding: 6 14; -fx-background-radius: 20; -fx-cursor: hand;";
+
+    private static final String STYLE_LANG_IDLE =
+            "-fx-background-color: #f5f3ff; -fx-text-fill: #7c3aed; " +
+                    "-fx-font-size: 12px; -fx-padding: 6 14; " +
+                    "-fx-background-radius: 20; -fx-cursor: hand;";
 
     private final QuestionnaireServices service = new QuestionnaireServices();
     private final ReponseQuestionnaireServices reponseService = new ReponseQuestionnaireServices();
     private final ObservableList<Questionnaire> data = FXCollections.observableArrayList();
     private FilteredList<Questionnaire> filtered;
+
+    public void setContentArea(StackPane contentArea) {
+        this.contentArea = contentArea;
+    }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -45,8 +64,8 @@ public class EtudiantQuestionnairesController implements Initializable {
                 String lower = val == null ? "" : val.toLowerCase().trim();
                 filtered.setPredicate(q ->
                         lower.isEmpty()
-                                || q.getNom().toLowerCase().contains(lower)
-                                || q.getType().toString().toLowerCase().contains(lower)
+                                || q.getNomTraduit().toLowerCase().contains(lower)
+                                || (q.getType() != null && q.getType().toString().toLowerCase().contains(lower))
                                 || q.getCode().toLowerCase().contains(lower)
                 );
             });
@@ -54,16 +73,55 @@ public class EtudiantQuestionnairesController implements Initializable {
 
         afficherPassagesRestants();
         loadData();
+        setLangueActive(btnFR);
     }
+
+    // ══════════════════════════════════════════
+    //  LANGUE
+    // ══════════════════════════════════════════
+
+    @FXML
+    public void handleLangFR() {
+        langueActuelle = "FR";
+        setLangueActive(btnFR);
+        for (Questionnaire q : data) q.setNomTraduit(null);
+        listQuestionnaire.refresh();
+        setStatus("🇫🇷 Français", true);
+    }
+
+    @FXML
+    public void handleLangEN() {
+        langueActuelle = "EN";
+        setLangueActive(btnEN);
+        setStatus("⚠️ Service de traduction non disponible", false);
+    }
+
+    @FXML
+    public void handleLangAR() {
+        langueActuelle = "AR";
+        setLangueActive(btnAR);
+        setStatus("⚠️ Service de traduction non disponible", false);
+    }
+
+    private void setLangueActive(Button actif) {
+        if (btnFR != null) btnFR.setStyle(STYLE_LANG_IDLE);
+        if (btnEN != null) btnEN.setStyle(STYLE_LANG_IDLE);
+        if (btnAR != null) btnAR.setStyle(STYLE_LANG_IDLE);
+        if (actif != null) actif.setStyle(STYLE_LANG_ACTIVE);
+    }
+
+    // ══════════════════════════════════════════
+    //  PASSAGES RESTANTS
+    // ══════════════════════════════════════════
 
     private void afficherPassagesRestants() {
         try {
             int userId = LimiteQuestionnaire.getInstance().getUserId();
             int passages = reponseService.countPassagesAujourdhui(userId);
-            int restants = 2 - passages;
+            int restants = 10 - passages;
 
             if (restants <= 0) {
-                setStatus("🚫 Vous avez atteint la limite de 2 questionnaires aujourd'hui. Revenez demain !", false);
+                setStatus("🚫 Vous avez atteint la limite de 10 questionnaires aujourd'hui. Revenez demain !", false);
             } else if (restants == 1) {
                 setStatus("⚠️ Il vous reste 1 questionnaire à passer aujourd'hui.", true);
             } else {
@@ -74,6 +132,10 @@ public class EtudiantQuestionnairesController implements Initializable {
         }
     }
 
+    // ══════════════════════════════════════════
+    //  HANDLE REPONDRE
+    // ══════════════════════════════════════════
+
     @FXML
     public void handleRepondre() {
         Questionnaire selected = listQuestionnaire.getSelectionModel().getSelectedItem();
@@ -82,6 +144,7 @@ public class EtudiantQuestionnairesController implements Initializable {
             return;
         }
 
+        // ✅ Vérifier limite
         try {
             int userId = LimiteQuestionnaire.getInstance().getUserId();
             if (!reponseService.peutPasser(userId)) {
@@ -89,7 +152,7 @@ public class EtudiantQuestionnairesController implements Initializable {
                 alert.setTitle("Limite atteinte");
                 alert.setHeaderText("🚫 Limite quotidienne atteinte");
                 alert.setContentText(
-                        "Vous avez déjà passé 2 questionnaires aujourd'hui.\n" +
+                        "Vous avez déjà passé 10 questionnaires aujourd'hui.\n" +
                                 "Revenez demain pour continuer !");
                 alert.showAndWait();
                 return;
@@ -99,6 +162,7 @@ public class EtudiantQuestionnairesController implements Initializable {
             return;
         }
 
+        // ✅ Naviguer
         try {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/fxml/EtudiantRepondreView.fxml"));
@@ -107,14 +171,14 @@ public class EtudiantQuestionnairesController implements Initializable {
             EtudiantRepondreController controller = loader.getController();
             controller.setQuestionnaire(selected);
 
-            // ── Navigation via NavigationContext ──
-            NavigationContext.loadContentInCenter(view);
+            // ✅ NavigationContext — même système que la Sidebar
+            org.example.utils.NavigationContext.loadContentInCenter(view);
 
         } catch (Exception e) {
             setStatus("❌ Erreur navigation : " + e.getMessage(), false);
             e.printStackTrace();
         }
-    }
+    } // ✅ Accolade fermante de handleRepondre()
 
     // ══════════════════════════════════════════
     //  CARTE QUESTIONNAIRE
@@ -178,7 +242,7 @@ public class EtudiantQuestionnairesController implements Initializable {
             super.updateItem(q, empty);
             if (empty || q == null) { setGraphic(null); return; }
 
-            nomLbl.setText(q.getNom());
+            nomLbl.setText(q.getNomTraduit() != null ? q.getNomTraduit() : q.getNom());
             codeLbl.setText(q.getCode());
 
             String type = q.getType() != null ? q.getType().toString() : "?";
@@ -209,12 +273,12 @@ public class EtudiantQuestionnairesController implements Initializable {
 
         private String[] typeColors(String type) {
             switch (type) {
-                case "STRESS":     return new String[]{"#fef3c7", "#d97706", "#fde68a", "#92400e"};
-                case "ANXIETE":    return new String[]{"#ede9fe", "#7c3aed", "#ddd6fe", "#4c1d95"};
-                case "DEPRESSION": return new String[]{"#fee2e2", "#dc2626", "#fecaca", "#991b1b"};
-                case "SOMMEIL":    return new String[]{"#e0f2fe", "#0284c7", "#bae6fd", "#075985"};
-                case "BIEN_ETRE":  return new String[]{"#dcfce7", "#16a34a", "#bbf7d0", "#14532d"};
-                default:           return new String[]{"#f1f5f9", "#475569", "#e2e8f0", "#334155"};
+                case "STRESS":     return new String[]{"#fef3c7","#d97706","#fde68a","#92400e"};
+                case "ANXIETE":    return new String[]{"#ede9fe","#7c3aed","#ddd6fe","#4c1d95"};
+                case "DEPRESSION": return new String[]{"#fee2e2","#dc2626","#fecaca","#991b1b"};
+                case "SOMMEIL":    return new String[]{"#e0f2fe","#0284c7","#bae6fd","#075985"};
+                case "BIEN_ETRE":  return new String[]{"#dcfce7","#16a34a","#bbf7d0","#14532d"};
+                default:           return new String[]{"#f1f5f9","#475569","#e2e8f0","#334155"};
             }
         }
     }

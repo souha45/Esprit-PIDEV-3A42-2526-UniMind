@@ -10,6 +10,7 @@ import org.example.entities.Reponsequestionnaire;
 import org.example.services.EmailServiceQuestionnaire;
 import org.example.services.QuestionServices;
 import org.example.services.ReponseQuestionnaireServices;
+import org.example.services.TraductionService;
 import org.example.utils.LimiteQuestionnaire;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
@@ -21,20 +22,39 @@ import java.util.*;
 public class EtudiantRepondreController implements Initializable {
 
     @FXML private Label lblTitreQuestionnaire;
-    @FXML private VBox  questionsContainer;
+    @FXML private VBox questionsContainer;
     @FXML private Label lblStatus;
+    @FXML private Button btnFR;
+    @FXML private Button btnEN;
+    @FXML private Button btnAR;
 
     private Questionnaire questionnaire;
     private List<Question> questions;
+    private List<Question> questionsOriginales = new ArrayList<>();
 
     private final Map<Integer, String> reponsesChoisies = new HashMap<>();
-    private final Map<Integer, Double> scoresChoisis    = new HashMap<>();
+    private final Map<Integer, Double> scoresChoisis = new HashMap<>();
 
-    private final QuestionServices             questionService = new QuestionServices();
-    private final ReponseQuestionnaireServices repService      = new ReponseQuestionnaireServices();
+    private final QuestionServices questionService = new QuestionServices();
+    private final ReponseQuestionnaireServices repService = new ReponseQuestionnaireServices();
+
+    private static final String LANG_ACTIVE =
+            "-fx-background-color: #7c3aed; -fx-text-fill: white; " +
+                    "-fx-font-size: 12px; -fx-font-weight: bold; " +
+                    "-fx-padding: 6 12; -fx-background-radius: 20; -fx-cursor: hand;";
+
+    private static final String LANG_IDLE =
+            "-fx-background-color: #f5f3ff; -fx-text-fill: #7c3aed; " +
+                    "-fx-font-size: 12px; -fx-padding: 6 12; " +
+                    "-fx-background-radius: 20; -fx-cursor: hand;";
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {}
+    public void initialize(URL url, ResourceBundle rb) {
+        // Initialisation des boutons de langue
+        if (btnFR != null) btnFR.setOnAction(e -> handleLangFR());
+        if (btnEN != null) btnEN.setOnAction(e -> handleLangEN());
+        if (btnAR != null) btnAR.setOnAction(e -> handleLangAR());
+    }
 
     public void setQuestionnaire(Questionnaire q) {
         this.questionnaire = q;
@@ -46,6 +66,10 @@ public class EtudiantRepondreController implements Initializable {
         try {
             questions = questionService.afficherParQuestionnaire(
                     questionnaire.getQuestionnaireId());
+
+            // Sauvegarder les originaux
+            questionsOriginales = new ArrayList<>(questions);
+
             questionsContainer.getChildren().clear();
 
             if (questions.isEmpty()) {
@@ -59,9 +83,126 @@ public class EtudiantRepondreController implements Initializable {
                 questionsContainer.getChildren().add(buildQuestionBox(i + 1, questions.get(i)));
             }
 
+            // Activer FR par défaut
+            if (btnFR != null) setLangActive(btnFR);
+
         } catch (SQLException e) {
             setStatus("❌ Erreur chargement questions: " + e.getMessage(), false);
         }
+    }
+
+    // ══════════════════════════════════════════
+    //  TRADUCTION
+    // ══════════════════════════════════════════
+
+    @FXML
+    public void handleLangFR() {
+        setLangActive(btnFR);
+        // Restaurer questions originales
+        questions = new ArrayList<>(questionsOriginales);
+        afficherQuestions();
+        setStatus("🇫🇷 Français", true);
+    }
+
+    @FXML
+    public void handleLangEN() {
+        setLangActive(btnEN);
+        setStatus("⏳ Traduction en anglais...", true);
+
+        new Thread(() -> {
+            List<Question> traduits = new ArrayList<>();
+            for (Question q : questionsOriginales) {
+                Question copie = copierQuestion(q);
+                try {
+                    copie.setTexte(TraductionService.versAnglais(q.getTexte()));
+                    // Traduire les options
+                    if (q.getOptionsQuest() != null && !q.getOptionsQuest().isBlank()) {
+                        String[] opts = q.getOptionsQuest()
+                                .replaceAll("[\\[\\]\"]", "").split(",");
+                        StringBuilder newOpts = new StringBuilder();
+                        for (String opt : opts) {
+                            newOpts.append(TraductionService.versAnglais(opt.trim()))
+                                    .append(",");
+                        }
+                        copie.setOptionsQuest(newOpts.toString()
+                                .replaceAll(",$", ""));
+                    }
+                } catch (Exception e) {
+                    System.err.println("Erreur traduction EN: " + e.getMessage());
+                    copie = copierQuestion(q); // Garder l'original en cas d'erreur
+                }
+                traduits.add(copie);
+            }
+            javafx.application.Platform.runLater(() -> {
+                questions = traduits;
+                afficherQuestions();
+                setStatus("🇬🇧 Traduit en Anglais", true);
+            });
+        }).start();
+    }
+
+    @FXML
+    public void handleLangAR() {
+        setLangActive(btnAR);
+        setStatus("⏳ Traduction en arabe...", true);
+
+        new Thread(() -> {
+            List<Question> traduits = new ArrayList<>();
+            for (Question q : questionsOriginales) {
+                Question copie = copierQuestion(q);
+                try {
+                    copie.setTexte(TraductionService.versArabe(q.getTexte()));
+                    if (q.getOptionsQuest() != null && !q.getOptionsQuest().isBlank()) {
+                        String[] opts = q.getOptionsQuest()
+                                .replaceAll("[\\[\\]\"]", "").split(",");
+                        StringBuilder newOpts = new StringBuilder();
+                        for (String opt : opts) {
+                            newOpts.append(TraductionService.versArabe(opt.trim()))
+                                    .append(",");
+                        }
+                        copie.setOptionsQuest(newOpts.toString()
+                                .replaceAll(",$", ""));
+                    }
+                } catch (Exception e) {
+                    System.err.println("Erreur traduction AR: " + e.getMessage());
+                    copie = copierQuestion(q);
+                }
+                traduits.add(copie);
+            }
+            javafx.application.Platform.runLater(() -> {
+                questions = traduits;
+                afficherQuestions();
+                setStatus("🇸🇦 Traduit en Arabe", true);
+            });
+        }).start();
+    }
+
+    private void afficherQuestions() {
+        questionsContainer.getChildren().clear();
+        reponsesChoisies.clear();
+        scoresChoisis.clear();
+        for (int i = 0; i < questions.size(); i++) {
+            questionsContainer.getChildren().add(
+                    buildQuestionBox(i + 1, questions.get(i)));
+        }
+    }
+
+    private Question copierQuestion(Question q) {
+        Question copie = new Question();
+        copie.setQuestionId(q.getQuestionId());
+        copie.setTexte(q.getTexte());
+        copie.setOptionsQuest(q.getOptionsQuest());
+        copie.setScoreOptions(q.getScoreOptions());
+        copie.setTypeQuestion(q.getTypeQuestion());
+        copie.setQuestionnaireId(q.getQuestionnaireId());
+        return copie;
+    }
+
+    private void setLangActive(Button actif) {
+        if (btnFR != null) btnFR.setStyle(LANG_IDLE);
+        if (btnEN != null) btnEN.setStyle(LANG_IDLE);
+        if (btnAR != null) btnAR.setStyle(LANG_IDLE);
+        if (actif != null) actif.setStyle(LANG_ACTIVE);
     }
 
     private VBox buildQuestionBox(int numero, Question question) {
@@ -91,6 +232,12 @@ public class EtudiantRepondreController implements Initializable {
                 rb.setToggleGroup(group);
                 rb.setStyle("-fx-text-fill: #c084fc; -fx-font-size: 13px;");
 
+                // Vérifier si cette réponse était déjà choisie
+                String reponseExistante = reponsesChoisies.get(question.getQuestionId());
+                if (reponseExistante != null && reponseExistante.equals(option)) {
+                    rb.setSelected(true);
+                }
+
                 rb.setOnAction(e -> {
                     reponsesChoisies.put(question.getQuestionId(), option);
                     if (idx < scores.length) {
@@ -110,6 +257,13 @@ public class EtudiantRepondreController implements Initializable {
             tfReponse.setStyle("-fx-background-color: #1a0a2e; -fx-text-fill: #e2e8f0; " +
                     "-fx-border-color: #6d28d9; -fx-border-radius: 6; " +
                     "-fx-background-radius: 6; -fx-padding: 7;");
+
+            // Restaurer la réponse existante
+            String reponseExistante = reponsesChoisies.get(question.getQuestionId());
+            if (reponseExistante != null) {
+                tfReponse.setText(reponseExistante);
+            }
+
             tfReponse.textProperty().addListener((obs, old, val) ->
                     reponsesChoisies.put(question.getQuestionId(), val));
             box.getChildren().add(tfReponse);
@@ -145,9 +299,9 @@ public class EtudiantRepondreController implements Initializable {
             jsonReponses.deleteCharAt(jsonReponses.length() - 1);
         jsonReponses.append("}");
 
-        String niveau         = questionnaire.getNiveauScore((int) scoreTotale);
+        String niveau = questionnaire.getNiveauScore((int) scoreTotale);
         String interpretation = questionnaire.interpreterScore((int) scoreTotale);
-        int    userId         = LimiteQuestionnaire.getInstance().getUserId();
+        int userId = LimiteQuestionnaire.getInstance().getUserId();
 
         Reponsequestionnaire reponse = new Reponsequestionnaire(
                 scoreTotale,
@@ -164,8 +318,8 @@ public class EtudiantRepondreController implements Initializable {
         try {
             repService.ajouter(reponse);
 
-            // ── Envoi email + confirmation ───────────────────────
-            String emailUser  = "";
+            // Envoi email + confirmation
+            String emailUser = "";
             boolean emailEnvoye = false;
             try {
                 emailUser = SessionManager.getInstance().getCurrentUser().getEmail();
@@ -180,9 +334,8 @@ public class EtudiantRepondreController implements Initializable {
             } catch (Exception ex) {
                 System.out.println("⚠️ Email non envoyé : " + ex.getMessage());
             }
-            // ────────────────────────────────────────────────────
 
-            // ── Alert avec confirmation email ────────────────────
+            // Alert avec confirmation email
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("✅ Résultat du Questionnaire");
             alert.setHeaderText("Questionnaire : " + questionnaire.getNom());
@@ -196,7 +349,7 @@ public class EtudiantRepondreController implements Initializable {
                             "Cliquez sur OK pour voir vos réponses."
             );
 
-            // ── Navigation APRÈS fermeture de l'Alert ────────────
+            // Navigation APRÈS fermeture de l'Alert
             alert.showAndWait().ifPresent(btn -> {
                 try {
                     NavigationContext.loadContentInCenter("/fxml/EtudiantMesReponsesView.fxml");

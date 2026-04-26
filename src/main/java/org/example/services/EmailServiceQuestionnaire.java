@@ -1,7 +1,7 @@
 package org.example.services;
 
-import jakarta.mail.*;
-import jakarta.mail.internet.*;
+import javax.mail.*;
+import javax.mail.internet.*;
 
 import java.io.InputStream;
 import java.util.Properties;
