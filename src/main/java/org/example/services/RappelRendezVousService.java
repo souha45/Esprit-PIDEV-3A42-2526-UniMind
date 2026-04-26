@@ -71,7 +71,9 @@ public class RappelRendezVousService {
                 "AND dp.date_dispo BETWEEN ? AND ? " +
                 "AND dp.heure_debut BETWEEN ? AND ?";
 
-        try (PreparedStatement pst = con.prepareStatement(sql)) {
+        // ✅ Obtenir une nouvelle connexion à chaque vérification
+        try (Connection conn = MyDataBase_Unimind.getInstance().getConnection();
+             PreparedStatement pst = conn.prepareStatement(sql)) {
             pst.setDate(1, Date.valueOf(dateMin));
             pst.setDate(2, Date.valueOf(dateMax));
             pst.setTime(3, Time.valueOf(heureMin));
@@ -174,7 +176,9 @@ public class RappelRendezVousService {
     private void marquerRappelEnvoye(int rendezVousId) {
         String sql = "UPDATE rendez_vous SET rappel_envoye = TRUE WHERE rendez_vous_id = ?";
 
-        try (PreparedStatement pst = con.prepareStatement(sql)) {
+        // ✅ Obtenir une nouvelle connexion pour éviter l'erreur de connexion fermée
+        try (Connection conn = MyDataBase_Unimind.getInstance().getConnection();
+             PreparedStatement pst = conn.prepareStatement(sql)) {
             pst.setInt(1, rendezVousId);
             pst.executeUpdate();
         } catch (SQLException e) {

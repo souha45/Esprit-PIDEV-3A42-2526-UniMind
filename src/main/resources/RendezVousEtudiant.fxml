@@ -160,6 +160,8 @@
                                     <TableColumn fx:id="colType"        prefWidth="140" text="💬  Type"/>
                                     <TableColumn fx:id="colStatut"      prefWidth="140" text="📌  Statut"/>
                                     <TableColumn fx:id="colActions"     prefWidth="130" text="⚙  Actions"/>
+                                    <!-- ✅ AJOUTER CETTE COLONNE POUR LA VISIO -->
+                                    <TableColumn fx:id="colRejoindre"   prefWidth="100" text="🎥  Visio"/>
                                 </columns>
                                 <placeholder>
                                     <Label text="✨ Aucun rendez-vous trouvé"

@@ -12,6 +12,7 @@ public class RendezVous {
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private boolean rappelEnvoye;
+    private String lienVisio;
 
     // Clés étrangères
     private int dispoId;
@@ -114,7 +115,18 @@ public class RendezVous {
     }
 
     public boolean isRappelEnvoye() { return rappelEnvoye; }
+
+    public String getLienVisio() {
+        return lienVisio;
+    }
+
+    public void setLienVisio(String lienVisio) {
+        this.lienVisio = lienVisio;
+    }
+
     public void setRappelEnvoye(boolean rappelEnvoye) { this.rappelEnvoye = rappelEnvoye; }
+
+
 
     @Override
     public String toString() {

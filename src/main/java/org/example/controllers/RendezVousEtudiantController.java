@@ -26,6 +26,13 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.List;
 import java.util.Locale;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import org.example.utils.MyDataBase_Unimind;
 
 public class RendezVousEtudiantController
         implements SidebarEtudiantController.EtudiantPageController {
@@ -57,6 +64,7 @@ public class RendezVousEtudiantController
     @FXML private Button btnFiltreAnnule;
     @FXML private Button btnFiltreAbsent;
     @FXML private Button btnAssistant;
+    @FXML private TableColumn<RendezVousDetail, Void> colRejoindre;
 
     // ── Table ───────────────────────────────────────────────────────
     @FXML private TableView<RendezVousDetail>           tableViewRendezVous;
@@ -194,7 +202,11 @@ public class RendezVousEtudiantController
     // ════════════════════════════════════════════════════════════════
     //  COLONNES
     // ════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════
+//  COLONNES
+// ════════════════════════════════════════════════════════════════
     private void configurerColonnes() {
+        // Colonne Date & Heure
         colDateHeure.setCellValueFactory(cell -> {
             RendezVousDetail r = cell.getValue();
             String date  = r.getDateDispo().toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -212,6 +224,7 @@ public class RendezVousEtudiantController
             }
         });
 
+        // Colonne Psychologue
         colPsychologue.setCellValueFactory(cell ->
                 new SimpleStringProperty("Dr. " + cell.getValue().getPsyPrenom()
                         + " " + cell.getValue().getPsyNom()));
@@ -225,6 +238,7 @@ public class RendezVousEtudiantController
             }
         });
 
+        // Colonne Type
         colType.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getTypeConsult()));
         colType.setCellFactory(col -> new TableCell<>() {
             @Override protected void updateItem(String s, boolean empty) {
@@ -240,6 +254,7 @@ public class RendezVousEtudiantController
             }
         });
 
+        // Colonne Statut
         colStatut.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getStatutRDV()));
         colStatut.setCellFactory(col -> new TableCell<>() {
             @Override protected void updateItem(String s, boolean empty) {
@@ -254,6 +269,7 @@ public class RendezVousEtudiantController
             }
         });
 
+        // ✅ Colonne Actions (Détails + Annuler)
         colActions.setCellFactory(col -> new TableCell<>() {
             private final Button btnDetails = new Button("👁");
             private final Button btnAnnuler = new Button("✗");
@@ -277,6 +293,7 @@ public class RendezVousEtudiantController
                 btnAnnuler.setOnAction(e ->
                         confirmerAnnulation(getTableView().getItems().get(getIndex())));
             }
+
             @Override protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty) { setGraphic(null); return; }
@@ -288,6 +305,56 @@ public class RendezVousEtudiantController
                 setGraphic(box);
             }
         });
+
+        // ✅ NOUVELLE COLONNE : Visioconférence (Rejoindre)
+        TableColumn<RendezVousDetail, Void> colRejoindre = new TableColumn<>("🎥");
+        colRejoindre.setPrefWidth(100);
+        colRejoindre.setCellFactory(col -> new TableCell<>() {
+            private final Button btnRejoindre = new Button("🎥 Rejoindre");
+
+            {
+                btnRejoindre.setStyle("-fx-background-color: #10b981; -fx-text-fill: white; " +
+                        "-fx-font-size: 11px; -fx-padding: 5 10; " +
+                        "-fx-background-radius: 15; -fx-cursor: hand; " +
+                        "-fx-font-weight: bold;");
+
+                btnRejoindre.setOnAction(e -> {
+                    RendezVousDetail rdv = getTableView().getItems().get(getIndex());
+                    rejoindreVisioconference(rdv);
+                });
+
+                btnRejoindre.setOnMouseEntered(ev ->
+                        btnRejoindre.setStyle(btnRejoindre.getStyle().replace("#10b981", "#059669")));
+                btnRejoindre.setOnMouseExited(ev ->
+                        btnRejoindre.setStyle(btnRejoindre.getStyle().replace("#059669", "#10b981")));
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                    return;
+                }
+
+                RendezVousDetail rdv = getTableView().getItems().get(getIndex());
+                String statut = rdv.getStatutRDV().toLowerCase();
+                String typeConsult = rdv.getTypeConsult().toLowerCase();
+
+                // Afficher le bouton seulement si :
+                // 1. Le RDV est confirmé ou en cours (statut = "confirme" ou "encours")
+                // 2. La consultation est EN LIGNE (type = "en_ligne")
+                boolean afficherRejoindre = ("confirme".equals(statut) || "encours".equals(statut))
+                        && "en_ligne".equals(typeConsult);
+
+                btnRejoindre.setVisible(afficherRejoindre);
+                btnRejoindre.setManaged(afficherRejoindre);
+                setGraphic(btnRejoindre);
+            }
+        });
+
+        // Ajouter la colonne Visio à la table
+        tableViewRendezVous.getColumns().add(colRejoindre);
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -678,4 +745,79 @@ public class RendezVousEtudiantController
             showToast("❌ Impossible d'ouvrir l'assistant", ToastType.ERROR);
         }
     }
+    // ════════════════════════════════════════════════════════════════
+//  REJOINDRE VISIOCONFÉRENCE (pour l'étudiant)
+// ════════════════════════════════════════════════════════════════
+
+    /**
+     * Rejoint une consultation vidéo pour un rendez-vous
+     */
+    private void rejoindreVisioconference(RendezVousDetail rdv) {
+        try {
+            String lienVisio = recupererLienVisio(rdv.getRendezVousId());
+
+            if (lienVisio == null || lienVisio.isEmpty()) {
+                showToast("⚠️ Le psychologue n'a pas encore démarré la consultation.", ToastType.WARNING);
+                return;
+            }
+
+            ouvrirFenetreVisioEtudiant(lienVisio, rdv.getPsyPrenom() + " " + rdv.getPsyNom());
+
+        } catch (Exception e) {
+            showToast("✗ Impossible de rejoindre : " + e.getMessage(), ToastType.ERROR);
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Récupère le lien de visioconférence depuis la base de données
+     */
+    private String recupererLienVisio(int rdvId) {
+        String sql = "SELECT lien_visio FROM rendez_vous WHERE rendez_vous_id = ?";
+        try (Connection conn = MyDataBase_Unimind.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, rdvId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("lien_visio");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Ouvre la fenêtre de visioconférence pour l'étudiant
+     */
+    private void ouvrirFenetreVisioEtudiant(String lienVisio, String nomPsy) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/VisioConsultation.fxml"));
+            Parent root = loader.load();
+
+            VisioConsultationController controller = loader.getController();
+
+            Stage stage = new Stage();
+            stage.setTitle("Consultation vidéo avec " + nomPsy);
+            stage.setMinWidth(900);
+            stage.setMinHeight(700);
+            stage.setScene(new Scene(root));
+
+            controller.setStage(stage);
+            controller.chargerSalle(lienVisio, "Consultation avec " + nomPsy, false);
+
+            // Callback quand la fenêtre se ferme
+            controller.setOnFermerCallback(() -> {
+                // Rien de spécial pour l'étudiant
+                System.out.println("Fenêtre de visio fermée");
+            });
+
+            stage.show();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showToast("✗ Impossible d'ouvrir la fenêtre de visio", ToastType.ERROR);
+        }
+    }
+
 }
