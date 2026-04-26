@@ -34,6 +34,10 @@
                         style="-fx-background-color: #e2e8f0; -fx-text-fill: #64748b; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
                 <Button fx:id="btnStats" text="📊  Statistiques" onAction="#showStats"
                         style="-fx-background-color: #e2e8f0; -fx-text-fill: #64748b; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
+
+                <!-- ✅ NOUVEAU BOUTON IA -->
+                <Button fx:id="btnGenerateurIA" text="🤖  Générer Questions IA" onAction="#showGenerateurIA"
+                        style="-fx-background-color: #e2e8f0; -fx-text-fill: #64748b; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
             </HBox>
         </VBox>
     </top>

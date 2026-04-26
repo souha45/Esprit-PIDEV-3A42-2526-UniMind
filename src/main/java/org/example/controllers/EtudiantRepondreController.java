@@ -68,6 +68,38 @@ public class EtudiantRepondreController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════════
+    //  HELPER : split options (supporte | et ,)
+    // ════════════════════════════════════════════════════════════════
+
+    /**
+     * Découpe une chaîne d'options en tableau.
+     * Supporte les deux formats :
+     *   - généré manuellement : ["oui","non"]  → séparé par ,
+     *   - généré par IA       : Jamais|Parfois|Souvent|Toujours → séparé par |
+     */
+    private String[] splitOptions(String raw) {
+        String cleaned = raw.replaceAll("[\\[\\]\"]", "").trim();
+        if (cleaned.contains("|")) {
+            return cleaned.split("\\|");
+        } else {
+            return cleaned.split(",");
+        }
+    }
+
+    /**
+     * Découpe une chaîne de scores en tableau.
+     * Supporte les deux formats : séparé par | ou par ,
+     */
+    private String[] splitScores(String raw) {
+        String cleaned = raw.replaceAll("[\\[\\]\"\\s]", "").trim();
+        if (cleaned.contains("|")) {
+            return cleaned.split("\\|");
+        } else {
+            return cleaned.split(",");
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
     //  CHARGEMENT QUESTIONS
     // ════════════════════════════════════════════════════════════════
 
@@ -119,13 +151,13 @@ public class EtudiantRepondreController implements Initializable {
                 try {
                     copie.setTexte(TraductionService.versAnglais(q.getTexte()));
                     if (q.getOptionsQuest() != null && !q.getOptionsQuest().isBlank()) {
-                        String[] opts = q.getOptionsQuest()
-                                .replaceAll("[\\[\\]\"]", "").split(",");
+                        // ✅ FIX : supporte | et ,
+                        String[] opts = splitOptions(q.getOptionsQuest());
                         StringBuilder newOpts = new StringBuilder();
                         for (String opt : opts) {
-                            newOpts.append(TraductionService.versAnglais(opt.trim())).append(",");
+                            newOpts.append(TraductionService.versAnglais(opt.trim())).append("|");
                         }
-                        copie.setOptionsQuest(newOpts.toString().replaceAll(",$", ""));
+                        copie.setOptionsQuest(newOpts.toString().replaceAll("\\|$", ""));
                     }
                 } catch (Exception e) {
                     System.err.println("Erreur traduction EN: " + e.getMessage());
@@ -152,13 +184,13 @@ public class EtudiantRepondreController implements Initializable {
                 try {
                     copie.setTexte(TraductionService.versArabe(q.getTexte()));
                     if (q.getOptionsQuest() != null && !q.getOptionsQuest().isBlank()) {
-                        String[] opts = q.getOptionsQuest()
-                                .replaceAll("[\\[\\]\"]", "").split(",");
+                        // ✅ FIX : supporte | et ,
+                        String[] opts = splitOptions(q.getOptionsQuest());
                         StringBuilder newOpts = new StringBuilder();
                         for (String opt : opts) {
-                            newOpts.append(TraductionService.versArabe(opt.trim())).append(",");
+                            newOpts.append(TraductionService.versArabe(opt.trim())).append("|");
                         }
-                        copie.setOptionsQuest(newOpts.toString().replaceAll(",$", ""));
+                        copie.setOptionsQuest(newOpts.toString().replaceAll("\\|$", ""));
                     }
                 } catch (Exception e) {
                     System.err.println("Erreur traduction AR: " + e.getMessage());
@@ -202,7 +234,7 @@ public class EtudiantRepondreController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════════
-    //  CONSTRUCTION CARTE QUESTION
+    //  CONSTRUCTION CARTE QUESTION  ← FIX ICI
     // ════════════════════════════════════════════════════════════════
 
     private VBox buildQuestionBox(int numero, Question question) {
@@ -220,14 +252,18 @@ public class EtudiantRepondreController implements Initializable {
 
         if (question.getOptionsQuest() != null && !question.getOptionsQuest().isEmpty()) {
             ToggleGroup group = new ToggleGroup();
-            String[] options = question.getOptionsQuest()
-                    .replaceAll("[\\[\\]\"]", "").split(",");
-            String[] scores = question.getScoreOptions() != null
-                    ? question.getScoreOptions().replaceAll("[\\[\\]\"\\s]", "").split(",")
+
+            // ✅ FIX : utilise splitOptions() qui gère | et ,
+            String[] options = splitOptions(question.getOptionsQuest());
+
+            // ✅ FIX : utilise splitScores() qui gère | et ,
+            String[] scores = question.getScoreOptions() != null && !question.getScoreOptions().isBlank()
+                    ? splitScores(question.getScoreOptions())
                     : new String[0];
 
             for (int i = 0; i < options.length; i++) {
                 String option = options[i].trim();
+                if (option.isEmpty()) continue;
                 final int idx = i;
 
                 RadioButton rb = new RadioButton(option);
@@ -272,12 +308,11 @@ public class EtudiantRepondreController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════════
-    //  SOUMISSION — navigue vers AnalyseIAView
+    //  SOUMISSION
     // ════════════════════════════════════════════════════════════════
 
     @FXML
     public void handleSoumettre() {
-        // ── Validation ────────────────────────────────────────────
         if (questions == null || questions.isEmpty()) {
             setStatus("Aucune question a repondre !", false);
             return;
@@ -289,11 +324,9 @@ public class EtudiantRepondreController implements Initializable {
             }
         }
 
-        // ── Calcul score ──────────────────────────────────────────
         double scoreTotale = scoresChoisis.values().stream()
                 .mapToDouble(Double::doubleValue).sum();
 
-        // ── Construire JSON des reponses ──────────────────────────
         StringBuilder jsonReponses = new StringBuilder("{");
         for (Question q : questions) {
             jsonReponses.append("\"q").append(q.getQuestionId())
@@ -308,7 +341,6 @@ public class EtudiantRepondreController implements Initializable {
         String interpretation = questionnaire.interpreterScore((int) scoreTotale);
         int    userId         = LimiteQuestionnaire.getInstance().getUserId();
 
-        // ── Sauvegarder en BDD ────────────────────────────────────
         Reponsequestionnaire reponse = new Reponsequestionnaire(
                 scoreTotale, jsonReponses.toString(), interpretation,
                 null, niveau, scoreTotale >= questionnaire.getSeuilSevere(),
@@ -318,7 +350,6 @@ public class EtudiantRepondreController implements Initializable {
         try {
             repService.ajouter(reponse);
 
-            // ── Envoi email en arriere-plan ────────────────────────
             try {
                 String emailUser = SessionManager.getInstance().getCurrentUser().getEmail();
                 if (emailUser != null && !emailUser.isBlank()) {
@@ -335,7 +366,6 @@ public class EtudiantRepondreController implements Initializable {
                 System.out.println("Email non envoye : " + ex.getMessage());
             }
 
-            // ── Naviguer vers la page Analyse IA ──────────────────
             naviguerVersAnalyseIA(scoreTotale, niveau, interpretation, jsonReponses.toString());
 
         } catch (Exception e) {
@@ -352,10 +382,6 @@ public class EtudiantRepondreController implements Initializable {
         }
     }
 
-    /**
-     * Charge la page AnalyseIAView et lui passe toutes les donnees.
-     * L'analyse GPT se lancera automatiquement dans AnalyseIAController.
-     */
     private void naviguerVersAnalyseIA(
             double score, String niveau,
             String interpretation, String reponsesJson) {
@@ -364,10 +390,8 @@ public class EtudiantRepondreController implements Initializable {
                     getClass().getResource("/fxml/AnalyseIAView.fxml"));
             Parent view = loader.load();
 
-            // Injecter les donnees dans AnalyseIAController
             AnalyseIAController ctrl = loader.getController();
 
-            // Recuperer l'utilisateur connecte
             org.example.entities.User user = null;
             try {
                 user = SessionManager.getInstance().getCurrentUser();
@@ -375,15 +399,12 @@ public class EtudiantRepondreController implements Initializable {
 
             ctrl.setDonnees(questionnaire, score, niveau, interpretation, reponsesJson, user);
 
-            // Naviguer via NavigationContext
             if (NavigationContext.getContentScrollPane() != null) {
-                NavigationContext.getContentScrollPane()
-                        .setContent(view);
+                NavigationContext.getContentScrollPane().setContent(view);
             }
 
         } catch (Exception e) {
             System.err.println("Erreur navigation AnalyseIA : " + e.getMessage());
-            // Fallback : aller directement aux reponses
             try {
                 NavigationContext.loadContentInCenter("/fxml/EtudiantMesReponsesView.fxml");
             } catch (Exception ignored) {}

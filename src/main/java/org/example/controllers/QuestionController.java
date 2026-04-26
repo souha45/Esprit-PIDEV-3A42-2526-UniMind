@@ -4,9 +4,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -16,6 +18,7 @@ import org.example.entities.Questionnaire;
 import org.example.services.QuestionServices;
 import org.example.services.QuestionnaireServices;
 
+import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.List;
@@ -74,7 +77,7 @@ public class QuestionController implements Initializable {
 
         filtered = new FilteredList<>(data, p -> true);
 
-        // ✅ La ListView affiche pageData (page courante)
+        // La ListView affiche pageData (page courante)
         listQuestion.setItems(pageData);
         listQuestion.setCellFactory(lv -> new QuestionCard());
 
@@ -88,7 +91,6 @@ public class QuestionController implements Initializable {
                                 || (q.getTypeQuestion() != null && q.getTypeQuestion().toLowerCase().contains(lower))
                                 || String.valueOf(q.getQuestionnaireId()).contains(lower)
                 );
-                // Retour à la page 1 après recherche
                 currentPage = 0;
                 updatePage();
             });
@@ -112,17 +114,14 @@ public class QuestionController implements Initializable {
         int totalPages = (int) Math.ceil((double) total / PAGE_SIZE);
         if (totalPages == 0) totalPages = 1;
 
-        // Sécurité page courante
         if (currentPage >= totalPages) currentPage = totalPages - 1;
         if (currentPage < 0)           currentPage = 0;
 
-        // Extraire les éléments de la page courante
         int from = currentPage * PAGE_SIZE;
         int to   = Math.min(from + PAGE_SIZE, total);
 
         pageData.setAll(filtered.subList(from, to));
 
-        // Mettre à jour le label et les boutons
         lblPage.setText("Page " + (currentPage + 1) + " / " + totalPages
                 + "  (" + total + " question" + (total > 1 ? "s" : "") + ")");
         btnPrev.setDisable(currentPage == 0);
@@ -360,6 +359,22 @@ public class QuestionController implements Initializable {
     }
 
     // ══════════════════════════════════════════
+    //  HANDLER GÉNÉRER IA  ← NOUVEAU
+    // ══════════════════════════════════════════
+
+    @FXML
+    public void handleGenererIA() {
+        try {
+            Node page = FXMLLoader.load(
+                    getClass().getResource("/fxml/GenerateurQuestionsIAView.fxml"));
+            org.example.controllers.admin.AdminDashboardController.loadContent(page);
+        } catch (IOException e) {
+            setStatus("❌ Erreur : " + e.getMessage(), false);
+            e.printStackTrace();
+        }
+    }
+
+    // ══════════════════════════════════════════
     //  VALIDATION
     // ══════════════════════════════════════════
 
@@ -463,4 +478,3 @@ public class QuestionController implements Initializable {
         lblStatus.setStyle("-fx-font-size: 12px; -fx-text-fill: " + (success ? "#22c55e" : "#ef4444") + ";");
     }
 }
-

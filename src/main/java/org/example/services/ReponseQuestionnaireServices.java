@@ -29,7 +29,7 @@ public class ReponseQuestionnaireServices implements ICrud<Reponsequestionnaire>
     }
 
     public boolean peutPasser(int userId) throws SQLException {
-        return countPassagesAujourdhui(userId) < 15;
+        return countPassagesAujourdhui(userId) < 19;
     }
 
     // ══════════════════════════════════════════
