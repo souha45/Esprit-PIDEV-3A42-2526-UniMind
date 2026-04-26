@@ -55,10 +55,15 @@ public class DashboardResponsableController extends BaseDashboardController {
     private final EvenementService evenementService = new EvenementService();
     private final ParticipationService participationService = new ParticipationService();
 
+    private Node originalDashboardContent;
+
     @FXML
     public void initialize() {
         // Initialiser le contexte de navigation
         NavigationContext.setContentScrollPane(contentScrollPane);
+
+        // Sauvegarder le contenu original du dashboard
+        originalDashboardContent = contentScrollPane.getContent();
 
         // Initialiser le navbar controller
         if (navbarController != null) {
@@ -97,10 +102,13 @@ public class DashboardResponsableController extends BaseDashboardController {
 
     @FXML
     public void dashboard(ActionEvent event) {
-        // Recharger le dashboard par défaut (les statistiques sont déjà dans le FXML)
-        // On recharge juste les données
-        chargerStatistiques();
-        chargerCharts();
+        // Restaurer le contenu original du dashboard
+        if (originalDashboardContent != null) {
+            contentScrollPane.setContent(originalDashboardContent);
+            // Recharger les statistiques et charts
+            chargerStatistiques();
+            chargerCharts();
+        }
     }
 
     @FXML
@@ -169,8 +177,8 @@ public class DashboardResponsableController extends BaseDashboardController {
             int totalSponsors = queryInt(conn, "SELECT COUNT(*) FROM sponsor");
             lblTotalSponsors.setText(String.valueOf(totalSponsors));
 
-            // Total feedbacks
-            int totalFeedbacks = queryInt(conn, "SELECT COUNT(*) FROM feedback");
+            // Total feedbacks (comptés depuis participation où feedback_commentaire n'est pas null)
+            int totalFeedbacks = queryInt(conn, "SELECT COUNT(*) FROM participation WHERE feedback_commentaire IS NOT NULL");
             lblTotalFeedbacks.setText(String.valueOf(totalFeedbacks));
 
         } catch (Exception e) {

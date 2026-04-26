@@ -6,10 +6,13 @@ import org.example.enums.TypeEvenement;
 import org.example.services.evenement.EventEmailService;
 import org.example.utils.MyDataBase_Unimind;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class EvenementService implements ICrud<Evenement> {
 
@@ -21,9 +24,17 @@ public class EvenementService implements ICrud<Evenement> {
         this.connection = MyDataBase_Unimind.getInstance().getConnection();
         this.emailService = new EventEmailService();
 
-        // Configuration de l'email (à remplacer par vos identifiants)
-        this.emailService.setUsername("nadineeddouch07@gmail.com");
-        this.emailService.setPassword("jttd apnv wxpj rxlt");
+        // Chargement des credentials email depuis event-config.properties
+        Properties props = new Properties();
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("event-config.properties")) {
+            if (is != null) {
+                props.load(is);
+                this.emailService.setUsername(props.getProperty("mail.username", ""));
+                this.emailService.setPassword(props.getProperty("mail.password", ""));
+            }
+        } catch (IOException e) {
+            System.err.println("Impossible de charger event-config.properties : " + e.getMessage());
+        }
     }
 
     private ParticipationService getParticipationService() {
