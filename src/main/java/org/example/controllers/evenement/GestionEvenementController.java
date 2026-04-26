@@ -14,10 +14,11 @@ import org.example.enums.Role;
 import org.example.enums.TypeEvenement;
 import org.example.enums.StatutEvenement;
 import org.example.services.EvenementService;
-import org.example.services.evenement.PdfExportServiceEvent;
+import org.example.services.evenement.ExcelExportEventService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -65,8 +66,9 @@ public class GestionEvenementController {
 
     @FXML
     private Button btnAjouter;
+
     @FXML
-    private Button btnExportPdf;
+    private Button btnExportExcel;
 
     @FXML
     private ComboBox<TypeEvenement> comboType;
@@ -112,7 +114,6 @@ public class GestionEvenementController {
 
     // Formatter pour les dates
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-    private final PdfExportServiceEvent pdfExportService = new PdfExportServiceEvent();
 
     @FXML
     public void initialize() {
@@ -127,10 +128,11 @@ public class GestionEvenementController {
             System.err.println("Erreur lors de la mise à jour automatique des images: " + e.getMessage());
         }
 
-        // Cacher le bouton ajouter pour les étudiants
+        // Cacher le bouton ajouter et export pour les étudiants
         Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ETUDIANT);
         if (role == Role.ETUDIANT) {
             btnAjouter.setVisible(false);
+            btnExportExcel.setVisible(false);
         }
 
         // Initialiser les filtres
@@ -619,33 +621,48 @@ public class GestionEvenementController {
     }
 
     @FXML
-    private void exporterPdf() {
+    public void exporterExcel(ActionEvent event) {
         try {
-            // Créer un FileChooser pour choisir l'emplacement de sauvegarde
-            javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
-            fileChooser.setTitle("Enregistrer la liste PDF");
-            fileChooser.getExtensionFilters().add(
-                new javafx.stage.FileChooser.ExtensionFilter("Fichiers PDF", "*.pdf")
-            );
-            fileChooser.setInitialFileName("liste_evenements.pdf");
-
-            // Obtenir la fenêtre principale
-            javafx.stage.Window window = btnExportPdf.getScene().getWindow();
-            java.io.File file = fileChooser.showSaveDialog(window);
-
-            if (file != null) {
-                // Convertir la liste filtrée en liste d'Evenement
-                List<org.example.entities.Evenement> evenements = listeFiltre.stream()
-                    .map(ea -> ea.getEvenement())
-                    .toList();
-                
-                // Générer le PDF
-                pdfExportService.exportEvenementsList(evenements, file.getAbsolutePath());
-                
-                afficherAlerte("Succès", "La liste PDF a été générée avec succès !");
+            // Récupérer la liste des événements (filtrés si applicable)
+            List<Evenement> evenementsToExport;
+            if (listeFiltre.isEmpty()) {
+                evenementsToExport = evenementService.afficher();
+            } else {
+                evenementsToExport = listeFiltre.stream()
+                        .map(EvenementService.EvenementAvecOrganisateurNom::getEvenement)
+                        .toList();
             }
-        } catch (Exception e) {
-            afficherAlerte("Erreur", "Impossible de générer le PDF: " + e.getMessage());
+
+            if (evenementsToExport.isEmpty()) {
+                afficherAlerte("Information", "Aucun événement à exporter.");
+                return;
+            }
+
+            // Créer le service d'export
+            ExcelExportEventService exportService = new ExcelExportEventService();
+
+            // Générer le nom du fichier avec la date actuelle
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            String fileName = "evenements_export_" + timestamp + ".xlsx";
+
+            // Chemin du dossier de téléchargements de l'utilisateur
+            String userHome = System.getProperty("user.home");
+            String downloadPath = userHome + File.separator + "Downloads" + File.separator + fileName;
+
+            // Exporter vers Excel
+            exportService.exportEvenementsToExcel(evenementsToExport, downloadPath);
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Succès");
+            alert.setHeaderText("Export réussi !");
+            alert.setContentText("Fichier enregistré dans :\n" + downloadPath);
+            alert.getDialogPane().setMinWidth(500);
+            alert.showAndWait();
+
+        } catch (IOException e) {
+            afficherAlerte("Erreur", "Erreur lors de l'export Excel : " + e.getMessage());
+        } catch (SQLException e) {
+            afficherAlerte("Erreur", "Erreur lors de l'export Excel : " + e.getMessage());
         }
     }
 

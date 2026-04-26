@@ -85,6 +85,19 @@
             <version>3.0.1</version>
         </dependency>
 <!-- Event Module-->
+        <!-- Apache POI pour Excel -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+
+<!-- Event Module-->
         <!-- Jackson Databind pour JSON -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

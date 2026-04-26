@@ -24,7 +24,7 @@
                                 </VBox>
 
                                 <Button fx:id="btnAjouter" text="➕ Ajouter" onAction="#ajouterEvenement" styleClass="btn-primary"/>
-                                <Button fx:id="btnExportPdf" text="📄 Exporter PDF" onAction="#exporterPdf" styleClass="btn-secondary"/>
+                                <Button fx:id="btnExportExcel" text="📊 Export Excel" onAction="#exporterExcel" styleClass="btn-secondary"/>
 
                             </children>
                         </HBox>

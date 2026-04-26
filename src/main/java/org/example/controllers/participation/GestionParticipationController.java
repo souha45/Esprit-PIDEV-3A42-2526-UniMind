@@ -12,9 +12,11 @@ import javafx.scene.layout.HBox;
 import org.example.entities.Participation;
 import org.example.enums.Role;
 import org.example.services.ParticipationService;
+import org.example.services.evenement.ExcelExportParticipationService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -24,7 +26,6 @@ import java.util.List;
 
 import org.example.enums.StatutParticipation;
 import org.example.services.EvenementService;
-import org.example.services.evenement.PdfExportServiceEvent;
 
 public class GestionParticipationController {
 
@@ -58,8 +59,9 @@ public class GestionParticipationController {
 
     @FXML
     private Button btnAjouter;
+
     @FXML
-    private Button btnExportPdf;
+    private Button btnExportExcel;
 
     // Filtres avancés
     @FXML
@@ -96,7 +98,6 @@ public class GestionParticipationController {
 
     private ParticipationService participationService;
     private EvenementService evenementService;
-    private final PdfExportServiceEvent pdfExportService = new PdfExportServiceEvent();
     private ObservableList<ParticipationService.ParticipationAvecNoms> listeParticipations;
     private ObservableList<ParticipationService.ParticipationAvecNoms> listeFiltree;
 
@@ -115,9 +116,10 @@ public class GestionParticipationController {
         Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ETUDIANT);
         boolean estEtudiant = (role == Role.ETUDIANT);
 
-        // Cacher le bouton ajouter pour les étudiants
+        // Cacher le bouton ajouter et export pour les étudiants
         if (estEtudiant) {
             btnAjouter.setVisible(false);
+            btnExportExcel.setVisible(false);
             colActions.setVisible(false);
             colEtudiant.setVisible(false);
             colDateInscription.setVisible(false);
@@ -458,31 +460,41 @@ public class GestionParticipationController {
     }
 
     @FXML
-    private void exporterPdf() {
+    public void exporterExcel(ActionEvent event) {
         try {
-            // Créer un FileChooser pour choisir l'emplacement de sauvegarde
-            javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
-            fileChooser.setTitle("Enregistrer la liste PDF");
-            fileChooser.getExtensionFilters().add(
-                new javafx.stage.FileChooser.ExtensionFilter("Fichiers PDF", "*.pdf")
-            );
-            fileChooser.setInitialFileName("liste_participations.pdf");
+            // Récupérer toutes les participations
+            List<Participation> participationsToExport = participationService.afficher();
 
-            // Obtenir la fenêtre principale
-            javafx.stage.Window window = btnExportPdf.getScene().getWindow();
-            java.io.File file = fileChooser.showSaveDialog(window);
-
-            if (file != null) {
-                // Pour l'instant, générer une liste vide (à améliorer plus tard)
-                List<org.example.entities.Participation> participations = new ArrayList<>();
-                
-                // Générer le PDF
-                pdfExportService.exportParticipationsList(participations, file.getAbsolutePath());
-                
-                afficherAlerte("Succès", "La liste PDF a été générée avec succès !");
+            if (participationsToExport.isEmpty()) {
+                afficherAlerte("Information", "Aucune participation à exporter.");
+                return;
             }
-        } catch (Exception e) {
-            afficherAlerte("Erreur", "Impossible de générer le PDF: " + e.getMessage());
+
+            // Créer le service d'export
+            ExcelExportParticipationService exportService = new ExcelExportParticipationService();
+
+            // Générer le nom du fichier avec la date actuelle
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            String fileName = "participations_export_" + timestamp + ".xlsx";
+
+            // Chemin du dossier de téléchargements de l'utilisateur
+            String userHome = System.getProperty("user.home");
+            String downloadPath = userHome + File.separator + "Downloads" + File.separator + fileName;
+
+            // Exporter vers Excel
+            exportService.exportParticipationsToExcel(participationsToExport, downloadPath);
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Succès");
+            alert.setHeaderText("Export réussi !");
+            alert.setContentText("Fichier enregistré dans :\n" + downloadPath);
+            alert.getDialogPane().setMinWidth(500);
+            alert.showAndWait();
+
+        } catch (IOException e) {
+            afficherAlerte("Erreur", "Erreur lors de l'export Excel : " + e.getMessage());
+        } catch (SQLException e) {
+            afficherAlerte("Erreur", "Erreur lors de l'export Excel : " + e.getMessage());
         }
     }
 

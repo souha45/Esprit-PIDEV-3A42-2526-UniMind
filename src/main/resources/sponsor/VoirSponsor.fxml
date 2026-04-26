@@ -111,7 +111,6 @@
                                 <children>
                                     <Button fx:id="btnModifier" text="✏️ Modifier" onAction="#modifier" prefWidth="150" styleClass="btn-primary" />
                                     <Button fx:id="btnSupprimer" text="❌ Supprimer" onAction="#supprimer" prefWidth="150" styleClass="btn-delete" />
-                                    <Button fx:id="btnExportPdf" text="📄 Exporter PDF" onAction="#exporterPdf" prefWidth="150" style="-fx-background-color: #2c3e50; -fx-text-fill: white; -fx-font-weight: bold;" />
                                 </children>
                             </HBox>
                         </children>
