@@ -548,45 +548,145 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
         TableColumn<LigneSuiviGroupée, String> colSaisiPar = (TableColumn<LigneSuiviGroupée, String>) tableViewSuiviTraitements.getColumns().get(2);
         TableColumn<LigneSuiviGroupée, String> colNotes = (TableColumn<LigneSuiviGroupée, String>) tableViewSuiviTraitements.getColumns().get(3);
 
-        colEtudiant.setPrefWidth(350);
-        colDateSuivi.setPrefWidth(120);
-        colSaisiPar.setPrefWidth(120);
-        colNotes.setPrefWidth(400);
+        colEtudiant.setPrefWidth(320);
+        colDateSuivi.setPrefWidth(130);
+        colSaisiPar.setPrefWidth(150);
+        colNotes.setPrefWidth(380);
 
-        // Colonne Étudiant / Traitement
-        colEtudiant.setCellValueFactory(param -> {
-            LigneSuiviGroupée ligne = param.getValue();
-            return new javafx.beans.property.SimpleStringProperty(ligne.getAffichage());
-        });
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        // ===== COLONNE ÉTUDIANT / TRAITEMENT =====
+        colEtudiant.setCellValueFactory(param ->
+                new javafx.beans.property.SimpleStringProperty(param.getValue().getAffichage()));
 
         colEtudiant.setCellFactory(param -> new TableCell<LigneSuiviGroupée, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
+                setGraphic(null);
                 if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText("");
-                    setStyle("");
+                    setText(null); setStyle(""); return;
+                }
+                LigneSuiviGroupée ligne = getTableRow().getItem();
+
+                if (ligne.estEnteteEtudiant()) {
+                    // En-tête étudiant — bandeau bleu clair et lumineux pour les psychologues
+                    HBox box = new HBox(10);
+                    box.setAlignment(Pos.CENTER_LEFT);
+                    box.setStyle("-fx-background-color: #3b82f6; -fx-background-radius: 8; -fx-padding: 10 14;");
+
+                    Label icone = new Label("👤");
+                    icone.setStyle("-fx-font-size: 15px;");
+
+                    Label nom = new Label(ligne.getNomEtudiant());
+                    nom.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: white; -fx-effect: dropshadow(gaussian, rgba(255,255,255,0.3), 2, 0, 0, 1);");
+
+                    Label compteur = new Label(ligne.getSuivis().size() + " suivi(s)");
+                    compteur.setStyle("-fx-font-size: 11px; -fx-text-fill: #dbeafe; " +
+                            "-fx-background-color: rgba(255,255,255,0.25); " +
+                            "-fx-background-radius: 20; -fx-padding: 2 10;");
+
+                    box.getChildren().addAll(icone, nom, compteur);
+                    setGraphic(box);
+                    setText(null);
+                    setStyle("-fx-background-color: #3b82f6; -fx-padding: 6 8;");
+
+                } else if (ligne.estEnteteTraitement()) {
+                    // En-tête traitement — légèrement indenté
+                    HBox box = new HBox(8);
+                    box.setAlignment(Pos.CENTER_LEFT);
+                    box.setStyle("-fx-background-color: #f0fdf4; -fx-background-radius: 6; " +
+                            "-fx-padding: 8 12; -fx-border-color: #86efac; " +
+                            "-fx-border-width: 0 0 0 3; -fx-border-radius: 0 6 6 0;");
+
+                    Label icone = new Label("📋");
+                    icone.setStyle("-fx-font-size: 13px;");
+
+                    Label nom = new Label(ligne.getNomTraitement());
+                    nom.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #166534;");
+
+                    Label compteur = new Label(ligne.getSuivis().size() + " suivi(s)");
+                    compteur.setStyle("-fx-font-size: 10px; -fx-text-fill: #15803d; " +
+                            "-fx-background-color: #dcfce7; -fx-background-radius: 20; -fx-padding: 2 8;");
+
+                    // Indentation
+                    javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
+                    spacer.setPrefWidth(20);
+
+                    box.getChildren().addAll(spacer, icone, nom, compteur);
+                    setGraphic(box);
+                    setText(null);
+                    setStyle("-fx-background-color: #f0fdf4; -fx-padding: 4 8;");
+
                 } else {
-                    LigneSuiviGroupée ligne = getTableRow().getItem();
-                    setText(item);
-                    if (ligne.estEnteteEtudiant()) {
-                        setStyle("-fx-background-color: #ecfdf5; -fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #059669; -fx-padding: 12 8;");
-                    } else if (ligne.estEnteteTraitement()) {
-                        setStyle("-fx-background-color: #fef9c3; -fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #a16207; -fx-padding: 10 8 10 25;");
-                    } else {
-                        setStyle("-fx-background-color: white; -fx-padding: 10 8 10 35; -fx-font-size: 12px;");
-                    }
+                    // Ligne de données — indentation + point
+                    HBox box = new HBox(6);
+                    box.setAlignment(Pos.CENTER_LEFT);
+
+                    javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
+                    spacer.setPrefWidth(40);
+
+                    Label point = new Label("•");
+                    point.setStyle("-fx-text-fill: #d1d5db; -fx-font-size: 14px;");
+
+                    box.getChildren().addAll(spacer, point);
+                    setGraphic(box);
+                    setText(null);
+                    setStyle("-fx-background-color: white; -fx-padding: 0;");
                 }
             }
         });
 
-        // Colonne Saisi Par
+        // ===== COLONNE DATE SUIVI =====
+        colDateSuivi.setCellValueFactory(param -> {
+            LigneSuiviGroupée ligne = param.getValue();
+            if (!ligne.estEntete() && ligne.getSuivi() != null && ligne.getSuivi().getDateSuivi() != null) {
+                return new javafx.beans.property.SimpleStringProperty(
+                        ligne.getSuivi().getDateSuivi().toLocalDate().format(dateFormatter));
+            }
+            return new javafx.beans.property.SimpleStringProperty("");
+        });
+
+        colDateSuivi.setCellFactory(param -> new TableCell<LigneSuiviGroupée, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(null);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText(null); setStyle(""); return;
+                }
+                LigneSuiviGroupée ligne = getTableRow().getItem();
+
+                if (ligne.estEnteteEtudiant()) {
+                    setText(null);
+                    setStyle("-fx-background-color: #3b82f6;");
+                } else if (ligne.estEnteteTraitement()) {
+                    setText(null);
+                    setStyle("-fx-background-color: #f0fdf4;");
+                } else if (item != null && !item.isEmpty()) {
+                    VBox box = new VBox(2);
+                    box.setAlignment(Pos.CENTER_LEFT);
+                    Label icone = new Label("📅");
+                    icone.setStyle("-fx-font-size: 11px;");
+                    Label date = new Label(item);
+                    date.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;");
+                    box.getChildren().addAll(icone, date);
+                    setGraphic(box);
+                    setText(null);
+                    setStyle("-fx-background-color: white; -fx-padding: 8 10;");
+                } else {
+                    setText(null);
+                    setStyle("-fx-background-color: white;");
+                }
+            }
+        });
+
+        // ===== COLONNE SAISI PAR =====
         colSaisiPar.setCellValueFactory(param -> {
             LigneSuiviGroupée ligne = param.getValue();
-            SuiviTraitement suivi = ligne.getPremierSuivi();
-            if (suivi != null && !ligne.estEntete()) {
-                String texte = suivi.getSaisiPar() == SaisiPar.PSYCHOLOGUE ? "👨‍⚕️ Psychologue" : "👨‍🎓 Étudiant";
-                return new javafx.beans.property.SimpleStringProperty(texte);
+            if (!ligne.estEntete() && ligne.getSuivi() != null) {
+                return new javafx.beans.property.SimpleStringProperty(
+                        ligne.getSuivi().getSaisiPar() == SaisiPar.PSYCHOLOGUE ? "PSYCHOLOGUE" : "ETUDIANT");
             }
             return new javafx.beans.property.SimpleStringProperty("");
         });
@@ -595,38 +695,50 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
+                setGraphic(null);
                 if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText("");
-                    setStyle("");
+                    setText(null); setStyle(""); return;
+                }
+                LigneSuiviGroupée ligne = getTableRow().getItem();
+
+                if (ligne.estEnteteEtudiant()) {
+                    setText(null);
+                    setStyle("-fx-background-color: #3b82f6;");
+                } else if (ligne.estEnteteTraitement()) {
+                    setText(null);
+                    setStyle("-fx-background-color: #f0fdf4;");
+                } else if ("PSYCHOLOGUE".equals(item)) {
+                    Label badge = new Label("👨‍⚕️  Psychologue");
+                    badge.setStyle("-fx-background-color: #ede9fe; -fx-text-fill: #6d28d9; " +
+                            "-fx-font-weight: bold; -fx-font-size: 11px; " +
+                            "-fx-background-radius: 20; -fx-padding: 5 12;");
+                    setGraphic(badge);
+                    setText(null);
+                    setAlignment(Pos.CENTER);
+                    setStyle("-fx-background-color: white; -fx-padding: 8px;");
+                } else if ("ETUDIANT".equals(item)) {
+                    Label badge = new Label("👨‍🎓  Étudiant");
+                    badge.setStyle("-fx-background-color: #dcfce7; -fx-text-fill: #166534; " +
+                            "-fx-font-weight: bold; -fx-font-size: 11px; " +
+                            "-fx-background-radius: 20; -fx-padding: 5 12;");
+                    setGraphic(badge);
+                    setText(null);
+                    setAlignment(Pos.CENTER);
+                    setStyle("-fx-background-color: white; -fx-padding: 8px;");
                 } else {
-                    LigneSuiviGroupée ligne = getTableRow().getItem();
-                    if (ligne.estEntete()) {
-                        setText("");
-                        setStyle("");
-                    } else if (item != null && !item.isEmpty()) {
-                        setText(item);
-                        if (item.contains("Psychologue")) {
-                            setStyle("-fx-text-fill: #4f46e5; -fx-font-weight: bold; -fx-padding: 10 8;");
-                        } else {
-                            setStyle("-fx-text-fill: #15803d; -fx-font-weight: bold; -fx-padding: 10 8;");
-                        }
-                    } else {
-                        setText("");
-                    }
+                    setText(null);
+                    setStyle("-fx-background-color: white;");
                 }
             }
         });
 
-        // Colonne Observations
+        // ===== COLONNE OBSERVATIONS =====
         colNotes.setCellValueFactory(param -> {
             LigneSuiviGroupée ligne = param.getValue();
-            SuiviTraitement suivi = ligne.getPremierSuivi();
-            if (suivi != null && !ligne.estEntete()) {
-                String notes = suivi.getObservations();
-                if (notes != null && notes.length() > 80) {
-                    notes = notes.substring(0, 77) + "...";
-                }
-                return new javafx.beans.property.SimpleStringProperty(notes != null ? notes : "");
+            if (!ligne.estEntete() && ligne.getSuivi() != null) {
+                String notes = ligne.getSuivi().getObservations();
+                if (notes != null && notes.length() > 80) notes = notes.substring(0, 77) + "...";
+                return new javafx.beans.property.SimpleStringProperty(notes != null ? notes : "Aucune observation");
             }
             return new javafx.beans.property.SimpleStringProperty("");
         });
@@ -635,18 +747,24 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
+                setGraphic(null);
                 if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText("");
-                    setStyle("");
+                    setText(null); setStyle(""); return;
+                }
+                LigneSuiviGroupée ligne = getTableRow().getItem();
+
+                if (ligne.estEnteteEtudiant()) {
+                    setText(null);
+                    setStyle("-fx-background-color: #3b82f6;");
+                } else if (ligne.estEnteteTraitement()) {
+                    setText(null);
+                    setStyle("-fx-background-color: #f0fdf4;");
                 } else {
-                    LigneSuiviGroupée ligne = getTableRow().getItem();
-                    if (ligne.estEntete()) {
-                        setText("");
-                        setStyle("");
-                    } else {
-                        setText(item);
-                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
-                    }
+                    boolean aucune = "Aucune observation".equals(item);
+                    setText(item);
+                    setStyle("-fx-background-color: white; -fx-padding: 10 12; -fx-font-size: 12px; " +
+                            "-fx-text-fill: " + (aucune ? "#9ca3af" : "#374151") + "; " +
+                            (aucune ? "-fx-font-style: italic;" : ""));
                 }
             }
         });
@@ -659,31 +777,41 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             private final Button btnView = new Button("👁️");
             private final Button btnEdit = new Button("✏️");
             private final Button btnDelete = new Button("🗑️");
-            private final HBox container = new HBox(8, btnView, btnEdit, btnDelete);
 
             {
-                container.setAlignment(Pos.CENTER);
-                btnView.getStyleClass().addAll("table-action-button", "table-action-button-view");
-                btnEdit.getStyleClass().addAll("table-action-button", "table-action-button-edit");
-                btnDelete.getStyleClass().addAll("table-action-button", "table-action-button-delete");
-                btnView.setPrefWidth(70);
-                btnEdit.setPrefWidth(70);
-                btnDelete.setPrefWidth(70);
+                btnView.setStyle("-fx-background-color: #eff6ff; -fx-text-fill: #1d4ed8; " +
+                        "-fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold; " +
+                        "-fx-padding: 6 12; -fx-cursor: hand;");
+                btnEdit.setStyle("-fx-background-color: #fef9c3; -fx-text-fill: #a16207; " +
+                        "-fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold; " +
+                        "-fx-padding: 6 12; -fx-cursor: hand;");
+                btnDelete.setStyle("-fx-background-color: #fef2f2; -fx-text-fill: #dc2626; " +
+                        "-fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold; " +
+                        "-fx-padding: 6 10; -fx-cursor: hand;");
 
                 btnView.setOnAction(event -> {
                     LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
-                    SuiviTraitement suivi = ligne.getPremierSuivi();
-                    if (suivi != null && !ligne.estEntete()) {
-                        ouvrirPageAffichage(suivi);
+                    if (ligne.getSuivi() != null && !ligne.estEntete()) {
+                        ouvrirPageAffichage(ligne.getSuivi());
                     }
                 });
 
                 btnEdit.setOnAction(event -> {
                     LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
-                    SuiviTraitement suivi = ligne.getPremierSuivi();
-                    if (suivi != null && !ligne.estEntete()) {
-                        if (utilisateur != null && utilisateur.getRole().equals("ETUDIANT") && suivi.getSaisiPar() != SaisiPar.ETUDIANT) {
-                            afficherToast("✗ Vous ne pouvez pas modifier le suivi du psychologue", false);
+                    if (ligne.getSuivi() != null && !ligne.estEntete()) {
+                        SuiviTraitement suivi = ligne.getSuivi();
+                        if (utilisateur != null && "PSYCHOLOGUE".equals(utilisateur.getRole())) {
+                            if (suivi.getSaisiPar() == SaisiPar.PSYCHOLOGUE) {
+                                ouvrirPageModification(suivi);
+                            } else {
+                                afficherToast("✗ Vous ne pouvez pas modifier le suivi de l'étudiant", false);
+                            }
+                        } else if (utilisateur != null && "ETUDIANT".equals(utilisateur.getRole())) {
+                            if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
+                                ouvrirPageModification(suivi);
+                            } else {
+                                afficherToast("✗ Vous ne pouvez pas modifier le suivi du psychologue", false);
+                            }
                         } else {
                             ouvrirPageModification(suivi);
                         }
@@ -692,10 +820,20 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
 
                 btnDelete.setOnAction(event -> {
                     LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
-                    SuiviTraitement suivi = ligne.getPremierSuivi();
-                    if (suivi != null && !ligne.estEntete()) {
-                        if (utilisateur != null && utilisateur.getRole().equals("ETUDIANT") && suivi.getSaisiPar() != SaisiPar.ETUDIANT) {
-                            afficherToast("✗ Vous ne pouvez pas supprimer le suivi du psychologue", false);
+                    if (ligne.getSuivi() != null && !ligne.estEntete()) {
+                        SuiviTraitement suivi = ligne.getSuivi();
+                        if (utilisateur != null && "PSYCHOLOGUE".equals(utilisateur.getRole())) {
+                            if (suivi.getSaisiPar() == SaisiPar.PSYCHOLOGUE) {
+                                supprimerSuivi(suivi);
+                            } else {
+                                afficherToast("✗ Vous ne pouvez pas supprimer le suivi de l'étudiant", false);
+                            }
+                        } else if (utilisateur != null && "ETUDIANT".equals(utilisateur.getRole())) {
+                            if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
+                                supprimerSuivi(suivi);
+                            } else {
+                                afficherToast("✗ Vous ne pouvez pas supprimer le suivi du psychologue", false);
+                            }
                         } else {
                             supprimerSuivi(suivi);
                         }
@@ -706,11 +844,51 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null || getTableRow().getItem().estEntete()) {
+
+                if (empty || getTableRow() == null || getTableRow().getItem() == null
+                        || getTableRow().getItem().estEntete()) {
                     setGraphic(null);
-                } else {
-                    setGraphic(container);
+                    if (getTableRow() != null && getTableRow().getItem() != null) {
+                        LigneSuiviGroupée ligne = getTableRow().getItem();
+                        if (ligne.estEnteteEtudiant()) setStyle("-fx-background-color: #3b82f6;");
+                        else if (ligne.estEnteteTraitement()) setStyle("-fx-background-color: #f0fdf4;");
+                        else setStyle("");
+                    }
+                    return;
                 }
+
+                LigneSuiviGroupée ligne = getTableRow().getItem();
+                SuiviTraitement suivi = ligne.getSuivi();
+
+                if (suivi == null) {
+                    setGraphic(null);
+                    return;
+                }
+
+                boolean estPsychologue = (utilisateur != null && "PSYCHOLOGUE".equals(utilisateur.getRole()));
+                boolean estEtudiant = (utilisateur != null && "ETUDIANT".equals(utilisateur.getRole()));
+
+                HBox container = new HBox(6);
+                container.setAlignment(Pos.CENTER);
+
+                // Le bouton Afficher est TOUJOURS présent
+                container.getChildren().add(btnView);
+
+                // Pour le psychologue : ajouter Modifier/Supprimer SEULEMENT si c'est SON suivi
+                if (estPsychologue && suivi.getSaisiPar() == SaisiPar.PSYCHOLOGUE) {
+                    container.getChildren().addAll(btnEdit, btnDelete);
+                }
+                // Pour l'étudiant : ajouter Modifier/Supprimer SEULEMENT si c'est SON suivi
+                else if (estEtudiant && suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
+                    container.getChildren().addAll(btnEdit, btnDelete);
+                }
+                // Si ce n'est ni psychologue ni étudiant (admin par exemple)
+                else if (!estPsychologue && !estEtudiant) {
+                    container.getChildren().addAll(btnEdit, btnDelete);
+                }
+
+                setGraphic(container);
+                setStyle("-fx-background-color: white; -fx-padding: 6px;");
             }
         });
     }
@@ -816,7 +994,6 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
         }
     }
 
-// ... reste du code ...
     // ==================== NAVIGATION ====================
 
     @FXML private void handleAjouter() { ouvrirPageAjout(); }
