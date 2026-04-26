@@ -6,7 +6,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.scene.Parent;
+import org.example.controllers.ActivationController;
 import org.example.controllers.ResetPasswordController;
+import org.example.utils.ActivationServer;
 import org.example.utils.LocalCallbackServer;
 
 import java.net.URLDecoder;
@@ -19,6 +21,9 @@ public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         primaryStage = stage;
+        LocalCallbackServer.startServer();
+        System.out.println("🚀 Démarrage du serveur d'activation...");
+
         Parameters params = getParameters();
         if (params != null && params.getRaw() != null) {
             for (String arg : params.getRaw()) {
@@ -31,7 +36,6 @@ public class MainApp extends Application {
                 }
             }
         }
-
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
         Scene scene = new Scene(loader.load());
         scene.getStylesheets().add(getClass().getResource("/css/etudiant.css").toExternalForm());

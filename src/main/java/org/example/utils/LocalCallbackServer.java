@@ -161,11 +161,11 @@ public class LocalCallbackServer {
                 String token = params.get("token");
 
                 try (var conn = MyDataBase_Unimind.getInstance().getConnection()) {
-                    var ps = conn.prepareStatement("UPDATE user SET is_verified=1, activation_token=NULL WHERE user_id=? AND activation_token=?");
+                    var ps = conn.prepareStatement("UPDATE user SET is_verified=1, verification_token=NULL WHERE user_id=? AND verification_token=?");
                     ps.setInt(1, userId);
                     ps.setString(2, token);
                     if (ps.executeUpdate() > 0) {
-                        sendResponse(exchange, getActivationSuccessHtml());
+                        sendResponse(exchange, getCaptchaRedirectHtml());
                     } else {
                         sendResponse(exchange, getActivationErrorHtml("Token invalide ou compte déjà activé"));
                     }
@@ -177,7 +177,17 @@ public class LocalCallbackServer {
             }
         }
     }
+    private static String getCaptchaRedirectHtml() {
+        return "<!DOCTYPE html>" +
+                "<html><head><meta charset='UTF-8'>" +
 
+                // 🔥 REDIRECTION VERS CAPTCHA
+                "<script>window.location.href='http://localhost:8080/captcha';</script>" +
+
+                "</head><body>" +
+                "<p>Redirection vers vérification...</p>" +
+                "</body></html>";
+    }
     static class ResetPasswordHandler implements HttpHandler {
         public void handle(HttpExchange exchange) throws IOException {
             String query = exchange.getRequestURI().getQuery();
