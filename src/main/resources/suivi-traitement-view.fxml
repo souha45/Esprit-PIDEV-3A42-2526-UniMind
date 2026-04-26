@@ -106,6 +106,7 @@
                 <Button fx:id="btnAjouter" text="+ Nouveau Suivi" onAction="#handleAjouter" styleClass="btn-primary"/>
                 <Button text="⟳ Rafraîchir" onAction="#handleRafraichir" styleClass="btn-secondary"/>
                 <Button text="📊 Voir Traitements" onAction="#ouvrirTraitementView" styleClass="btn-info"/>
+                <Button text="🤖 Analyse IA" onAction="#handleAnalyseIA" styleClass="btn-ia-small"/>
                 <Button text="📎 Exporter Excel" onAction="#handleExporterExcel" styleClass="btn-secondary"/>
 
                 <Region HBox.hgrow="ALWAYS"/>

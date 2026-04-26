@@ -52,6 +52,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.collections.transformation.FilteredList;
+import org.example.services.TraitementIAService;
+import java.util.stream.Collectors;
 
 public class SuiviTraitementController implements Initializable, SidebarPsychologueController.PsyPageController {
 
@@ -1159,6 +1161,72 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             } catch (SQLException e) {
                 afficherToast("✗ Erreur de suppression: " + e.getMessage(), false);
             }
+        }
+    }
+
+    /**
+     * Ouvre la fenêtre d'analyse IA pour le psychologue
+     */
+    @FXML
+    private void handleAnalyseIA() {
+        try {
+            if (utilisateur == null) {
+                afficherToast("⚠️ Utilisateur non connecté", false);
+                return;
+            }
+
+            // Récupérer tous les suivis et traitements
+            List<SuiviTraitement> tousLesSuivis = suiviTraitementService.afficher();
+            List<Traitement> tousLesTraitements = traitementService.afficher();
+
+            Map<Integer, Traitement> traitementsMap = new HashMap<>();
+            for (Traitement t : tousLesTraitements) {
+                traitementsMap.put(t.getTraitementId(), t);
+            }
+
+            int utilisateurId = utilisateur.getUserId();
+
+            // Filtrer les traitements du psychologue connecté
+            List<Traitement> traitementsPsychologue = new ArrayList<>();
+            for (Traitement traitement : tousLesTraitements) {
+                if (traitement.getPsychologueId() == utilisateurId) {
+                    traitementsPsychologue.add(traitement);
+                }
+            }
+
+            // Récupérer les IDs des traitements du psychologue
+            List<Integer> traitementIds = traitementsPsychologue.stream()
+                    .map(Traitement::getTraitementId)
+                    .collect(Collectors.toList());
+
+            // Filtrer les suivis correspondant aux traitements du psychologue
+            List<SuiviTraitement> suivisPsychologue = tousLesSuivis.stream()
+                    .filter(s -> traitementIds.contains(s.getTraitementId()))
+                    .collect(Collectors.toList());
+
+            if (traitementsPsychologue.isEmpty()) {
+                afficherToast("⚠️ Aucun traitement trouvé pour l'analyse", false);
+                return;
+            }
+
+            // Ouvrir la fenêtre d'analyse IA
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/analyse-ia-view.fxml"));
+            Parent root = loader.load();
+
+            AnalyseIAController controller = loader.getController();
+            controller.setDonneesAnalyse(traitementsPsychologue, suivisPsychologue);
+
+            Stage stage = new Stage();
+            stage.setTitle("🤖 Analyse IA - Suivi des Traitements");
+            stage.setScene(new Scene(root, 1000, 800));
+            stage.setMaximized(true);
+            stage.show();
+
+            afficherToast("📊 Analyse IA lancée pour " + traitementsPsychologue.size() + " traitement(s)", true);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            afficherToast("✗ Erreur lors de l'analyse IA: " + e.getMessage(), false);
         }
     }
 
