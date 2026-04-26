@@ -74,7 +74,7 @@
                        -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
                        -fx-background-radius: 10; -fx-cursor: hand;" />
 
-        <Button fx:id="btnPatients" text="  👥  Statistiques"
+        <Button fx:id="btnPatients" text="  📈  Statistiques"
                 maxWidth="Infinity"
                 style="-fx-background-color: transparent; -fx-text-fill: #6b7280; -fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-alignment: CENTER_LEFT; -fx-padding: 11 16; -fx-background-radius: 10; -fx-cursor: hand;" />
 

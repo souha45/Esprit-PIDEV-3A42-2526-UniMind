@@ -228,31 +228,31 @@
                     </HBox>
 
                     <!-- ── ROW 2 : Évolution RDV par mois + Répartition statuts ── -->
-                    <HBox spacing="16" fillHeight="true">
-
-                        <!-- Graphique évolution RDV (BarChart) -->
-                        <VBox spacing="8" HBox.hgrow="ALWAYS"
+                    <!-- ── ROW 2 : Évolution RDV par mois + Répartition statuts ── -->
+                    <HBox spacing="20" fillHeight="true" VBox.vgrow="ALWAYS">
+                        <!-- Graphique évolution RDV (BarChart) - prend 60% -->
+                        <VBox spacing="8" HBox.hgrow="ALWAYS" prefWidth="400"
                               style="-fx-background-color: #ffffff; -fx-background-radius: 14;
-                                     -fx-padding: 18 20; -fx-border-color: #ddd6fe;
-                                     -fx-border-width: 1; -fx-border-radius: 14;
-                                     -fx-effect: dropshadow(gaussian, rgba(109,40,217,0.08), 10, 0, 0, 3);">
+                 -fx-padding: 18 20; -fx-border-color: #ddd6fe;
+                 -fx-border-width: 1; -fx-border-radius: 14;
+                 -fx-effect: dropshadow(gaussian, rgba(109,40,217,0.08), 10, 0, 0, 3);">
                             <HBox alignment="CENTER_LEFT" spacing="8">
                                 <Label text="📈  Évolution des rendez-vous"
                                        style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
-                                              -fx-font-weight: bold; -fx-text-fill: #4c1d95;" />
+                          -fx-font-weight: bold; -fx-text-fill: #4c1d95;" />
                                 <Region HBox.hgrow="ALWAYS" />
                                 <ComboBox fx:id="comboGroupement"
                                           style="-fx-background-color: #f5f3ff; -fx-border-color: #ddd6fe;
-                                                 -fx-border-radius: 8; -fx-background-radius: 8;
-                                                 -fx-border-width: 1; -fx-font-family: 'Segoe UI';
-                                                 -fx-font-size: 11px; -fx-pref-height: 30px; -fx-cursor: hand;"
+                             -fx-border-radius: 8; -fx-background-radius: 8;
+                             -fx-border-width: 1; -fx-font-family: 'Segoe UI';
+                             -fx-font-size: 11px; -fx-pref-height: 30px; -fx-cursor: hand;"
                                           prefWidth="100" />
                             </HBox>
                             <Label text="Nombre de RDV par période"
                                    style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
-                                          -fx-text-fill: #9ca3af;" />
+                      -fx-text-fill: #9ca3af;" />
                             <BarChart fx:id="chartEvolution"
-                                      prefHeight="260" animated="false"
+                                      prefHeight="280" animated="false"
                                       style="-fx-background-color: transparent; -fx-padding: 4 0 0 0;">
                                 <xAxis><CategoryAxis fx:id="axisX" label="Période"
                                                      style="-fx-tick-label-fill: #9ca3af; -fx-font-size: 11px;"/></xAxis>
@@ -261,24 +261,36 @@
                             </BarChart>
                         </VBox>
 
-                        <!-- Pie chart répartition statuts -->
-                        <VBox spacing="8" prefWidth="320"
+                        <!-- Pie chart répartition statuts - prend 40% mais plus large -->
+                        <VBox spacing="8" HBox.hgrow="ALWAYS" prefWidth="420"
                               style="-fx-background-color: #ffffff; -fx-background-radius: 14;
-                                     -fx-padding: 18 20; -fx-border-color: #ddd6fe;
-                                     -fx-border-width: 1; -fx-border-radius: 14;
-                                     -fx-effect: dropshadow(gaussian, rgba(109,40,217,0.08), 10, 0, 0, 3);">
-                            <Label text="🥧  Répartition des statuts RDV"
-                                   style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
-                                          -fx-font-weight: bold; -fx-text-fill: #4c1d95;" />
+                 -fx-padding: 18 20; -fx-border-color: #ddd6fe;
+                 -fx-border-width: 1; -fx-border-radius: 14;
+                 -fx-effect: dropshadow(gaussian, rgba(109,40,217,0.08), 10, 0, 0, 3);">
+                            <HBox alignment="CENTER_LEFT" spacing="8">
+                                <Label text="🥧  Répartition des statuts RDV"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;
+                          -fx-font-weight: bold; -fx-text-fill: #4c1d95;" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label text="(cliquez pour détails)"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px;
+                          -fx-text-fill: #9ca3af; -fx-font-style: italic;" />
+                            </HBox>
                             <Label text="Sur la période sélectionnée"
                                    style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px;
-                                          -fx-text-fill: #9ca3af;" />
-                            <PieChart fx:id="chartStatuts"
-                                      prefHeight="260" animated="false"
-                                      labelsVisible="true"
-                                      style="-fx-background-color: transparent;" />
-                        </VBox>
+                      -fx-text-fill: #9ca3af;" />
 
+                            <!-- ✅ PIE CHART AGRANDI -->
+                            <PieChart fx:id="chartStatuts"
+                                      prefHeight="320"
+                                      prefWidth="400"
+                                      animated="true"
+                                      labelsVisible="true"
+                                      labelLineLength="15"
+                                      startAngle="90"
+                                      style="-fx-background-color: transparent;">
+                            </PieChart>
+                        </VBox>
                     </HBox>
 
                     <!-- ── ROW 3 : Disponibilités utilisées + Satisfaction détail ── -->
