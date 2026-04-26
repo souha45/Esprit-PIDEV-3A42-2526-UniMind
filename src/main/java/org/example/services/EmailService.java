@@ -99,6 +99,7 @@ public class EmailService {
         }
         System.out.println("✅ Email envoyé à " + toEmail);
     }
+
     public void sendNewRegistrationToAdmin(String userName, String userEmail, String userRole) throws Exception {
         MailjetRequest request = new MailjetRequest(Emailv31.resource)
                 .property(Emailv31.MESSAGES, new JSONArray()
@@ -161,8 +162,13 @@ public class EmailService {
     }
 
     public void storeResetToken(int userId, String token, Connection conn) throws SQLException {
-        System.out.println("📝 Token de réinitialisation généré pour user " + userId + ": " + token);
-        // Stockage optionnel - à implémenter si nécessaire
+        String query = "UPDATE user SET reset_token = ? WHERE user_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setString(1, token);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+            System.out.println("✅ Token stocké en BDD pour user_id: " + userId);
+        }
     }
 
     public boolean verifyResetToken(String token, Connection conn) throws SQLException {

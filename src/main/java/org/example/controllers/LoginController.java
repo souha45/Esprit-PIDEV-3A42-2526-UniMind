@@ -205,6 +205,7 @@ public class LoginController {
         webView.setMinHeight(120);
         webView.setMaxHeight(120);
 
+
         // Charger depuis le serveur HTTP — pas loadContent()
         webView.getEngine().load("http://localhost:8080/captcha");
 

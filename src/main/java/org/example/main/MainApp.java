@@ -61,6 +61,7 @@ public class MainApp extends Application {
         return null;
     }
 
+
     public static void openResetPasswordWindow(String token) {
         Platform.runLater(() -> {
             try {

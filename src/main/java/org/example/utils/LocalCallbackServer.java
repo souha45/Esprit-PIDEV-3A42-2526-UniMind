@@ -34,6 +34,7 @@ public class LocalCallbackServer {
             server.createContext("/captcha-callback", new CaptchaServer.CaptchaCallbackHandler());
             server.createContext("/captcha",          new HCaptchaPageHandler());
             server.createContext("/hcaptcha-callback", new HCaptchaCallbackHandler());
+            server.createContext("/do-reset-password", new DoResetPasswordHandler());
             server.setExecutor(null);
             server.start();
             isRunning = true;
@@ -65,7 +66,62 @@ public class LocalCallbackServer {
     // ══════════════════════════════════════════════════════════════════
     //  HANDLERS (inchangés)
     // ══════════════════════════════════════════════════════════════════
+    static class DoResetPasswordHandler implements HttpHandler {
+        public void handle(HttpExchange exchange) throws IOException {
+            String query = exchange.getRequestURI().getQuery();
+            String token = null;
+            String password = null;
 
+            if (query != null) {
+                for (String param : query.split("&")) {
+                    if (param.startsWith("token=")) {
+                        token = URLDecoder.decode(param.substring(6), StandardCharsets.UTF_8);
+                    } else if (param.startsWith("password=")) {
+                        password = URLDecoder.decode(param.substring(9), StandardCharsets.UTF_8);
+                    }
+                }
+            }
+
+            String response;
+            if (token == null || password == null || password.length() < 8) {
+                response = "Paramètres invalides";
+            } else {
+                try {
+                    // Chercher l'utilisateur par reset_token et mettre à jour le mot de passe
+                    String hashedPwd = org.example.utils.PasswordUtils.hasher(password);
+                    try (var conn = MyDataBase_Unimind.getInstance().getConnection()) {
+                        // Trouver le user_id via le token
+                        var ps1 = conn.prepareStatement(
+                                "SELECT user_id FROM user WHERE reset_token = ?");
+                        ps1.setString(1, token);
+                        var rs = ps1.executeQuery();
+                        if (rs.next()) {
+                            int userId = rs.getInt("user_id");
+                            // Mettre à jour le mot de passe
+                            var ps2 = conn.prepareStatement(
+                                    "UPDATE user SET password = ?, reset_token = NULL WHERE user_id = ?");
+                            ps2.setString(1, hashedPwd);
+                            ps2.setInt(2, userId);
+                            ps2.executeUpdate();
+                            response = "OK";
+                            System.out.println("✅ Mot de passe réinitialisé pour user_id: " + userId);
+                        } else {
+                            response = "Token invalide ou expiré";
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    response = "Erreur serveur: " + e.getMessage();
+                }
+            }
+
+            exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=UTF-8");
+            exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+            byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, bytes.length);
+            try (OutputStream os = exchange.getResponseBody()) { os.write(bytes); }
+        }
+    }
     static class CallbackHandler implements HttpHandler {
         public void handle(HttpExchange exchange) throws IOException {
             String query = exchange.getRequestURI().getQuery();
@@ -125,7 +181,6 @@ public class LocalCallbackServer {
     static class ResetPasswordHandler implements HttpHandler {
         public void handle(HttpExchange exchange) throws IOException {
             String query = exchange.getRequestURI().getQuery();
-
             System.out.println("ResetPasswordHandler - Query: " + query);
 
             if (query != null && query.contains("token=")) {
@@ -133,13 +188,24 @@ public class LocalCallbackServer {
                 System.out.println("Token extrait: " + token);
 
                 String html = getOpenAppHtml(token);
+                byte[] bytes = html.getBytes(StandardCharsets.UTF_8); // ← bytes d'abord
+
                 exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
-                exchange.sendResponseHeaders(200, html.getBytes().length);
+                exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+                exchange.sendResponseHeaders(200, bytes.length); // ← longueur exacte
                 try (OutputStream os = exchange.getResponseBody()) {
-                    os.write(html.getBytes());
+                    os.write(bytes);
+                    os.flush(); // ← forcer l'envoi
                 }
             } else {
-                sendResponse(exchange, getErrorHtml("Token manquant"));
+                String errorHtml = getErrorHtml("Token manquant");
+                byte[] bytes = errorHtml.getBytes(StandardCharsets.UTF_8);
+                exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
+                exchange.sendResponseHeaders(200, bytes.length);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(bytes);
+                    os.flush();
+                }
             }
         }
 
@@ -153,101 +219,80 @@ public class LocalCallbackServer {
         }
 
         private String getOpenAppHtml(String token) {
-            return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>UniMind - Réinitialisation</title>
-                <style>
-                    body {
-                        font-family: 'Segoe UI', Arial, sans-serif;
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        min-height: 100vh;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        margin: 0;
-                        padding: 20px;
-                    }
-                    .container {
-                        background: white;
-                        border-radius: 20px;
-                        padding: 40px;
-                        max-width: 450px;
-                        width: 100%;
-                        text-align: center;
-                        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                    }
-                    .loader {
-                        display: inline-block;
-                        width: 50px;
-                        height: 50px;
-                        border: 3px solid #f3f3f3;
-                        border-top: 3px solid #4F46E5;
-                        border-radius: 50%;
-                        animation: spin 1s linear infinite;
-                        margin: 20px auto;
-                    }
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                    h1 { color: #4F46E5; margin-bottom: 10px; }
-                    p { color: #6B7280; }
-                    .btn-retry {
-                        background: #4F46E5;
-                        color: white;
-                        border: none;
-                        padding: 10px 20px;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        margin-top: 20px;
-                    }
-                    .token-info {
-                        background: #F3F4F6;
-                        padding: 10px;
-                        border-radius: 8px;
-                        font-family: monospace;
-                        word-break: break-all;
-                        margin: 15px 0;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <h1>🔐 UniMind</h1>
-                    <div class="loader"></div>
-                    <p>Ouverture de l'application...</p>
-                    <p style="font-size: 12px;">Si l'application ne s'ouvre pas automatiquement :</p>
-                    <div class="token-info">
-                        <strong>Code :</strong> <span id="token">%s</span>
-                    </div>
-                    <button class="btn-retry" onclick="retryOpen()">🔄 Réessayer d'ouvrir</button>
-                    <button class="btn-retry" onclick="copyToken()" style="background: #059669; margin-left: 10px;">📋 Copier le code</button>
-                </div>
-                <script>
-                    function openApp() {
-                        const token = document.getElementById('token').innerText;
-                        window.location.href = 'unimind://reset-password?token=' + encodeURIComponent(token);
-                    }
-                    function retryOpen() {
-                        openApp();
-                        setTimeout(() => {
-                            document.querySelector('.loader').style.display = 'none';
-                        }, 1000);
-                    }
-                    function copyToken() {
-                        const token = document.getElementById('token').innerText;
-                        navigator.clipboard.writeText(token).then(() => {
-                            alert('Code copié ! Collez-le dans l\\'application UniMind.');
-                        });
-                    }
-                    setTimeout(openApp, 1000);
-                </script>
-            </body>
-            </html>
-        """.formatted(token);
+            return "<!DOCTYPE html>" +
+                    "<html><head><meta charset='UTF-8'>" +
+                    "<title>UniMind - Réinitialisation</title>" +
+                    "<style>" +
+                    "* { box-sizing: border-box; margin: 0; padding: 0; }" +
+                    "body { font-family: 'Segoe UI', Arial, sans-serif;" +
+                    "background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);" +
+                    "min-height: 100vh; display: flex; justify-content: center;" +
+                    "align-items: center; padding: 20px; }" +
+                    ".card { background: white; border-radius: 20px; padding: 40px;" +
+                    "max-width: 420px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }" +
+                    ".logo { text-align: center; font-size: 32px; margin-bottom: 8px; }" +
+                    "h2 { text-align: center; color: #1E1B4B; font-size: 22px; margin-bottom: 8px; }" +
+                    "p { text-align: center; color: #6B7280; font-size: 13px; margin-bottom: 24px; }" +
+                    "label { display: block; font-size: 12px; font-weight: bold;" +
+                    "color: #374151; margin-bottom: 6px; }" +
+                    "input[type=password] { width: 100%; padding: 12px 14px;" +
+                    "border: 1.5px solid #DDD6FE; border-radius: 10px; font-size: 14px;" +
+                    "margin-bottom: 16px; outline: none; }" +
+                    "input[type=password]:focus { border-color: #7C3AED; }" +
+                    "button { width: 100%; padding: 13px;" +
+                    "background: linear-gradient(to right, #D97706, #F59E0B);" +
+                    "color: white; border: none; border-radius: 10px; font-size: 15px;" +
+                    "font-weight: bold; cursor: pointer; }" +
+                    "button:hover { opacity: 0.92; }" +
+                    ".message { text-align: center; margin-top: 14px; font-size: 13px;" +
+                    "padding: 10px; border-radius: 8px; display: none; }" +
+                    ".error { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }" +
+                    ".success { background: #ECFDF5; color: #059669; border: 1px solid #6EE7B7; }" +
+                    "</style></head><body>" +
+                    "<div class='card'>" +
+                    "<div class='logo'>🔐</div>" +
+                    "<h2>Nouveau mot de passe</h2>" +
+                    "<p>Entrez votre nouveau mot de passe UniMind</p>" +
+                    "<label>Nouveau mot de passe</label>" +
+                    "<input type='password' id='pwd' placeholder='Minimum 8 caractères' />" +
+                    "<label>Confirmer le mot de passe</label>" +
+                    "<input type='password' id='pwd2' placeholder='Répétez le mot de passe' />" +
+                    "<button onclick='submit()'>Réinitialiser mon mot de passe</button>" +
+                    "<div class='message' id='msg'></div>" +
+                    "</div>" +
+                    "<script>" +
+                    "function showMsg(text, type) {" +
+                    "  var el = document.getElementById('msg');" +
+                    "  el.textContent = text;" +
+                    "  el.className = 'message ' + type;" +
+                    "  el.style.display = 'block';" +
+                    "}" +
+                    "function submit() {" +
+                    "  var pwd = document.getElementById('pwd').value;" +
+                    "  var pwd2 = document.getElementById('pwd2').value;" +
+                    "  if (!pwd || pwd.length < 8) {" +
+                    "    showMsg('Le mot de passe doit contenir au moins 8 caractères.', 'error');" +
+                    "    return;" +
+                    "  }" +
+                    "  if (pwd !== pwd2) {" +
+                    "    showMsg('Les mots de passe ne correspondent pas.', 'error');" +
+                    "    return;" +
+                    "  }" +
+                    "  fetch('http://localhost:8080/do-reset-password?token=" + token + "&password=' + encodeURIComponent(pwd), { method: 'POST' })" +
+                    "  .then(function(r) { return r.text(); })" +
+                    "  .then(function(text) {" +
+                    "    if (text === 'OK') {" +
+                    "      showMsg('Mot de passe modifié ! Vous pouvez fermer et vous connecter.', 'success');" +
+                    "      document.querySelector('button').disabled = true;" +
+                    "    } else {" +
+                    "      showMsg('Erreur : ' + text, 'error');" +
+                    "    }" +
+                    "  })" +
+                    "  .catch(function() {" +
+                    "    showMsg('Connexion impossible. Assurez-vous que l application est ouverte.', 'error');" +
+                    "  });" +
+                    "}" +
+                    "</script></body></html>";
         }
     }
 
@@ -386,4 +431,5 @@ public class LocalCallbackServer {
             try (OutputStream os = exchange.getResponseBody()) { os.write(bytes); }
         }
     }
+
 }
