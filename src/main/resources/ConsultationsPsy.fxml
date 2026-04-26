@@ -109,7 +109,8 @@
                                       style="-fx-background-color:#f5f3ff;-fx-border-color:#ddd6fe;
                                              -fx-border-radius:10;-fx-background-radius:10;
                                              -fx-padding:0 12;-fx-border-width:1;">
-                                    <Label text="🔍" style="-fx-font-size:13px;-fx-text-fill:#a78bfa;"/>
+                                    <Label text="⌕"
+                                           style="-fx-font-size: 16px; -fx-text-fill: #a5b4fc; -fx-font-weight: bold;" />
                                     <TextField fx:id="fieldRecherche"
                                                promptText="Rechercher un patient..."
                                                prefWidth="220"

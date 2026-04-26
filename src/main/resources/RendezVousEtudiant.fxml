@@ -104,7 +104,8 @@
                                       style="-fx-background-color:#f5f3ff;-fx-border-color:#c7d2fe;
                                              -fx-border-radius:10;-fx-background-radius:10;
                                              -fx-padding:0 12;-fx-border-width:1;">
-                                    <Label text="🔍" style="-fx-font-size:13px;-fx-text-fill:#a5b4fc;"/>
+                                    <Label text="⌕"
+                                           style="-fx-font-size: 16px; -fx-text-fill: #a5b4fc; -fx-font-weight: bold;" />
                                     <TextField fx:id="fieldRecherche" prefWidth="180"
                                                promptText="Rechercher par psy, date..."
                                                style="-fx-background-color:transparent;-fx-border-width:0;

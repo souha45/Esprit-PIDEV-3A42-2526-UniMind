@@ -116,18 +116,18 @@
                     <!-- Recherche -->
                     <HBox alignment="CENTER_LEFT" spacing="6"
                           style="-fx-background-color: #ffffff; -fx-border-color: #c7d2fe;
-                                 -fx-border-radius: 10; -fx-background-radius: 10;
-                                 -fx-padding: 0 12; -fx-border-width: 1;
-                                 -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.06), 6, 0, 0, 2);"
+             -fx-border-radius: 10; -fx-background-radius: 10;
+             -fx-padding: 0 12; -fx-border-width: 1;
+             -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.06), 6, 0, 0, 2);"
                           prefWidth="240">
-                        <Label text="🔍"
-                               style="-fx-font-size: 13px; -fx-text-fill: #a5b4fc;" />
+                        <Label text="⌕"
+                               style="-fx-font-size: 16px; -fx-text-fill: #a5b4fc; -fx-font-weight: bold;" />
                         <TextField fx:id="fieldRecherche"
                                    promptText="Rechercher par date ou lieu..."
                                    style="-fx-background-color: transparent; -fx-border-width: 0;
-                                          -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
-                                          -fx-text-fill: #374151; -fx-prompt-text-fill: #c4b5fd;
-                                          -fx-padding: 10 0;"
+                      -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                      -fx-text-fill: #374151; -fx-prompt-text-fill: #c4b5fd;
+                      -fx-padding: 10 0;"
                                    prefWidth="200" />
                     </HBox>
 

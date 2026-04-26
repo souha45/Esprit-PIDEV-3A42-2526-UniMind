@@ -29,19 +29,27 @@ public class RendezVousService implements ICrud<RendezVous>{
 
         // ÉTAPE 2 : Vérifier que la disponibilité existe
         if (dispoChoisie == null) {
-            throw new SQLException(" Cette disponibilité n'existe pas !");
+            throw new SQLException("Cette disponibilité n'existe pas !");
         }
 
         // ÉTAPE 3 : Vérifier que la disponibilité est DISPONIBLE (pas déjà réservée)
         if (dispoChoisie.getStatut() != StatutDisponibilite.disponible) {
-            throw new SQLException(" Cette disponibilité n'est plus disponible ! Statut actuel : " + dispoChoisie.getStatut());
+            throw new SQLException("Cette disponibilité n'est plus disponible ! Statut actuel : " + dispoChoisie.getStatut());
         }
 
-        String sql ="INSERT INTO `rendez_vous`(`motif`, `statut`, `created_at`, `dispo_id`, `etudiant_id`, `psy_id`) VALUES ('"+rendezVous.getMotif()+"','"+rendezVous.getStatut()+"','"+rendezVous.getCreatedAt()+"',"+rendezVous.getDispoId()+","+rendezVous.getEtudiantId()+","+rendezVous.getPsyId()+")";
+        // ✅ Requête avec PreparedStatement
+        String sql = "INSERT INTO `rendez_vous` (`motif`, `statut`, `created_at`, `dispo_id`, `etudiant_id`, `psy_id`) VALUES (?, ?, ?, ?, ?, ?)";
 
-        Statement statement = con.createStatement();
-        statement.executeUpdate(sql);
-        System.out.println("RendezVous créé avec succés");
+        PreparedStatement pstmt = con.prepareStatement(sql);
+        pstmt.setString(1, rendezVous.getMotif());
+        pstmt.setString(2, rendezVous.getStatut().toString());  // ✅ CORRIGÉ : .toString()
+        pstmt.setTimestamp(3, rendezVous.getCreatedAt());
+        pstmt.setInt(4, rendezVous.getDispoId());
+        pstmt.setInt(5, rendezVous.getEtudiantId());
+        pstmt.setInt(6, rendezVous.getPsyId());
+
+        pstmt.executeUpdate();
+        System.out.println("RendezVous créé avec succès");
 
         // ÉTAPE 5 : Mettre à jour le statut de la disponibilité à "RESERVE"
         String updateDispo = "UPDATE disponibilite_psy SET statut = ?, updated_at = ? WHERE dispo_id = ?";
@@ -50,12 +58,8 @@ public class RendezVousService implements ICrud<RendezVous>{
         pstDispo.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
         pstDispo.setInt(3, rendezVous.getDispoId());
         pstDispo.executeUpdate();
-        System.out.println("DisponibilitePsy mis en réservé avec succés");
-
-
-
+        System.out.println("DisponibilitePsy mis en réservé avec succès");
     }
-
     @Override
     public void modifier(RendezVous rendezVous) throws SQLException {
 

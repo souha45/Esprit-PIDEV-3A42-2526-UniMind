@@ -138,7 +138,8 @@
                                      -fx-border-radius:10;-fx-background-radius:10;
                                      -fx-padding:0 12;-fx-border-width:1;
                                      -fx-effect:dropshadow(gaussian,rgba(99,102,241,0.06),6,0,0,2);">
-                            <Label text="🔍" style="-fx-font-size:13px;-fx-text-fill:#a5b4fc;"/>
+                            <Label text="⌕"
+                                   style="-fx-font-size: 16px; -fx-text-fill: #a5b4fc; -fx-font-weight: bold;" />
                             <TextField fx:id="fieldRecherche" prefWidth="180"
                                        promptText="Rechercher un patient..."
                                        style="-fx-background-color:transparent;-fx-border-width:0;
