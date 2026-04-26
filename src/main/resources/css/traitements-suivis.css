@@ -1720,3 +1720,40 @@
     -fx-border-width: 1 0 0 0;
     -fx-padding: 16 32;
 }
+
+/* =============================================
+   PAGINATION STYLES
+   ============================================= */
+
+.pagination-bar {
+    -fx-background-color: white;
+    -fx-padding: 12 24;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1 0 0 0;
+}
+
+.pagination-button {
+    -fx-background-color: #f3f4f6;
+    -fx-text-fill: #374151;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 12;
+    -fx-background-radius: 6;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-min-width: 36;
+}
+
+.pagination-button:hover {
+    -fx-background-color: #e5e7eb;
+}
+
+.pagination-button:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}
+
+.pagination-button:disabled:hover {
+    -fx-background-color: #f3f4f6;
+}

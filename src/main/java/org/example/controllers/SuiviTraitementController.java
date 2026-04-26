@@ -51,6 +51,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.collections.transformation.FilteredList;
 
 public class SuiviTraitementController implements Initializable, SidebarPsychologueController.PsyPageController {
 
@@ -158,6 +159,121 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
     @FXML private SidebarPsychologueController sidebarPsyController;
     @FXML private StackPane toastContainer;
 
+    // ==================== PAGINATION ====================
+    @FXML private ComboBox<Integer> cmbItemsPerPage;
+    @FXML private Button btnFirstPage;
+    @FXML private Button btnPrevPage;
+    @FXML private Button btnNextPage;
+    @FXML private Button btnLastPage;
+    @FXML private Label lblPageInfo;
+    @FXML private Label lblTotalPagesInfo;
+
+    private List<LigneSuiviGroupée> toutesLesLignes;
+    private int currentPage = 0;
+    private int itemsPerPage = 10;
+
+    /**
+     * Initialise la pagination
+     */
+    private void initialiserPagination() {
+        cmbItemsPerPage.setValue(10);
+        cmbItemsPerPage.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                itemsPerPage = newVal;
+                currentPage = 0;
+                appliquerPagination();
+            }
+        });
+    }
+
+    /**
+     * Applique la pagination sur les données
+     */
+    private void appliquerPagination() {
+        if (toutesLesLignes == null || toutesLesLignes.isEmpty()) {
+            tableViewSuiviTraitements.setItems(FXCollections.observableArrayList());
+            lblPageInfo.setText("Page 0 / 0");
+            lblTotalPagesInfo.setText("0 ligne(s)");
+            btnFirstPage.setDisable(true);
+            btnPrevPage.setDisable(true);
+            btnNextPage.setDisable(true);
+            btnLastPage.setDisable(true);
+            return;
+        }
+
+        int totalPages = (int) Math.ceil((double) toutesLesLignes.size() / itemsPerPage);
+
+        // Ajuster la page courante si elle dépasse
+        if (currentPage >= totalPages) {
+            currentPage = Math.max(0, totalPages - 1);
+        }
+
+        int fromIndex = currentPage * itemsPerPage;
+        int toIndex = Math.min(fromIndex + itemsPerPage, toutesLesLignes.size());
+
+        List<LigneSuiviGroupée> pageLignes = toutesLesLignes.subList(fromIndex, toIndex);
+        lignesSuivisGroupéesList = FXCollections.observableArrayList(pageLignes);
+        tableViewSuiviTraitements.setItems(lignesSuivisGroupéesList);
+
+        // Mettre à jour les infos de pagination
+        lblPageInfo.setText("Page " + (currentPage + 1) + " / " + totalPages);
+        lblTotalPagesInfo.setText(toutesLesLignes.size() + " ligne(s)");
+
+        // Gérer l'état des boutons
+        btnFirstPage.setDisable(currentPage == 0);
+        btnPrevPage.setDisable(currentPage == 0);
+        btnNextPage.setDisable(currentPage >= totalPages - 1);
+        btnLastPage.setDisable(currentPage >= totalPages - 1);
+
+        // Mettre à jour le compteur
+        long totalSuivis = toutesLesLignes.stream().filter(l -> !l.estEntete()).count();
+        lblCount.setText(totalSuivis + " suivi(s)");
+    }
+
+    /**
+     * Va à la première page
+     */
+    @FXML
+    private void handleFirstPage() {
+        currentPage = 0;
+        appliquerPagination();
+    }
+
+    /**
+     * Va à la page précédente
+     */
+    @FXML
+    private void handlePrevPage() {
+        if (currentPage > 0) {
+            currentPage--;
+            appliquerPagination();
+        }
+    }
+
+    /**
+     * Va à la page suivante
+     */
+    @FXML
+    private void handleNextPage() {
+        int totalPages = (int) Math.ceil((double) toutesLesLignes.size() / itemsPerPage);
+        if (currentPage < totalPages - 1) {
+            currentPage++;
+            appliquerPagination();
+        }
+    }
+
+    /**
+     * Va à la dernière page
+     */
+    @FXML
+    private void handleLastPage() {
+        int totalPages = (int) Math.ceil((double) toutesLesLignes.size() / itemsPerPage);
+        if (totalPages > 0) {
+            currentPage = totalPages - 1;
+            appliquerPagination();
+        }
+    }
+
     // ==================== SERVICES ====================
 
     private SuiviTraitementService suiviTraitementService;
@@ -180,9 +296,11 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             traitementService = new TraitementService();
             etudiantTraitementService = new EtudiantTraitementService();
             tousLesSuivisFiltres = new ArrayList<>();
+            toutesLesLignes = new ArrayList<>();
 
             initialiserFiltres();
             initialiserTri();
+            initialiserPagination();  // <-- AJOUTER CETTE LIGNE
             configurerColonnes();
 
             isInitialized = true;
@@ -273,7 +391,6 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
 
                 boolean peutVoir = false;
 
-                // Utiliser l'utilisateur connecté au lieu de SessionManager
                 if (utilisateur.getRole().equals("PSYCHOLOGUE")) {
                     peutVoir = (psychologueId == utilisateurId);
                 } else if (utilisateur.getRole().equals("ETUDIANT")) {
@@ -299,13 +416,12 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             // Appliquer tri
             suivisFiltres = appliquerTri(suivisFiltres, traitementsMap);
 
-            // Créer les lignes groupées
-            List<LigneSuiviGroupée> lignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
-            lignesSuivisGroupéesList = FXCollections.observableArrayList(lignes);
-            tableViewSuiviTraitements.setItems(lignesSuivisGroupéesList);
+            // MODIFICATION ICI : Stocker toutes les lignes pour la pagination
+            toutesLesLignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
+            currentPage = 0;
+            appliquerPagination();
 
-            long totalSuivis = lignes.stream().filter(l -> !l.estEntete()).count();
-            lblCount.setText(totalSuivis + " suivi(s)");
+            long totalSuivis = toutesLesLignes.stream().filter(l -> !l.estEntete()).count();
             lblStatus.setText(totalSuivis + " suivi(s) affiché(s)");
 
         } catch (SQLException e) {
@@ -877,6 +993,8 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
 
     private void appliquerFiltres() {
         if (tousLesSuivisFiltres == null || tousLesSuivisFiltres.isEmpty()) {
+            toutesLesLignes = new ArrayList<>();
+            appliquerPagination();
             return;
         }
 
@@ -887,17 +1005,19 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             }
 
             List<SuiviTraitement> suivisFiltres = new ArrayList<>(tousLesSuivisFiltres);
-
             suivisFiltres = appliquerRechercheEtFiltres(suivisFiltres, traitementsMap);
             suivisFiltres = appliquerTri(suivisFiltres, traitementsMap);
 
-            List<LigneSuiviGroupée> lignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
-            lignesSuivisGroupéesList = FXCollections.observableArrayList(lignes);
-            tableViewSuiviTraitements.setItems(lignesSuivisGroupéesList);
+            // MODIFICATION ICI : Stocker toutes les lignes pour la pagination
+            toutesLesLignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
 
-            long totalSuivis = lignes.stream().filter(l -> !l.estEntete()).count();
-            lblCount.setText(totalSuivis + " suivi(s)");
-            lblStatus.setText(totalSuivis + " suivi(s) affiché(s)");
+            // Réinitialiser à la première page
+            currentPage = 0;
+
+            // Appliquer la pagination
+            appliquerPagination();
+
+            lblStatus.setText(toutesLesLignes.stream().filter(l -> !l.estEntete()).count() + " suivi(s) après filtrage");
         } catch (Exception e) {
             afficherToast("✗ Erreur: " + e.getMessage(), false);
         }
