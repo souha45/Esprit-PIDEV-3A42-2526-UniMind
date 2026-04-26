@@ -85,12 +85,13 @@ public class EventAiGeneratorService {
         user.put("target_audience", targetAudience != null ? targetAudience : "");
         user.put("topic", topic);
         user.put("constraints", constraints != null ? constraints : "");
-        user.put("task", "Propose 5 titres, 1 description structurée, 6 points d'agenda, et 8 éléments de checklist logistique/communication.");
+        user.put("task", "Propose 5 titres, 1 description structurée, 6 points d'agenda, 8 éléments de checklist logistique, et un prompt court (en anglais) décrivant une belle image réaliste et moderne illustrant cet événement pour un générateur d'images.");
         user.put("output_schema", Map.of(
             "titles", List.of("..."),
             "description", "...",
             "agenda", List.of("..."),
-            "checklist", List.of("...")
+            "checklist", List.of("..."),
+            "image_prompt", "..."
         ));
 
         String prompt;
@@ -190,11 +191,72 @@ public class EventAiGeneratorService {
                 }
             }
 
+            String imagePrompt = data.has("image_prompt") && data.get("image_prompt").isTextual()
+                ? data.get("image_prompt").asText()
+                : "";
+
+            String imageFileName1 = "";
+            String imageFileName2 = "";
+            String imageFileName3 = "";
+            if (!imagePrompt.isEmpty()) {
+                try {
+                    String encodedPrompt = java.net.URLEncoder.encode(imagePrompt, java.nio.charset.StandardCharsets.UTF_8);
+                    java.nio.file.Path destinationDir = java.nio.file.Paths.get("D:\\xampp\\htdocs\\uploadsEvent\\evenements\\");
+                    
+                    // S'assurer que le dossier existe
+                    if (!java.nio.file.Files.exists(destinationDir)) {
+                        java.nio.file.Files.createDirectories(destinationDir);
+                    }
+                    
+                    long currentTime = System.currentTimeMillis();
+                    
+                    // --- Image 1 ---
+                    String imageUrl1 = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=800&height=600&nologo=true&seed=" + currentTime;
+                    String fileName1 = "ai_event_1_" + currentTime + ".jpg";
+                    java.nio.file.Path destination1 = destinationDir.resolve(fileName1);
+                    
+                    HttpRequest imgRequest1 = HttpRequest.newBuilder().uri(URI.create(imageUrl1)).GET().build();
+                    HttpResponse<java.nio.file.Path> imgResponse1 = httpClient.send(imgRequest1, HttpResponse.BodyHandlers.ofFile(destination1));
+                    if (imgResponse1.statusCode() >= 200 && imgResponse1.statusCode() < 300) {
+                        imageFileName1 = fileName1;
+                    }
+
+                    // --- Image 2 ---
+                    String imageUrl2 = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=800&height=600&nologo=true&seed=" + (currentTime + 9999);
+                    String fileName2 = "ai_event_2_" + currentTime + ".jpg";
+                    java.nio.file.Path destination2 = destinationDir.resolve(fileName2);
+                    
+                    HttpRequest imgRequest2 = HttpRequest.newBuilder().uri(URI.create(imageUrl2)).GET().build();
+                    HttpResponse<java.nio.file.Path> imgResponse2 = httpClient.send(imgRequest2, HttpResponse.BodyHandlers.ofFile(destination2));
+                    if (imgResponse2.statusCode() >= 200 && imgResponse2.statusCode() < 300) {
+                        imageFileName2 = fileName2;
+                    }
+                    
+                    // --- Image 3 ---
+                    String imageUrl3 = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=800&height=600&nologo=true&seed=" + (currentTime + 5555);
+                    String fileName3 = "ai_event_3_" + currentTime + ".jpg";
+                    java.nio.file.Path destination3 = destinationDir.resolve(fileName3);
+                    
+                    HttpRequest imgRequest3 = HttpRequest.newBuilder().uri(URI.create(imageUrl3)).GET().build();
+                    HttpResponse<java.nio.file.Path> imgResponse3 = httpClient.send(imgRequest3, HttpResponse.BodyHandlers.ofFile(destination3));
+                    if (imgResponse3.statusCode() >= 200 && imgResponse3.statusCode() < 300) {
+                        imageFileName3 = fileName3;
+                    }
+                    
+                    System.out.println("3 Images IA générées avec succès.");
+                } catch (Exception ex) {
+                    System.err.println("Erreur lors de la génération des images IA: " + ex.getMessage());
+                }
+            }
+
             Map<String, Object> result = new HashMap<>();
             result.put("titles", titles.stream().filter(s -> s != null && !s.trim().isEmpty()).limit(5).toList());
             result.put("description", description != null ? description.trim() : "");
             result.put("agenda", agenda.stream().filter(s -> s != null && !s.trim().isEmpty()).limit(10).toList());
             result.put("checklist", checklist.stream().filter(s -> s != null && !s.trim().isEmpty()).limit(15).toList());
+            result.put("image_file_1", imageFileName1);
+            result.put("image_file_2", imageFileName2);
+            result.put("image_file_3", imageFileName3);
 
             return result;
 

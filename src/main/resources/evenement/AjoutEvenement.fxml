@@ -175,6 +175,35 @@
                                     <Button text="📁 Parcourir" onAction="#parcourirImage" prefWidth="120" styleClass="btn-secondary" />
                                 </children>
                             </HBox>
+                            
+                            <!-- Aperçu Image IA -->
+                            <VBox fx:id="vboxImagePreview" spacing="10" visible="false" managed="false" alignment="CENTER" style="-fx-padding: 10 0 0 0;">
+                                <children>
+                                    <Label text="Choisissez une des images générées par l'IA :" styleClass="form-label" style="-fx-text-fill: #667eea; -fx-font-weight: bold;" />
+                                    <HBox spacing="15" alignment="CENTER">
+                                        <children>
+                                            <VBox alignment="CENTER" spacing="5" style="-fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-padding: 5;">
+                                                <children>
+                                                    <javafx.scene.image.ImageView fx:id="imgPreview1" fitWidth="160" fitHeight="120" preserveRatio="true" />
+                                                    <Button text="Sélectionner Image 1" onAction="#choisirImage1" styleClass="btn-secondary" />
+                                                </children>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="5" style="-fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-padding: 5;">
+                                                <children>
+                                                    <javafx.scene.image.ImageView fx:id="imgPreview2" fitWidth="160" fitHeight="120" preserveRatio="true" />
+                                                    <Button text="Sélectionner Image 2" onAction="#choisirImage2" styleClass="btn-secondary" />
+                                                </children>
+                                            </VBox>
+                                            <VBox alignment="CENTER" spacing="5" style="-fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-padding: 5;">
+                                                <children>
+                                                    <javafx.scene.image.ImageView fx:id="imgPreview3" fitWidth="160" fitHeight="120" preserveRatio="true" />
+                                                    <Button text="Sélectionner Image 3" onAction="#choisirImage3" styleClass="btn-secondary" />
+                                                </children>
+                                            </VBox>
+                                        </children>
+                                    </HBox>
+                                </children>
+                            </VBox>
                         </children>
                     </VBox>
 
