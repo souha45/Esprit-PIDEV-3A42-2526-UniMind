@@ -65,7 +65,7 @@ public class InscriptionController {
             adresseField.setOnMouseClicked(e -> openMapForAddress());
         }
     }
-
+//gener id etudient alea
     private String generateStudentId() {
         Random random = new Random();
         int year = Year.now().getValue();
