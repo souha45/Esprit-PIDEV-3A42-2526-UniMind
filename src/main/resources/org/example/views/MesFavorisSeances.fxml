@@ -6,6 +6,10 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.geometry.Insets?>
 <?import javafx.geometry.Insets?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
@@ -30,7 +34,54 @@
                     <Label text="Retrouvez toutes vos séances de méditation favorites" styleClass="page-subtitle"/>
                 </VBox>
                 <VBox styleClass="section-container" spacing="16">
+
+                    <!-- Toolbar : recherche + filtres -->
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+
+                        <!-- Recherche -->
+                        <HBox styleClass="search-box" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" spacing="8">
+                            <Label text="🔍" styleClass="search-icon"/>
+                            <TextField fx:id="tfSearch"
+                                       promptText="Rechercher par nom ou description..."
+                                       styleClass="search-field" HBox.hgrow="ALWAYS"
+                                       onKeyReleased="#onSearch"/>
+                        </HBox>
+
+                        <!-- Filtre Type -->
+                        <VBox spacing="3">
+                            <Label text="Type" style="-fx-font-size:11px;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
+                            <ComboBox fx:id="cbType" promptText="Tous les types"
+                                      styleClass="filter-combo" prefWidth="140"
+                                      onAction="#onFilter"/>
+                        </VBox>
+
+                        <!-- Filtre Niveau -->
+                        <VBox spacing="3">
+                            <Label text="Niveau" style="-fx-font-size:11px;-fx-text-fill:#6b7280;-fx-font-weight:bold;"/>
+                            <ComboBox fx:id="cbNiveau" promptText="Tous les niveaux"
+                                      styleClass="filter-combo" prefWidth="155"
+                                      onAction="#onFilter"/>
+                        </VBox>
+
+                        <!-- Reset -->
+                        <VBox spacing="3">
+                            <Label text=" " style="-fx-font-size:11px;"/>
+                            <Button text="↺ Réinitialiser" styleClass="btn-secondary"
+                                    onAction="#onReset"
+                                    style="-fx-padding:7 14 7 14;-fx-font-size:12px;"/>
+                        </VBox>
+
+                        <!-- Compteur résultat -->
+                        <VBox spacing="3" alignment="CENTER_RIGHT">
+                            <Label text=" " style="-fx-font-size:11px;"/>
+                            <Label fx:id="lblCount" text=""
+                                   style="-fx-font-size:12px;-fx-text-fill:#6366f1;-fx-font-weight:bold;"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Grille des favoris -->
                     <FlowPane fx:id="favorisGrid" hgap="16" vgap="16"/>
+
                 </VBox>
             </VBox>
         </ScrollPane>

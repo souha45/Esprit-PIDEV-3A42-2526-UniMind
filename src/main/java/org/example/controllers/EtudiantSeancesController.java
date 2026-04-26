@@ -1196,8 +1196,8 @@ public class EtudiantSeancesController implements Initializable,
                 ModerationService.ResultatModeration res = moderationSvc.verifierEtGerer(
                         contenuText + " " + tfTitre.getText().trim(), currentUser, contenuText);
                 if (!res.estValide()) {
-                    showErr(errMod, "🚫 Votre message contient des termes inappropriés. Publication refusée.");
-                    ev.consume(); return;
+                    ev.consume();
+                    showModerationAlert();return;
                 }
             }
         });
@@ -1224,6 +1224,54 @@ public class EtudiantSeancesController implements Initializable,
                 loadPosts();
             } catch(SQLException e){ e.printStackTrace(); }
         }
+    }
+
+    private void showModerationAlert() {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Publication refusée");
+        alert.setHeaderText(null);
+
+        // Contenu personnalisé
+        VBox content = new VBox(12);
+        content.setPadding(new Insets(10, 0, 10, 0));
+        content.setAlignment(Pos.CENTER);
+
+        Label icon = new Label("🚫");
+        icon.setStyle("-fx-font-size: 40px;");
+
+        Label titre = new Label("Publication refusée");
+        titre.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #dc2626;");
+
+        Label message = new Label("Votre message contient des termes inappropriés.");
+        message.setStyle("-fx-font-size: 13px; -fx-text-fill: #374151;");
+        message.setWrapText(true);
+        message.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+
+        Label sousTitre = new Label("Veuillez modifier votre contenu avant de publier.");
+        sousTitre.setStyle("-fx-font-size: 12px; -fx-text-fill: #9ca3af;");
+        sousTitre.setWrapText(true);
+        sousTitre.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+
+        Separator sep = new Separator();
+
+        Label avertissement = new Label("⚠️  Un email d'avertissement vous a été envoyé.");
+        avertissement.setStyle("-fx-font-size: 11px; -fx-text-fill: #f59e0b; -fx-font-weight: bold;");
+
+        content.getChildren().addAll(icon, titre, message, sousTitre, sep, avertissement);
+
+        alert.getDialogPane().setContent(content);
+        alert.getDialogPane().setStyle("-fx-background-color: white; -fx-border-radius: 12; -fx-background-radius: 12;");
+        alert.getDialogPane().getStylesheets().add(
+                getClass().getResource("/css/etudiant.css").toExternalForm());
+
+        // Bouton OK stylisé
+        alert.getButtonTypes().setAll(ButtonType.OK);
+        Button btnOk = (Button) alert.getDialogPane().lookupButton(ButtonType.OK);
+        btnOk.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; " +
+                "-fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 9 24 9 24;");
+        btnOk.setText("J'ai compris");
+
+        alert.showAndWait();
     }
 
     private void enregistrerMediaEnBase(int postId, File source, String chemin) {
