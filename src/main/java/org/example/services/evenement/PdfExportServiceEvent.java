@@ -11,9 +11,9 @@ import org.example.entities.Evenement;
 import org.example.entities.Participation;
 import org.example.entities.Sponsor;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PdfExportServiceEvent {
@@ -22,6 +22,15 @@ public class PdfExportServiceEvent {
     private static final SimpleDateFormat DATE_ONLY_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
     private static final PDFont FONT_HELVETICA = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
     private static final PDFont FONT_HELVETICA_BOLD = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+
+    private static final float FONT_SIZE_NORMAL = 10f;
+    private static final float FONT_SIZE_TITLE = 20f;
+    private static final float LINE_HEIGHT = 14f;
+    private static final float SECTION_GAP = 10f;
+    private static final float LABEL_VALUE_GAP = 10f;
+    private static final float TABLE_FONT_SIZE = 9f;
+    private static final float TABLE_LINE_HEIGHT = 11f;
+    private static final float TABLE_ROW_GAP = 2f;
 
     /**
      * Exporte un rapport d'événement en PDF
@@ -37,13 +46,11 @@ public class PdfExportServiceEvent {
             float y = PDRectangle.A4.getHeight() - margin;
             float width = PDRectangle.A4.getWidth() - 2 * margin;
 
+            float labelX = margin;
+            float valueX = margin + 120;
+
             // Titre
-            contentStream.setFont(FONT_HELVETICA_BOLD, 18);
-            contentStream.beginText();
-            contentStream.newLineAtOffset(margin, y);
-            contentStream.showText("RAPPORT D'ÉVÉNEMENT");
-            contentStream.endText();
-            y -= 30;
+            y = drawCenteredTitle(contentStream, "RAPPORT D'ÉVÉNEMENT", margin, y, width);
 
             // Ligne de séparation
             drawLine(contentStream, margin, y, margin + width, y);
@@ -51,45 +58,23 @@ public class PdfExportServiceEvent {
 
             // Informations de l'événement
             contentStream.setFont(FONT_HELVETICA_BOLD, 14);
-            y = addText(contentStream, "Titre:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, evenement.getTitre(), margin + 80, y, FONT_HELVETICA);
+            y = addLabelValue(contentStream, "Titre:", evenement.getTitre(), labelX, valueX, y, width - (valueX - labelX));
+            y = addLabelValue(contentStream, "Type:", evenement.getType() != null ? evenement.getType().toString() : "-", labelX, valueX, y, width - (valueX - labelX));
+            y = addLabelValue(contentStream, "Lieu:", evenement.getLieu(), labelX, valueX, y, width - (valueX - labelX));
+            y = addLabelValue(contentStream, "Date début:", evenement.getDateDebut() != null ? DATE_FORMAT.format(evenement.getDateDebut()) : "-", labelX, valueX, y, width - (valueX - labelX));
+            y = addLabelValue(contentStream, "Date fin:", evenement.getDateFin() != null ? DATE_FORMAT.format(evenement.getDateFin()) : "-", labelX, valueX, y, width - (valueX - labelX));
+            y = addLabelValue(contentStream, "Capacité max:", String.valueOf(evenement.getCapaciteMax()), labelX, valueX, y, width - (valueX - labelX));
+            y = addLabelValue(contentStream, "Inscrits:", String.valueOf(evenement.getNombreInscrits()), labelX, valueX, y, width - (valueX - labelX));
+            y = addLabelValue(contentStream, "Statut:", evenement.getStatut() != null ? evenement.getStatut().toString() : "-", labelX, valueX, y, width - (valueX - labelX));
             y -= 10;
-
-            y = addText(contentStream, "Type:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, evenement.getType() != null ? evenement.getType().toString() : "-", margin + 80, y, FONT_HELVETICA);
-            y -= 10;
-
-            y = addText(contentStream, "Lieu:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, evenement.getLieu(), margin + 80, y, FONT_HELVETICA);
-            y -= 10;
-
-            y = addText(contentStream, "Date début:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, evenement.getDateDebut() != null ? DATE_FORMAT.format(evenement.getDateDebut()) : "-", margin + 80, y, FONT_HELVETICA);
-            y -= 10;
-
-            y = addText(contentStream, "Date fin:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, evenement.getDateFin() != null ? DATE_FORMAT.format(evenement.getDateFin()) : "-", margin + 80, y, FONT_HELVETICA);
-            y -= 10;
-
-            y = addText(contentStream, "Capacité max:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, String.valueOf(evenement.getCapaciteMax()), margin + 80, y, FONT_HELVETICA);
-            y -= 10;
-
-            y = addText(contentStream, "Inscrits:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, String.valueOf(evenement.getNombreInscrits()), margin + 80, y, FONT_HELVETICA);
-            y -= 10;
-
-            y = addText(contentStream, "Statut:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, evenement.getStatut() != null ? evenement.getStatut().toString() : "-", margin + 80, y, FONT_HELVETICA);
-            y -= 20;
 
             // Description
             contentStream.setFont(FONT_HELVETICA_BOLD, 12);
             y = addText(contentStream, "Description:", margin, y, FONT_HELVETICA_BOLD);
-            y -= 5;
+            y -= LABEL_VALUE_GAP;
             contentStream.setFont(FONT_HELVETICA, 10);
-            y = addWrappedText(contentStream, evenement.getDescription(), margin, y, width, FONT_HELVETICA);
-            y -= 20;
+            y = addWrappedText(contentStream, evenement.getDescription(), margin, y, width, FONT_HELVETICA, FONT_SIZE_NORMAL);
+            y -= SECTION_GAP;
 
             // Participants
             if (participations != null && !participations.isEmpty()) {
@@ -120,7 +105,7 @@ public class PdfExportServiceEvent {
             }
 
             // Date de génération
-            y = margin + 30;
+            y = margin + 15;
             contentStream.setFont(FONT_HELVETICA, 8);
             y = addText(contentStream, "Généré le: " + DATE_FORMAT.format(new java.util.Date()), margin, y, FONT_HELVETICA);
 
@@ -144,12 +129,7 @@ public class PdfExportServiceEvent {
             float width = PDRectangle.A4.getWidth() - 2 * margin;
 
             // Titre
-            contentStream.setFont(FONT_HELVETICA_BOLD, 18);
-            contentStream.beginText();
-            contentStream.newLineAtOffset(margin, y);
-            contentStream.showText("LISTE DES ÉVÉNEMENTS");
-            contentStream.endText();
-            y -= 30;
+            y = drawCenteredTitle(contentStream, "LISTE DES ÉVÉNEMENTS", margin, y, width);
 
             // Ligne de séparation
             drawLine(contentStream, margin, y, margin + width, y);
@@ -157,33 +137,44 @@ public class PdfExportServiceEvent {
 
             // En-têtes de tableau
             contentStream.setFont(FONT_HELVETICA_BOLD, 10);
-            y = addText(contentStream, "ID", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, "Titre", margin + 40, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, "Type", margin + 200, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, "Date", margin + 280, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, "Statut", margin + 380, y, FONT_HELVETICA_BOLD);
+            y = addText(contentStream, "Titre", margin, y, FONT_HELVETICA_BOLD);
+            y = addText(contentStream, "Type", margin + 220, y, FONT_HELVETICA_BOLD);
+            y = addText(contentStream, "Date", margin + 340, y, FONT_HELVETICA_BOLD);
+            y = addText(contentStream, "Statut", margin + 410, y, FONT_HELVETICA_BOLD);
             y -= 15;
 
             drawLine(contentStream, margin, y, margin + width, y);
             y -= 10;
 
             // Données
-            contentStream.setFont(FONT_HELVETICA, 9);
+            contentStream.setFont(FONT_HELVETICA, TABLE_FONT_SIZE);
+            float typeX = margin + 220;
+            float dateX = margin + 340;
+            float statutX = margin + 410;
+            float titleMaxWidth = typeX - margin - 10;
             for (Evenement e : evenements) {
-                if (y < margin + 50) {
+                List<String> titreLines = wrapLines(e.getTitre(), FONT_HELVETICA, TABLE_FONT_SIZE, titleMaxWidth);
+                float rowHeight = Math.max(TABLE_LINE_HEIGHT, titreLines.size() * TABLE_LINE_HEIGHT) + TABLE_ROW_GAP;
+
+                if (y - rowHeight < margin + 50) {
                     contentStream.close();
                     page = new PDPage(PDRectangle.A4);
                     document.addPage(page);
                     contentStream = new PDPageContentStream(document, page);
                     y = PDRectangle.A4.getHeight() - margin;
+                    contentStream.setFont(FONT_HELVETICA, TABLE_FONT_SIZE);
                 }
 
-                y = addText(contentStream, String.valueOf(e.getEvenementId()), margin, y, FONT_HELVETICA);
-                y = addText(contentStream, truncate(e.getTitre(), 25), margin + 40, y, FONT_HELVETICA);
-                y = addText(contentStream, e.getType() != null ? e.getType().toString() : "-", margin + 200, y, FONT_HELVETICA);
-                y = addText(contentStream, e.getDateDebut() != null ? DATE_ONLY_FORMAT.format(e.getDateDebut()) : "-", margin + 280, y, FONT_HELVETICA);
-                y = addText(contentStream, e.getStatut() != null ? e.getStatut().toString() : "-", margin + 380, y, FONT_HELVETICA);
-                y -= 12;
+                float rowTopY = y;
+                for (int i = 0; i < titreLines.size(); i++) {
+                    addTextAtFontSize(contentStream, titreLines.get(i), margin, rowTopY - (i * TABLE_LINE_HEIGHT), FONT_HELVETICA, TABLE_FONT_SIZE);
+                }
+
+                addTextAtFontSize(contentStream, truncate(e.getType() != null ? e.getType().toString() : "-", 22), typeX, rowTopY, FONT_HELVETICA, TABLE_FONT_SIZE);
+                addTextAtFontSize(contentStream, e.getDateDebut() != null ? DATE_ONLY_FORMAT.format(e.getDateDebut()) : "-", dateX, rowTopY, FONT_HELVETICA, TABLE_FONT_SIZE);
+                addTextAtFontSize(contentStream, e.getStatut() != null ? e.getStatut().toString() : "-", statutX, rowTopY, FONT_HELVETICA, TABLE_FONT_SIZE);
+
+                y -= rowHeight;
             }
 
             contentStream.close();
@@ -206,12 +197,7 @@ public class PdfExportServiceEvent {
             float width = PDRectangle.A4.getWidth() - 2 * margin;
 
             // Titre
-            contentStream.setFont(FONT_HELVETICA_BOLD, 18);
-            contentStream.beginText();
-            contentStream.newLineAtOffset(margin, y);
-            contentStream.showText("LISTE DES PARTICIPATIONS");
-            contentStream.endText();
-            y -= 30;
+            y = drawCenteredTitle(contentStream, "LISTE DES PARTICIPATIONS", margin, y, width);
 
             // Ligne de séparation
             drawLine(contentStream, margin, y, margin + width, y);
@@ -268,12 +254,7 @@ public class PdfExportServiceEvent {
             float width = PDRectangle.A4.getWidth() - 2 * margin;
 
             // Titre
-            contentStream.setFont(FONT_HELVETICA_BOLD, 18);
-            contentStream.beginText();
-            contentStream.newLineAtOffset(margin, y);
-            contentStream.showText("LISTE DES SPONSORS");
-            contentStream.endText();
-            y -= 30;
+            y = drawCenteredTitle(contentStream, "LISTE DES SPONSORS", margin, y, width);
 
             // Ligne de séparation
             drawLine(contentStream, margin, y, margin + width, y);
@@ -329,13 +310,11 @@ public class PdfExportServiceEvent {
             float y = PDRectangle.A4.getHeight() - margin;
             float width = PDRectangle.A4.getWidth() - 2 * margin;
 
+            float labelX = margin;
+            float valueX = margin + 120;
+
             // Titre
-            contentStream.setFont(FONT_HELVETICA_BOLD, 18);
-            contentStream.beginText();
-            contentStream.newLineAtOffset(margin, y);
-            contentStream.showText("RAPPORT SPONSOR");
-            contentStream.endText();
-            y -= 30;
+            y = drawCenteredTitle(contentStream, "RAPPORT SPONSOR", margin, y, width);
 
             // Ligne de séparation
             drawLine(contentStream, margin, y, margin + width, y);
@@ -343,44 +322,25 @@ public class PdfExportServiceEvent {
 
             // Informations du sponsor
             contentStream.setFont(FONT_HELVETICA_BOLD, 14);
-            y = addText(contentStream, "Nom:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, sponsor.getNomSponsor(), margin + 80, y, FONT_HELVETICA);
+            y = addLabelValue(contentStream, "Nom:", sponsor.getNomSponsor(), labelX, valueX, y, width - (valueX - labelX));
+            y = addLabelValue(contentStream, "Type:", sponsor.getTypeSponsor() != null ? sponsor.getTypeSponsor().toString() : "-", labelX, valueX, y, width - (valueX - labelX));
+            y = addLabelValue(contentStream, "Email:", sponsor.getEmailContact(), labelX, valueX, y, width - (valueX - labelX));
+            y = addLabelValue(contentStream, "Téléphone:", sponsor.getTelephone() != null ? sponsor.getTelephone() : "-", labelX, valueX, y, width - (valueX - labelX));
+            y = addLabelValue(contentStream, "Site web:", sponsor.getSiteWeb() != null ? sponsor.getSiteWeb() : "-", labelX, valueX, y, width - (valueX - labelX));
+            y = addLabelValue(contentStream, "Domaine d'activité:", sponsor.getDomaineActivite() != null ? sponsor.getDomaineActivite() : "-", labelX, valueX, y, width - (valueX - labelX));
+            y = addLabelValue(contentStream, "Statut:", sponsor.getStatut() != null ? sponsor.getStatut().toString() : "-", labelX, valueX, y, width - (valueX - labelX));
             y -= 10;
-
-            y = addText(contentStream, "Type:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, sponsor.getTypeSponsor() != null ? sponsor.getTypeSponsor().toString() : "-", margin + 80, y, FONT_HELVETICA);
-            y -= 10;
-
-            y = addText(contentStream, "Email:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, sponsor.getEmailContact(), margin + 80, y, FONT_HELVETICA);
-            y -= 10;
-
-            y = addText(contentStream, "Téléphone:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, sponsor.getTelephone() != null ? sponsor.getTelephone() : "-", margin + 80, y, FONT_HELVETICA);
-            y -= 10;
-
-            y = addText(contentStream, "Site web:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, sponsor.getSiteWeb() != null ? sponsor.getSiteWeb() : "-", margin + 80, y, FONT_HELVETICA);
-            y -= 10;
-
-            y = addText(contentStream, "Domaine d'activité:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, sponsor.getDomaineActivite() != null ? sponsor.getDomaineActivite() : "-", margin + 80, y, FONT_HELVETICA);
-            y -= 10;
-
-            y = addText(contentStream, "Statut:", margin, y, FONT_HELVETICA_BOLD);
-            y = addText(contentStream, sponsor.getStatut() != null ? sponsor.getStatut().toString() : "-", margin + 80, y, FONT_HELVETICA);
-            y -= 20;
 
             // Adresse
             contentStream.setFont(FONT_HELVETICA_BOLD, 12);
             y = addText(contentStream, "Adresse:", margin, y, FONT_HELVETICA_BOLD);
-            y -= 5;
+            y -= LABEL_VALUE_GAP;
             contentStream.setFont(FONT_HELVETICA, 10);
-            y = addWrappedText(contentStream, sponsor.getAdresse(), margin, y, width, FONT_HELVETICA);
-            y -= 20;
+            y = addWrappedText(contentStream, sponsor.getAdresse(), margin, y, width, FONT_HELVETICA, FONT_SIZE_NORMAL);
+            y -= SECTION_GAP;
 
             // Date de génération
-            y = margin + 30;
+            y = margin + 15;
             contentStream.setFont(FONT_HELVETICA, 8);
             y = addText(contentStream, "Généré le: " + DATE_FORMAT.format(new java.util.Date()), margin, y, FONT_HELVETICA);
 
@@ -392,7 +352,7 @@ public class PdfExportServiceEvent {
     // Méthodes utilitaires
 
     private float addText(PDPageContentStream contentStream, String text, float x, float y, PDFont font) throws IOException {
-        contentStream.setFont(font, 10);
+        contentStream.setFont(font, FONT_SIZE_NORMAL);
         contentStream.beginText();
         contentStream.newLineAtOffset(x, y);
         contentStream.showText(text != null ? text : "-");
@@ -400,25 +360,59 @@ public class PdfExportServiceEvent {
         return y;
     }
 
-    private float addWrappedText(PDPageContentStream contentStream, String text, float x, float y, float maxWidth, PDFont font) throws IOException {
+    private void addTextAtFontSize(PDPageContentStream contentStream, String text, float x, float y, PDFont font, float fontSize) throws IOException {
+        contentStream.setFont(font, fontSize);
+        contentStream.beginText();
+        contentStream.newLineAtOffset(x, y);
+        contentStream.showText(text != null ? text : "-");
+        contentStream.endText();
+    }
+
+    private List<String> wrapLines(String text, PDFont font, float fontSize, float maxWidth) throws IOException {
+        List<String> lines = new ArrayList<>();
+
+        String safeText = (text == null || text.isBlank()) ? "-" : text.trim();
+        String[] words = safeText.split("\\s+");
+
+        StringBuilder line = new StringBuilder();
+        for (String word : words) {
+            String testLine = line.length() > 0 ? line + " " + word : word;
+            float width = font.getStringWidth(testLine) / 1000f * fontSize;
+
+            if (width > maxWidth && line.length() > 0) {
+                lines.add(line.toString());
+                line = new StringBuilder(word);
+            } else {
+                line = line.length() > 0 ? line.append(" ").append(word) : line.append(word);
+            }
+        }
+
+        if (line.length() > 0) {
+            lines.add(line.toString());
+        }
+
+        return lines;
+    }
+
+    private float addWrappedText(PDPageContentStream contentStream, String text, float x, float y, float maxWidth, PDFont font, float fontSize) throws IOException {
         if (text == null || text.isEmpty()) {
             return y;
         }
 
-        contentStream.setFont(font, 10);
+        contentStream.setFont(font, fontSize);
         String[] words = text.split(" ");
         StringBuilder line = new StringBuilder();
 
         for (String word : words) {
             String testLine = line.length() > 0 ? line + " " + word : word;
-            float width = font.getStringWidth(testLine) / 1000 * 12;
+            float width = font.getStringWidth(testLine) / 1000 * fontSize;
 
             if (width > maxWidth && line.length() > 0) {
                 contentStream.beginText();
                 contentStream.newLineAtOffset(x, y);
                 contentStream.showText(line.toString());
                 contentStream.endText();
-                y -= 12;
+                y -= LINE_HEIGHT;
                 line = new StringBuilder(word);
             } else {
                 line = line.length() > 0 ? line.append(" ").append(word) : line.append(word);
@@ -430,10 +424,34 @@ public class PdfExportServiceEvent {
             contentStream.newLineAtOffset(x, y);
             contentStream.showText(line.toString());
             contentStream.endText();
-            y -= 12;
+            y -= LINE_HEIGHT;
         }
 
         return y;
+    }
+
+    private float addLabelValue(PDPageContentStream contentStream, String label, String value, float labelX, float valueX, float y, float valueMaxWidth) throws IOException {
+        contentStream.setFont(FONT_HELVETICA_BOLD, FONT_SIZE_NORMAL);
+        addText(contentStream, label, labelX, y, FONT_HELVETICA_BOLD);
+        contentStream.setFont(FONT_HELVETICA, FONT_SIZE_NORMAL);
+        float nextY = addWrappedText(contentStream, value != null ? value : "-", valueX, y, valueMaxWidth, FONT_HELVETICA, FONT_SIZE_NORMAL);
+        if (nextY == y) {
+            nextY = y - LINE_HEIGHT;
+        }
+        return nextY;
+    }
+
+    private float drawCenteredTitle(PDPageContentStream contentStream, String title, float margin, float y, float width) throws IOException {
+        contentStream.setFont(FONT_HELVETICA_BOLD, FONT_SIZE_TITLE);
+        float titleWidth = FONT_HELVETICA_BOLD.getStringWidth(title) / 1000f * FONT_SIZE_TITLE;
+        float titleX = margin + Math.max(0, (width - titleWidth) / 2f);
+
+        contentStream.beginText();
+        contentStream.newLineAtOffset(titleX, y);
+        contentStream.showText(title);
+        contentStream.endText();
+
+        return y - 30;
     }
 
     private void drawLine(PDPageContentStream contentStream, float x1, float y1, float x2, float y2) throws IOException {
