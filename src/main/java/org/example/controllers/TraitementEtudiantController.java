@@ -83,12 +83,26 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
     @FXML private SidebarEtudiantController sidebarEtudiantController;
     @FXML private StackPane toastContainer;
 
+    // ==================== PAGINATION ====================
+    @FXML private ComboBox<String> cmbItemsPerPage;
+    @FXML private Button btnFirstPage;
+    @FXML private Button btnPrevPage;
+    @FXML private Button btnNextPage;
+    @FXML private Button btnLastPage;
+    @FXML private Label lblPageInfo;
+    @FXML private Label lblTotalPagesInfo;
+    @FXML private HBox paginationBar;
+
+    private List<VBox> toutesLesCartes;
+    private List<Traitement> tousLesTraitementsFiltres;
+    private int currentPage = 0;
+    private int itemsPerPage = 10;
+
     private TraitementService traitementService;
     private SuiviTraitementService suiviTraitementService;
     private TraitementIAService traitementIAService;
     private List<Traitement> tousLesTraitements;
     private List<SuiviTraitement> tousLesSuivis;
-    private List<VBox> toutesLesCartes;
     private boolean isInitialized = false;
     private User currentUser;
 
@@ -103,17 +117,16 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             suiviTraitementService = new SuiviTraitementService();
             traitementIAService = new TraitementIAService();
             toutesLesCartes = new ArrayList<>();
+            tousLesTraitementsFiltres = new ArrayList<>();
 
             initialiserFiltres();
             initialiserTri();
+            initialiserPagination();
 
             isInitialized = true;
             if (lblStatus != null) {
                 lblStatus.setText("✓ Bienvenue sur votre espace personnel");
             }
-
-            // Charger les données via SessionManager
-            //chargerDonneesAvecSession();
 
         } catch (Exception e) {
             if (lblStatus != null) {
@@ -127,7 +140,6 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
     public void setUtilisateur(User user) {
         this.currentUser = user;
 
-        // Initialiser les services si ce n'est pas déjà fait
         if (traitementService == null) {
             traitementService = new TraitementService();
         }
@@ -140,13 +152,116 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         if (toutesLesCartes == null) {
             toutesLesCartes = new ArrayList<>();
         }
+        if (tousLesTraitementsFiltres == null) {
+            tousLesTraitementsFiltres = new ArrayList<>();
+        }
 
         if (sidebarEtudiantController != null) {
             sidebarEtudiantController.setUtilisateur(user);
             sidebarEtudiantController.setActiveButtonByFxml("/traitement-etudiant-view.fxml");
         }
-        chargerDonnees();  // charge les données avec currentUser
+        chargerDonnees();
     }
+
+    // ==================== PAGINATION ====================
+
+    private void initialiserPagination() {
+        cmbItemsPerPage.getItems().addAll("5", "10", "20", "50");
+        cmbItemsPerPage.setValue("5");
+        itemsPerPage = 5;
+
+        cmbItemsPerPage.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                itemsPerPage = Integer.parseInt(newVal);
+                currentPage = 0;
+                appliquerPagination();
+            }
+        });
+    }
+
+    private void appliquerPagination() {
+        if (toutesLesCartes == null || toutesLesCartes.isEmpty()) {
+            cardsContainer.getChildren().clear();
+            if (lblAucunResultat != null) {
+                lblAucunResultat.setVisible(true);
+                lblAucunResultat.setManaged(true);
+                lblAucunResultat.setText("Aucun traitement trouvé.");
+            }
+            lblPageInfo.setText("Page 0 / 0");
+            lblTotalPagesInfo.setText("0 traitement(s)");
+            btnFirstPage.setDisable(true);
+            btnPrevPage.setDisable(true);
+            btnNextPage.setDisable(true);
+            btnLastPage.setDisable(true);
+            return;
+        }
+
+        int totalPages = (int) Math.ceil((double) toutesLesCartes.size() / itemsPerPage);
+
+        if (totalPages == 0) totalPages = 1;
+
+        if (currentPage >= totalPages) {
+            currentPage = Math.max(0, totalPages - 1);
+        }
+
+        int fromIndex = currentPage * itemsPerPage;
+        int toIndex = Math.min(fromIndex + itemsPerPage, toutesLesCartes.size());
+
+        List<VBox> pageCartes = toutesLesCartes.subList(fromIndex, toIndex);
+
+        cardsContainer.getChildren().clear();
+        for (VBox carte : pageCartes) {
+            cardsContainer.getChildren().add(carte);
+        }
+
+        lblPageInfo.setText("Page " + (currentPage + 1) + " / " + totalPages);
+        lblTotalPagesInfo.setText(toutesLesCartes.size() + " traitement(s)");
+
+        btnFirstPage.setDisable(currentPage == 0);
+        btnPrevPage.setDisable(currentPage == 0);
+        btnNextPage.setDisable(currentPage >= totalPages - 1);
+        btnLastPage.setDisable(currentPage >= totalPages - 1);
+
+        // Masquer le message "aucun résultat" si on a des cartes
+        if (lblAucunResultat != null && !toutesLesCartes.isEmpty()) {
+            lblAucunResultat.setVisible(false);
+            lblAucunResultat.setManaged(false);
+        }
+    }
+
+    @FXML
+    private void handleFirstPage() {
+        currentPage = 0;
+        appliquerPagination();
+    }
+
+    @FXML
+    private void handlePrevPage() {
+        if (currentPage > 0) {
+            currentPage--;
+            appliquerPagination();
+        }
+    }
+
+    @FXML
+    private void handleNextPage() {
+        int totalPages = (int) Math.ceil((double) toutesLesCartes.size() / itemsPerPage);
+        if (currentPage < totalPages - 1) {
+            currentPage++;
+            appliquerPagination();
+        }
+    }
+
+    @FXML
+    private void handleLastPage() {
+        int totalPages = (int) Math.ceil((double) toutesLesCartes.size() / itemsPerPage);
+        if (totalPages > 0) {
+            currentPage = totalPages - 1;
+            appliquerPagination();
+        }
+    }
+
+    // ==================== CHARGEMENT DES DONNÉES ====================
 
     private void chargerDonnees() {
         if (currentUser == null) {
@@ -177,7 +292,6 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             e.printStackTrace();
         }
     }
-
 
     private void initialiserFiltres() {
         ObservableList<String> statuts = FXCollections.observableArrayList(
@@ -217,44 +331,6 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
                 "✅ Statut (En cours → Terminé)"
         ));
         cmbTri.setValue("📅 Date (plus récent)");
-    }
-
-    private void chargerDonneesAvecSession() {
-        SessionManager session = SessionManager.getInstance();
-
-        if (!session.estConnecte()) {
-            if (lblStatus != null) lblStatus.setText("✗ Erreur: utilisateur non connecté");
-            return;
-        }
-
-        if (!session.estEtudiant()) {
-            if (lblStatus != null) lblStatus.setText("✗ Accès réservé aux étudiants");
-            return;
-        }
-
-        try {
-            if (lblStatus != null) lblStatus.setText("Chargement en cours...");
-            int etudiantId = session.getUtilisateurConnecteId();
-
-            List<Traitement> tousTraitements = traitementService.afficher();
-            tousLesTraitements = tousTraitements.stream()
-                    .filter(t -> t.getEtudiantId() == etudiantId)
-                    .collect(Collectors.toList());
-
-            tousLesSuivis = suiviTraitementService.afficher();
-
-            mettreAJourStatistiques(tousLesTraitements);
-            appliquerFiltres();
-
-            if (lblStatus != null) {
-                lblStatus.setText(tousLesTraitements.size() + " traitement(s) trouvé(s)");
-            }
-
-        } catch (SQLException e) {
-            if (lblStatus != null) lblStatus.setText("✗ Erreur: " + e.getMessage());
-            afficherToast("✗ Erreur de chargement: " + e.getMessage(), false);
-            e.printStackTrace();
-        }
     }
 
     private void mettreAJourStatistiques(List<Traitement> traitements) {
@@ -368,46 +444,30 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
 
     private void appliquerFiltres() {
         if (tousLesTraitements == null) {
-            return; // pas encore chargé
-        }
-        if (tousLesTraitements.isEmpty()) {
-            cardsContainer.getChildren().clear();
-            if (lblAucunResultat != null) {
-                lblAucunResultat.setVisible(true);
-                lblAucunResultat.setManaged(true);
-                lblAucunResultat.setText("Aucun traitement trouvé.");
-            }
-            if (lblStatus != null) lblStatus.setText("0 traitement trouvé");
             return;
         }
 
         List<Traitement> traitementsFiltres = new ArrayList<>(tousLesTraitements);
         traitementsFiltres = appliquerRechercheEtFiltres(traitementsFiltres);
         traitementsFiltres = appliquerTri(traitementsFiltres);
-        creerCartesTraitements(traitementsFiltres);
+        tousLesTraitementsFiltres = traitementsFiltres;
+
+        // Créer toutes les cartes
+        creerToutesLesCartes(traitementsFiltres);
+
+        // Appliquer la pagination
+        currentPage = 0;
+        appliquerPagination();
 
         long total = traitementsFiltres.size();
         if (lblStatus != null) lblStatus.setText(total + " traitement(s) trouvé(s)");
     }
 
-    private void creerCartesTraitements(List<Traitement> traitements) {
-        if (cardsContainer == null) return;
-        cardsContainer.getChildren().clear();
+    private void creerToutesLesCartes(List<Traitement> traitements) {
         toutesLesCartes.clear();
 
         if (traitements.isEmpty()) {
-            if (lblAucunResultat != null) {
-                lblAucunResultat.setVisible(true);
-                lblAucunResultat.setManaged(true);
-                lblAucunResultat.setText("Aucun traitement ne correspond aux filtres.");
-            }
             return;
-        }
-
-        // Il y a des traitements → cacher le message
-        if (lblAucunResultat != null) {
-            lblAucunResultat.setVisible(false);
-            lblAucunResultat.setManaged(false);
         }
 
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -421,22 +481,7 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
                     .collect(Collectors.toList());
             VBox carte = creerCarteTraitement(traitement, suivis, dateFormatter);
             toutesLesCartes.add(carte);
-            cardsContainer.getChildren().add(carte);
         }
-    }
-
-    @FXML
-    private void handleAppliquerFiltres() {
-        appliquerFiltres();
-    }
-
-    @FXML
-    private void handleReinitialiserFiltres() {
-        txtRecherche.clear();
-        cmbFiltreStatut.setValue("Tous les statuts");
-        cmbFiltrePriorite.setValue("Toutes les priorités");
-        cmbTri.setValue("📅 Date (plus récent)");
-        appliquerFiltres();
     }
 
     private String getNomPsychologue(Integer psychologueId) {
@@ -481,7 +526,6 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             case "BASSE": prioriteBadge.getStyleClass().add("priority-BASSE"); break;
         }
 
-        // Indicateur de suivis
         HBox suiviIndicator = new HBox();
         suiviIndicator.setAlignment(Pos.CENTER);
         suiviIndicator.setSpacing(5);
@@ -622,7 +666,6 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         notesLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #374151;");
         notesLabel.setWrapText(true);
 
-        // Boutons d'action pour le suivi (uniquement pour les suivis de l'étudiant)
         HBox actionsBox = new HBox();
         actionsBox.setSpacing(10);
         actionsBox.setAlignment(Pos.CENTER_RIGHT);
@@ -644,6 +687,20 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         suiviCard.getChildren().addAll(dateLabel, saisieLabel, notesLabel, actionsBox);
 
         return suiviCard;
+    }
+
+    @FXML
+    private void handleAppliquerFiltres() {
+        appliquerFiltres();
+    }
+
+    @FXML
+    private void handleReinitialiserFiltres() {
+        txtRecherche.clear();
+        cmbFiltreStatut.setValue("Tous les statuts");
+        cmbFiltrePriorite.setValue("Toutes les priorités");
+        cmbTri.setValue("📅 Date (plus récent)");
+        appliquerFiltres();
     }
 
     private void ouvrirModificationSuivi(SuiviTraitement suivi) {
@@ -710,8 +767,6 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         }
     }
 
-    // ==================== TOAST NOTIFICATION ====================
-
     private void afficherToast(String message, boolean success) {
         if (toastContainer == null) return;
 
@@ -755,21 +810,17 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
                 return;
             }
 
-            // Récupérer le psychologue associé au traitement
             User psychologue = null;
             try {
-                // Utiliser le service psychologue pour récupérer le psychologue par son ID
                 org.example.services.PsychologueService psychologueService = new org.example.services.PsychologueService();
                 psychologue = psychologueService.getPsychologueById(traitement.getPsychologueId());
             } catch (Exception e) {
                 System.err.println("Impossible de récupérer le psychologue: " + e.getMessage());
             }
 
-            // Créer le service PDF et générer l'ordonnance
             OrdonnancePDFService pdfService = new OrdonnancePDFService();
             byte[] pdfBytes = pdfService.genererOrdonnancePDF(traitement, psychologue, currentUser);
 
-            // Choix du fichier de sauvegarde
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Enregistrer l'ordonnance PDF");
             fileChooser.getExtensionFilters().add(
@@ -782,7 +833,6 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             File file = fileChooser.showSaveDialog(cardsContainer.getScene().getWindow());
 
             if (file != null) {
-                // Sauvegarder le PDF
                 try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file)) {
                     fos.write(pdfBytes);
                 }
@@ -806,11 +856,10 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             controller.setTraitement(traitement);
             controller.setUtilisateur(currentUser);
 
-            // ✅ Ouvrir dans une nouvelle fenêtre en plein écran
             Stage stage = new Stage();
             stage.setTitle("Traduction de Traitement");
             stage.setScene(new Scene(root));
-            stage.setMaximized(true); // plein écran
+            stage.setMaximized(true);
             stage.show();
 
         } catch (Exception e) {
@@ -820,12 +869,8 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         }
     }
 
-    /**
-     * Vérifie si un nouveau suivi a été ajouté et envoie une notification au psychologue
-     */
     private void verifierEtNotifierNouveauSuivi(Traitement traitement) {
         try {
-            // Récupérer les suivis actuels pour ce traitement
             List<SuiviTraitement> suivisActuels = suiviTraitementService.afficher().stream()
                     .filter(s -> s.getTraitementId() == traitement.getTraitementId())
                     .sorted((s1, s2) -> {
@@ -837,21 +882,19 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             if (!suivisActuels.isEmpty()) {
                 SuiviTraitement dernierSuivi = suivisActuels.get(0);
 
-                // Vérifier si le suivi a été ajouté aujourd'hui par l'étudiant
                 boolean estRecent = dernierSuivi.getDateSuivi() != null &&
                         dernierSuivi.getDateSuivi().toLocalDate().equals(LocalDate.now());
                 boolean estEtudiant = dernierSuivi.getSaisiPar() == SaisiPar.ETUDIANT;
 
                 if (estRecent && estEtudiant) {
-                    // Envoyer la notification au psychologue
                     TraitementEmailService emailService = new TraitementEmailService();
                     var resultat = emailService.envoyerNotificationNouveauSuiviPsychologue(
                             dernierSuivi, traitement, currentUser);
 
                     if (resultat.isSuccess()) {
-                        System.out.println(" Notification envoyée au psychologue pour le nouveau suivi");
+                        System.out.println("Notification envoyée au psychologue pour le nouveau suivi");
                     } else {
-                        System.err.println(" Erreur envoi notification: " + resultat.getErrorMessage());
+                        System.err.println("Erreur envoi notification: " + resultat.getErrorMessage());
                     }
                 }
             }
@@ -864,7 +907,7 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
     @FXML
     private void handleAnalyseIA() {
         if (currentUser == null) {
-            afficherToast(" Utilisateur non connecté", false);
+            afficherToast("Utilisateur non connecté", false);
             return;
         }
 
@@ -874,23 +917,21 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
 
         try {
             if (lblStatus != null) {
-                lblStatus.setText(" Analyse IA en cours...");
+                lblStatus.setText("Analyse IA en cours...");
             }
 
-            // Récupérer les traitements de l'étudiant
             List<Traitement> traitementsEtudiant = tousLesTraitements.stream()
                     .filter(t -> t.getEtudiantId() == currentUser.getUserId())
                     .collect(Collectors.toList());
 
             if (traitementsEtudiant.isEmpty()) {
-                afficherToast(" Aucun traitement trouvé pour l'analyse", true);
+                afficherToast("Aucun traitement trouvé pour l'analyse", true);
                 if (lblStatus != null) {
                     lblStatus.setText("Aucun traitement trouvé");
                 }
                 return;
             }
 
-            // Ouvrir la vue d'analyse IA personnalisée
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/analyse-ia-view.fxml"));
             Parent root = loader.load();
 
@@ -898,16 +939,16 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             controller.setDonneesAnalyse(traitementsEtudiant, tousLesSuivis);
 
             Stage stage = new Stage();
-            stage.setTitle(" Analyse IA Intelligente");
+            stage.setTitle("Analyse IA Intelligente");
             stage.setScene(new Scene(root, 900, 700));
             stage.setResizable(true);
             stage.show();
 
             if (lblStatus != null) {
-                lblStatus.setText(" Analyse IA ouverte - " + traitementsEtudiant.size() + " traitement(s)");
+                lblStatus.setText("Analyse IA ouverte - " + traitementsEtudiant.size() + " traitement(s)");
             }
 
-            afficherToast(" Analyse IA lancée avec succès", true);
+            afficherToast("Analyse IA lancée avec succès", true);
 
         } catch (Exception e) {
             String errorMsg = "Erreur lors de l'analyse IA: " + e.getMessage();
@@ -915,12 +956,11 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             e.printStackTrace();
 
             if (lblStatus != null) {
-                lblStatus.setText(" Erreur analyse IA");
+                lblStatus.setText("Erreur analyse IA");
             }
 
-            afficherToast(" Erreur lors de l'analyse IA", false);
+            afficherToast("Erreur lors de l'analyse IA", false);
 
-            // Afficher l'erreur dans une alerte
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Erreur d'analyse IA");
             alert.setHeaderText("Impossible d'effectuer l'analyse");
