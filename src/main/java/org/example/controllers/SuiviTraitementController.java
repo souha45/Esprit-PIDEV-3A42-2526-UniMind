@@ -300,7 +300,7 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
 
             initialiserFiltres();
             initialiserTri();
-            initialiserPagination();  // <-- AJOUTER CETTE LIGNE
+            initialiserPagination();
             configurerColonnes();
 
             isInitialized = true;
