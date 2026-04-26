@@ -18,10 +18,13 @@ import org.example.enums.Role;
 import org.example.services.EvenementService;
 import org.example.services.FavoriService;
 import org.example.services.ParticipationService;
+import org.example.services.evenement.PdfExportEventDetailsService;
+import org.example.services.evenement.PdfExportParticipantsService;
 import org.example.services.evenement.EventNominatimService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -599,6 +602,77 @@ public class VoirEvenementController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    @FXML
+    private void exporterPdfEvenement(ActionEvent event) {
+        if (evenementCourant == null) {
+            afficherAlerte("Erreur", "Aucun événement sélectionné");
+            return;
+        }
+
+        try {
+            String organisateurNom;
+            try {
+                organisateurNom = evenementService.getNomOrganisateur(evenementCourant.getOrganisateurId());
+            } catch (SQLException e) {
+                organisateurNom = "-";
+            }
+
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            String fileName = "fiche_evenement_" + timestamp + ".pdf";
+            String userHome = System.getProperty("user.home");
+            String filePath = userHome + File.separator + "Downloads" + File.separator + fileName;
+
+            PdfExportEventDetailsService pdfService = new PdfExportEventDetailsService();
+            pdfService.exportEventDetails(evenementCourant, organisateurNom, new File(filePath));
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Succès");
+            alert.setHeaderText("Export PDF réussi !");
+            alert.setContentText("Fichier enregistré dans :\n" + filePath);
+            alert.getDialogPane().setMinWidth(500);
+            alert.showAndWait();
+
+        } catch (IOException e) {
+            afficherAlerte("Erreur", "Erreur lors de l'export PDF : " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void exporterPdfParticipants(ActionEvent event) {
+        if (evenementCourant == null) {
+            afficherAlerte("Erreur", "Aucun événement sélectionné");
+            return;
+        }
+
+        try {
+            List<ParticipationService.ParticipantInfo> participants = participationService.getParticipantsByEvenementId(evenementCourant.getEvenementId());
+            if (participants.isEmpty()) {
+                afficherAlerte("Information", "Aucun participant à exporter.");
+                return;
+            }
+
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            String fileName = "participants_evenement_" + timestamp + ".pdf";
+            String userHome = System.getProperty("user.home");
+            String filePath = userHome + File.separator + "Downloads" + File.separator + fileName;
+
+            PdfExportParticipantsService pdfService = new PdfExportParticipantsService();
+            pdfService.exportParticipants(evenementCourant.getTitre(), participants, new File(filePath));
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Succès");
+            alert.setHeaderText("Export PDF réussi !");
+            alert.setContentText("Fichier enregistré dans :\n" + filePath);
+            alert.getDialogPane().setMinWidth(500);
+            alert.showAndWait();
+
+        } catch (IOException e) {
+            afficherAlerte("Erreur", "Erreur lors de l'export PDF : " + e.getMessage());
+        } catch (SQLException e) {
+            afficherAlerte("Erreur", "Erreur lors de l'export PDF : " + e.getMessage());
+        }
     }
 
     private void chargerAvis() {

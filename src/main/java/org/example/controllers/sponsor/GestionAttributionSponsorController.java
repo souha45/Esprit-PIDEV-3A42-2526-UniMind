@@ -12,6 +12,7 @@ import org.example.enums.Role;
 import org.example.enums.StatutSponsor;
 import org.example.enums.TypeContribution;
 import org.example.services.EvenementSponsorService;
+import org.example.services.evenement.PdfExportAttributionSponsorService;
 import org.example.services.evenement.ExcelExportAttributionSponsorService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
@@ -113,6 +114,43 @@ public class GestionAttributionSponsorController {
                     updateTableForPage(newIdx.intValue());
                 }
             });
+        }
+    }
+
+    @FXML
+    public void exporterPdf(ActionEvent event) {
+        try {
+            List<EvenementSponsorService.AttributionAvecInfos> toExport;
+            if (listeFiltree != null && !listeFiltree.isEmpty()) {
+                toExport = new ArrayList<>(listeFiltree);
+            } else {
+                toExport = attributionService.afficherAvecInfos();
+            }
+
+            if (toExport.isEmpty()) {
+                afficherErreur("Aucune attribution à exporter.");
+                return;
+            }
+
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            String fileName = "attributions_sponsors_" + timestamp + ".pdf";
+            String userHome = System.getProperty("user.home");
+            String filePath = userHome + File.separator + "Downloads" + File.separator + fileName;
+
+            PdfExportAttributionSponsorService pdfService = new PdfExportAttributionSponsorService();
+            pdfService.exportAttributions(toExport, new File(filePath));
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Succès");
+            alert.setHeaderText("Export PDF réussi !");
+            alert.setContentText("Fichier enregistré dans :\n" + filePath);
+            alert.getDialogPane().setMinWidth(500);
+            alert.showAndWait();
+
+        } catch (IOException e) {
+            afficherErreur("Erreur lors de l'export PDF : " + e.getMessage());
+        } catch (SQLException e) {
+            afficherErreur("Erreur lors de l'export PDF : " + e.getMessage());
         }
     }
 

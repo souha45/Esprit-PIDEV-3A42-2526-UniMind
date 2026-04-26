@@ -299,7 +299,7 @@ public class ParticipationService implements ICrud<Participation> {
      * Récupérer tous les participants d'un événement
      */
     public java.util.List<ParticipantInfo> getParticipantsByEvenementId(int evenementId) throws SQLException {
-        String sql = "SELECT p.etudiant_id, u.email, u.prenom, u.nom " +
+        String sql = "SELECT p.etudiant_id, u.email, u.prenom, u.nom, p.date_inscription " +
                      "FROM participation p " +
                      "LEFT JOIN user u ON p.etudiant_id = u.user_id " +
                      "WHERE p.evenement_id = ?";
@@ -314,6 +314,7 @@ public class ParticipationService implements ICrud<Participation> {
                     info.setEmail(rs.getString("email"));
                     info.setPrenom(rs.getString("prenom"));
                     info.setNom(rs.getString("nom"));
+                    info.setDateInscription(rs.getTimestamp("date_inscription"));
                     result.add(info);
                 }
             }
@@ -329,6 +330,7 @@ public class ParticipationService implements ICrud<Participation> {
         private String email;
         private String prenom;
         private String nom;
+        private java.sql.Timestamp dateInscription;
 
         public int getEtudiantId() { return etudiantId; }
         public void setEtudiantId(int etudiantId) { this.etudiantId = etudiantId; }
@@ -338,6 +340,8 @@ public class ParticipationService implements ICrud<Participation> {
         public void setPrenom(String prenom) { this.prenom = prenom; }
         public String getNom() { return nom; }
         public void setNom(String nom) { this.nom = nom; }
+        public java.sql.Timestamp getDateInscription() { return dateInscription; }
+        public void setDateInscription(java.sql.Timestamp dateInscription) { this.dateInscription = dateInscription; }
     }
 
     /**

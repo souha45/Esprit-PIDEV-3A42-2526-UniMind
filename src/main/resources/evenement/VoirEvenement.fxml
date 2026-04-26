@@ -11,11 +11,13 @@
             styleClass="dashboard-bg">
 
     <top>
-        <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-background-color: #ecf0f1;" BorderPane.alignment="CENTER">
+        <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-background-color: #ecf0f1; -fx-padding: 12 18;" BorderPane.alignment="CENTER">
             <children>
                 <Label text="DÉTAILS DE L'ÉVÉNEMENT" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
                 <Region HBox.hgrow="ALWAYS" />
-                <Button text="🔙 Retour" onAction="#retour" style="-fx-background-color: #95a5a6; -fx-text-fill: white;" />
+                <Button text="📄 Export PDF" onAction="#exporterPdfEvenement" style="-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 14; -fx-background-radius: 8;" />
+                <Button text="👥 PDF Participants" onAction="#exporterPdfParticipants" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 14; -fx-background-radius: 8;" />
+                <Button text="🔙 Retour" onAction="#retour" style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 14; -fx-background-radius: 8;" />
             </children>
         </HBox>
     </top>
