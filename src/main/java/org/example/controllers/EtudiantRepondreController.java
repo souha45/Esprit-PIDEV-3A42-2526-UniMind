@@ -1,7 +1,9 @@
 package org.example.controllers;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import org.example.entities.Question;
@@ -21,9 +23,9 @@ import java.util.*;
 
 public class EtudiantRepondreController implements Initializable {
 
-    @FXML private Label lblTitreQuestionnaire;
-    @FXML private VBox questionsContainer;
-    @FXML private Label lblStatus;
+    @FXML private Label  lblTitreQuestionnaire;
+    @FXML private VBox   questionsContainer;
+    @FXML private Label  lblStatus;
     @FXML private Button btnFR;
     @FXML private Button btnEN;
     @FXML private Button btnAR;
@@ -33,10 +35,10 @@ public class EtudiantRepondreController implements Initializable {
     private List<Question> questionsOriginales = new ArrayList<>();
 
     private final Map<Integer, String> reponsesChoisies = new HashMap<>();
-    private final Map<Integer, Double> scoresChoisis = new HashMap<>();
+    private final Map<Integer, Double> scoresChoisis    = new HashMap<>();
 
-    private final QuestionServices questionService = new QuestionServices();
-    private final ReponseQuestionnaireServices repService = new ReponseQuestionnaireServices();
+    private final QuestionServices             questionService = new QuestionServices();
+    private final ReponseQuestionnaireServices repService      = new ReponseQuestionnaireServices();
 
     private static final String LANG_ACTIVE =
             "-fx-background-color: #7c3aed; -fx-text-fill: white; " +
@@ -48,9 +50,12 @@ public class EtudiantRepondreController implements Initializable {
                     "-fx-font-size: 12px; -fx-padding: 6 12; " +
                     "-fx-background-radius: 20; -fx-cursor: hand;";
 
+    // ════════════════════════════════════════════════════════════════
+    //  INIT
+    // ════════════════════════════════════════════════════════════════
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Initialisation des boutons de langue
         if (btnFR != null) btnFR.setOnAction(e -> handleLangFR());
         if (btnEN != null) btnEN.setOnAction(e -> handleLangEN());
         if (btnAR != null) btnAR.setOnAction(e -> handleLangAR());
@@ -62,18 +67,19 @@ public class EtudiantRepondreController implements Initializable {
         chargerQuestions();
     }
 
+    // ════════════════════════════════════════════════════════════════
+    //  CHARGEMENT QUESTIONS
+    // ════════════════════════════════════════════════════════════════
+
     private void chargerQuestions() {
         try {
             questions = questionService.afficherParQuestionnaire(
                     questionnaire.getQuestionnaireId());
-
-            // Sauvegarder les originaux
             questionsOriginales = new ArrayList<>(questions);
-
             questionsContainer.getChildren().clear();
 
             if (questions.isEmpty()) {
-                Label lblVide = new Label("⚠️ Aucune question trouvée pour ce questionnaire.");
+                Label lblVide = new Label("Aucune question trouvee pour ce questionnaire.");
                 lblVide.setStyle("-fx-text-fill: #f59e0b; -fx-font-size: 13px;");
                 questionsContainer.getChildren().add(lblVide);
                 return;
@@ -83,60 +89,54 @@ public class EtudiantRepondreController implements Initializable {
                 questionsContainer.getChildren().add(buildQuestionBox(i + 1, questions.get(i)));
             }
 
-            // Activer FR par défaut
             if (btnFR != null) setLangActive(btnFR);
 
         } catch (SQLException e) {
-            setStatus("❌ Erreur chargement questions: " + e.getMessage(), false);
+            setStatus("Erreur chargement questions: " + e.getMessage(), false);
         }
     }
 
-    // ══════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════
     //  TRADUCTION
-    // ══════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════
 
     @FXML
     public void handleLangFR() {
         setLangActive(btnFR);
-        // Restaurer questions originales
         questions = new ArrayList<>(questionsOriginales);
         afficherQuestions();
-        setStatus("🇫🇷 Français", true);
+        setStatus("Francais", true);
     }
 
     @FXML
     public void handleLangEN() {
         setLangActive(btnEN);
-        setStatus("⏳ Traduction en anglais...", true);
-
+        setStatus("Traduction en anglais...", true);
         new Thread(() -> {
             List<Question> traduits = new ArrayList<>();
             for (Question q : questionsOriginales) {
                 Question copie = copierQuestion(q);
                 try {
                     copie.setTexte(TraductionService.versAnglais(q.getTexte()));
-                    // Traduire les options
                     if (q.getOptionsQuest() != null && !q.getOptionsQuest().isBlank()) {
                         String[] opts = q.getOptionsQuest()
                                 .replaceAll("[\\[\\]\"]", "").split(",");
                         StringBuilder newOpts = new StringBuilder();
                         for (String opt : opts) {
-                            newOpts.append(TraductionService.versAnglais(opt.trim()))
-                                    .append(",");
+                            newOpts.append(TraductionService.versAnglais(opt.trim())).append(",");
                         }
-                        copie.setOptionsQuest(newOpts.toString()
-                                .replaceAll(",$", ""));
+                        copie.setOptionsQuest(newOpts.toString().replaceAll(",$", ""));
                     }
                 } catch (Exception e) {
                     System.err.println("Erreur traduction EN: " + e.getMessage());
-                    copie = copierQuestion(q); // Garder l'original en cas d'erreur
+                    copie = copierQuestion(q);
                 }
                 traduits.add(copie);
             }
             javafx.application.Platform.runLater(() -> {
                 questions = traduits;
                 afficherQuestions();
-                setStatus("🇬🇧 Traduit en Anglais", true);
+                setStatus("Traduit en Anglais", true);
             });
         }).start();
     }
@@ -144,8 +144,7 @@ public class EtudiantRepondreController implements Initializable {
     @FXML
     public void handleLangAR() {
         setLangActive(btnAR);
-        setStatus("⏳ Traduction en arabe...", true);
-
+        setStatus("Traduction en arabe...", true);
         new Thread(() -> {
             List<Question> traduits = new ArrayList<>();
             for (Question q : questionsOriginales) {
@@ -157,11 +156,9 @@ public class EtudiantRepondreController implements Initializable {
                                 .replaceAll("[\\[\\]\"]", "").split(",");
                         StringBuilder newOpts = new StringBuilder();
                         for (String opt : opts) {
-                            newOpts.append(TraductionService.versArabe(opt.trim()))
-                                    .append(",");
+                            newOpts.append(TraductionService.versArabe(opt.trim())).append(",");
                         }
-                        copie.setOptionsQuest(newOpts.toString()
-                                .replaceAll(",$", ""));
+                        copie.setOptionsQuest(newOpts.toString().replaceAll(",$", ""));
                     }
                 } catch (Exception e) {
                     System.err.println("Erreur traduction AR: " + e.getMessage());
@@ -172,7 +169,7 @@ public class EtudiantRepondreController implements Initializable {
             javafx.application.Platform.runLater(() -> {
                 questions = traduits;
                 afficherQuestions();
-                setStatus("🇸🇦 Traduit en Arabe", true);
+                setStatus("Traduit en Arabe", true);
             });
         }).start();
     }
@@ -182,8 +179,7 @@ public class EtudiantRepondreController implements Initializable {
         reponsesChoisies.clear();
         scoresChoisis.clear();
         for (int i = 0; i < questions.size(); i++) {
-            questionsContainer.getChildren().add(
-                    buildQuestionBox(i + 1, questions.get(i)));
+            questionsContainer.getChildren().add(buildQuestionBox(i + 1, questions.get(i)));
         }
     }
 
@@ -205,15 +201,21 @@ public class EtudiantRepondreController implements Initializable {
         if (actif != null) actif.setStyle(LANG_ACTIVE);
     }
 
+    // ════════════════════════════════════════════════════════════════
+    //  CONSTRUCTION CARTE QUESTION
+    // ════════════════════════════════════════════════════════════════
+
     private VBox buildQuestionBox(int numero, Question question) {
         VBox box = new VBox(8);
-        box.setStyle("-fx-background-color: #3b1f6e; -fx-background-radius: 10; " +
-                "-fx-border-color: #6d28d9; -fx-border-radius: 10; " +
-                "-fx-border-width: 1; -fx-padding: 14;");
+        box.setStyle(
+                "-fx-background-color: #3b1f6e; -fx-background-radius: 10; " +
+                        "-fx-border-color: #6d28d9; -fx-border-radius: 10; " +
+                        "-fx-border-width: 1; -fx-padding: 14;");
 
         Label lblQuestion = new Label(numero + ". " + question.getTexte());
         lblQuestion.setWrapText(true);
-        lblQuestion.setStyle("-fx-text-fill: #e2e8f0; -fx-font-size: 14px; -fx-font-weight: bold;");
+        lblQuestion.setStyle(
+                "-fx-text-fill: #e2e8f0; -fx-font-size: 14px; -fx-font-weight: bold;");
         box.getChildren().add(lblQuestion);
 
         if (question.getOptionsQuest() != null && !question.getOptionsQuest().isEmpty()) {
@@ -232,7 +234,6 @@ public class EtudiantRepondreController implements Initializable {
                 rb.setToggleGroup(group);
                 rb.setStyle("-fx-text-fill: #c084fc; -fx-font-size: 13px;");
 
-                // Vérifier si cette réponse était déjà choisie
                 String reponseExistante = reponsesChoisies.get(question.getQuestionId());
                 if (reponseExistante != null && reponseExistante.equals(option)) {
                     rb.setSelected(true);
@@ -253,16 +254,14 @@ public class EtudiantRepondreController implements Initializable {
             }
         } else {
             TextField tfReponse = new TextField();
-            tfReponse.setPromptText("Votre réponse...");
-            tfReponse.setStyle("-fx-background-color: #1a0a2e; -fx-text-fill: #e2e8f0; " +
-                    "-fx-border-color: #6d28d9; -fx-border-radius: 6; " +
-                    "-fx-background-radius: 6; -fx-padding: 7;");
+            tfReponse.setPromptText("Votre reponse...");
+            tfReponse.setStyle(
+                    "-fx-background-color: #1a0a2e; -fx-text-fill: #e2e8f0; " +
+                            "-fx-border-color: #6d28d9; -fx-border-radius: 6; " +
+                            "-fx-background-radius: 6; -fx-padding: 7;");
 
-            // Restaurer la réponse existante
             String reponseExistante = reponsesChoisies.get(question.getQuestionId());
-            if (reponseExistante != null) {
-                tfReponse.setText(reponseExistante);
-            }
+            if (reponseExistante != null) tfReponse.setText(reponseExistante);
 
             tfReponse.textProperty().addListener((obs, old, val) ->
                     reponsesChoisies.put(question.getQuestionId(), val));
@@ -272,23 +271,29 @@ public class EtudiantRepondreController implements Initializable {
         return box;
     }
 
+    // ════════════════════════════════════════════════════════════════
+    //  SOUMISSION — navigue vers AnalyseIAView
+    // ════════════════════════════════════════════════════════════════
+
     @FXML
     public void handleSoumettre() {
+        // ── Validation ────────────────────────────────────────────
         if (questions == null || questions.isEmpty()) {
-            setStatus("❌ Aucune question à répondre !", false);
+            setStatus("Aucune question a repondre !", false);
             return;
         }
-
         for (Question q : questions) {
             if (!reponsesChoisies.containsKey(q.getQuestionId())) {
-                setStatus("⚠️ Veuillez répondre à toutes les questions !", false);
+                setStatus("Veuillez repondre a toutes les questions !", false);
                 return;
             }
         }
 
+        // ── Calcul score ──────────────────────────────────────────
         double scoreTotale = scoresChoisis.values().stream()
                 .mapToDouble(Double::doubleValue).sum();
 
+        // ── Construire JSON des reponses ──────────────────────────
         StringBuilder jsonReponses = new StringBuilder("{");
         for (Question q : questions) {
             jsonReponses.append("\"q").append(q.getQuestionId())
@@ -299,77 +304,95 @@ public class EtudiantRepondreController implements Initializable {
             jsonReponses.deleteCharAt(jsonReponses.length() - 1);
         jsonReponses.append("}");
 
-        String niveau = questionnaire.getNiveauScore((int) scoreTotale);
+        String niveau         = questionnaire.getNiveauScore((int) scoreTotale);
         String interpretation = questionnaire.interpreterScore((int) scoreTotale);
-        int userId = LimiteQuestionnaire.getInstance().getUserId();
+        int    userId         = LimiteQuestionnaire.getInstance().getUserId();
 
+        // ── Sauvegarder en BDD ────────────────────────────────────
         Reponsequestionnaire reponse = new Reponsequestionnaire(
-                scoreTotale,
-                jsonReponses.toString(),
-                interpretation,
-                null,
-                niveau,
-                scoreTotale >= questionnaire.getSeuilSevere(),
-                null,
-                questionnaire.getQuestionnaireId(),
-                userId
+                scoreTotale, jsonReponses.toString(), interpretation,
+                null, niveau, scoreTotale >= questionnaire.getSeuilSevere(),
+                null, questionnaire.getQuestionnaireId(), userId
         );
 
         try {
             repService.ajouter(reponse);
 
-            // Envoi email + confirmation
-            String emailUser = "";
-            boolean emailEnvoye = false;
+            // ── Envoi email en arriere-plan ────────────────────────
             try {
-                emailUser = SessionManager.getInstance().getCurrentUser().getEmail();
-                EmailServiceQuestionnaire.envoyerResultat(
-                        emailUser,
-                        questionnaire.getNom(),
-                        scoreTotale,
-                        niveau,
-                        interpretation
-                );
-                emailEnvoye = true;
+                String emailUser = SessionManager.getInstance().getCurrentUser().getEmail();
+                if (emailUser != null && !emailUser.isBlank()) {
+                    final String   niveauF         = niveau;
+                    final String   interpretationF = interpretation;
+                    final double   scoreF          = scoreTotale;
+                    final String   nomQ            = questionnaire.getNom();
+                    new Thread(() ->
+                            EmailServiceQuestionnaire.envoyerResultat(
+                                    emailUser, nomQ, scoreF, niveauF, interpretationF)
+                    ).start();
+                }
             } catch (Exception ex) {
-                System.out.println("⚠️ Email non envoyé : " + ex.getMessage());
+                System.out.println("Email non envoye : " + ex.getMessage());
             }
 
-            // Alert avec confirmation email
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("✅ Résultat du Questionnaire");
-            alert.setHeaderText("Questionnaire : " + questionnaire.getNom());
-            alert.setContentText(
-                    "🎯 Score Total : " + scoreTotale + "\n" +
-                            "📊 Niveau      : " + niveau.toUpperCase() + "\n\n" +
-                            "📝 Interprétation :\n" + interpretation + "\n\n" +
-                            (emailEnvoye
-                                    ? "📧 Email de résultat envoyé à : " + emailUser + "\n\n"
-                                    : "⚠️ Email non envoyé.\n\n") +
-                            "Cliquez sur OK pour voir vos réponses."
-            );
-
-            // Navigation APRÈS fermeture de l'Alert
-            alert.showAndWait().ifPresent(btn -> {
-                try {
-                    NavigationContext.loadContentInCenter("/fxml/EtudiantMesReponsesView.fxml");
-                } catch (Exception ex) {
-                    setStatus("❌ Erreur navigation : " + ex.getMessage(), false);
-                }
-            });
+            // ── Naviguer vers la page Analyse IA ──────────────────
+            naviguerVersAnalyseIA(scoreTotale, niveau, interpretation, jsonReponses.toString());
 
         } catch (Exception e) {
-            if (e.getMessage() != null && e.getMessage().equals("LIMITE_QUOTIDIENNE")) {
+            if ("LIMITE_QUOTIDIENNE".equals(e.getMessage())) {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Limite atteinte");
-                alert.setHeaderText("🚫 Limite quotidienne atteinte");
-                alert.setContentText("Vous avez déjà passé 2 questionnaires aujourd'hui.\nRevenez demain !");
+                alert.setHeaderText("Limite quotidienne atteinte");
+                alert.setContentText(
+                        "Vous avez deja passe 2 questionnaires aujourd'hui.\nRevenez demain !");
                 alert.showAndWait();
             } else {
-                setStatus("❌ Erreur soumission : " + e.getMessage(), false);
+                setStatus("Erreur soumission : " + e.getMessage(), false);
             }
         }
     }
+
+    /**
+     * Charge la page AnalyseIAView et lui passe toutes les donnees.
+     * L'analyse GPT se lancera automatiquement dans AnalyseIAController.
+     */
+    private void naviguerVersAnalyseIA(
+            double score, String niveau,
+            String interpretation, String reponsesJson) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/AnalyseIAView.fxml"));
+            Parent view = loader.load();
+
+            // Injecter les donnees dans AnalyseIAController
+            AnalyseIAController ctrl = loader.getController();
+
+            // Recuperer l'utilisateur connecte
+            org.example.entities.User user = null;
+            try {
+                user = SessionManager.getInstance().getCurrentUser();
+            } catch (Exception ignored) {}
+
+            ctrl.setDonnees(questionnaire, score, niveau, interpretation, reponsesJson, user);
+
+            // Naviguer via NavigationContext
+            if (NavigationContext.getContentScrollPane() != null) {
+                NavigationContext.getContentScrollPane()
+                        .setContent(view);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Erreur navigation AnalyseIA : " + e.getMessage());
+            // Fallback : aller directement aux reponses
+            try {
+                NavigationContext.loadContentInCenter("/fxml/EtudiantMesReponsesView.fxml");
+            } catch (Exception ignored) {}
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  RETOUR
+    // ════════════════════════════════════════════════════════════════
 
     @FXML
     public void handleRetour() {
@@ -379,6 +402,10 @@ public class EtudiantRepondreController implements Initializable {
             System.out.println("Erreur retour : " + e.getMessage());
         }
     }
+
+    // ════════════════════════════════════════════════════════════════
+    //  HELPER
+    // ════════════════════════════════════════════════════════════════
 
     private void setStatus(String msg, boolean success) {
         lblStatus.setText(msg);
