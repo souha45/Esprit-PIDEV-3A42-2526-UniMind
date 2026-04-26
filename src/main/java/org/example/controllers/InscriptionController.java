@@ -9,6 +9,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import netscape.javascript.JSObject;
 import org.example.entities.*;
 import org.example.services.*;
 import org.example.utils.MyDataBase_Unimind;
@@ -76,55 +77,203 @@ public class InscriptionController {
         Stage mapStage = new Stage();
         mapStage.initModality(Modality.APPLICATION_MODAL);
         mapStage.setTitle("Sélectionner une adresse");
-        mapStage.setWidth(700);
-        mapStage.setHeight(600);
+        mapStage.setWidth(900);
+        mapStage.setHeight(700);
 
         WebView webView = new WebView();
-        String osmHtml = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-                <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-                <style>#map{height:500px;width:100%;}body{margin:0;padding:0;}</style>
-            </head>
-            <body>
-                <div id="map"></div>
-                <script>
-                    var map = L.map('map').setView([33.5731, -7.5898], 13);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© OpenStreetMap'}).addTo(map);
-                    var marker;
-                    map.on('click', function(e) {
-                        if (marker) marker.remove();
-                        marker = L.marker(e.latlng).addTo(map);
-                        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + e.latlng.lat + '&lon=' + e.latlng.lng)
-                            .then(response => response.json())
-                            .then(data => {
-                                window.location.href = 'callback://?address=' + encodeURIComponent(data.display_name);
-                            });
-                    });
-                </script>
-            </body>
-            </html>
-        """;
+        webView.getEngine().setJavaScriptEnabled(true);
 
-        webView.getEngine().loadContent(osmHtml);
-        webView.getEngine().locationProperty().addListener((obs, old, url) -> {
-            if (url != null && url.startsWith("callback://")) {
-                String[] parts = url.split("\\?");
-                if (parts.length > 1 && parts[1].startsWith("address=")) {
-                    try {
-                        String address = java.net.URLDecoder.decode(parts[1].substring(8), "UTF-8");
-                        adresseField.setText(address);
-                        mapStage.close();
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
+        // Version avec ressources locales et CDN de secours
+        String html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Sélection d'adresse</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5; }
+                #map { height: 550px; width: 100%; background: #e0e0e0; }
+                .info-panel {
+                    padding: 15px 20px;
+                    background: white;
+                    border-top: 3px solid #4F46E5;
+                    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
                 }
+                .address-box {
+                    margin: 12px 0;
+                    padding: 12px;
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    border: 1px solid #e0e0e0;
+                    min-height: 70px;
+                    word-break: break-word;
+                    font-size: 13px;
+                }
+                .address-box.loading {
+                    background: #fff3cd;
+                    border-color: #ffc107;
+                    color: #856404;
+                }
+                .address-box.success {
+                    background: #d4edda;
+                    border-color: #28a745;
+                    color: #155724;
+                }
+                .address-box.error {
+                    background: #f8d7da;
+                    border-color: #dc3545;
+                    color: #721c24;
+                }
+                button {
+                    width: 100%;
+                    padding: 12px;
+                    background: #4F46E5;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 15px;
+                    font-weight: bold;
+                }
+                button:hover:not(:disabled) { background: #7C3AED; }
+                button:disabled {
+                    background: #adb5bd;
+                    cursor: not-allowed;
+                }
+                .instruction { margin-bottom: 10px; font-size: 12px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div id="map"></div>
+            <div class="info-panel">
+                <strong>📍 Sélection de votre adresse professionnelle</strong>
+                <div class="instruction">Cliquez sur la carte pour placer un marqueur</div>
+                <div class="address-box" id="addressDisplay">
+                    Aucune adresse sélectionnée
+                </div>
+                <button id="confirmBtn" disabled>
+                    ✅ Confirmer et utiliser cette adresse
+                </button>
+            </div>
+            
+            <script>
+                // Attendre que la page soit complètement chargée
+                window.addEventListener('load', function() {
+                    try {
+                        // Initialisation de la carte
+                        var map = L.map('map').setView([36.8065, 10.1815], 13);
+                        
+                        // Ajout des tuiles OpenStreetMap
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors',
+                            maxZoom: 19
+                        }).addTo(map);
+                        
+                        var marker = null;
+                        var currentAddress = '';
+                        var addressDisplay = document.getElementById('addressDisplay');
+                        var confirmBtn = document.getElementById('confirmBtn');
+                        
+                        // Gestion du clic sur la carte
+                        map.on('click', function(e) {
+                            var lat = e.latlng.lat;
+                            var lng = e.latlng.lng;
+                            
+                            // Ajouter ou déplacer le marqueur
+                            if (marker) {
+                                marker.setLatLng(e.latlng);
+                            } else {
+                                marker = L.marker(e.latlng).addTo(map);
+                            }
+                            
+                            // Mettre à jour l'affichage
+                            addressDisplay.innerHTML = '🔍 Recherche de l\\'adresse en cours...';
+                            addressDisplay.className = 'address-box loading';
+                            confirmBtn.disabled = true;
+                            confirmBtn.textContent = '⏳ Chargement...';
+                            
+                            // Appel à l'API Nominatim
+                            var url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&accept-language=fr';
+                            
+                            fetch(url, {
+                                headers: {
+                                    'User-Agent': 'UniMind Application/1.0'
+                                }
+                            })
+                            .then(function(response) {
+                                if (!response.ok) throw new Error('HTTP ' + response.status);
+                                return response.json();
+                            })
+                            .then(function(data) {
+                                if (data && data.display_name) {
+                                    currentAddress = data.display_name;
+                                    addressDisplay.innerHTML = '📍 ' + currentAddress;
+                                    addressDisplay.className = 'address-box success';
+                                    confirmBtn.disabled = false;
+                                    confirmBtn.textContent = '✅ Confirmer cette adresse';
+                                } else {
+                                    throw new Error('Adresse non trouvée');
+                                }
+                            })
+                            .catch(function(error) {
+                                console.error('Erreur:', error);
+                                currentAddress = '';
+                                addressDisplay.innerHTML = '❌ ' + error.message + '. Veuillez réessayer.';
+                                addressDisplay.className = 'address-box error';
+                                confirmBtn.disabled = true;
+                                confirmBtn.textContent = '❌ Erreur, réessayez';
+                            });
+                        });
+                        
+                        // Confirmation de l'adresse
+                        confirmBtn.onclick = function() {
+                            if (currentAddress) {
+                                alert(currentAddress);
+                            }
+                        };
+                        
+                        // Ajuster la taille après chargement
+                        setTimeout(function() {
+                            map.invalidateSize();
+                        }, 100);
+                        
+                    } catch(e) {
+                        document.getElementById('addressDisplay').innerHTML = 'Erreur de chargement de la carte: ' + e.message;
+                    }
+                });
+            </script>
+        </body>
+        </html>
+    """;
+
+        // Afficher un message de chargement
+        webView.getEngine().loadContent(html);
+
+        // Capturer l'adresse via alert
+        webView.getEngine().setOnAlert(event -> {
+            String address = event.getData();
+            if (address != null && !address.isEmpty()) {
+                Platform.runLater(() -> {
+                    adresseField.setText(address);
+                    mapStage.close();
+                });
             }
         });
 
-        Scene scene = new Scene(webView, 700, 600);
+        // Afficher le chargement dans la console
+        webView.getEngine().getLoadWorker().stateProperty().addListener((obs, old, newState) -> {
+            if (newState == javafx.concurrent.Worker.State.SUCCEEDED) {
+                System.out.println("✅ Carte chargée");
+            } else if (newState == javafx.concurrent.Worker.State.FAILED) {
+                System.err.println("❌ Échec chargement");
+            }
+        });
+
+        Scene scene = new Scene(webView, 900, 700);
         mapStage.setScene(scene);
         mapStage.show();
     }
