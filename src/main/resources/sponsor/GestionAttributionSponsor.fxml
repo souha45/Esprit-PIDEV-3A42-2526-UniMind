@@ -24,6 +24,7 @@
                         </children>
                     </VBox>
                     <Button text="➕ Nouvelle Attribution" onAction="#ajouterAttribution" styleClass="btn-primary"/>
+                    <Button text="📊 Export Excel" onAction="#exporterExcel" styleClass="btn-secondary"/>
                 </children>
             </HBox>
         </children>

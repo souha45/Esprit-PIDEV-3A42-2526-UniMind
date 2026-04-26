@@ -7,13 +7,16 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import org.example.entities.EvenementSponsor;
 import org.example.enums.Role;
 import org.example.enums.StatutSponsor;
 import org.example.enums.TypeContribution;
 import org.example.services.EvenementSponsorService;
+import org.example.services.evenement.ExcelExportAttributionSponsorService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -68,6 +71,9 @@ public class GestionAttributionSponsorController {
 
     @FXML
     private TextField txtRecherche;
+
+    @FXML
+    private Button btnExportExcel;
 
     // Filtres avancés
     @FXML
@@ -494,6 +500,45 @@ public class GestionAttributionSponsorController {
             } catch (SQLException e) {
                 afficherErreur("Erreur lors de la suppression : " + e.getMessage());
             }
+        }
+    }
+
+    @FXML
+    public void exporterExcel(ActionEvent event) {
+        try {
+            // Récupérer toutes les attributions
+            List<EvenementSponsor> attributionsToExport = attributionService.afficher();
+
+            if (attributionsToExport.isEmpty()) {
+                afficherErreur("Aucune attribution à exporter.");
+                return;
+            }
+
+            // Créer le service d'export
+            ExcelExportAttributionSponsorService exportService = new ExcelExportAttributionSponsorService();
+
+            // Générer le nom du fichier avec la date actuelle
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            String fileName = "attributions_sponsors_export_" + timestamp + ".xlsx";
+
+            // Chemin du dossier de téléchargements de l'utilisateur
+            String userHome = System.getProperty("user.home");
+            String downloadPath = userHome + File.separator + "Downloads" + File.separator + fileName;
+
+            // Exporter vers Excel
+            exportService.exportAttributionsToExcel(attributionsToExport, downloadPath);
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Succès");
+            alert.setHeaderText("Export réussi !");
+            alert.setContentText("Fichier enregistré dans :\n" + downloadPath);
+            alert.getDialogPane().setMinWidth(500);
+            alert.showAndWait();
+
+        } catch (IOException e) {
+            afficherErreur("Erreur lors de l'export Excel : " + e.getMessage());
+        } catch (SQLException e) {
+            afficherErreur("Erreur lors de l'export Excel : " + e.getMessage());
         }
     }
 
