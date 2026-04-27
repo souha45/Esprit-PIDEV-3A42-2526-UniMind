@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -195,7 +196,10 @@ public class ModificationParticipationController {
         // Date d'inscription
         LocalDate date = dateInscription.getValue();
         if (date != null) {
-            LocalDateTime dateTime = date.atStartOfDay();
+            LocalTime time = participationCourante.getDateInscription() != null
+                    ? participationCourante.getDateInscription().toLocalDateTime().toLocalTime()
+                    : LocalTime.now();
+            LocalDateTime dateTime = LocalDateTime.of(date, time);
             p.setDateInscription(Timestamp.valueOf(dateTime));
         } else {
             p.setDateInscription(participationCourante.getDateInscription());

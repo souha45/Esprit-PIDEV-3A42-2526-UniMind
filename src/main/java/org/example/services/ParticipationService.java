@@ -47,6 +47,35 @@ public class ParticipationService implements ICrud<Participation> {
     @Override
     public void ajouter(Participation p) throws SQLException {
         System.out.println("Ajout d'une participation pour l'etudiant ID: " + p.getEtudiantId() + " a l'evenement ID: " + p.getEvenementId());
+
+        Evenement evenement = getEvenementService().findById(p.getEvenementId());
+        if (evenement == null) {
+            throw new SQLException("Événement introuvable (ID=" + p.getEvenementId() + ")");
+        }
+
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+
+        if (evenement.getStatut() != null && (evenement.getStatut() == org.example.enums.StatutEvenement.ANNULE
+                || evenement.getStatut() == org.example.enums.StatutEvenement.TERMINE)) {
+            throw new SQLException("Inscription impossible : l'événement est " + evenement.getStatut().toString().toLowerCase());
+        }
+
+        if (evenement.getDateDebut() != null && evenement.getDateDebut().before(now)) {
+            throw new SQLException("Inscription impossible : l'événement est déjà passé (date de début dépassée)");
+        }
+
+        if (evenement.getDateLimiteInscription() != null && evenement.getDateLimiteInscription().before(now)) {
+            throw new SQLException("Inscription impossible : la date limite d'inscription est dépassée");
+        }
+
+        if (evenement.isComplet()) {
+            throw new SQLException("Inscription impossible : l'événement est complet");
+        }
+
+        if (!evenement.isInscriptionPossible()) {
+            throw new SQLException("Inscription impossible");
+        }
+
         String sql = "INSERT INTO participation (date_inscription, statut, created_at, updated_at, evenement_id, etudiant_id, note_satisfaction, feedback_commentaire, feedback_at, qr_token, scanned_at, present) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -93,6 +122,31 @@ public class ParticipationService implements ICrud<Participation> {
     @Override
     public void modifier(Participation p) throws SQLException {
         System.out.println("Modification de la participation ID: " + p.getParticipationId());
+
+        boolean wantsToSaveFeedback = p.getNoteSatisfaction() != null
+                || (p.getFeedbackCommentaire() != null && !p.getFeedbackCommentaire().trim().isEmpty());
+
+        if (wantsToSaveFeedback) {
+            Participation current = findById(p.getParticipationId());
+            if (current == null) {
+                throw new SQLException("Participation introuvable (ID=" + p.getParticipationId() + ")");
+            }
+
+            if (current.getStatut() != StatutParticipation.CONFIRME) {
+                throw new SQLException("Avis impossible : votre participation n'est pas confirmée");
+            }
+
+            Evenement ev = getEvenementService().findById(current.getEvenementId());
+            if (ev == null) {
+                throw new SQLException("Événement introuvable (ID=" + current.getEvenementId() + ")");
+            }
+
+            Timestamp now = new Timestamp(System.currentTimeMillis());
+            if (ev.getDateFin() != null && ev.getDateFin().after(now)) {
+                throw new SQLException("Avis impossible : l'événement n'est pas encore terminé");
+            }
+        }
+
         String sql = "UPDATE participation SET date_inscription=?, statut=?, updated_at=?, evenement_id=?, etudiant_id=?, note_satisfaction=?, feedback_commentaire=?, feedback_at=?, qr_token=?, scanned_at=?, present=? " +
                 "WHERE participation_id=?";
 
@@ -307,13 +361,15 @@ public class ParticipationService implements ICrud<Participation> {
     }
 
     /**
-     * Récupérer tous les participants d'un événement
+     * Récupérer les participants confirmés d'un événement
+     * (seulement ceux avec statut = 'confirme')
      */
     public java.util.List<ParticipantInfo> getParticipantsByEvenementId(int evenementId) throws SQLException {
         String sql = "SELECT p.etudiant_id, u.email, u.prenom, u.nom, p.date_inscription " +
                      "FROM participation p " +
                      "LEFT JOIN user u ON p.etudiant_id = u.user_id " +
-                     "WHERE p.evenement_id = ?";
+                     "WHERE p.evenement_id = ? " +
+                     "AND p.statut = 'confirme'";
         java.util.List<ParticipantInfo> result = new java.util.ArrayList<>();
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {

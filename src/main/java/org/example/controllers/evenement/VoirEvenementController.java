@@ -346,7 +346,10 @@ public class VoirEvenementController {
                         btnLaisserAvis.setVisible(false);
                         lblAvisDonne.setVisible(true);
                     } else {
-                        btnLaisserAvis.setVisible(true);
+                        // Autoriser l'avis seulement si la participation est confirmée
+                        boolean confirme = participationEtudiant != null
+                                && participationEtudiant.getStatut() == org.example.enums.StatutParticipation.CONFIRME;
+                        btnLaisserAvis.setVisible(confirme);
                         lblAvisDonne.setVisible(false);
                     }
                 } else {
@@ -773,6 +776,11 @@ public class VoirEvenementController {
 
             if (participation[0] == null) {
                 afficherAlerte("Erreur", "Vous devez être inscrit à cet événement pour laisser un avis");
+                return;
+            }
+
+            if (participation[0].getStatut() != org.example.enums.StatutParticipation.CONFIRME) {
+                afficherAlerte("Erreur", "Vous ne pouvez laisser un avis que si votre participation est confirmée");
                 return;
             }
 

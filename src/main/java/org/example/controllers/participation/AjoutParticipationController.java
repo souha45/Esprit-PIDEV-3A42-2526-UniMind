@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -174,7 +175,7 @@ public class AjoutParticipationController {
 
         // Date d'inscription : utilise la date du DatePicker ou la date actuelle
         LocalDate date = dateInscription.getValue();
-        LocalDateTime dateTime = date != null ? date.atStartOfDay() : LocalDateTime.now();
+        LocalDateTime dateTime = date != null ? LocalDateTime.of(date, LocalTime.now()) : LocalDateTime.now();
         Timestamp dateInscriptionTs = Timestamp.valueOf(dateTime);
 
         Participation participation = new Participation(evenementId, etudiantId, statut);

@@ -422,11 +422,12 @@ public class ParticipationsEtudiantController {
             Button btnLaisserAvis = null;
             Label lblAvisDonne = null;
             if (evenementTermine) {
-                if (!participation.hasFeedback()) {
+                boolean confirme = participation.getStatut() == StatutParticipation.CONFIRME;
+                if (confirme && !participation.hasFeedback()) {
                     btnLaisserAvis = new Button("💬 Laisser un avis");
                     btnLaisserAvis.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 8 16; -fx-cursor: hand; -fx-font-weight: bold;");
                     btnLaisserAvis.setOnAction(event -> voirEvenement(evenement)); // Redirige vers le détail où le bouton laisser avis est disponible
-                } else {
+                } else if (participation.hasFeedback()) {
                     lblAvisDonne = new Label("✓ Avis donné");
                     lblAvisDonne.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 8 16; -fx-background-radius: 10; -fx-font-size: 12px; -fx-font-weight: bold;");
                 }
