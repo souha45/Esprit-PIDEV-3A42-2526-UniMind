@@ -109,7 +109,7 @@ public class ModificationAttributionSponsorController {
     private void chargerEvenements() {
         try {
             int userId = SessionManager.getInstance().getCurrentUserId().orElse(-1);
-            String sql = "SELECT evenement_id, titre FROM evenement WHERE organisateur_id = ? ORDER BY titre";
+            String sql = "SELECT evenement_id, titre FROM evenement WHERE organisateur_id = ? AND statut IN ('a_venir', 'en_cours') ORDER BY titre";
             List<EvenementInfo> evenements = new ArrayList<>();
 
             try (PreparedStatement ps = MyDataBase_Unimind.getInstance().getConnection().prepareStatement(sql)) {

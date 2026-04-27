@@ -234,11 +234,11 @@ public class AjoutParticipationController {
         try {
             String sql;
             if (isAdmin) {
-                // Admin : voir tous les événements
-                sql = "SELECT evenement_id, titre FROM evenement ORDER BY titre";
+                // Admin : voir tous les événements à venir et en cours
+                sql = "SELECT evenement_id, titre FROM evenement WHERE statut IN ('a_venir', 'en_cours') ORDER BY titre";
             } else {
-                // Responsable : voir seulement ses événements
-                sql = "SELECT evenement_id, titre FROM evenement WHERE organisateur_id = ? ORDER BY titre";
+                // Responsable : voir seulement ses événements à venir et en cours
+                sql = "SELECT evenement_id, titre FROM evenement WHERE organisateur_id = ? AND statut IN ('a_venir', 'en_cours') ORDER BY titre";
             }
 
             java.util.List<EvenementInfo> evenements = new ArrayList<>();
