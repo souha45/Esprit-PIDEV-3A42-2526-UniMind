@@ -100,13 +100,11 @@ public class EventStatusSchedulerService {
                 "AND date_debut <= ? " +
                 "AND date_fin >= ?";
 
-        try (Connection conn = MyDataBase_Unimind.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
+        Connection conn = MyDataBase_Unimind.getInstance().getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, StatutEvenement.EN_COURS.getDbValue());
             ps.setTimestamp(2, now);
             ps.setTimestamp(3, now);
-
             return ps.executeUpdate();
         }
     }
@@ -119,12 +117,10 @@ public class EventStatusSchedulerService {
                 "WHERE statut IN ('a_venir', 'actif', 'en_cours') " +
                 "AND date_fin < ?";
 
-        try (Connection conn = MyDataBase_Unimind.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
+        Connection conn = MyDataBase_Unimind.getInstance().getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, StatutEvenement.TERMINE.getDbValue());
             ps.setTimestamp(2, now);
-
             return ps.executeUpdate();
         }
     }
