@@ -1,6 +1,7 @@
 package org.example.controllers;
 
 import javafx.animation.FadeTransition;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -609,7 +610,7 @@ public class RendezVousEtudiantController
 
             if (rowsAffected > 0) {
                 System.out.println("✓ Annulation réussie en BDD");
-                chargerRendezVous(); // Recharger la liste
+                rafraichir(); // Recharger la liste
                 showToast("✓  Rendez-vous annulé avec succès.", ToastType.SUCCESS);
             } else {
                 showToast("✗ Impossible d'annuler : rendez-vous non trouvé ou déjà traité.", ToastType.ERROR);
@@ -701,7 +702,7 @@ public class RendezVousEtudiantController
             controller.setModalStage(modalStage);
 
             modalStage.showAndWait();
-            chargerRendezVous();
+            rafraichir();
         } catch (IOException e) {
             showToast("✗  Impossible d'ouvrir le formulaire.", ToastType.ERROR);
             e.printStackTrace();
@@ -712,15 +713,25 @@ public class RendezVousEtudiantController
     //  CHARGEMENT
     // ════════════════════════════════════════════════════════════════
     private void chargerRendezVous() {
-        if (utilisateur == null) { lblStatut.setText("Erreur : utilisateur non connecté"); return; }
+        if (utilisateur == null) {
+            lblStatut.setText("Erreur : utilisateur non connecté");
+            return;
+        }
         try {
             lblStatut.setText("Chargement…");
-            List<RendezVousDetail> liste =
-                    rendezVousService.afficherRendezVousDetailsByEtudiant(utilisateur.getUserId());
+
+            // ✅ Créer un nouveau service avec une connexion fraîche
+            RendezVousService nouveauService = new RendezVousService();
+            List<RendezVousDetail> liste = nouveauService.afficherRendezVousDetailsByEtudiant(utilisateur.getUserId());
+
+            rendezVousList.clear();
             rendezVousList.setAll(liste);
             remplirComboPsy(liste);
             mettreAJourStatCards(liste);
             appliquerFiltres();
+
+            System.out.println("✓ Rechargement réussi : " + liste.size() + " RDV");
+
         } catch (SQLException e) {
             lblStatut.setText("Erreur : " + e.getMessage());
             e.printStackTrace();
@@ -828,5 +839,15 @@ public class RendezVousEtudiantController
             e.printStackTrace();
             showToast("❌ Impossible d'ouvrir l'assistant", ToastType.ERROR);
         }
+    }
+
+    /**
+     * Force le rafraîchissement de la liste des rendez-vous
+     */
+    public void rafraichir() {
+        Platform.runLater(() -> {
+            chargerRendezVous();
+            tableViewRendezVous.refresh();
+        });
     }
 }
