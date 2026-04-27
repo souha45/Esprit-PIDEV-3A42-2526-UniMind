@@ -5,13 +5,20 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.scene.Parent;
+import org.example.services.evenement.EventStatusSchedulerService;
 
 public class MainApp extends Application {
     private static Stage primaryStage;
+    private EventStatusSchedulerService eventStatusScheduler;
 
     @Override
     public void start(Stage stage) throws Exception {
         primaryStage = stage;
+
+        // 🔥 Démarrer le scheduler de mise à jour des statuts d'événements
+        eventStatusScheduler = new EventStatusSchedulerService();
+        eventStatusScheduler.start();
+
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/login.fxml")
         );
@@ -27,6 +34,13 @@ public class MainApp extends Application {
         stage.setResizable(true);  // ← On peut redimensionner
         stage.setScene(scene);
         stage.show();
+
+        // Arrêter le scheduler quand l'application se ferme
+        stage.setOnCloseRequest(event -> {
+            if (eventStatusScheduler != null) {
+                eventStatusScheduler.stop();
+            }
+        });
     }
     public static void showAdminView() throws Exception {
         Parent view = FXMLLoader.load(MainApp.class.getResource("/fxml/AdminView.fxml"));

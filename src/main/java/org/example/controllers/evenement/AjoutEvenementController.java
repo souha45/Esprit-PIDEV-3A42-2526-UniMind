@@ -435,7 +435,8 @@ public class AjoutEvenementController {
         }
 
         if (!erreurs.isEmpty()) {
-            afficherErreur("Le formulaire contient des erreurs. Vérifiez les champs marqués en rouge.");
+            String message = "Erreurs détectées :\n" + String.join("\n", erreurs);
+            afficherErreur(message);
             return false;
         }
 
