@@ -88,7 +88,7 @@ public class TraitementStatistiquesController implements Initializable {
     private List<Etudiant>             tousLesEtudiants;
     private User                       utilisateur;
 
-    // ── Classe interne ────────────────────────────────────────────────────────
+    //  Classe interne
     public static class EtudiantStat {
         private final String nom;
         private int total, enCours, termine, suspendu;
@@ -107,7 +107,7 @@ public class TraitementStatistiquesController implements Initializable {
         public void incrementSuspendu() { suspendu++; }
     }
 
-    // ── initialize ────────────────────────────────────────────────────────────
+    // initialize
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         if (lblDate != null)
@@ -129,14 +129,14 @@ public class TraitementStatistiquesController implements Initializable {
     }
 
     private void creerGraphiques() {
-        // ── BarChart Catégorie ──────────────────────────────
+        //  BarChart Catégorie
         xAxisCategorie = new CategoryAxis();
         xAxisCategorie.setLabel("Catégorie de traitement");
         xAxisCategorie.setTickMarkVisible(true);
         xAxisCategorie.setTickLabelsVisible(true);
         xAxisCategorie.setAnimated(false);
         xAxisCategorie.setAutoRanging(false);
-        // ✅ Pré-remplir TOUTES les catégories dès la création
+        // Pré-remplir TOUTES les catégories dès la création
         xAxisCategorie.setCategories(FXCollections.observableArrayList(
                 "Cognitif", "Comportemental", "Émotionnel", "Relaxation"));
 
@@ -162,7 +162,7 @@ public class TraitementStatistiquesController implements Initializable {
             vboxBarCategorie.getChildren().add(barChartCategorie);
         }
 
-        // ── BarChart Évolution ──────────────────────────────
+        //  BarChart Évolution
         xAxisEvolution = new CategoryAxis();
         xAxisEvolution.setLabel("Période");
         xAxisEvolution.setTickMarkVisible(true);
@@ -200,7 +200,7 @@ public class TraitementStatistiquesController implements Initializable {
         chargerDonnees();
     }
 
-    // ── Configuration initiale ────────────────────────────────────────────────
+    // Configuration initiale
     private void initialiserPeriodes() {
         if (cmbPeriode != null) {
             cmbPeriode.setItems(FXCollections.observableArrayList(
@@ -258,7 +258,7 @@ public class TraitementStatistiquesController implements Initializable {
                     new SimpleIntegerProperty(c.getValue().getSuspendu()).asObject());
     }
 
-    // ── Chargement ───────────────────────────────────────────────────────────
+    // Chargement
     private void chargerDonnees() {
         if (utilisateur == null) {
             SessionManager session = SessionManager.getInstance();
@@ -287,7 +287,7 @@ public class TraitementStatistiquesController implements Initializable {
         }
     }
 
-    // ── Mise à jour globale ───────────────────────────────────────────────────
+    //  Mise à jour globale
     private void mettreAJourStatistiques() {
         if (tousLesTraitements == null || tousLesTraitements.isEmpty()) {
             reinitialiserAffichage();
@@ -367,7 +367,7 @@ public class TraitementStatistiquesController implements Initializable {
         if (tableViewTopEtudiants != null) tableViewTopEtudiants.getItems().clear();
     }
 
-    // ── Filtrage ──────────────────────────────────────────────────────────────
+    //  Filtrage
     private List<Traitement> filtrerParPeriode(List<Traitement> traitements) {
         if (cmbPeriode == null) return traitements;
         String    periode = cmbPeriode.getValue();
@@ -395,7 +395,7 @@ public class TraitementStatistiquesController implements Initializable {
         }).collect(Collectors.toList());
     }
 
-    // ── Graphiques ────────────────────────────────────────────────────────────
+    //  Graphiques
     private void mettreAJourPieChartStatut(List<Traitement> t) {
         if (pieChartStatut == null) return;
         pieChartStatut.getData().clear();
@@ -427,13 +427,13 @@ public class TraitementStatistiquesController implements Initializable {
         axe.setTickMarkVisible(true);
         axe.setTickLabelsVisible(true);
         axe.setAnimated(false);
-        // ✅ Style inline — ignore complètement le CSS
+        //  Style inline — ignore complètement le CSS
         axe.setStyle(
                 "-fx-tick-label-fill: #1f2937;" +
                         "-fx-font-size: 12px;" +
                         "-fx-font-family: 'Segoe UI';"
         );
-        // ✅ Forcer la couleur du label titre de l'axe
+        //  Forcer la couleur du label titre de l'axe
         axe.lookup(".axis-label");
     }
 
@@ -460,7 +460,7 @@ public class TraitementStatistiquesController implements Initializable {
             String titre, List<String> categories,
             List<XYChart.Data<String, Number>> data) {
 
-        // ✅ Définir les catégories AVANT de créer le BarChart
+        // Définir les catégories AVANT de créer le BarChart
         xAxis.setCategories(FXCollections.observableArrayList(categories));
 
         BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
@@ -477,7 +477,7 @@ public class TraitementStatistiquesController implements Initializable {
         data.forEach(d -> series.getData().add(d));
         chart.getData().add(series);
 
-        // ✅ Après rendu, forcer couleurs sur tous les éléments texte
+        //  Après rendu, forcer couleurs sur tous les éléments texte
         Platform.runLater(() -> {
             // Couleur des tick labels axe X
             xAxis.lookupAll(".axis-tick-mark").forEach(n -> {});
@@ -527,7 +527,7 @@ public class TraitementStatistiquesController implements Initializable {
 
         for (Map.Entry<String, String> e : labelsFr.entrySet()) {
             long c = counts.getOrDefault(e.getKey(), 0L);
-            // ✅ Ajouter TOUTES les catégories (même à 0) pour afficher les labels X
+            //  Ajouter TOUTES les catégories (même à 0) pour afficher les labels X
             dataList.add(new XYChart.Data<>(e.getValue(), c));
             if (c > 0) { maxVal = Math.max(maxVal, c); hasData = true; }
         }
@@ -625,7 +625,7 @@ public class TraitementStatistiquesController implements Initializable {
                         .collect(Collectors.toList())));
     }
 
-    // ── Actions ───────────────────────────────────────────────────────────────
+    //  Actions
     @FXML
     private void handleActualiser() {
         if (utilisateur != null) { chargerDonnees(); return; }

@@ -418,7 +418,7 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             // Appliquer tri
             suivisFiltres = appliquerTri(suivisFiltres, traitementsMap);
 
-            // MODIFICATION ICI : Stocker toutes les lignes pour la pagination
+            //  Stocker toutes les lignes pour la pagination
             toutesLesLignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
             currentPage = 0;
             appliquerPagination();
@@ -926,7 +926,7 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
                 boolean estEtudiant = (utilisateur != null &&
                         "ETUDIANT".equals(utilisateur.getRole().name().trim()));
 
-                // ✅ Recréer les boutons à chaque appel pour éviter les conflits de cellules
+                //  Recréer les boutons à chaque appel pour éviter les conflits de cellules
                 Button btnView   = new Button("👁");
                 Button btnEdit   = new Button("✏");
                 Button btnDelete = new Button("🗑");
@@ -956,22 +956,22 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
                 HBox container = new HBox(6);
                 container.setAlignment(Pos.CENTER);
 
-                // 👁️ Bouton Afficher toujours visible
+                //  Bouton Afficher toujours visible
                 container.getChildren().add(btnView);
 
                 if (estPsychologue) {
-                    // ✅ Psy : Modifier/Supprimer UNIQUEMENT sur SES propres suivis
+                    //  Psy : Modifier/Supprimer UNIQUEMENT sur SES propres suivis
                     if (suivi.getSaisiPar() == SaisiPar.PSYCHOLOGUE) {
                         container.getChildren().addAll(btnEdit, btnDelete);
                     }
-                    // ❌ Suivi ETUDIANT → bouton 👁️ uniquement
+                    //  Suivi ETUDIANT → bouton 👁️ uniquement
 
                 } else if (estEtudiant) {
-                    // ✅ Étudiant : Modifier/Supprimer UNIQUEMENT sur SES propres suivis
+                    //  Étudiant : Modifier/Supprimer UNIQUEMENT sur SES propres suivis
                     if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
                         container.getChildren().addAll(btnEdit, btnDelete);
                     }
-                    // ❌ Suivi PSYCHOLOGUE → bouton 👁️ uniquement
+                    //  Suivi PSYCHOLOGUE → bouton 👁️ uniquement
 
                 }
 
@@ -1014,7 +1014,7 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             suivisFiltres = appliquerRechercheEtFiltres(suivisFiltres, traitementsMap);
             suivisFiltres = appliquerTri(suivisFiltres, traitementsMap);
 
-            // MODIFICATION ICI : Stocker toutes les lignes pour la pagination
+            //  Stocker toutes les lignes pour la pagination
             toutesLesLignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
 
             // Réinitialiser à la première page

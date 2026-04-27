@@ -8,7 +8,7 @@
             fx:controller="org.example.controllers.TraitementController"
             stylesheets="@/css/traitements-suivis.css">
 
-    <!-- Sidebar gauche (intégrée au projet) -->
+    <!-- Sidebar gauche -->
     <left>
         <fx:include fx:id="sidebarPsy" source="/SidebarPsy.fxml"/>
     </left>
@@ -28,7 +28,7 @@
                 </HBox>
             </VBox>
 
-            <!-- ===== SECTION STATISTIQUES ===== -->
+            <!--  SECTION STATISTIQUES  -->
             <HBox spacing="14" style="-fx-background-color: white; -fx-padding: 20 24; -fx-border-color: #e0e7ff; -fx-border-width: 0 0 1 0;">
 
                 <!-- Carte Total -->

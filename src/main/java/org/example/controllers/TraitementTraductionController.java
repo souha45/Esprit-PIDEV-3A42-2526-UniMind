@@ -308,7 +308,7 @@ public class TraitementTraductionController implements Initializable {
         }
     }
 
-    // VERSION FINALE CORRIGÉE - Pied de page sur la première page
+    //  Pied de page sur la première page
     private void genererPDF(File file) throws Exception {
         String selected = cmbLangueCible.getValue();
         String langueNom = selected != null ? selected : "langue cible";
@@ -373,7 +373,7 @@ public class TraitementTraductionController implements Initializable {
         addTranslationSection(document, "Catégorie", traitement.getCategorie().name(), categorieTraduite, fontRegular, fontBold);
         addTranslationSection(document, "Objectif thérapeutique", traitement.getObjectifTherapeutique(), objectifTraduit, fontRegular, fontBold);
 
-        // 🔥 Pied de page - Force à rester sur la première page
+        //  Pied de page - Force à rester sur la première page
         Paragraph footer = new Paragraph("Document généré par UniMind - Système de traduction de traitements")
                 .setFont(fontRegular)
                 .setFontSize(9)
@@ -451,7 +451,7 @@ public class TraitementTraductionController implements Initializable {
 
     @FXML
     private void handleRetour() {
-        // ✅ Simplement fermer cette fenêtre — la fenêtre principale reste intacte
+        //  Simplement fermer cette fenêtre — la fenêtre principale reste intacte
         Stage stage = (Stage) btnRetour.getScene().getWindow();
         stage.close();
     }

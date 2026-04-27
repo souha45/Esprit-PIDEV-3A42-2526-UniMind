@@ -53,7 +53,7 @@
                        -fx-background-color: transparent;">
         <VBox spacing="20" style="-fx-padding: 20; -fx-background-color: #f3f4f6;">
 
-            <!-- ── Ligne 1 : Cartes statistiques ── -->
+            <!--  Ligne 1 : Cartes statistiques  -->
             <HBox spacing="15" alignment="CENTER">
                 <VBox spacing="4" HBox.hgrow="ALWAYS" styleClass="stat-card"
                       alignment="CENTER">
@@ -87,7 +87,7 @@
                 </VBox>
             </HBox>
 
-            <!-- ── Ligne 2 : PieCharts ── -->
+            <!--  Ligne 2 : PieCharts  -->
             <HBox spacing="20" alignment="CENTER">
                 <VBox spacing="10" HBox.hgrow="ALWAYS" styleClass="chart-container">
                     <Label text="Répartition par Statut" styleClass="chart-title"/>
@@ -107,19 +107,19 @@
                 </VBox>
             </HBox>
 
-            <!-- ── Ligne 3 : BarChart Catégorie ── -->
+            <!--  Ligne 3 : BarChart Catégorie  -->
             <VBox spacing="10" styleClass="chart-container">
                 <Label text="Traitements par Catégorie" styleClass="chart-title"/>
                 <VBox fx:id="vboxBarCategorie" prefHeight="320" VBox.vgrow="ALWAYS"/>
             </VBox>
 
-            <!-- ── Ligne 4 : BarChart Évolution ── -->
+            <!--  Ligne 4 : BarChart Évolution  -->
             <VBox fx:id="vboxEvolution" spacing="10" styleClass="chart-container">
                 <Label text="Évolution des traitements" styleClass="chart-title"/>
                 <VBox fx:id="vboxBarEvolution" prefHeight="320" VBox.vgrow="ALWAYS"/>
             </VBox>
 
-            <!-- ── Ligne 5 : Top étudiants ── -->
+            <!--  Ligne 5 : Top étudiants  -->
             <VBox spacing="10" styleClass="chart-container">
                 <Label text="Top 5 Étudiants avec le plus de traitements"
                        styleClass="chart-title"/>

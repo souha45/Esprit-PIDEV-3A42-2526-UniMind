@@ -79,7 +79,7 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
     @FXML private Label statSuspendu;
     @FXML private Label statPrioriteHaute;
 
-    // Sidebar (injecté comme VBox, pas comme contrôleur)
+    // Sidebar
     @FXML private SidebarEtudiantController sidebarEtudiantController;
     @FXML private StackPane toastContainer;
 

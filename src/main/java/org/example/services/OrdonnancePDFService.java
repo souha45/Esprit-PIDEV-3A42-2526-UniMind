@@ -26,7 +26,7 @@ import com.itextpdf.layout.properties.VerticalAlignment;
 
 public class OrdonnancePDFService {
 
-    // ── Palette de couleurs ────────────────────────────────────────────────
+    //  Palette de couleurs
     private static final DeviceRgb VIOLET_FONCE  = new DeviceRgb(79,  70,  229); // #4f46e5
     private static final DeviceRgb VIOLET_CLAIR  = new DeviceRgb(237, 233, 254); // #ede9fe
     private static final DeviceRgb VIOLET_MEDIUM = new DeviceRgb(99,  102, 241); // #6366f1
@@ -40,7 +40,7 @@ public class OrdonnancePDFService {
     private static final DateTimeFormatter DATE_FR =
             DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH);
 
-    // ── API publique ───────────────────────────────────────────────────────
+    //  API publique
 
     /**
      * @param traitement  Le traitement à exporter
@@ -82,7 +82,7 @@ public class OrdonnancePDFService {
                 LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
     }
 
-    // ── Sections ──────────────────────────────────────────────────────────
+    //  Sections
 
     private void ajouterEntete(Document doc, User psy) {
         // Bandeau violet en-tête
@@ -295,7 +295,7 @@ public class OrdonnancePDFService {
                 .setPaddingTop(8));
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────
+    //  Helpers
 
     private Paragraph titreSousSection(String texte) {
         return new Paragraph(texte)

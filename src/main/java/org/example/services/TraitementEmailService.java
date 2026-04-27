@@ -36,7 +36,7 @@ public class TraitementEmailService {
     private String fromName;
 
     public TraitementEmailService() {
-        // Configuration par défaut - peut être chargée depuis un fichier de config
+        // Configuration par défaut
         this.smtpHost = "smtp.gmail.com"; // ou autre serveur SMTP
         this.smtpPort = 587;
         this.smtpAuth = true;
@@ -44,8 +44,7 @@ public class TraitementEmailService {
         this.fromEmail = "omaimagouider6@gmail.com";
         this.smtpUsername = "omaimagouider6@gmail.com"; // même email que l'expéditeur
         this.smtpPassword = "zchq ocxh cjzn ywnu"; //  le mot de passe d'application Gmail de 16 caractères
-        // Pour désactiver les emails pendant les tests, mettez cette valeur à null ou vide
-        // this.smtpPassword = null; // Désactive les envois d'emails
+        // this.smtpPassword = null; // Désactive les envois d'emails pendant les tests
         this.fromName = "Unimind";
     }
 
@@ -299,8 +298,7 @@ public class TraitementEmailService {
         RapportResult result = new RapportResult();
 
         try {
-            // Récupérer tous les psychologues (à implémenter selon votre structure)
-            // Pour l'instant, simulation
+            // Récupérer tous les psychologues
             List<User> psychologues = getPsychologues();
 
             for (User psychologue : psychologues) {
@@ -757,10 +755,9 @@ public class TraitementEmailService {
     }
 
     /**
-     * Simulation de récupération des psychologues (à adapter selon votre structure)
+     * Simulation de récupération des psychologues
      */
     private List<User> getPsychologues() {
-        // À implémenter selon votre structure de données
         return List.of(); // liste vide pour l'instant
     }
 

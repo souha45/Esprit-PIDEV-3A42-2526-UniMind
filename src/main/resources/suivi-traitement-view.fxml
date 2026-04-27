@@ -29,7 +29,7 @@
                 </HBox>
             </VBox>
 
-            <!-- ===== SECTION STATISTIQUES ===== -->
+            <!-- SECTION STATISTIQUES -->
             <HBox spacing="14" style="-fx-background-color: white; -fx-padding: 20 24; -fx-border-color: #e0e7ff; -fx-border-width: 0 0 1 0;">
 
                 <VBox spacing="5" HBox.hgrow="ALWAYS"
