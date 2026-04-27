@@ -237,7 +237,7 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
                 RendezVousDetail rdv = getTableView().getItems().get(getIndex());
                 String statut = rdv.getStatut();
                 String typeConsult = rdv.getTypeConsult();
-                
+
                 // Debug détaillé
                 System.out.println("=== DEBUG VISIO ===");
                 System.out.println("RDV ID: " + rdv.getRendezVousId());
@@ -249,12 +249,13 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
                 System.out.println("TypeConsult null: " + (typeConsult == null));
                 System.out.println("Confirme check: " + "confirme".equals(statut.toLowerCase()));
                 System.out.println("En ligne check: " + "en_ligne".equals(typeConsult.toLowerCase()));
-                
-                // Afficher le bouton seulement si RDV confirmé ET en ligne
-                boolean statutOK = statut != null && "confirme".equals(statut.toLowerCase().trim());
-                boolean typeOK = typeConsult != null && "en_ligne".equals(typeConsult.toLowerCase().trim());
-                boolean afficherVisio = statutOK && typeOK;
-                
+
+                String statutLower = statut != null ? statut.toLowerCase().trim() : "";
+               String typeLower   = typeConsult != null ? typeConsult.toLowerCase().trim() : "";
+               boolean statutOK   = "confirme".equals(statutLower) || "en-cours".equals(statutLower);
+               boolean typeOK     = "en_ligne".equals(typeLower);
+               boolean afficherVisio = statutOK && typeOK;
+
                 System.out.println("StatutOK: " + statutOK);
                 System.out.println("TypeOK: " + typeOK);
                 System.out.println("AfficherVisio: " + afficherVisio);
@@ -531,17 +532,17 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
             lblStatut.setText("Chargement en cours...");
             List<RendezVousDetail> rdvs =
                     rendezVousService.afficherRendezVousDetailsByPsy(utilisateur.getUserId());
-            
+
             // Debug des données brutes
             System.out.println("=== CHARGEMENT RDV ===");
             System.out.println("Nombre de RDV: " + rdvs.size());
             for (RendezVousDetail rdv : rdvs) {
-                System.out.println("RDV " + rdv.getRendezVousId() + 
-                    " - Statut: '" + rdv.getStatut() + 
-                    "' - Type: '" + rdv.getTypeConsult() + "'");
+                System.out.println("RDV " + rdv.getRendezVousId() +
+                        " - Statut: '" + rdv.getStatut() +
+                        "' - Type: '" + rdv.getTypeConsult() + "'");
             }
             System.out.println("====================");
-            
+
             rendezVousList.clear();
             rendezVousList.addAll(rdvs);
             majStatistiques(rdvs);
@@ -582,23 +583,62 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
      */
     private void lancerVisioconference(RendezVousDetail rdv) {
         try {
-            // 1. Générer un nom de salle unique
-            String nomSalle = "unimind_" + rdv.getRendezVousId() + "_" + System.currentTimeMillis();
-            String lienVisio = "https://meet.jit.si/" + nomSalle;
+            // Vérifier si un lien existe déjà pour ce RDV
+            String lienExistant = recupererLienVisioExistant(rdv.getRendezVousId());
+            String lienVisio;
 
-            // 2. Sauvegarder le lien dans la BDD
-            sauvegarderLienVisio(rdv.getRendezVousId(), lienVisio);
+            if (lienExistant != null && !lienExistant.isEmpty()) {
+                // Réutiliser le lien existant (étudiant et psy rejoignent la même salle)
+                lienVisio = lienExistant;
+                System.out.println("[Visio] Réutilisation du lien existant : " + lienVisio);
+            } else {
+                // Générer un nouveau lien unique pour ce RDV
+                String nomSalle = "unimind_rdv_" + rdv.getRendezVousId();
+                lienVisio = "https://meet.jit.si/" + nomSalle;
 
-            // 3. Mettre à jour le statut du RDV à "en-cours"
-            mettreAJourStatutRDV(rdv.getRendezVousId(), "en-cours");
+                // Sauvegarder le lien en BDD
+                sauvegarderLienVisio(rdv.getRendezVousId(), lienVisio);
+                System.out.println("[Visio] Nouveau lien créé : " + lienVisio);
+            }
 
-            // 4. Ouvrir la fenêtre de visioconférence
-            ouvrirFenetreVisio(lienVisio, rdv.getEtudiantPrenom() + " " + rdv.getEtudiantNom());
+            // Mettre à jour le statut à "en-cours" si encore "confirme"
+            if ("confirme".equalsIgnoreCase(rdv.getStatut())) {
+                mettreAJourStatutRDV(rdv.getRendezVousId(), "en-cours");
+            }
+
+            // Ouvrir dans le navigateur
+            java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
+            if (desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
+                desktop.browse(new java.net.URI(lienVisio));
+                showToast("🌐 Consultation vidéo ouverte ! L'étudiant peut maintenant rejoindre.", true);
+
+                // Rafraîchir la liste après 2s
+                new javafx.animation.Timeline(new javafx.animation.KeyFrame(
+                        javafx.util.Duration.seconds(2),
+                        e -> javafx.application.Platform.runLater(this::chargerRendezVous)
+                )).play();
+            } else {
+                ouvrirFenetreLien(lienVisio, rdv.getEtudiantPrenom() + " " + rdv.getEtudiantNom());
+            }
 
         } catch (Exception e) {
             showToast("✗ Impossible de démarrer la visio : " + e.getMessage(), false);
             e.printStackTrace();
         }
+    }
+
+    // Récupère le lien visio existant depuis la BDD (dans RendezVousPsyController)
+    private String recupererLienVisioExistant(int rdvId) {
+        String sql = "SELECT lien_visio FROM rendez_vous WHERE rendez_vous_id = ?";
+        try (java.sql.Connection conn = org.example.utils.MyDataBase_Unimind.getInstance().getConnection();
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, rdvId);
+            java.sql.ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getString("lien_visio");
+        } catch (java.sql.SQLException e) {
+            System.err.println("[Visio] Erreur récupération lien : " + e.getMessage());
+        }
+        return null;
     }
 
     /**
@@ -647,29 +687,29 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
             if (desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
                 java.net.URI uri = new java.net.URI(lienVisio);
                 desktop.browse(uri);
-                
+
                 System.out.println("✅ Visio ouverte dans le navigateur: " + lienVisio);
                 showToast("🌐 Consultation vidéo ouverte dans votre navigateur", true);
-                
+
                 // ✅ Proposer de générer un compte-rendu après un délai
                 Timeline timer = new Timeline(new KeyFrame(Duration.seconds(2), e -> {
                     proposerGenererCompteRendu();
                     Platform.runLater(() -> chargerRendezVous());
                 }));
                 timer.play();
-                
+
             } else {
                 // Fallback : fenêtre simple avec le lien
                 ouvrirFenetreLien(lienVisio, nomPatient);
             }
-            
+
         } catch (Exception e) {
             System.err.println("❌ Erreur ouverture navigateur: " + e.getMessage());
             // Fallback : fenêtre simple avec le lien
             ouvrirFenetreLien(lienVisio, nomPatient);
         }
     }
-    
+
     /**
      * Fallback : ouvre une fenêtre simple avec le lien de visio
      */
@@ -677,16 +717,16 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
         try {
             Stage stage = new Stage();
             stage.setTitle("Consultation vidéo - " + nomPatient);
-            
+
             VBox root = new VBox(20);
             root.setStyle("-fx-background-color: #1a1a2e; -fx-padding: 30; -fx-alignment: center;");
-            
+
             Label titre = new Label("🎥 Consultation avec " + nomPatient);
             titre.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
-            
+
             Label info = new Label("Cliquez sur le bouton ci-dessous pour ouvrir la consultation vidéo");
             info.setStyle("-fx-text-fill: #a78bfa; -fx-font-size: 14px;");
-            
+
             Hyperlink lien = new Hyperlink(lienVisio);
             lien.setStyle("-fx-text-fill: #6366f1; -fx-font-size: 12px;");
             lien.setOnAction(e -> {
@@ -696,7 +736,7 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
                     ex.printStackTrace();
                 }
             });
-            
+
             Button btnOuvrir = new Button("🌐 Ouvrir dans le navigateur");
             btnOuvrir.setStyle("-fx-background-color: #6366f1; -fx-text-fill: white; -fx-padding: 10 20;");
             btnOuvrir.setOnAction(e -> {
@@ -706,7 +746,7 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
                     ex.printStackTrace();
                 }
             });
-            
+
             Button btnFermer = new Button("✕ Terminer la consultation");
             btnFermer.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20;");
             btnFermer.setOnAction(ev -> {
@@ -714,13 +754,13 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
                 Platform.runLater(() -> chargerRendezVous());
                 stage.close();
             });
-            
+
             root.getChildren().addAll(titre, info, lien, btnOuvrir, btnFermer);
-            
+
             Scene scene = new Scene(root, 400, 300);
             stage.setScene(scene);
             stage.show();
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             showToast("✗ Impossible d'ouvrir la fenêtre de visio", false);

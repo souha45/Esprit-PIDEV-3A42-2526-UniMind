@@ -40,7 +40,9 @@ public class RendezVousService implements ICrud<RendezVous>{
         // ✅ Requête avec PreparedStatement
         String sql = "INSERT INTO `rendez_vous` (`motif`, `statut`, `created_at`, `dispo_id`, `etudiant_id`, `psy_id`) VALUES (?, ?, ?, ?, ?, ?)";
 
-        PreparedStatement pstmt = con.prepareStatement(sql);
+        // Obtenir une nouvelle connexion pour éviter les connexions fermées
+        Connection conn = MyDataBase_Unimind.getInstance().getConnection();
+        PreparedStatement pstmt = conn.prepareStatement(sql);
         pstmt.setString(1, rendezVous.getMotif());
         pstmt.setString(2, rendezVous.getStatut().toString());  // ✅ CORRIGÉ : .toString()
         pstmt.setTimestamp(3, rendezVous.getCreatedAt());
@@ -53,7 +55,7 @@ public class RendezVousService implements ICrud<RendezVous>{
 
         // ÉTAPE 5 : Mettre à jour le statut de la disponibilité à "RESERVE"
         String updateDispo = "UPDATE disponibilite_psy SET statut = ?, updated_at = ? WHERE dispo_id = ?";
-        PreparedStatement pstDispo = con.prepareStatement(updateDispo);
+        PreparedStatement pstDispo = conn.prepareStatement(updateDispo);
         pstDispo.setString(1, StatutDisponibilite.réservé.toString());
         pstDispo.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
         pstDispo.setInt(3, rendezVous.getDispoId());
@@ -96,7 +98,7 @@ public class RendezVousService implements ICrud<RendezVous>{
                 "WHERE dp.user_id = ? " +
                 "ORDER BY dp.date_dispo DESC, dp.heure_debut ASC";
 
-        PreparedStatement pst = con.prepareStatement(sql);
+        PreparedStatement pst = MyDataBase_Unimind.getInstance().getConnection().prepareStatement(sql);
         pst.setInt(1, psyId);
         ResultSet rs = pst.executeQuery();
 
@@ -168,7 +170,9 @@ public class RendezVousService implements ICrud<RendezVous>{
                 "WHERE rdv.etudiant_id = ? " +
                 "ORDER BY dp.date_dispo DESC, dp.heure_debut ASC";
 
-        PreparedStatement pst = con.prepareStatement(sql);
+        // Obtenir une nouvelle connexion à chaque fois pour éviter les connexions fermées
+        Connection conn = MyDataBase_Unimind.getInstance().getConnection();
+        PreparedStatement pst = conn.prepareStatement(sql);
         pst.setInt(1, etudiantId);
         ResultSet rs = pst.executeQuery();
 
@@ -209,7 +213,7 @@ public class RendezVousService implements ICrud<RendezVous>{
                 "INNER JOIN user u ON dp.user_id = u.user_id " +
                 "WHERE rdv.etudiant_id = ?  AND rendez_vous_id = ?";
 
-        PreparedStatement pst = con.prepareStatement(sql);
+        PreparedStatement pst = MyDataBase_Unimind.getInstance().getConnection().prepareStatement(sql);
         pst.setInt(1, etudiantId);
         pst.setInt(2, rendezVousId);
 
@@ -247,7 +251,7 @@ public class RendezVousService implements ICrud<RendezVous>{
     public void modifierStatutRendezVous(int rendezVousId, int etudiantId,int psyUserId, String nouveauStatut) throws SQLException {
         // ÉTAPE 1 : Vérifier que le rendez-vous existe et appartient à l'étudiant
         String checkSql = "SELECT statut, dispo_id FROM rendez_vous WHERE rendez_vous_id = ? AND etudiant_id = ?";
-        PreparedStatement checkPst = con.prepareStatement(checkSql);
+        PreparedStatement checkPst = MyDataBase_Unimind.getInstance().getConnection().prepareStatement(checkSql);
         checkPst.setInt(1, rendezVousId);
         checkPst.setInt(2, etudiantId);
         ResultSet rs = checkPst.executeQuery();
@@ -295,7 +299,7 @@ public class RendezVousService implements ICrud<RendezVous>{
 
         // ÉTAPE 3 : Mettre à jour le statut
         String updateSql = "UPDATE rendez_vous SET statut = ?, updated_at = ? WHERE rendez_vous_id = ?";
-        PreparedStatement updatePst = con.prepareStatement(updateSql);
+        PreparedStatement updatePst = MyDataBase_Unimind.getInstance().getConnection().prepareStatement(updateSql);
         updatePst.setString(1, nouveauStatut);
         updatePst.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
         updatePst.setInt(3, rendezVousId);

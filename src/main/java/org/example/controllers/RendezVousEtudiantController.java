@@ -306,60 +306,77 @@ public class RendezVousEtudiantController
             }
         });
 
-        // ✅ NOUVELLE COLONNE : Visioconférence (Rejoindre)
-        TableColumn<RendezVousDetail, Void> colRejoindre = new TableColumn<>("🎥");
-        colRejoindre.setPrefWidth(100);
+        // ✅ CONFIGURER LA COLONNE VISIO (déjà déclarée dans le FXML)
+        // ════════════════════════════════════════════════════════════════
+// REMPLACER uniquement le bloc colRejoindre.setCellFactory(...)
+// dans la méthode configurerColonnes() de RendezVousEtudiantController
+// ════════════════════════════════════════════════════════════════
+
         colRejoindre.setCellFactory(col -> new TableCell<>() {
             private final Button btnRejoindre = new Button("🎥 Rejoindre");
 
             {
-                btnRejoindre.setStyle("-fx-background-color: #10b981; -fx-text-fill: white; " +
-                        "-fx-font-size: 11px; -fx-padding: 5 10; " +
-                        "-fx-background-radius: 15; -fx-cursor: hand; " +
-                        "-fx-font-weight: bold;");
+                btnRejoindre.setStyle(
+                        "-fx-background-color:#10b981;-fx-text-fill:white;" +
+                                "-fx-font-size:11px;-fx-padding:5 10;" +
+                                "-fx-background-radius:15;-fx-cursor:hand;-fx-font-weight:bold;");
+                btnRejoindre.setOnMouseEntered(e ->
+                        btnRejoindre.setStyle(btnRejoindre.getStyle().replace("#10b981","#059669")));
+                btnRejoindre.setOnMouseExited(e ->
+                        btnRejoindre.setStyle(btnRejoindre.getStyle().replace("#059669","#10b981")));
 
                 btnRejoindre.setOnAction(e -> {
                     RendezVousDetail rdv = getTableView().getItems().get(getIndex());
                     rejoindreVisioconference(rdv);
                 });
-
-                btnRejoindre.setOnMouseEntered(ev ->
-                        btnRejoindre.setStyle(btnRejoindre.getStyle().replace("#10b981", "#059669")));
-                btnRejoindre.setOnMouseExited(ev ->
-                        btnRejoindre.setStyle(btnRejoindre.getStyle().replace("#059669", "#10b981")));
             }
 
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                    return;
-                }
+                if (empty) { setGraphic(null); return; }
 
                 RendezVousDetail rdv = getTableView().getItems().get(getIndex());
-                String statut = rdv.getStatutRDV().toLowerCase();
-                String typeConsult = rdv.getTypeConsult().toLowerCase();
 
-                // Afficher le bouton seulement si :
-                // 1. Le RDV est confirmé ou en cours (statut = "confirme" ou "encours")
-                // 2. La consultation est EN LIGNE (type = "en_ligne")
-                boolean afficherRejoindre = ("confirme".equals(statut) || "encours".equals(statut))
-                        && "en_ligne".equals(typeConsult);
+                // Afficher "Rejoindre" seulement si :
+                // - statut = "confirme" OU "en-cours"
+                // - type   = "en_ligne"
+                // - lien_visio existe dans la BDD
+                String statut = rdv.getStatut() != null
+                        ? rdv.getStatut().toLowerCase().trim() : "";
+                String type   = rdv.getTypeConsult() != null
+                        ? rdv.getTypeConsult().toLowerCase().trim() : "";
 
-                btnRejoindre.setVisible(afficherRejoindre);
-                btnRejoindre.setManaged(afficherRejoindre);
+                boolean statutOk = "confirme".equals(statut) || "en-cours".equals(statut);
+                boolean typeOk   = "en_ligne".equals(type);
+
+                if (statutOk && typeOk) {
+                    // Vérifier si le lien existe en BDD (requête légère)
+                    String lien = recupererLienVisio(rdv.getRendezVousId());
+                    boolean lienOk = lien != null && !lien.isEmpty();
+
+                    btnRejoindre.setVisible(lienOk);
+                    btnRejoindre.setManaged(lienOk);
+
+                    if (!lienOk) {
+                        // Pas encore de lien : afficher label d'attente
+                        Label attente = new Label("⏳ En attente");
+                        attente.setStyle(
+                                "-fx-font-family:'Segoe UI';-fx-font-size:10px;" +
+                                        "-fx-text-fill:#f59e0b;-fx-font-style:italic;");
+                        setGraphic(attente);
+                        return;
+                    }
+                } else {
+                    btnRejoindre.setVisible(false);
+                    btnRejoindre.setManaged(false);
+                }
+
                 setGraphic(btnRejoindre);
             }
         });
-
-        // Ajouter la colonne Visio à la table
-        tableViewRendezVous.getColumns().add(colRejoindre);
     }
 
-    // ════════════════════════════════════════════════════════════════
-    //  MODAL DÉTAILS — card overlay moderne
-    // ════════════════════════════════════════════════════════════════
     private void afficherDetailsRendezVous(RendezVousDetail rdv) {
         VBox card = new VBox(0);
         card.setMaxWidth(460);
@@ -753,16 +770,23 @@ public class RendezVousEtudiantController
      * Rejoint une consultation vidéo pour un rendez-vous
      */
     private void rejoindreVisioconference(RendezVousDetail rdv) {
+        // Récupérer le lien depuis la BDD
+        String lienVisio = recupererLienVisio(rdv.getRendezVousId());
+
+        if (lienVisio == null || lienVisio.isEmpty()) {
+            showToast("⏳ Le psychologue n'a pas encore démarré la consultation vidéo.", ToastType.WARNING);
+            return;
+        }
+
         try {
-            String lienVisio = recupererLienVisio(rdv.getRendezVousId());
-
-            if (lienVisio == null || lienVisio.isEmpty()) {
-                showToast("⚠️ Le psychologue n'a pas encore démarré la consultation.", ToastType.WARNING);
-                return;
+            java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
+            if (desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
+                desktop.browse(new java.net.URI(lienVisio));
+                showToast("🌐 Consultation vidéo ouverte dans votre navigateur !", ToastType.SUCCESS);
+            } else {
+                // Fallback si le bureau ne supporte pas BROWSE
+                afficherFenetreRejoindre(lienVisio, rdv.getPsyPrenom() + " " + rdv.getPsyNom());
             }
-
-            ouvrirFenetreVisioEtudiant(lienVisio, rdv.getPsyPrenom() + " " + rdv.getPsyNom());
-
         } catch (Exception e) {
             showToast("✗ Impossible de rejoindre : " + e.getMessage(), ToastType.ERROR);
             e.printStackTrace();
@@ -790,34 +814,40 @@ public class RendezVousEtudiantController
     /**
      * Ouvre la fenêtre de visioconférence pour l'étudiant
      */
-    private void ouvrirFenetreVisioEtudiant(String lienVisio, String nomPsy) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/VisioConsultation.fxml"));
-            Parent root = loader.load();
+    private void afficherFenetreRejoindre(String lienVisio, String nomPsy) {
+        Stage stage = new Stage();
+        stage.setTitle("Consultation avec Dr. " + nomPsy);
 
-            VisioConsultationController controller = loader.getController();
+        VBox root = new VBox(20);
+        root.setAlignment(javafx.geometry.Pos.CENTER);
+        root.setStyle("-fx-background-color:#1a1a2e;-fx-padding:30;");
 
-            Stage stage = new Stage();
-            stage.setTitle("Consultation vidéo avec " + nomPsy);
-            stage.setMinWidth(900);
-            stage.setMinHeight(700);
-            stage.setScene(new Scene(root));
+        Label titre = new Label("🎥  Consultation avec Dr. " + nomPsy);
+        titre.setStyle("-fx-text-fill:white;-fx-font-size:17px;-fx-font-weight:bold;");
 
-            controller.setStage(stage);
-            controller.chargerSalle(lienVisio, "Consultation avec " + nomPsy, false);
+        Label info = new Label("Cliquez pour rejoindre la consultation vidéo");
+        info.setStyle("-fx-text-fill:#a78bfa;-fx-font-size:13px;");
 
-            // Callback quand la fenêtre se ferme
-            controller.setOnFermerCallback(() -> {
-                // Rien de spécial pour l'étudiant
-                System.out.println("Fenêtre de visio fermée");
-            });
+        Button btnOuvrir = new Button("🌐  Rejoindre maintenant");
+        btnOuvrir.setStyle(
+                "-fx-background-color:#10b981;-fx-text-fill:white;" +
+                        "-fx-font-size:14px;-fx-font-weight:bold;" +
+                        "-fx-padding:12 28;-fx-background-radius:10;-fx-cursor:hand;");
+        btnOuvrir.setOnAction(e -> {
+            try { java.awt.Desktop.getDesktop().browse(new java.net.URI(lienVisio)); }
+            catch (Exception ex) { ex.printStackTrace(); }
+        });
 
-            stage.show();
+        Button btnFermer = new Button("✕  Fermer");
+        btnFermer.setStyle(
+                "-fx-background-color:#374151;-fx-text-fill:white;" +
+                        "-fx-font-size:12px;-fx-padding:9 22;-fx-background-radius:10;-fx-cursor:hand;");
+        btnFermer.setOnAction(e -> stage.close());
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            showToast("✗ Impossible d'ouvrir la fenêtre de visio", ToastType.ERROR);
-        }
+        root.getChildren().addAll(titre, info, btnOuvrir, btnFermer);
+        stage.setScene(new Scene(root, 420, 240));
+        stage.show();
     }
+
 
 }
