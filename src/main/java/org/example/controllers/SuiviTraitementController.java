@@ -671,6 +671,10 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
         colSaisiPar.setPrefWidth(150);
         colNotes.setPrefWidth(380);
 
+        colActions.setPrefWidth(180);
+        colActions.setMinWidth(160);
+        colActions.setResizable(false);
+
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         // ===== COLONNE ÉTUDIANT / TRAITEMENT =====
