@@ -86,6 +86,9 @@ public class EvenementService implements ICrud<Evenement> {
                 }
             }
         }
+
+        // Envoyer l'email de notification à tous les étudiants
+        sendNewEventNotification(e);
     }
 
     @Override
@@ -281,6 +284,72 @@ public class EvenementService implements ICrud<Evenement> {
             System.err.println("Erreur lors de l'envoi des emails d'annulation: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Envoyer l'email de notification de nouvel événement à tous les étudiants
+     */
+    private void sendNewEventNotification(Evenement event) {
+        try {
+            // Récupérer tous les étudiants
+            String sql = "SELECT user_id, email, prenom, nom FROM user WHERE role = 'Etudiant'";
+            java.util.List<StudentInfo> students = new java.util.ArrayList<>();
+
+            try (PreparedStatement ps = connection.prepareStatement(sql);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    StudentInfo student = new StudentInfo();
+                    student.setUserId(rs.getInt("user_id"));
+                    student.setEmail(rs.getString("email"));
+                    student.setPrenom(rs.getString("prenom"));
+                    student.setNom(rs.getString("nom"));
+                    students.add(student);
+                }
+            }
+
+            // Formater les détails de l'événement
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            String formattedDate = event.getDateDebut() != null ? sdf.format(event.getDateDebut()) : "Non spécifié";
+            String formattedLocation = event.getLieu() != null ? event.getLieu() : "Non spécifié";
+            String description = event.getDescription() != null ? event.getDescription() : "";
+
+            // Envoyer l'email à chaque étudiant
+            for (StudentInfo student : students) {
+                String studentName = student.getPrenom() + " " + student.getNom();
+                emailService.sendNewEventEmail(
+                    student.getEmail(),
+                    studentName,
+                    event.getTitre(),
+                    formattedDate,
+                    formattedLocation,
+                    description
+                );
+                System.out.println("Email de nouvel événement envoyé à: " + student.getEmail());
+            }
+            System.out.println("Emails de notification envoyés à " + students.size() + " étudiant(s)");
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de l'envoi des emails de notification: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Classe interne pour stocker les informations d'un étudiant
+     */
+    private static class StudentInfo {
+        private int userId;
+        private String email;
+        private String prenom;
+        private String nom;
+
+        public int getUserId() { return userId; }
+        public void setUserId(int userId) { this.userId = userId; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getPrenom() { return prenom; }
+        public void setPrenom(String prenom) { this.prenom = prenom; }
+        public String getNom() { return nom; }
+        public void setNom(String nom) { this.nom = nom; }
     }
 
     @Override

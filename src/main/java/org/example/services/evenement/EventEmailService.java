@@ -117,6 +117,15 @@ public class EventEmailService {
         return sendEmail(to, subject, content, true);
     }
 
+    /**
+     * Email de notification de nouvel événement
+     */
+    public boolean sendNewEventEmail(String to, String studentName, String eventTitle, String eventDate, String eventLocation, String eventDescription) {
+        String subject = "Nouvel événement : " + eventTitle;
+        String content = buildNewEventEmail(studentName, eventTitle, eventDate, eventLocation, eventDescription);
+        return sendEmail(to, subject, content, true);
+    }
+
     private String buildInscriptionEmail(String participantName, String eventTitle, String eventDate, String eventLocation) {
         return "<!DOCTYPE html>" +
                 "<html>" +
@@ -256,6 +265,47 @@ public class EventEmailService {
                 "<p><strong>Événement :</strong> " + eventTitle + "</p>" +
                 "</div>" +
                 "<p>Nous nous excusons pour la gêne occasionnée.</p>" +
+                "<p>Cordialement,<br>L'équipe UniMind</p>" +
+                "</div>" +
+                "</div>" +
+                "</body>" +
+                "</html>";
+    }
+
+    private String buildNewEventEmail(String studentName, String eventTitle, String eventDate, String eventLocation, String eventDescription) {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "<meta charset='UTF-8'>" +
+                "<style>" +
+                "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }" +
+                ".container { max-width: 600px; margin: 0 auto; padding: 20px; }" +
+                ".header { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }" +
+                ".content { background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 10px 10px; }" +
+                ".event-details { background: white; padding: 15px; margin: 15px 0; border-radius: 5px; border-left: 4px solid #11998e; }" +
+                ".event-details strong { color: #11998e; }" +
+                ".description { background: #e8f5e9; padding: 15px; margin: 15px 0; border-radius: 5px; border-left: 4px solid #38ef7d; }" +
+                "</style>" +
+                "</head>" +
+                "<body>" +
+                "<div class='container'>" +
+                "<div class='header'>" +
+                "<h2>UniMind</h2>" +
+                "<p>Nouvel événement</p>" +
+                "</div>" +
+                "<div class='content'>" +
+                "<p>Bonjour <strong>" + studentName + "</strong>,</p>" +
+                "<p>Un nouvel événement a été créé et vous pourriez être intéressé(e) !</p>" +
+                "<div class='event-details'>" +
+                "<p><strong>Événement :</strong> " + eventTitle + "</p>" +
+                "<p><strong>Date :</strong> " + eventDate + "</p>" +
+                "<p><strong>Lieu :</strong> " + eventLocation + "</p>" +
+                "</div>" +
+                "<div class='description'>" +
+                "<p><strong>Description :</strong></p>" +
+                "<p>" + (eventDescription != null && !eventDescription.isEmpty() ? eventDescription : "Aucune description disponible") + "</p>" +
+                "</div>" +
+                "<p>N'hésitez pas à vous inscrire si cet événement vous intéresse !</p>" +
                 "<p>Cordialement,<br>L'équipe UniMind</p>" +
                 "</div>" +
                 "</div>" +
