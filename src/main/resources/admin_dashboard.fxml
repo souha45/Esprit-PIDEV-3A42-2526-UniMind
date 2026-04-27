@@ -7,7 +7,7 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.controllers.admin.AdminDashboardController"
-            prefWidth="1200" prefHeight="700"
+            prefWidth="1280" prefHeight="760"
             style="-fx-background-color: #F3F0FF;">
 
     <!-- NAVBAR (inchangée) -->
@@ -101,65 +101,157 @@
         </VBox>
     </left>
 
-    <!-- CONTENU PRINCIPAL - MODIFICATION ICI -->
+    <!-- CONTENU PRINCIPAL -->
     <center>
-        <StackPane fx:id="contentArea" style="-fx-background-color: #F3F0FF;">
+        <StackPane fx:id="contentArea" style="-fx-background-color: #F8FAFC;">
+
             <!-- PANNEAU GESTION UTILISATEURS -->
-            <VBox fx:id="panneauGestion" spacing="15" visible="true" managed="true"
+            <VBox fx:id="panneauGestion" spacing="20" visible="true" managed="true"
                   style="-fx-padding: 25;">
-                <Label text="Gestion des Utilisateurs"
-                       style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #4C1D95;"/>
-                <HBox spacing="10" alignment="CENTER_LEFT">
-                    <Button text="➕ Ajouter un utilisateur" onAction="#ouvrirModalAjout"
-                            style="-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 8 18; -fx-font-weight: bold; -fx-font-size: 13;"/>
-                    <Label fx:id="messageGestion" style="-fx-font-size: 12;"/>
+                <HBox alignment="CENTER_LEFT" spacing="16">
+                    <VBox spacing="3">
+                        <Label text="Gestion des Utilisateurs"
+                               style="-fx-font-size: 22px; -fx-font-weight: bold;
+                                      -fx-text-fill: #1E293B; -fx-font-family: 'Segoe UI';"/>
+                        <Label text="Gérez, modifiez et contrôlez tous les comptes."
+                               style="-fx-font-size: 12px; -fx-text-fill: #64748B;
+                                      -fx-font-family: 'Segoe UI';"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="➕  Ajouter un utilisateur" onAction="#ouvrirModalAjout"
+                            style="-fx-background-color: linear-gradient(to right, #4F46E5, #7C3AED);
+                                   -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 10;
+                                   -fx-padding: 10 22; -fx-font-weight: bold; -fx-font-size: 13px;
+                                   -fx-font-family: 'Segoe UI';
+                                   -fx-effect: dropshadow(gaussian, rgba(79,70,229,0.35), 8, 0, 0, 3);"/>
                 </HBox>
-                <TableView fx:id="tableUtilisateurs" prefHeight="450"
-                           style="-fx-background-color: white; -fx-background-radius: 10; -fx-border-color: #E5E7EB; -fx-border-radius: 10;">
-                    <columns>
-                        <TableColumn fx:id="colNom" text="Nom" prefWidth="120"/>
-                        <TableColumn fx:id="colPrenom" text="Prénom" prefWidth="120"/>
-                        <TableColumn fx:id="colEmail" text="Email" prefWidth="220"/>
-                        <TableColumn fx:id="colRole" text="Rôle" prefWidth="120"/>
-                        <TableColumn fx:id="colStatut" text="Statut" prefWidth="100"/>
-                        <TableColumn fx:id="colActif" text="Actif" prefWidth="80"/>
-                        <TableColumn fx:id="colActions" text="Actions" prefWidth="280"/>
-                    </columns>
-                    <placeholder>
-                        <Label text="Aucun utilisateur" style="-fx-text-fill: #9CA3AF;"/>
-                    </placeholder>
-                    <columnResizePolicy>
-                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
-                    </columnResizePolicy>
-                </TableView>
+
+                <Label fx:id="messageGestion" style="-fx-font-size: 12px; -fx-font-family: 'Segoe UI';"/>
+
+                <VBox spacing="0"
+                      style="-fx-background-color: white; -fx-background-radius: 16;
+                             -fx-border-color: #E2E8F0; -fx-border-radius: 16;
+                             -fx-border-width: 1;
+                             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 10, 0, 0, 4);">
+
+                    <HBox alignment="CENTER_LEFT" spacing="12"
+                          style="-fx-padding: 16 20;
+                                 -fx-border-color: transparent transparent #F1F5F9 transparent;
+                                 -fx-border-width: 0 0 1 0;">
+                        <Label text="👥" style="-fx-font-size: 16px;"/>
+                        <Label text="Liste des utilisateurs"
+                               style="-fx-font-size: 14px; -fx-font-weight: bold;
+                                      -fx-text-fill: #334155; -fx-font-family: 'Segoe UI';"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="labelNbResultats"
+                               style="-fx-font-size: 11px; -fx-text-fill: #94A3B8;
+                                      -fx-background-color: #F1F5F9;
+                                      -fx-padding: 4 10; -fx-background-radius: 20;"/>
+                    </HBox>
+
+                    <TableView fx:id="tableUtilisateurs" prefHeight="450"
+                               style="-fx-background-color: white; -fx-background-radius: 0 0 16 16;
+                                      -fx-border-color: transparent;
+                                      -fx-table-cell-border-color: #F1F5F9;
+                                      -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;">
+                        <columns>
+                            <TableColumn fx:id="colNom" text="Nom" prefWidth="160"/>
+                            <TableColumn fx:id="colPrenom" text="Prénom" prefWidth="160"/>
+                            <TableColumn fx:id="colEmail" text="Email" prefWidth="240"/>
+                            <TableColumn fx:id="colRole" text="Rôle" prefWidth="130"/>
+                            <TableColumn fx:id="colStatut" text="Statut" prefWidth="110"/>
+                            <TableColumn fx:id="colActif" text="Status" prefWidth="90"/>
+                            <TableColumn fx:id="colActions" text="Actions" prefWidth="320"/>
+                        </columns>
+                        <placeholder>
+                            <VBox alignment="CENTER" spacing="10" style="-fx-padding: 40;">
+                                <Label text="🔍" style="-fx-font-size: 40px;"/>
+                                <Label text="Aucun utilisateur trouvé"
+                                       style="-fx-font-size: 14px; -fx-text-fill: #94A3B8;
+                                              -fx-font-family: 'Segoe UI';"/>
+                            </VBox>
+                        </placeholder>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                        </columnResizePolicy>
+                    </TableView>
+                </VBox>
             </VBox>
 
             <!-- PANNEAU DEMANDES EN ATTENTE -->
-            <VBox fx:id="panneauDemandes" spacing="15" visible="false" managed="false"
+            <VBox fx:id="panneauDemandes" spacing="20" visible="false" managed="false"
                   style="-fx-padding: 25;">
-                <Label text="Demandes d'inscription en attente"
-                       style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #4C1D95;"/>
-                <Label fx:id="messageDemandes" style="-fx-font-size: 12;"/>
-                <TableView fx:id="tableDemandes" prefHeight="400"
-                           style="-fx-background-color: white; -fx-background-radius: 10; -fx-border-color: #E5E7EB; -fx-border-radius: 10;">
-                    <columns>
-                        <TableColumn fx:id="dColNom" text="Nom" prefWidth="180"/>
-                        <TableColumn fx:id="dColPrenom" text="Prénom" prefWidth="180"/>
-                        <TableColumn fx:id="dColEmail" text="Email" prefWidth="280"/>
-                        <TableColumn fx:id="dColRole" text="Rôle" prefWidth="180"/>
-                    </columns>
-                    <placeholder>
-                        <Label text="Aucune demande en attente ✓" style="-fx-text-fill: #9CA3AF;"/>
-                    </placeholder>
-                </TableView>
-                <HBox spacing="15">
-                    <Button text="✅ Accepter la sélection" onAction="#accepterDemande"
-                            style="-fx-background-color: #059669; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 10 25; -fx-font-weight: bold;"/>
-                    <Button text="❌ Refuser la sélection" onAction="#refuserDemande"
-                            style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 10 25; -fx-font-weight: bold;"/>
+                <HBox alignment="CENTER_LEFT">
+                    <VBox spacing="3">
+                        <Label text="Demandes d'inscription"
+                               style="-fx-font-size: 22px; -fx-font-weight: bold;
+                                      -fx-text-fill: #1E293B; -fx-font-family: 'Segoe UI';"/>
+                        <Label text="Validez ou refusez les nouvelles demandes de compte."
+                               style="-fx-font-size: 12px; -fx-text-fill: #64748B;
+                                      -fx-font-family: 'Segoe UI';"/>
+                    </VBox>
                 </HBox>
+
+                <Label fx:id="messageDemandes" style="-fx-font-size: 12px; -fx-font-family: 'Segoe UI';"/>
+
+                <VBox spacing="0"
+                      style="-fx-background-color: white; -fx-background-radius: 16;
+                             -fx-border-color: #E2E8F0; -fx-border-radius: 16;
+                             -fx-border-width: 1;
+                             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 10, 0, 0, 4);">
+
+                    <HBox alignment="CENTER_LEFT" spacing="12"
+                          style="-fx-padding: 16 20;
+                                 -fx-border-color: transparent transparent #F1F5F9 transparent;
+                                 -fx-border-width: 0 0 1 0;">
+                        <Label text="⏳" style="-fx-font-size: 16px;"/>
+                        <Label text="Comptes en attente de validation"
+                               style="-fx-font-size: 14px; -fx-font-weight: bold;
+                                      -fx-text-fill: #334155; -fx-font-family: 'Segoe UI';"/>
+                    </HBox>
+
+                    <TableView fx:id="tableDemandes" prefHeight="380"
+                               style="-fx-background-color: white; -fx-background-radius: 0 0 16 16;
+                                      -fx-border-color: transparent;
+                                      -fx-table-cell-border-color: #F1F5F9;
+                                      -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;">
+                        <columns>
+                            <TableColumn fx:id="dColNom" text="Nom" prefWidth="200"/>
+                            <TableColumn fx:id="dColPrenom" text="Prénom" prefWidth="200"/>
+                            <TableColumn fx:id="dColEmail" text="Email" prefWidth="340"/>
+                            <TableColumn fx:id="dColRole" text="Rôle demandé" prefWidth="180"/>
+                        </columns>
+                        <placeholder>
+                            <VBox alignment="CENTER" spacing="10" style="-fx-padding: 40;">
+                                <Label text="✅" style="-fx-font-size: 40px;"/>
+                                <Label text="Aucune demande en attente"
+                                       style="-fx-font-size: 14px; -fx-text-fill: #94A3B8;
+                                              -fx-font-family: 'Segoe UI';"/>
+                            </VBox>
+                        </placeholder>
+                    </TableView>
+
+                    <HBox spacing="15" alignment="CENTER_RIGHT"
+                          style="-fx-padding: 16 20; -fx-border-color: #F1F5F9 transparent transparent transparent;
+                                 -fx-border-width: 1 0 0 0;">
+                        <Button text="❌  Refuser la sélection" onAction="#refuserDemande"
+                                style="-fx-background-color: white; -fx-text-fill: #DC2626;
+                                       -fx-cursor: hand; -fx-background-radius: 8;
+                                       -fx-padding: 10 24; -fx-font-weight: bold; -fx-font-size: 13px;
+                                       -fx-font-family: 'Segoe UI';
+                                       -fx-border-color: #DC2626; -fx-border-radius: 8;
+                                       -fx-border-width: 1.5;"/>
+                        <Button text="✅  Accepter la sélection" onAction="#accepterDemande"
+                                style="-fx-background-color: #10B981; -fx-text-fill: white;
+                                       -fx-cursor: hand; -fx-background-radius: 8;
+                                       -fx-padding: 10 24; -fx-font-weight: bold; -fx-font-size: 13px;
+                                       -fx-font-family: 'Segoe UI';
+                                       -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.3), 6, 0, 0, 2);"/>
+                    </HBox>
+                </VBox>
             </VBox>
 
+            <!-- PANNEAU PROFIL ADMIN -->
             <!-- PANNEAU PROFIL ADMIN -->
             <VBox fx:id="panneauProfil" spacing="20" visible="false" managed="false"
                   style="-fx-padding: 25;">
@@ -219,6 +311,7 @@
                 </HBox>
                 <Label fx:id="pMessageProfil" style="-fx-font-size: 13;"/>
             </VBox>
+
             <!-- PANNEAU QUESTIONNAIRES -->
             <VBox fx:id="panneauQuestionnaires" spacing="15" visible="false" managed="false"
                   style="-fx-padding: 0;">
@@ -230,6 +323,7 @@
                   style="-fx-padding: 0;">
                 <fx:include source="/fxml/QuestionView.fxml"/>
             </VBox>
+
         </StackPane>
     </center>
 </BorderPane>

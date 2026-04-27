@@ -1,5 +1,7 @@
 package org.example.controllers.admin;
 
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -84,6 +86,7 @@ public class AdminDashboardController {
     @FXML private TableColumn<User, String> dColEmail;
     @FXML private TableColumn<User, String> dColRole;
     @FXML private Label messageDemandes;
+    @FXML private Label labelNbResultats;
 
     // PROFIL ADMIN
     @FXML private Label pNomPrenom, pEmail, pRole, pStatut;
@@ -149,11 +152,28 @@ public class AdminDashboardController {
 
     public void setUser(User user) {
         this.adminConnecte = user;
-        navNomAdmin.setText(user.getPrenom() + " " + user.getNom());
-        pNomPrenom.setText(user.getPrenom() + " " + user.getNom());
-        pEmail.setText(user.getEmail());
-        pRole.setText(user.getRole().toString());
-        pStatut.setText(user.getStatut());
+
+        // Vérifier que les éléments existent avant de les utiliser
+        if (navNomAdmin != null) {
+            navNomAdmin.setText(user.getPrenom() + " " + user.getNom());
+        }
+
+        if (pNomPrenom != null) {
+            pNomPrenom.setText(user.getPrenom() + " " + user.getNom());
+        }
+
+        if (pEmail != null) {
+            pEmail.setText(user.getEmail());
+        }
+
+        if (pRole != null) {
+            pRole.setText(user.getRole().toString());
+        }
+
+        if (pStatut != null) {
+            pStatut.setText(user.getStatut());
+        }
+
         chargerPhotoProfile(user);
     }
 
@@ -184,12 +204,21 @@ public class AdminDashboardController {
         panneauProfil.setManaged(true);
         contentArea.getChildren().setAll(panneauProfil);
         setActiveSidebarButton(btnProfil);
-        // Recharger les informations du profil (au cas où)
+
+        // Recharger les informations du profil avec vérifications
         if (adminConnecte != null) {
-            pNomPrenom.setText(adminConnecte.getPrenom() + " " + adminConnecte.getNom());
-            pEmail.setText(adminConnecte.getEmail());
-            pRole.setText(adminConnecte.getRole().toString());
-            pStatut.setText(adminConnecte.getStatut());
+            if (pNomPrenom != null) {
+                pNomPrenom.setText(adminConnecte.getPrenom() + " " + adminConnecte.getNom());
+            }
+            if (pEmail != null) {
+                pEmail.setText(adminConnecte.getEmail());
+            }
+            if (pRole != null) {
+                pRole.setText(adminConnecte.getRole().toString());
+            }
+            if (pStatut != null) {
+                pStatut.setText(adminConnecte.getStatut());
+            }
         }
     }
 
@@ -270,35 +299,91 @@ public class AdminDashboardController {
     // ==================== GESTION UTILISATEURS ====================
 
     private void configurerTable() {
+        // Configuration correcte des colonnes
         colNom.setCellValueFactory(new PropertyValueFactory<>("nom"));
         colPrenom.setCellValueFactory(new PropertyValueFactory<>("prenom"));
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
-        colRole.setCellValueFactory(new PropertyValueFactory<>("role"));
-        colStatut.setCellValueFactory(new PropertyValueFactory<>("statut"));
-        colActif.setCellValueFactory(new PropertyValueFactory<>("active"));
 
-        colActif.setCellFactory(col -> new TableCell<>() {
-            @Override protected void updateItem(Boolean item, boolean empty) {
+        // Colonne Rôle avec badge coloré
+        colRole.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getRole() != null
+                        ? cellData.getValue().getRole().toString().replace("_", " ") : ""));
+        colRole.setCellFactory(col -> new TableCell<>() {
+            @Override protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || item == null) { setText(""); setStyle(""); }
-                else {
-                    setText(item ? "✓ Actif" : "✗ Inactif");
-                    setStyle(item ? "-fx-text-fill: #16A34A;" : "-fx-text-fill: #DC2626;");
-                }
+                if (empty || item == null) { setGraphic(null); setText(null); return; }
+                Label badge = new Label(item);
+                String bg = getRoleBadgeColor(item);
+                badge.setStyle(
+                        "-fx-background-color: " + bg + "; -fx-text-fill: white;" +
+                                "-fx-font-size: 11px; -fx-font-weight: bold;" +
+                                "-fx-font-family: 'Segoe UI';" +
+                                "-fx-padding: 5 12; -fx-background-radius: 20;"
+                );
+                setGraphic(badge);
+                setText(null);
+                setStyle("-fx-padding: 0 16;");
             }
         });
 
+        // Colonne Statut avec badge
+        colStatut.setCellValueFactory(new PropertyValueFactory<>("statut"));
+        colStatut.setCellFactory(col -> new TableCell<>() {
+            @Override protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) { setGraphic(null); return; }
+                Label badge = new Label(item);
+                String color = switch (item.toLowerCase()) {
+                    case "actif" -> "#10B981";
+                    case "en_attente" -> "#F59E0B";
+                    case "bloqué", "bloque" -> "#EF4444";
+                    default -> "#6B7280";
+                };
+                badge.setStyle(
+                        "-fx-background-color: " + color + "20;" +
+                                "-fx-text-fill: " + color + ";" +
+                                "-fx-font-size: 11px; -fx-font-weight: bold;" +
+                                "-fx-font-family: 'Segoe UI';" +
+                                "-fx-padding: 5 12; -fx-background-radius: 20;"
+                );
+                setGraphic(badge);
+                setText(null);
+            }
+        });
+
+        // Colonne Actif avec cercle + texte
+        colActif.setCellValueFactory(new PropertyValueFactory<>("active"));
+        colActif.setCellFactory(col -> new TableCell<>() {
+            @Override protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) { setGraphic(null); return; }
+                HBox box = new HBox(6);
+                box.setAlignment(Pos.CENTER);
+                Circle dot = new Circle(5);
+                dot.setFill(item ? Color.web("#10B981") : Color.web("#94A3B8"));
+                Label text = new Label(item ? "Actif" : "Inactif");
+                text.setStyle("-fx-font-size: 12px; -fx-font-weight: 500;" +
+                        "-fx-text-fill: " + (item ? "#065F46" : "#64748B") + ";" +
+                        "-fx-font-family: 'Segoe UI';");
+                box.getChildren().addAll(dot, text);
+                setGraphic(box);
+                setText(null);
+            }
+        });
+
+        // Colonne Actions avec boutons modernes
         colActions.setCellFactory(col -> new TableCell<>() {
-            private final Button btnModifier = createIconButton("✏", "#2563EB");
-            private final Button btnSupprimer = createIconButton("🗑", "#DC2626");
-            private final Button btnBloquer = createIconButton("🔒", "#D97706");
-            private final Button btnDebloquer = createIconButton("🔓", "#059669");
-            private final Button btnActiver = createIconButton("✅", "#0284C7");
-            private final Button btnDesactiver = createIconButton("⛔", "#6B7280");
-            private final HBox container = new HBox(5, btnModifier, btnSupprimer, btnBloquer, btnDebloquer, btnActiver, btnDesactiver);
+            private final Button btnModifier = createArgonButton("✏", "#4F46E5");
+            private final Button btnSupprimer = createArgonButton("🗑", "#EF4444");
+            private final Button btnBloquer = createArgonButton("🔒", "#F59E0B");
+            private final Button btnDebloquer = createArgonButton("🔓", "#10B981");
+            private final Button btnActiver = createArgonButton("✅", "#3B82F6");
+            private final Button btnDesactiver = createArgonButton("⛔", "#6B7280");
+            private final HBox container = new HBox(8, btnModifier, btnSupprimer, btnBloquer, btnDebloquer, btnActiver, btnDesactiver);
 
             {
-                container.setAlignment(Pos.CENTER);
+                container.setAlignment(Pos.CENTER_LEFT);
+                container.setPadding(new Insets(0, 8, 0, 8));
                 btnModifier.setOnAction(e -> ouvrirModalModification(getTableView().getItems().get(getIndex())));
                 btnSupprimer.setOnAction(e -> supprimerUtilisateur(getTableView().getItems().get(getIndex())));
                 btnBloquer.setOnAction(e -> bloquerUtilisateur(getTableView().getItems().get(getIndex())));
@@ -312,6 +397,66 @@ public class AdminDashboardController {
                 setGraphic(empty ? null : container);
             }
         });
+
+        // Lignes avec survol
+        tableUtilisateurs.setRowFactory(tv -> {
+            TableRow<User> row = new TableRow<>();
+            row.setStyle("-fx-background-color: white; -fx-border-color: transparent transparent #F1F5F9 transparent; -fx-border-width: 1;");
+            row.hoverProperty().addListener((obs, wasHover, isHover) -> {
+                if (!row.isEmpty()) {
+                    row.setStyle(isHover
+                            ? "-fx-background-color: #F8FAFC; -fx-border-color: transparent transparent #F1F5F9 transparent; -fx-border-width: 1;"
+                            : "-fx-background-color: white; -fx-border-color: transparent transparent #F1F5F9 transparent; -fx-border-width: 1;");
+                }
+            });
+            return row;
+        });
+    }
+
+    // Ajoutez ces méthodes utilitaires
+    private String getRoleBadgeColor(String role) {
+        return switch (role.toUpperCase().trim()) {
+            case "ADMIN" -> "linear-gradient(to right, #F5365C, #F56036)";
+            case "PSYCHOLOGUE" -> "linear-gradient(to right, #11CDEF, #1171EF)";
+            case "RESPONSABLE ETUDIANT" -> "linear-gradient(to right, #FB6340, #FBB140)";
+            default -> "linear-gradient(to right, #2DCE89, #2DCECC)";
+        };
+    }
+
+    private Button createArgonButton(String icon, String color) {
+        Button btn = new Button(icon);
+        btn.setStyle(
+                "-fx-background-color: " + color + "20; " +
+                        "-fx-text-fill: " + color + "; " +
+                        "-fx-font-size: 13px; " +
+                        "-fx-cursor: hand; " +
+                        "-fx-background-radius: 8; " +
+                        "-fx-padding: 6 12; " +
+                        "-fx-min-width: 36; " +
+                        "-fx-min-height: 32;"
+        );
+        btn.setOnMouseEntered(e -> btn.setStyle(
+                "-fx-background-color: " + color + "; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-font-size: 13px; " +
+                        "-fx-cursor: hand; " +
+                        "-fx-background-radius: 8; " +
+                        "-fx-padding: 6 12; " +
+                        "-fx-min-width: 36; " +
+                        "-fx-min-height: 32;" +
+                        "-fx-effect: dropshadow(gaussian, " + color + "40, 8, 0, 0, 3);"
+        ));
+        btn.setOnMouseExited(e -> btn.setStyle(
+                "-fx-background-color: " + color + "20; " +
+                        "-fx-text-fill: " + color + "; " +
+                        "-fx-font-size: 13px; " +
+                        "-fx-cursor: hand; " +
+                        "-fx-background-radius: 8; " +
+                        "-fx-padding: 6 12; " +
+                        "-fx-min-width: 36; " +
+                        "-fx-min-height: 32;"
+        ));
+        return btn;
     }
 
     private Button createIconButton(String icon, String color) {
@@ -326,8 +471,16 @@ public class AdminDashboardController {
             tousLesUsers.setAll(users);
             tableUtilisateurs.setItems(tousLesUsers);
             afficherMsgGestion("✓ " + users.size() + " utilisateur(s)", "#16A34A");
+
+            // Mettre à jour le compteur
+            if (labelNbResultats != null) {
+                labelNbResultats.setText(users.size() + " utilisateurs");
+            }
         } catch (SQLException e) {
             afficherMsgGestion("Erreur : " + e.getMessage(), "#DC2626");
+            if (labelNbResultats != null) {
+                labelNbResultats.setText("0 utilisateurs");
+            }
         }
     }
 
@@ -352,73 +505,101 @@ public class AdminDashboardController {
     private void ouvrirModalModification(User user) {
         ouvrirModal(user);
     }
-
     private void ouvrirModal(User user) {
-        VBox modalContent = new VBox(15);
-        modalContent.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 5);");
-        modalContent.setMaxWidth(450);
+        // Dialog moderne style Argon
+        Dialog<User> dialog = new Dialog<>();
+        dialog.setTitle(user == null ? "Ajouter un utilisateur" : "Modifier l'utilisateur");
+        dialog.setHeaderText(null);
 
-        Label titre = new Label(user == null ? "➕ Ajouter un utilisateur" : "✏ Modifier " + user.getPrenom() + " " + user.getNom());
-        titre.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #4C1D95;");
+        // Style du dialog
+        DialogPane dialogPane = dialog.getDialogPane();
+        dialogPane.setStyle("-fx-background-color: white; -fx-background-radius: 16; -fx-padding: 20;");
+        dialogPane.getStylesheets().add(getClass().getResource("/css/modern.css") != null ?
+                getClass().getResource("/css/modern.css").toExternalForm() : "");
 
-        TextField nomField = new TextField();
-        nomField.setPromptText("Nom *");
-        nomField.setStyle("-fx-padding: 10; -fx-background-radius: 6; -fx-border-color: #E5E7EB; -fx-border-radius: 6;");
+        // Contenu
+        VBox content = new VBox(16);
+        content.setPadding(new Insets(10, 20, 10, 20));
 
-        TextField prenomField = new TextField();
-        prenomField.setPromptText("Prénom *");
-        prenomField.setStyle("-fx-padding: 10; -fx-background-radius: 6; -fx-border-color: #E5E7EB; -fx-border-radius: 6;");
+        // Titre
+        Label titleLabel = new Label(user == null ? "➕ Nouvel utilisateur" : "✏ Modification");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1E293B; -fx-font-family: 'Segoe UI';");
 
-        TextField emailField = new TextField();
-        emailField.setPromptText("Email *");
-        emailField.setStyle("-fx-padding: 10; -fx-background-radius: 6; -fx-border-color: #E5E7EB; -fx-border-radius: 6;");
-
-        TextField cinField = new TextField();
-        cinField.setPromptText("CIN (8 chiffres) *");
-        cinField.setStyle("-fx-padding: 10; -fx-background-radius: 6; -fx-border-color: #E5E7EB; -fx-border-radius: 6;");
-
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Mot de passe *");
-        passwordField.setStyle("-fx-padding: 10; -fx-background-radius: 6; -fx-border-color: #E5E7EB; -fx-border-radius: 6;");
+        // Champs avec style moderne
+        TextField nomField = createModernTextField("Nom complet");
+        TextField prenomField = createModernTextField("Prénom");
+        TextField emailField = createModernTextField("Adresse email");
+        TextField cinField = createModernTextField("CIN (8 chiffres)");
+        PasswordField passwordField = createModernPasswordField("Mot de passe");
 
         ComboBox<String> roleCombo = new ComboBox<>();
         roleCombo.setItems(FXCollections.observableArrayList("Admin", "Etudiant", "Psychologue", "Responsable Etudiant"));
         roleCombo.setValue("Etudiant");
-        roleCombo.setStyle("-fx-padding: 5; -fx-background-radius: 6; -fx-border-color: #E5E7EB; -fx-border-radius: 6;");
+        roleCombo.setStyle(modernComboStyle());
 
         Label messageLabel = new Label();
-        messageLabel.setStyle("-fx-font-size: 12;");
+        messageLabel.setStyle("-fx-font-size: 12px; -fx-font-family: 'Segoe UI';");
 
         if (user != null) {
             nomField.setText(user.getNom());
             prenomField.setText(user.getPrenom());
             emailField.setText(user.getEmail());
             cinField.setText(user.getCin());
-            roleCombo.setValue(user.getRole().name());
+            roleCombo.setValue(user.getRole().toString().replace("_", " "));
             passwordField.setVisible(false);
             passwordField.setManaged(false);
         }
 
-        Button btnSave = new Button("💾 Sauvegarder");
-        btnSave.setStyle("-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-cursor: hand; -fx-padding: 10 20; -fx-background-radius: 6;");
+        // Organisation des champs en grille
+        GridPane grid = new GridPane();
+        grid.setHgap(20);
+        grid.setVgap(15);
+        grid.setPadding(new Insets(10, 0, 10, 0));
 
-        Button btnAnnuler = new Button("✕ Annuler");
-        btnAnnuler.setStyle("-fx-background-color: #6B7280; -fx-text-fill: white; -fx-cursor: hand; -fx-padding: 10 20; -fx-background-radius: 6;");
+        grid.add(createLabeledField("Nom complet", nomField), 0, 0);
+        grid.add(createLabeledField("Prénom", prenomField), 1, 0);
+        grid.add(createLabeledField("Email", emailField), 0, 1);
+        grid.add(createLabeledField("CIN", cinField), 1, 1);
+        grid.add(createLabeledField("Rôle", roleCombo), 0, 2);
+        if (user == null) {
+            grid.add(createLabeledField("Mot de passe", passwordField), 1, 2);
+        }
 
-        HBox btnBox = new HBox(10, btnSave, btnAnnuler);
-        btnBox.setAlignment(Pos.CENTER);
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(50);
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setPercentWidth(50);
+        grid.getColumnConstraints().addAll(col1, col2);
 
-        modalContent.getChildren().addAll(titre, nomField, prenomField, emailField, cinField, roleCombo, passwordField, messageLabel, btnBox);
+        content.getChildren().addAll(titleLabel, grid, messageLabel);
 
-        Scene scene = new Scene(modalContent);
-        scene.setFill(Color.TRANSPARENT);
+        // Boutons
+        ButtonType saveButtonType = new ButtonType("Sauvegarder", ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelButtonType = new ButtonType("Annuler", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, cancelButtonType);
 
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initStyle(StageStyle.TRANSPARENT);
-        stage.setScene(scene);
+        dialog.getDialogPane().setContent(content);
 
-        btnSave.setOnAction(e -> {
+        // Styling des boutons
+        Node saveButton = dialog.getDialogPane().lookupButton(saveButtonType);
+        saveButton.setStyle("-fx-background-color: linear-gradient(to right, #4F46E5, #7C3AED); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20; -fx-background-radius: 8;");
+        Node cancelButton = dialog.getDialogPane().lookupButton(cancelButtonType);
+        cancelButton.setStyle("-fx-background-color: #F1F5F9; -fx-text-fill: #475569; -fx-padding: 8 20; -fx-background-radius: 8; -fx-cursor: hand;");
+
+        // Conversion du résultat
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == saveButtonType) {
+                return new User(nomField.getText().trim(), prenomField.getText().trim(),
+                        emailField.getText().trim(), passwordField.getText(),
+                        cinField.getText().trim(),
+                        org.example.enums.Role.valueOf(roleCombo.getValue().replace(" ", "_").toUpperCase()),
+                        "actif");
+            }
+            return null;
+        });
+
+        // Gestion de la sauvegarde
+        dialog.showAndWait().ifPresent(result -> {
             String nom = nomField.getText().trim();
             String prenom = prenomField.getText().trim();
             String email = emailField.getText().trim();
@@ -428,11 +609,11 @@ public class AdminDashboardController {
 
             boolean valide = true;
 
-            if (!ValidationUtils.isNomValide(nom)) { messageLabel.setText("Nom invalide"); valide = false; }
-            else if (!ValidationUtils.isNomValide(prenom)) { messageLabel.setText("Prénom invalide"); valide = false; }
-            else if (!ValidationUtils.isEmailValide(email)) { messageLabel.setText(ValidationUtils.messageEmail()); valide = false; }
-            else if (!ValidationUtils.isCinValide(cin)) { messageLabel.setText(ValidationUtils.messageCin()); valide = false; }
-            else if (user == null && !ValidationUtils.isPasswordValide(password)) { messageLabel.setText(ValidationUtils.messagePassword()); valide = false; }
+            if (!ValidationUtils.isNomValide(nom)) { showMessage(messageLabel, "Nom invalide", "error"); valide = false; }
+            else if (!ValidationUtils.isNomValide(prenom)) { showMessage(messageLabel, "Prénom invalide", "error"); valide = false; }
+            else if (!ValidationUtils.isEmailValide(email)) { showMessage(messageLabel, ValidationUtils.messageEmail(), "error"); valide = false; }
+            else if (!ValidationUtils.isCinValide(cin)) { showMessage(messageLabel, ValidationUtils.messageCin(), "error"); valide = false; }
+            else if (user == null && !ValidationUtils.isPasswordValide(password)) { showMessage(messageLabel, ValidationUtils.messagePassword(), "error"); valide = false; }
 
             if (valide) {
                 try {
@@ -442,32 +623,94 @@ public class AdminDashboardController {
                         u.setActive(true);
                         u.setVerified(true);
                         adminService.ajouter(u);
-                        messageLabel.setStyle("-fx-text-fill: #16A34A;");
-                        messageLabel.setText("✓ Utilisateur ajouté !");
+                        showMessage(messageLabel, "✓ Utilisateur ajouté avec succès !", "success");
                     } else {
                         user.setNom(nom);
                         user.setPrenom(prenom);
                         user.setEmail(email);
                         user.setCin(cin);
                         adminService.modifier(user);
-                        messageLabel.setStyle("-fx-text-fill: #16A34A;");
-                        messageLabel.setText("✓ Modifié avec succès !");
+                        showMessage(messageLabel, "✓ Utilisateur modifié avec succès !", "success");
                     }
                     chargerUtilisateurs();
+
                     new Thread(() -> {
-                        try { Thread.sleep(1200); } catch (InterruptedException ignored) {}
-                        javafx.application.Platform.runLater(stage::close);
+                        try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
+                        Platform.runLater(() -> {
+                            Stage stage = (Stage) messageLabel.getScene().getWindow();
+                            if (stage != null) stage.close();
+                        });
                     }).start();
                 } catch (SQLException ex) {
-                    messageLabel.setStyle("-fx-text-fill: #DC2626;");
-                    messageLabel.setText("Erreur : " + ex.getMessage());
+                    showMessage(messageLabel, "Erreur : " + ex.getMessage(), "error");
                 }
             }
         });
-
-        btnAnnuler.setOnAction(e -> stage.close());
-        stage.showAndWait();
     }
+
+    private TextField createModernTextField(String prompt) {
+        TextField field = new TextField();
+        field.setPromptText(prompt);
+        field.setStyle(
+                "-fx-padding: 12 14; " +
+                        "-fx-background-radius: 10; " +
+                        "-fx-border-color: #E2E8F0; " +
+                        "-fx-border-radius: 10; " +
+                        "-fx-border-width: 1.5; " +
+                        "-fx-font-size: 13px; " +
+                        "-fx-font-family: 'Segoe UI';"
+        );
+        field.focusedProperty().addListener((obs, old, newVal) -> {
+            field.setStyle(newVal
+                    ? "-fx-padding: 12 14; -fx-background-radius: 10; -fx-border-color: #4F46E5; -fx-border-radius: 10; -fx-border-width: 2; -fx-font-size: 13px; -fx-font-family: 'Segoe UI';"
+                    : "-fx-padding: 12 14; -fx-background-radius: 10; -fx-border-color: #E2E8F0; -fx-border-radius: 10; -fx-border-width: 1.5; -fx-font-size: 13px; -fx-font-family: 'Segoe UI';");
+        });
+        return field;
+    }
+
+    private PasswordField createModernPasswordField(String prompt) {
+        PasswordField field = new PasswordField();
+        field.setPromptText(prompt);
+        field.setStyle(
+                "-fx-padding: 12 14; " +
+                        "-fx-background-radius: 10; " +
+                        "-fx-border-color: #E2E8F0; " +
+                        "-fx-border-radius: 10; " +
+                        "-fx-border-width: 1.5; " +
+                        "-fx-font-size: 13px; " +
+                        "-fx-font-family: 'Segoe UI';"
+        );
+        field.focusedProperty().addListener((obs, old, newVal) -> {
+            field.setStyle(newVal
+                    ? "-fx-padding: 12 14; -fx-background-radius: 10; -fx-border-color: #4F46E5; -fx-border-radius: 10; -fx-border-width: 2; -fx-font-size: 13px; -fx-font-family: 'Segoe UI';"
+                    : "-fx-padding: 12 14; -fx-background-radius: 10; -fx-border-color: #E2E8F0; -fx-border-radius: 10; -fx-border-width: 1.5; -fx-font-size: 13px; -fx-font-family: 'Segoe UI';");
+        });
+        return field;
+    }
+
+    private String modernComboStyle() {
+        return "-fx-padding: 8 12; -fx-background-radius: 10; -fx-border-color: #E2E8F0; -fx-border-radius: 10; -fx-border-width: 1.5; -fx-font-size: 13px; -fx-font-family: 'Segoe UI';";
+    }
+
+    private VBox createLabeledField(String labelText, javafx.scene.Node field) {
+        VBox box = new VBox(6);
+        Label label = new Label(labelText);
+        label.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-family: 'Segoe UI';");
+        box.getChildren().addAll(label, field);
+        return box;
+    }
+
+    private void showMessage(Label label, String message, String type) {
+        if ("error".equals(type)) {
+            label.setStyle("-fx-text-fill: #DC2626; -fx-font-size: 12px; -fx-font-family: 'Segoe UI'; -fx-padding: 8 12; -fx-background-color: #FEF2F2; -fx-background-radius: 8;");
+            label.setText("⚠ " + message);
+        } else {
+            label.setStyle("-fx-text-fill: #065F46; -fx-font-size: 12px; -fx-font-family: 'Segoe UI'; -fx-padding: 8 12; -fx-background-color: #ECFDF5; -fx-background-radius: 8;");
+            label.setText("✓ " + message);
+        }
+    }
+
+
 
     private void supprimerUtilisateur(User user) {
         Alert c = new Alert(Alert.AlertType.CONFIRMATION,
@@ -532,7 +775,39 @@ public class AdminDashboardController {
         dColNom.setCellValueFactory(new PropertyValueFactory<>("nom"));
         dColPrenom.setCellValueFactory(new PropertyValueFactory<>("prenom"));
         dColEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
-        dColRole.setCellValueFactory(new PropertyValueFactory<>("role"));
+
+        dColRole.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getRole() != null
+                        ? cellData.getValue().getRole().toString().replace("_", " ") : ""));
+        dColRole.setCellFactory(col -> new TableCell<>() {
+            @Override protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) { setGraphic(null); return; }
+                Label badge = new Label(item);
+                String bg = getRoleBadgeColor(item);
+                badge.setStyle(
+                        "-fx-background-color: " + bg + "; -fx-text-fill: white;" +
+                                "-fx-font-size: 11px; -fx-font-weight: bold;" +
+                                "-fx-font-family: 'Segoe UI';" +
+                                "-fx-padding: 5 12; -fx-background-radius: 20;"
+                );
+                setGraphic(badge);
+                setText(null);
+            }
+        });
+
+        tableDemandes.setRowFactory(tv -> {
+            TableRow<User> row = new TableRow<>();
+            row.setStyle("-fx-background-color: white; -fx-border-color: transparent transparent #F1F5F9 transparent; -fx-border-width: 1;");
+            row.hoverProperty().addListener((obs, wasHover, isHover) -> {
+                if (!row.isEmpty()) {
+                    row.setStyle(isHover
+                            ? "-fx-background-color: #FFF7ED; -fx-border-color: transparent transparent #F1F5F9 transparent; -fx-border-width: 1;"
+                            : "-fx-background-color: white; -fx-border-color: transparent transparent #F1F5F9 transparent; -fx-border-width: 1;");
+                }
+            });
+            return row;
+        });
     }
 
     private void chargerDemandes() {
