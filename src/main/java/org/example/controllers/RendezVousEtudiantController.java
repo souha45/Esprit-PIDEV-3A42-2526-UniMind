@@ -5,10 +5,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+
+import java.sql.*;
+
 import org.example.utils.MyDataBase_Unimind;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -364,8 +363,16 @@ public class RendezVousEtudiantController
                         ", Type: " + typeConsult +
                         ", Lien existant: " + aUnLien);
 
-                // Afficher le bouton seulement si consultation en ligne ET lien existe
-                boolean afficherRejoindre = "en_ligne".equals(typeConsult) && aUnLien;
+                // Récupérer le statut du RDV
+                String statut = rdv.getStatutRDV().toLowerCase();
+
+                // Afficher le bouton seulement si :
+                // 1. Consultation en ligne
+                // 2. Un lien existe dans la BDD
+                // 3. Le statut du RDV est "confirme" (pas en-cours, terminé, annulé, etc.)
+                boolean afficherRejoindre = "en_ligne".equals(typeConsult)
+                        && aUnLien
+                        && "confirme".equals(statut);  // ← NOUVEAU : seulement si confirmé
 
                 btnRejoindre.setVisible(afficherRejoindre);
                 btnRejoindre.setManaged(afficherRejoindre);
@@ -583,13 +590,34 @@ public class RendezVousEtudiantController
     }
 
     private void effectuerAnnulation(RendezVousDetail rdv) {
-        try {
-            rendezVousService.modifierStatutRendezVous(
-                    rdv.getRendezVousId(), utilisateur.getUserId(), 0, "annulé");
-            chargerRendezVous();
-            showToast("✓  Rendez-vous annulé avec succès.", ToastType.SUCCESS);
+        System.out.println("=== ANNULATION ===");
+        System.out.println("RendezVous ID: " + rdv.getRendezVousId());
+        System.out.println("Etudiant ID: " + utilisateur.getUserId());
+        System.out.println("Statut actuel: " + rdv.getStatutRDV());
+
+        // Utiliser une connexion fraîche
+        String sql = "UPDATE rendez_vous SET statut = 'annulé', updated_at = ? WHERE rendez_vous_id = ? AND etudiant_id = ?";
+
+        try (Connection conn = MyDataBase_Unimind.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            pstmt.setInt(2, rdv.getRendezVousId());
+            pstmt.setInt(3, utilisateur.getUserId());
+
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("✓ Annulation réussie en BDD");
+                chargerRendezVous(); // Recharger la liste
+                showToast("✓  Rendez-vous annulé avec succès.", ToastType.SUCCESS);
+            } else {
+                showToast("✗ Impossible d'annuler : rendez-vous non trouvé ou déjà traité.", ToastType.ERROR);
+            }
+
         } catch (SQLException e) {
-            showToast("✗  Impossible d'annuler : " + e.getMessage(), ToastType.ERROR);
+            System.err.println("❌ Erreur SQL: " + e.getMessage());
+            showToast("✗ Impossible d'annuler : " + e.getMessage(), ToastType.ERROR);
             e.printStackTrace();
         }
     }
