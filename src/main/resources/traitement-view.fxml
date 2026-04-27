@@ -118,47 +118,53 @@
                 <Label fx:id="lblCount" styleClass="count-badge"/>
             </HBox>
 
-            <!-- Table principale -->
-            <VBox VBox.vgrow="ALWAYS" styleClass="table-container">
-                <TableView fx:id="tableViewTraitements" styleClass="custom-table" VBox.vgrow="ALWAYS">
-                    <columns>
-                        <TableColumn text="ÉTUDIANT" />
-                        <TableColumn text="TITRE" />
-                        <TableColumn text="TYPE" />
-                        <TableColumn text="CATÉGORIE" />
-                        <TableColumn text="DURÉE" />
-                        <TableColumn text="STATUT" />
-                        <TableColumn text="PRIORITÉ" />
-                        <TableColumn text="DATE DÉBUT" />
-                        <TableColumn text="OBJECTIF" />
-                        <TableColumn text="SUIVIS" />
-                        <TableColumn fx:id="colActions" text="ACTIONS" />
-                    </columns>
-                </TableView>
-            </VBox>
+            <!-- Table principale avec pagination -->
+            <ScrollPane styleClass="table-scroll" fitToWidth="true" VBox.vgrow="ALWAYS">
+                <content>
+                    <VBox spacing="0">
+                        <!-- TableView -->
+                        <VBox styleClass="table-container">
+                            <TableView fx:id="tableViewTraitements" styleClass="custom-table">
+                                <columns>
+                                    <TableColumn text="ÉTUDIANT" />
+                                    <TableColumn text="TITRE" />
+                                    <TableColumn text="TYPE" />
+                                    <TableColumn text="CATÉGORIE" />
+                                    <TableColumn text="DURÉE" />
+                                    <TableColumn text="STATUT" />
+                                    <TableColumn text="PRIORITÉ" />
+                                    <TableColumn text="DATE DÉBUT" />
+                                    <TableColumn text="OBJECTIF" />
+                                    <TableColumn text="SUIVIS" />
+                                    <TableColumn fx:id="colActions" text="ACTIONS" />
+                                </columns>
+                            </TableView>
+                        </VBox>
 
-            <!-- Pagination -->
-            <HBox styleClass="pagination-bar" spacing="15" alignment="CENTER"
-                  style="-fx-padding: 15 24; -fx-background-color: white; -fx-border-color: #e5e7eb; -fx-border-width: 1 0 0 0;">
+                        <!-- Pagination -->
+                        <HBox styleClass="pagination-bar" spacing="15" alignment="CENTER"
+                              style="-fx-padding: 15 24; -fx-background-color: white; -fx-border-color: #e5e7eb; -fx-border-width: 1 0 0 0;">
 
-                <Label text="Lignes par page :" style="-fx-font-size: 12px; -fx-text-fill: #6b7280;"/>
-                <ComboBox fx:id="cmbItemsPerPage" prefWidth="80" styleClass="filter-combo"/>
+                            <Label text="Lignes par page :" style="-fx-font-size: 12px; -fx-text-fill: #6b7280;"/>
+                            <ComboBox fx:id="cmbItemsPerPage" prefWidth="80" styleClass="filter-combo"/>
 
-                <Region HBox.hgrow="ALWAYS"/>
+                            <Region HBox.hgrow="ALWAYS"/>
 
-                <HBox spacing="10" alignment="CENTER">
-                    <Button fx:id="btnFirstPage" text="⏮" styleClass="pagination-button" onAction="#handleFirstPage"/>
-                    <Button fx:id="btnPrevPage" text="◀" styleClass="pagination-button" onAction="#handlePrevPage"/>
-                    <Label fx:id="lblPageInfo" text="Page 1 / 1" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #4f46e5; -fx-min-width: 80; -fx-alignment: CENTER;"/>
-                    <Button fx:id="btnNextPage" text="▶" styleClass="pagination-button" onAction="#handleNextPage"/>
-                    <Button fx:id="btnLastPage" text="⏭" styleClass="pagination-button" onAction="#handleLastPage"/>
-                </HBox>
+                            <HBox spacing="10" alignment="CENTER">
+                                <Button fx:id="btnFirstPage" text="⏮" styleClass="pagination-button" onAction="#handleFirstPage"/>
+                                <Button fx:id="btnPrevPage" text="◀" styleClass="pagination-button" onAction="#handlePrevPage"/>
+                                <Label fx:id="lblPageInfo" text="Page 1 / 1" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #4f46e5; -fx-min-width: 80; -fx-alignment: CENTER;"/>
+                                <Button fx:id="btnNextPage" text="▶" styleClass="pagination-button" onAction="#handleNextPage"/>
+                                <Button fx:id="btnLastPage" text="⏭" styleClass="pagination-button" onAction="#handleLastPage"/>
+                            </HBox>
 
-                <Region HBox.hgrow="ALWAYS"/>
+                            <Region HBox.hgrow="ALWAYS"/>
 
-                <Label fx:id="lblTotalPagesInfo" style="-fx-font-size: 11px; -fx-text-fill: #9ca3af;"/>
-            </HBox>
-
+                            <Label fx:id="lblTotalPagesInfo" style="-fx-font-size: 11px; -fx-text-fill: #9ca3af;"/>
+                        </HBox>
+                    </VBox>
+                </content>
+            </ScrollPane>
 
             <!-- Barre de statut -->
             <HBox styleClass="status-bar">
