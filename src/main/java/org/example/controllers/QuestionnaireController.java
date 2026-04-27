@@ -38,6 +38,14 @@ public class QuestionnaireController implements Initializable {
     @FXML private ComboBox<String> cbTri;
     @FXML private Label lblCompteur;
 
+    // ─── PAGINATION ───
+    @FXML private Button btnPrev;
+    @FXML private Button btnNext;
+    @FXML private Label lblPage;
+    private static final int PAGE_SIZE = 5;
+    private int currentPage = 0;
+    private final ObservableList<Questionnaire> pageData = FXCollections.observableArrayList();
+
     // ─── LIST ───
     @FXML private ListView<Questionnaire> listQuestionnaire;
 
@@ -50,22 +58,20 @@ public class QuestionnaireController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
 
-        // ─── FilteredList + SortedList ───
         filtered = new FilteredList<>(data, p -> true);
         sorted   = new SortedList<>(filtered);
-        listQuestionnaire.setItems(sorted);
+
+        // ✅ ListView affiche pageData
+        listQuestionnaire.setItems(pageData);
         listQuestionnaire.setCellFactory(lv -> new QuestionnaireCard());
 
-        // ─── ComboBox form ───
         cbType.setItems(FXCollections.observableArrayList(TypeQuestionnaire.values()));
 
-        // ─── ComboBox filtre type ───
         ObservableList<String> types = FXCollections.observableArrayList("Tous");
         for (TypeQuestionnaire t : TypeQuestionnaire.values()) types.add(t.name());
         cbFiltreType.setItems(types);
         cbFiltreType.setValue("Tous");
 
-        // ─── ComboBox tri ───
         cbTri.setItems(FXCollections.observableArrayList(
                 "Par défaut",
                 "Nom A→Z",
@@ -78,11 +84,19 @@ public class QuestionnaireController implements Initializable {
         cbTri.setValue("Par défaut");
 
         // ─── Listeners ───
-        tfSearch.textProperty().addListener((obs, old, val) -> appliquerFiltre());
-        cbFiltreType.valueProperty().addListener((obs, old, val) -> appliquerFiltre());
-        cbTri.valueProperty().addListener((obs, old, val) -> appliquerTri());
+        tfSearch.textProperty().addListener((obs, old, val) -> {
+            currentPage = 0;
+            appliquerFiltre();
+        });
+        cbFiltreType.valueProperty().addListener((obs, old, val) -> {
+            currentPage = 0;
+            appliquerFiltre();
+        });
+        cbTri.valueProperty().addListener((obs, old, val) -> {
+            appliquerTri();
+            updatePage();
+        });
 
-        // ─── Clic liste ───
         listQuestionnaire.setOnMouseClicked(e -> {
             Questionnaire selected = listQuestionnaire.getSelectionModel().getSelectedItem();
             if (selected != null) fillForm(selected);
@@ -92,8 +106,49 @@ public class QuestionnaireController implements Initializable {
     }
 
     // ══════════════════════════════════════════
-    //  FILTRE — recherche + type
+    //  PAGINATION
     // ══════════════════════════════════════════
+
+    private void updatePage() {
+        int total      = sorted.size();
+        int totalPages = (int) Math.ceil((double) total / PAGE_SIZE);
+        if (totalPages == 0) totalPages = 1;
+
+        if (currentPage >= totalPages) currentPage = totalPages - 1;
+        if (currentPage < 0)           currentPage = 0;
+
+        int from = currentPage * PAGE_SIZE;
+        int to   = Math.min(from + PAGE_SIZE, total);
+
+        pageData.setAll(sorted.subList(from, to));
+
+        lblPage.setText("Page " + (currentPage + 1) + " / " + totalPages
+                + "  (" + total + " questionnaire(s))");
+        btnPrev.setDisable(currentPage == 0);
+        btnNext.setDisable(currentPage >= totalPages - 1);
+    }
+
+    @FXML
+    public void handlePrev() {
+        if (currentPage > 0) {
+            currentPage--;
+            updatePage();
+        }
+    }
+
+    @FXML
+    public void handleNext() {
+        int totalPages = (int) Math.ceil((double) sorted.size() / PAGE_SIZE);
+        if (currentPage < totalPages - 1) {
+            currentPage++;
+            updatePage();
+        }
+    }
+
+    // ══════════════════════════════════════════
+    //  FILTRE
+    // ══════════════════════════════════════════
+
     private void appliquerFiltre() {
         String search = tfSearch.getText() == null ? "" : tfSearch.getText().toLowerCase().trim();
         String type   = cbFiltreType.getValue();
@@ -111,11 +166,13 @@ public class QuestionnaireController implements Initializable {
         });
 
         updateCompteur();
+        updatePage();
     }
 
     // ══════════════════════════════════════════
-    //  TRI — appliqué SUR les résultats filtrés
+    //  TRI
     // ══════════════════════════════════════════
+
     private void appliquerTri() {
         String tri = cbTri.getValue();
         if (tri == null) return;
@@ -127,7 +184,7 @@ public class QuestionnaireController implements Initializable {
             case "Nb Questions ↓"  -> Comparator.comparingInt(Questionnaire::getNbreQuestions).reversed();
             case "Seuil Légère ↑"  -> Comparator.comparingInt(Questionnaire::getSeuilLegere);
             case "Seuil Légère ↓"  -> Comparator.comparingInt(Questionnaire::getSeuilLegere).reversed();
-            default                -> null; // Par défaut = pas de tri
+            default                -> null;
         };
 
         sorted.setComparator(comparator);
@@ -144,11 +201,14 @@ public class QuestionnaireController implements Initializable {
         cbFiltreType.setValue("Tous");
         cbTri.setValue("Par défaut");
         sorted.setComparator(null);
+        currentPage = 0;
+        updatePage();
     }
 
     // ══════════════════════════════════════════
     //  CARTE QUESTIONNAIRE
     // ══════════════════════════════════════════
+
     private static class QuestionnaireCard extends ListCell<Questionnaire> {
 
         private final HBox      root      = new HBox(14);
@@ -247,6 +307,7 @@ public class QuestionnaireController implements Initializable {
     // ══════════════════════════════════════════
     //  HANDLERS CRUD
     // ══════════════════════════════════════════
+
     @FXML
     public void handleAjouter() {
         if (!valider()) return;
@@ -301,6 +362,7 @@ public class QuestionnaireController implements Initializable {
     // ══════════════════════════════════════════
     //  VALIDATION
     // ══════════════════════════════════════════
+
     private boolean valider() {
         errCode.setText(""); errNom.setText(""); errType.setText("");
         errSeuilLeger.setText(""); errSeuilModere.setText("");
@@ -344,6 +406,7 @@ public class QuestionnaireController implements Initializable {
     // ══════════════════════════════════════════
     //  HELPERS
     // ══════════════════════════════════════════
+
     private Questionnaire buildFromForm() {
         Questionnaire q = new Questionnaire();
         q.setCode(tfCode.getText().trim());
@@ -375,7 +438,9 @@ public class QuestionnaireController implements Initializable {
         try {
             List<Questionnaire> list = service.afficher();
             data.setAll(list);
+            currentPage = 0;
             updateCompteur();
+            updatePage();
         } catch (SQLException e) { setStatus("❌ Erreur chargement : " + e.getMessage(), false); }
     }
 

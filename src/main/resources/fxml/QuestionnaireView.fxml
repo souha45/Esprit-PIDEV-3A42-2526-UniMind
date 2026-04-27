@@ -131,5 +131,19 @@
 
         <ListView fx:id="listQuestionnaire" VBox.vgrow="ALWAYS"
                   style="-fx-background-color: transparent; -fx-border-color: transparent;"/>
+        <!-- PAGINATION -->
+        <HBox alignment="CENTER" spacing="12">
+            <padding><Insets top="4" bottom="4"/></padding>
+            <Button fx:id="btnPrev" text="◀ Précédent" onAction="#handlePrev"
+                    style="-fx-background-color: #e2e8f0; -fx-text-fill: #64748b;
+                   -fx-font-weight: bold; -fx-padding: 6 14;
+                   -fx-background-radius: 7; -fx-cursor: hand;"/>
+            <Label fx:id="lblPage" text="Page 1 / 1"
+                   style="-fx-text-fill: #64748b; -fx-font-size: 12px; -fx-font-weight: bold;"/>
+            <Button fx:id="btnNext" text="Suivant ▶" onAction="#handleNext"
+                    style="-fx-background-color: #3b82f6; -fx-text-fill: white;
+                   -fx-font-weight: bold; -fx-padding: 6 14;
+                   -fx-background-radius: 7; -fx-cursor: hand;"/>
+        </HBox>
     </VBox>
 </HBox>
