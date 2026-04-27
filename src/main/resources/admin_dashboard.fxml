@@ -5,6 +5,8 @@
 <?import javafx.scene.shape.*?>
 <?import javafx.geometry.*?>
 
+<?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
 <BorderPane xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.controllers.admin.AdminDashboardController"
             prefWidth="1280" prefHeight="760"
@@ -81,6 +83,7 @@
             <Button fx:id="btnStats" text="📊  Statistiques"
                     onAction="#showStats"
                     style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+
             <Button fx:id="btnQuestionnaires" text="📋  Questionnaires"
                     onAction="#showQuestionnaires"
                     style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
@@ -108,6 +111,8 @@
             <!-- PANNEAU GESTION UTILISATEURS -->
             <VBox fx:id="panneauGestion" spacing="20" visible="true" managed="true"
                   style="-fx-padding: 25;">
+
+                <!-- En-tête avec titre et bouton ajout -->
                 <HBox alignment="CENTER_LEFT" spacing="16">
                     <VBox spacing="3">
                         <Label text="Gestion des Utilisateurs"
@@ -126,8 +131,150 @@
                                    -fx-effect: dropshadow(gaussian, rgba(79,70,229,0.35), 8, 0, 0, 3);"/>
                 </HBox>
 
+                <!-- Barre de filtres -->
+                <VBox spacing="12"
+                      style="-fx-background-color: white; -fx-padding: 16 24;
+                             -fx-background-radius: 12; -fx-border-color: #E2E8F0;
+                             -fx-border-radius: 12; -fx-border-width: 1;
+                             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 8, 0, 0, 2);">
+
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Label text="🔎" style="-fx-font-size: 14px;"/>
+                        <Label text="Filtres avancés"
+                               style="-fx-font-size: 13px; -fx-font-weight: bold;
+                                      -fx-text-fill: #374151; -fx-font-family: 'Segoe UI';"/>
+                    </HBox>
+
+                    <HBox spacing="16" alignment="CENTER_LEFT">
+                        <!-- Filtre Rôle -->
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="Rôle"
+                                   style="-fx-font-size: 11px; -fx-font-weight: bold;
+                  -fx-text-fill: #6B7280; -fx-font-family: 'Segoe UI';"/>
+                            <ComboBox fx:id="filtreRole" promptText="Tous les rôles" prefWidth="180">
+                                <items>
+                                    <FXCollections fx:factory="observableArrayList">
+                                        <String fx:value="Tous les rôles"/>
+                                        <String fx:value="Admin"/>
+                                        <String fx:value="Etudiant"/>
+                                        <String fx:value="Psychologue"/>
+                                        <String fx:value="Responsable Etudiant"/>
+                                    </FXCollections>
+                                </items>
+                                <value><String fx:value="Tous les rôles"/></value>
+                            </ComboBox>
+                        </VBox>
+
+                        <!-- Filtre Statut -->
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="Statut"
+                                   style="-fx-font-size: 11px; -fx-font-weight: bold;
+                  -fx-text-fill: #6B7280; -fx-font-family: 'Segoe UI';"/>
+                            <ComboBox fx:id="filtreStatut" promptText="Tous les statuts" prefWidth="180">
+                                <items>
+                                    <FXCollections fx:factory="observableArrayList">
+                                        <String fx:value="Tous les statuts"/>
+                                        <String fx:value="actif"/>
+                                        <String fx:value="en_attente"/>
+                                        <String fx:value="bloqué"/>
+                                        <String fx:value="inactif"/>
+                                    </FXCollections>
+                                </items>
+                                <value><String fx:value="Tous les statuts"/></value>
+                            </ComboBox>
+                        </VBox>
+
+                        <!-- Filtre Actif/Inactif -->
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="Activation"
+                                   style="-fx-font-size: 11px; -fx-font-weight: bold;
+                  -fx-text-fill: #6B7280; -fx-font-family: 'Segoe UI';"/>
+                            <ComboBox fx:id="filtreActif" promptText="Tous" prefWidth="140">
+                                <items>
+                                    <FXCollections fx:factory="observableArrayList">
+                                        <String fx:value="Tous"/>
+                                        <String fx:value="Actif"/>
+                                        <String fx:value="Inactif"/>
+                                    </FXCollections>
+                                </items>
+                                <value><String fx:value="Tous"/></value>
+                            </ComboBox>
+                        </VBox>
+
+                        <!-- Bouton Réinitialiser -->
+                        <VBox spacing="4" alignment="BOTTOM_RIGHT">
+                            <Button text="↺  Réinitialiser"
+                                    onAction="#reinitialiserFiltres"
+                                    style="-fx-background-color: #F1F5F9; -fx-text-fill: #475569;
+                                           -fx-cursor: hand; -fx-background-radius: 8;
+                                           -fx-padding: 8 16; -fx-font-size: 12px;
+                                           -fx-font-family: 'Segoe UI';
+                                           -fx-border-color: #E2E8F0; -fx-border-radius: 8;
+                                           -fx-border-width: 1;"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Chips de filtres rapides -->
+                    <FlowPane hgap="8" vgap="8" alignment="CENTER_LEFT">
+                        <Label text="Accès rapide :"
+                               style="-fx-font-size: 11px; -fx-text-fill: #94A3B8;
+                                      -fx-font-family: 'Segoe UI';"
+                               minWidth="70"/>
+
+                        <Button text="🟣 Admins" onAction="#filtrerAdmins"
+                                style="-fx-background-color: #EDE9FE; -fx-text-fill: #6D28D9;
+                                       -fx-font-size: 11px; -fx-font-weight: bold;
+                                       -fx-cursor: hand; -fx-background-radius: 20;
+                                       -fx-padding: 5 14; -fx-font-family: 'Segoe UI';"/>
+
+                        <Button text="🔵 Étudiants" onAction="#filtrerEtudiants"
+                                style="-fx-background-color: #DBEAFE; -fx-text-fill: #1D4ED8;
+                                       -fx-font-size: 11px; -fx-font-weight: bold;
+                                       -fx-cursor: hand; -fx-background-radius: 20;
+                                       -fx-padding: 5 14; -fx-font-family: 'Segoe UI';"/>
+
+                        <Button text="🟢 Psychologues" onAction="#filtrerPsychologues"
+                                style="-fx-background-color: #D1FAE5; -fx-text-fill: #065F46;
+                                       -fx-font-size: 11px; -fx-font-weight: bold;
+                                       -fx-cursor: hand; -fx-background-radius: 20;
+                                       -fx-padding: 5 14; -fx-font-family: 'Segoe UI';"/>
+
+                        <Button text="🟠 Responsables" onAction="#filtrerResponsables"
+                                style="-fx-background-color: #FFEDD5; -fx-text-fill: #C2410C;
+                                       -fx-font-size: 11px; -fx-font-weight: bold;
+                                       -fx-cursor: hand; -fx-background-radius: 20;
+                                       -fx-padding: 5 14; -fx-font-family: 'Segoe UI';"/>
+
+                        <Button text="⛔ Bloqués" onAction="#filtrerBloques"
+                                style="-fx-background-color: #FEE2E2; -fx-text-fill: #991B1B;
+                                       -fx-font-size: 11px; -fx-font-weight: bold;
+                                       -fx-cursor: hand; -fx-background-radius: 20;
+                                       -fx-padding: 5 14; -fx-font-family: 'Segoe UI';"/>
+
+                        <Button text="⏳ En attente" onAction="#filtrerEnAttente"
+                                style="-fx-background-color: #FEF9C3; -fx-text-fill: #854D0E;
+                                       -fx-font-size: 11px; -fx-font-weight: bold;
+                                       -fx-cursor: hand; -fx-background-radius: 20;
+                                       -fx-padding: 5 14; -fx-font-family: 'Segoe UI';"/>
+
+                        <Button text="✅ Actifs" onAction="#filtrerActifs"
+                                style="-fx-background-color: #D1FAE5; -fx-text-fill: #065F46;
+                                       -fx-font-size: 11px; -fx-font-weight: bold;
+                                       -fx-cursor: hand; -fx-background-radius: 20;
+                                       -fx-padding: 5 14; -fx-font-family: 'Segoe UI';"/>
+
+                        <Button text="❌ Inactifs" onAction="#filtrerInactifs"
+                                style="-fx-background-color: #F3F4F6; -fx-text-fill: #6B7280;
+                                       -fx-font-size: 11px; -fx-font-weight: bold;
+                                       -fx-cursor: hand; -fx-background-radius: 20;
+                                       -fx-padding: 5 14; -fx-font-family: 'Segoe UI';"/>
+                    </FlowPane>
+                </VBox>
+
+                <!-- Message de gestion -->
                 <Label fx:id="messageGestion" style="-fx-font-size: 12px; -fx-font-family: 'Segoe UI';"/>
 
+                <!-- Carte table -->
                 <VBox spacing="0"
                       style="-fx-background-color: white; -fx-background-radius: 16;
                              -fx-border-color: #E2E8F0; -fx-border-radius: 16;
@@ -181,6 +328,7 @@
             <!-- PANNEAU DEMANDES EN ATTENTE -->
             <VBox fx:id="panneauDemandes" spacing="20" visible="false" managed="false"
                   style="-fx-padding: 25;">
+
                 <HBox alignment="CENTER_LEFT">
                     <VBox spacing="3">
                         <Label text="Demandes d'inscription"
@@ -251,7 +399,6 @@
                 </VBox>
             </VBox>
 
-            <!-- PANNEAU PROFIL ADMIN -->
             <!-- PANNEAU PROFIL ADMIN -->
             <VBox fx:id="panneauProfil" spacing="20" visible="false" managed="false"
                   style="-fx-padding: 25;">

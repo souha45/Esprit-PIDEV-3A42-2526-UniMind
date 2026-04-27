@@ -87,7 +87,11 @@ public class AdminDashboardController {
     @FXML private TableColumn<User, String> dColRole;
     @FXML private Label messageDemandes;
     @FXML private Label labelNbResultats;
-
+    // Ajoutez ces déclarations avec les autres @FXML
+    @FXML private ComboBox<String> filtreRole;
+    @FXML private ComboBox<String> filtreStatut;
+    @FXML private ComboBox<String> filtreActif;
+    @FXML private Button btnReinitialiserFiltres;
     // PROFIL ADMIN
     @FXML private Label pNomPrenom, pEmail, pRole, pStatut;
     @FXML private TextField pBio, pTel;
@@ -107,19 +111,25 @@ public class AdminDashboardController {
     // INITIALISATION
     @FXML
     public void initialize() {
-        instance = this; // Initialiser l'instance statique
+        instance = this;
 
+        // Ne pas appeler configurerFiltres() car les valeurs sont déjà dans le FXML
         configurerTable();
         configurerTableDemandes();
         chargerUtilisateurs();
 
-        // Retirer les trois VBox du StackPane (elles ne seront plus dans l'arbre)
+        // Retirer les trois VBox du StackPane
         contentArea.getChildren().removeAll(panneauGestion, panneauDemandes, panneauProfil);
 
         // Afficher le panneau Gestion par défaut
         afficherGestion();
 
-        navRechercheField.textProperty().addListener((obs, o, n) -> filtrer(n));
+        // Ajouter les listeners pour les filtres
+        navRechercheField.textProperty().addListener((obs, o, n) -> appliquerFiltres());
+
+        if (filtreRole != null) filtreRole.setOnAction(e -> appliquerFiltres());
+        if (filtreStatut != null) filtreStatut.setOnAction(e -> appliquerFiltres());
+        if (filtreActif != null) filtreActif.setOnAction(e -> appliquerFiltres());
 
         modalStage = new Stage();
         modalStage.initModality(Modality.APPLICATION_MODAL);
@@ -130,6 +140,203 @@ public class AdminDashboardController {
      * Méthode statique pour charger du contenu dans le contentArea de l'AdminDashboard
      * Utilisable depuis les contrôleurs de gestion
      */
+    // ==================== FILTRES ET TRI ====================
+
+    private void configurerFiltres() {
+        // Filtre Rôle
+        filtreRole = new ComboBox<>();
+        filtreRole.setItems(FXCollections.observableArrayList(
+                "Tous les rôles", "Admin", "Etudiant", "Psychologue", "Responsable Etudiant"));
+        filtreRole.setValue("Tous les rôles");  // Valeur par défaut
+        filtreRole.setStyle(filtreComboStyle());
+        filtreRole.setOnAction(e -> appliquerFiltres());
+
+        // Filtre Statut
+        filtreStatut = new ComboBox<>();
+        ObservableList<String> statuts = FXCollections.observableArrayList(
+                "Tous les statuts", "actif", "en_attente", "bloqué", "inactif");
+        filtreStatut.setItems(statuts);
+        filtreStatut.setValue("Tous les statuts");  // Valeur par défaut
+        filtreStatut.setStyle(filtreComboStyle());
+        filtreStatut.setOnAction(e -> appliquerFiltres());
+
+        // Filtre Actif/Inactif
+        filtreActif = new ComboBox<>();
+        filtreActif.setItems(FXCollections.observableArrayList(
+                "Tous", "Actif", "Inactif"));
+        filtreActif.setValue("Tous");  // Valeur par défaut
+        filtreActif.setStyle(filtreComboStyle());
+        filtreActif.setOnAction(e -> appliquerFiltres());
+    }
+
+    private String filtreComboStyle() {
+        return "-fx-background-radius: 8; -fx-border-color: #E2E8F0;" +
+                "-fx-border-radius: 8; -fx-border-width: 1.5;" +
+                "-fx-font-family: 'Segoe UI'; -fx-font-size: 13px;" +
+                "-fx-pref-width: 180; -fx-pref-height: 36;" +
+                "-fx-padding: 0 10; -fx-background-color: white;";
+    }
+
+    private void appliquerFiltres() {
+        String recherche = navRechercheField != null ? navRechercheField.getText().toLowerCase() : "";
+
+        // Récupération des valeurs avec gestion des nulls
+        String role = (filtreRole != null && filtreRole.getValue() != null)
+                ? filtreRole.getValue() : "Tous les rôles";
+        String statut = (filtreStatut != null && filtreStatut.getValue() != null)
+                ? filtreStatut.getValue() : "Tous les statuts";
+        String actif = (filtreActif != null && filtreActif.getValue() != null)
+                ? filtreActif.getValue() : "Tous";
+
+        // Filtrer les utilisateurs
+        ObservableList<User> filtres = tousLesUsers.filtered(u -> {
+            // Filtre recherche textuelle
+            boolean matchRecherche = recherche.isEmpty()
+                    || (u.getNom() != null && u.getNom().toLowerCase().contains(recherche))
+                    || (u.getPrenom() != null && u.getPrenom().toLowerCase().contains(recherche))
+                    || (u.getEmail() != null && u.getEmail().toLowerCase().contains(recherche));
+
+            // Filtre rôle
+            String userRole = u.getRole() != null ? u.getRole().toString().replace("_", " ") : "";
+            boolean matchRole = role.equals("Tous les rôles") || userRole.equalsIgnoreCase(role);
+
+            // Filtre statut
+            String userStatut = u.getStatut() != null ? u.getStatut() : "";
+            boolean matchStatut = statut.equals("Tous les statuts") || userStatut.equalsIgnoreCase(statut);
+
+            // Filtre actif/inactif
+            boolean matchActif = actif.equals("Tous")
+                    || (actif.equals("Actif") && u.isActive())
+                    || (actif.equals("Inactif") && !u.isActive());
+
+            return matchRecherche && matchRole && matchStatut && matchActif;
+        });
+
+        tableUtilisateurs.setItems(filtres);
+
+        // Mettre à jour le compteur
+        if (labelNbResultats != null) {
+            labelNbResultats.setText(filtres.size() + " / " + tousLesUsers.size() + " utilisateurs");
+        }
+
+        // Message de résultat
+        if (filtres.isEmpty()) {
+            afficherMsgGestion("⚠ Aucun utilisateur ne correspond aux filtres", "#F59E0B");
+        } else {
+            afficherMsgGestion("✓ " + filtres.size() + " utilisateur(s) trouvé(s)", "#16A34A");
+        }
+    }
+
+    // Filtres rapides par rôle
+    @FXML public void filtrerAdmins() {
+        if (filtreRole != null) filtreRole.setValue("Admin");
+        if (filtreStatut != null) filtreStatut.setValue("Tous les statuts");
+        appliquerFiltres();
+    }
+
+    @FXML public void filtrerEtudiants() {
+        if (filtreRole != null) filtreRole.setValue("Etudiant");
+        if (filtreStatut != null) filtreStatut.setValue("Tous les statuts");
+        appliquerFiltres();
+    }
+
+    @FXML public void filtrerPsychologues() {
+        if (filtreRole != null) filtreRole.setValue("Psychologue");
+        if (filtreStatut != null) filtreStatut.setValue("Tous les statuts");
+        appliquerFiltres();
+    }
+
+    @FXML public void filtrerResponsables() {
+        if (filtreRole != null) filtreRole.setValue("Responsable Etudiant");
+        if (filtreStatut != null) filtreStatut.setValue("Tous les statuts");
+        appliquerFiltres();
+    }
+
+    @FXML public void filtrerBloques() {
+        if (filtreRole != null) filtreRole.setValue("Tous les rôles");
+        if (filtreStatut != null) filtreStatut.setValue("bloqué");
+        appliquerFiltres();
+    }
+
+    @FXML public void filtrerEnAttente() {
+        if (filtreRole != null) filtreRole.setValue("Tous les rôles");
+        if (filtreStatut != null) filtreStatut.setValue("en_attente");
+        appliquerFiltres();
+    }
+
+    @FXML public void filtrerActifs() {
+        if (filtreActif != null) filtreActif.setValue("Actif");
+        appliquerFiltres();
+    }
+
+    @FXML public void filtrerInactifs() {
+        if (filtreActif != null) filtreActif.setValue("Inactif");
+        appliquerFiltres();
+    }
+
+    @FXML
+    public void reinitialiserFiltres() {
+        if (filtreRole != null) filtreRole.setValue("Tous les rôles");
+        if (filtreStatut != null) filtreStatut.setValue("Tous les statuts");
+        if (filtreActif != null) filtreActif.setValue("Tous");
+        if (navRechercheField != null) navRechercheField.clear();
+        appliquerFiltres();
+    }
+
+    // Tri des colonnes
+    private void configurerTri() {
+        // Tri par Nom
+        colNom.setComparator((String s1, String s2) -> {
+            if (s1 == null) return 1;
+            if (s2 == null) return -1;
+            return s1.compareToIgnoreCase(s2);
+        });
+
+        // Tri par Prénom
+        colPrenom.setComparator((String s1, String s2) -> {
+            if (s1 == null) return 1;
+            if (s2 == null) return -1;
+            return s1.compareToIgnoreCase(s2);
+        });
+
+        // Tri par Email
+        colEmail.setComparator((String s1, String s2) -> {
+            if (s1 == null) return 1;
+            if (s2 == null) return -1;
+            return s1.compareToIgnoreCase(s2);
+        });
+
+        // Tri par Rôle
+        colRole.setComparator((String s1, String s2) -> {
+            if (s1 == null) return 1;
+            if (s2 == null) return -1;
+            return s1.compareToIgnoreCase(s2);
+        });
+
+        // Tri par Statut
+        colStatut.setComparator((String s1, String s2) -> {
+            if (s1 == null) return 1;
+            if (s2 == null) return -1;
+            return s1.compareToIgnoreCase(s2);
+        });
+    }
+    private void styliserComboBox() {
+        if (filtreRole != null) {
+            filtreRole.setStyle("-fx-background-color: white; -fx-border-color: #E2E8F0; " +
+                    "-fx-border-radius: 8; -fx-background-radius: 8; " +
+                    "-fx-padding: 5 10; -fx-font-size: 13px;");
+        }
+        if (filtreStatut != null) {
+            filtreStatut.setStyle("-fx-background-color: white; -fx-border-color: #E2E8F0; " +
+                    "-fx-border-radius: 8; -fx-background-radius: 8; " +
+                    "-fx-padding: 5 10; -fx-font-size: 13px;");
+        }
+        if (filtreActif != null) {
+            filtreActif.setStyle("-fx-background-color: white; -fx-border-color: #E2E8F0; " +
+                    "-fx-border-radius: 8; -fx-background-radius: 8; " +
+                    "-fx-padding: 5 10; -fx-font-size: 13px;");
+        }
+    }
     public static void loadContent(String fxmlPath) {
         if (instance != null) {
             try {
@@ -470,13 +677,20 @@ public class AdminDashboardController {
             List<User> users = adminService.afficher();
             tousLesUsers.setAll(users);
             tableUtilisateurs.setItems(tousLesUsers);
-            afficherMsgGestion("✓ " + users.size() + " utilisateur(s)", "#16A34A");
+
+            // Configurer le tri après chargement
+            configurerTri();
 
             // Mettre à jour le compteur
             if (labelNbResultats != null) {
-                labelNbResultats.setText(users.size() + " utilisateurs");
+                labelNbResultats.setText(users.size() + " / " + users.size() + " utilisateurs");
             }
+
+            // Appliquer les filtres une seule fois
+            appliquerFiltres();
+
         } catch (SQLException e) {
+            e.printStackTrace();
             afficherMsgGestion("Erreur : " + e.getMessage(), "#DC2626");
             if (labelNbResultats != null) {
                 labelNbResultats.setText("0 utilisateurs");
