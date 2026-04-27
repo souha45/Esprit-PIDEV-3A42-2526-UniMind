@@ -927,9 +927,9 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
                         "ETUDIANT".equals(utilisateur.getRole().name().trim()));
 
                 // ✅ Recréer les boutons à chaque appel pour éviter les conflits de cellules
-                Button btnView   = new Button("👁️");
-                Button btnEdit   = new Button("✏️");
-                Button btnDelete = new Button("🗑️");
+                Button btnView   = new Button("👁");
+                Button btnEdit   = new Button("✏");
+                Button btnDelete = new Button("🗑");
 
                 btnView.setStyle("-fx-background-color: #eff6ff; -fx-text-fill: #1d4ed8; " +
                         "-fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold; " +

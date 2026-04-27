@@ -671,8 +671,8 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         actionsBox.setAlignment(Pos.CENTER_RIGHT);
 
         if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
-            Button btnModifier = new Button("✏️");
-            Button btnSupprimer = new Button("🗑️");
+            Button btnModifier = new Button("✏");
+            Button btnSupprimer = new Button("🗑");
 
             btnModifier.getStyleClass().addAll("table-action-button", "table-action-button-edit");
             btnSupprimer.getStyleClass().addAll("table-action-button", "table-action-button-delete");

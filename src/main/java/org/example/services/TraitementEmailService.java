@@ -41,9 +41,9 @@ public class TraitementEmailService {
         this.smtpPort = 587;
         this.smtpAuth = true;
         this.smtpStarttls = true;
-        this.fromEmail = "omaimagouider6@gmail.com"; // à configurer
+        this.fromEmail = "omaimagouider6@gmail.com";
         this.smtpUsername = "omaimagouider6@gmail.com"; // même email que l'expéditeur
-        this.smtpPassword = "zchq ocxh cjzn ywnu"; // Remplacer par le mot de passe d'application Gmail de 16 caractères
+        this.smtpPassword = "zchq ocxh cjzn ywnu"; //  le mot de passe d'application Gmail de 16 caractères
         // Pour désactiver les emails pendant les tests, mettez cette valeur à null ou vide
         // this.smtpPassword = null; // Désactive les envois d'emails
         this.fromName = "Unimind";
