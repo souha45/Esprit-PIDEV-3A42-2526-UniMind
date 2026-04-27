@@ -123,16 +123,18 @@ public class ParticipationService implements ICrud<Participation> {
     public void modifier(Participation p) throws SQLException {
         System.out.println("Modification de la participation ID: " + p.getParticipationId());
 
+        // Récupérer l'ancien statut pour détecter le changement vers ANNULE
+        Participation current = findById(p.getParticipationId());
+        if (current == null) {
+            throw new SQLException("Participation introuvable (ID=" + p.getParticipationId() + ")");
+        }
+        StatutParticipation oldStatut = current.getStatut();
+
         boolean wantsToSaveFeedback = p.getNoteSatisfaction() != null
                 || (p.getFeedbackCommentaire() != null && !p.getFeedbackCommentaire().trim().isEmpty());
 
         if (wantsToSaveFeedback) {
-            Participation current = findById(p.getParticipationId());
-            if (current == null) {
-                throw new SQLException("Participation introuvable (ID=" + p.getParticipationId() + ")");
-            }
-
-            if (current.getStatut() != StatutParticipation.CONFIRME) {
+            if (oldStatut != StatutParticipation.CONFIRME) {
                 throw new SQLException("Avis impossible : votre participation n'est pas confirmée");
             }
 
@@ -176,6 +178,12 @@ public class ParticipationService implements ICrud<Participation> {
 
             ps.setInt(12, p.getParticipationId());
             ps.executeUpdate();
+        }
+
+        // Envoyer l'email d'annulation si le statut passe à ANNULE
+        if (oldStatut != StatutParticipation.ANNULE && p.getStatut() == StatutParticipation.ANNULE) {
+            System.out.println("Statut de participation changé à ANNULE - envoi de l'email");
+            sendAnnulationEmail(current.getEtudiantId(), current.getEvenementId());
         }
     }
 
