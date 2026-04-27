@@ -161,9 +161,8 @@
                                 <TableColumn fx:id="colDateHeure" prefWidth="180" text="📅  Date &amp; Heure"/>
                                 <TableColumn fx:id="colType"      prefWidth="140" text="💬  Type"/>
                                 <TableColumn fx:id="colStatut"    prefWidth="160" text="📌  Statut"/>
-                                <!-- ✅ AJOUTER CETTE COLONNE POUR LA VISIO -->
-                                <TableColumn fx:id="colVisio"     prefWidth="100" text="🎥 Visio"/>
                                 <TableColumn fx:id="colActions"   prefWidth="260" text="⚙  Actions"/>
+                                <TableColumn fx:id="colVisio"     prefWidth="100" text="🎥  Visio"/>
                             </columns>
                             <placeholder>
                                 <Label text="✨ Aucun rendez-vous trouvé"

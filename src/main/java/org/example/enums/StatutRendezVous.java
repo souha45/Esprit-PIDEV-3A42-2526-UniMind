@@ -3,7 +3,7 @@ package org.example.enums;
 public enum StatutRendezVous {
     demande,
     confirme,
-    Encours,
+    en_cours,
     terminé,
     annulé,
     absent
