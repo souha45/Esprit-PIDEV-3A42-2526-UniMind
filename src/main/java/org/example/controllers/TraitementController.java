@@ -1061,9 +1061,9 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
         SessionManager session = SessionManager.getInstance();
 
         colActions.setCellFactory(param -> new TableCell<LigneGroupée, Void>() {
-            private final Button btnView = new Button("👁️");
-            private final Button btnEdit = new Button("✏️");
-            private final Button btnDelete = new Button("🗑️");
+            private final Button btnView = new Button("👁");
+            private final Button btnEdit = new Button("✏");
+            private final Button btnDelete = new Button("🗑");
             private final Button btnTranslate = new Button("🌐");
             private final HBox container = new HBox(6, btnView, btnEdit, btnDelete, btnTranslate);
 
