@@ -1,5 +1,6 @@
 package org.example.controllers;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -17,8 +18,6 @@ import org.example.services.ReponseQuestionnaireServices;
 import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.Month;
-import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,14 +46,18 @@ public class StatistiquesController implements Initializable {
     private List<Question>             toutesQuestions;
     private List<Reponsequestionnaire> toutesReponses;
 
-    // Mois en cours
-    private int moisSelectionne  = LocalDate.now().getMonthValue();
+    private int moisSelectionne   = LocalDate.now().getMonthValue();
     private int anneeSelectionnee = LocalDate.now().getYear();
 
-    // Noms des mois en français
     private static final String[] MOIS_FR = {
             "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
             "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+    };
+
+    // Couleurs pour le PieChart
+    private static final String[] PIE_COLORS = {
+            "#6366f1", "#10b981", "#f59e0b", "#ef4444", "#3b82f6",
+            "#8b5cf6", "#ec4899", "#14b8a6"
     };
 
     @Override
@@ -71,39 +74,34 @@ public class StatistiquesController implements Initializable {
                 moisItems.add(MOIS_FR[i] + " " + anneeSelectionnee);
             }
             cbMois.setItems(moisItems);
-
-            // Sélectionner le mois en cours
             cbMois.setValue(MOIS_FR[moisSelectionne - 1] + " " + anneeSelectionnee);
 
-            // ─── Listener changement mois ───
             cbMois.valueProperty().addListener((obs, old, val) -> {
                 if (val != null) rafraichir(val);
             });
 
-            // ─── Charger les stats du mois en cours ───
             rafraichir(cbMois.getValue());
 
         } catch (SQLException e) {
             System.out.println("Erreur statistiques: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     // ══════════════════════════════════════════
-    //  RAFRAICHIR SELON MOIS SELECTIONNE
+    //  RAFRAICHIR
     // ══════════════════════════════════════════
-    private void rafraichir(String moisStr) {
 
+    private void rafraichir(String moisStr) {
         List<Reponsequestionnaire> reponsesFiltrees;
 
         if (moisStr.equals("Tous les mois")) {
             reponsesFiltrees = toutesReponses;
             lblPeriode.setText("📅 Période : Toute la durée");
         } else {
-            // Extraire le numéro du mois depuis le nom
-            int mois = getMoisNumero(moisStr);
+            int mois  = getMoisNumero(moisStr);
             int annee = anneeSelectionnee;
 
-            // Filtrer les réponses par mois et année
             reponsesFiltrees = toutesReponses.stream()
                     .filter(r -> r.getCreatedAt() != null)
                     .filter(r -> {
@@ -121,9 +119,6 @@ public class StatistiquesController implements Initializable {
         chargerBarTopQuestionnaires(reponsesFiltrees, tousQuestionnaires);
     }
 
-    // ══════════════════════════════════════════
-    //  HELPER — nom mois → numéro
-    // ══════════════════════════════════════════
     private int getMoisNumero(String moisStr) {
         for (int i = 0; i < MOIS_FR.length; i++) {
             if (moisStr.startsWith(MOIS_FR[i])) return i + 1;
@@ -134,6 +129,7 @@ public class StatistiquesController implements Initializable {
     // ══════════════════════════════════════════
     //  CARTES STAT
     // ══════════════════════════════════════════
+
     private void chargerCartes(List<Questionnaire> questionnaires,
                                List<Question> questions,
                                List<Reponsequestionnaire> reponses) {
@@ -147,23 +143,38 @@ public class StatistiquesController implements Initializable {
     // ══════════════════════════════════════════
     //  CAMEMBERT — RÉPARTITION PAR TYPE
     // ══════════════════════════════════════════
+
     private void chargerPieType(List<Questionnaire> questionnaires) {
         Map<String, Long> countByType = questionnaires.stream()
                 .filter(q -> q.getType() != null)
                 .collect(Collectors.groupingBy(q -> q.getType().name(), Collectors.counting()));
 
-        List<PieChart.Data> pieData = new ArrayList<>();
+        ObservableList<PieChart.Data> pieData = FXCollections.observableArrayList();
         countByType.forEach((type, count) ->
                 pieData.add(new PieChart.Data(type + " (" + count + ")", count)));
 
-        pieType.setData(FXCollections.observableArrayList(pieData));
+        pieType.setData(pieData);
         pieType.setLegendVisible(true);
         pieType.setLabelsVisible(true);
+        pieType.setAnimated(true);
+
+        // ✅ Appliquer les couleurs APRÈS que le scene graph soit prêt
+        Platform.runLater(() -> {
+            int i = 0;
+            for (PieChart.Data d : pieType.getData()) {
+                String color = PIE_COLORS[i % PIE_COLORS.length];
+                if (d.getNode() != null) {
+                    d.getNode().setStyle("-fx-pie-color: " + color + ";");
+                }
+                i++;
+            }
+        });
     }
 
     // ══════════════════════════════════════════
     //  BARRES — RÉPONSES PAR NIVEAU
     // ══════════════════════════════════════════
+
     private void chargerBarNiveau(List<Reponsequestionnaire> reponses) {
         Map<String, Long> countByNiveau = reponses.stream()
                 .filter(r -> r.getNiveau() != null)
@@ -172,24 +183,28 @@ public class StatistiquesController implements Initializable {
         XYChart.Series<String, Number> series = new XYChart.Series<>();
         series.setName("Réponses");
 
-        List<String> niveaux = List.of("legere", "modere", "severe");
-        for (String niveau : niveaux) {
-            long count = countByNiveau.getOrDefault(niveau, 0L);
-            series.getData().add(new XYChart.Data<>(niveau.toUpperCase(), count));
+        String[] niveaux = {"legere", "modere", "severe"};
+        String[] niveauxLabels = {"LÉGÈRE", "MODÉRÉE", "SÉVÈRE"};
+        String[] niveauxColors = {"#22c55e", "#f59e0b", "#ef4444"};
+
+        for (int i = 0; i < niveaux.length; i++) {
+            long count = countByNiveau.getOrDefault(niveaux[i], 0L);
+            XYChart.Data<String, Number> dataPoint = new XYChart.Data<>(niveauxLabels[i], count);
+            series.getData().add(dataPoint);
         }
 
         barNiveau.getData().clear();
         barNiveau.getData().add(series);
         barNiveau.setLegendVisible(false);
+        barNiveau.setAnimated(true);
 
-        barNiveau.sceneProperty().addListener((obs, oldScene, newScene) -> {
-            if (newScene != null) {
-                barNiveau.lookupAll(".data0.chart-bar")
-                        .forEach(node -> node.setStyle("-fx-bar-fill: #22c55e;"));
-                barNiveau.lookupAll(".data1.chart-bar")
-                        .forEach(node -> node.setStyle("-fx-bar-fill: #f59e0b;"));
-                barNiveau.lookupAll(".data2.chart-bar")
-                        .forEach(node -> node.setStyle("-fx-bar-fill: #ef4444;"));
+        // ✅ Appliquer les couleurs après rendu
+        Platform.runLater(() -> {
+            for (int i = 0; i < series.getData().size(); i++) {
+                XYChart.Data<String, Number> d = series.getData().get(i);
+                if (d.getNode() != null) {
+                    d.getNode().setStyle("-fx-bar-fill: " + niveauxColors[i] + ";");
+                }
             }
         });
     }
@@ -197,12 +212,14 @@ public class StatistiquesController implements Initializable {
     // ══════════════════════════════════════════
     //  BARRES — TOP QUESTIONNAIRES
     // ══════════════════════════════════════════
+
     private void chargerBarTopQuestionnaires(List<Reponsequestionnaire> reponses,
                                              List<Questionnaire> questionnaires) {
         Map<Integer, String> idToNom = questionnaires.stream()
                 .collect(Collectors.toMap(
                         Questionnaire::getQuestionnaireId,
-                        Questionnaire::getNom));
+                        Questionnaire::getNom,
+                        (a, b) -> a));
 
         Map<Integer, Long> countByQ = reponses.stream()
                 .collect(Collectors.groupingBy(
@@ -217,12 +234,22 @@ public class StatistiquesController implements Initializable {
                 .limit(5)
                 .forEach(entry -> {
                     String nom = idToNom.getOrDefault(entry.getKey(), "Q#" + entry.getKey());
-                    if (nom.length() > 20) nom = nom.substring(0, 20) + "...";
+                    if (nom.length() > 20) nom = nom.substring(0, 20) + "…";
                     series.getData().add(new XYChart.Data<>(nom, entry.getValue()));
                 });
 
         barTopQuestionnaires.getData().clear();
         barTopQuestionnaires.getData().add(series);
         barTopQuestionnaires.setLegendVisible(false);
+        barTopQuestionnaires.setAnimated(true);
+
+        // ✅ Appliquer couleur uniforme
+        Platform.runLater(() -> {
+            for (XYChart.Data<String, Number> d : series.getData()) {
+                if (d.getNode() != null) {
+                    d.getNode().setStyle("-fx-bar-fill: #6366f1;");
+                }
+            }
+        });
     }
 }

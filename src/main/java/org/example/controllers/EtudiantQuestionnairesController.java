@@ -121,7 +121,7 @@ public class EtudiantQuestionnairesController implements Initializable {
             int restants = 10 - passages;
 
             if (restants <= 0) {
-                setStatus("🚫 Vous avez atteint la limite de 10 questionnaires aujourd'hui. Revenez demain !", false);
+                setStatus("🚫 Vous avez atteint la limite de 2 questionnaires aujourd'hui. Revenez demain !", false);
             } else if (restants == 1) {
                 setStatus("⚠️ Il vous reste 1 questionnaire à passer aujourd'hui.", true);
             } else {

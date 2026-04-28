@@ -88,6 +88,9 @@
             <Button fx:id="btnQuestions" text="❓  Questions"
                     onAction="#showQuestions"
                     style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+            <Button fx:id="btnStatQuestionnaire" text="📈  Stat Questionnaires"
+                    onAction="#showStatQuestionnaire"
+                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
 
             <Button fx:id="btnProfil" text="👤  Mon Profil"
                     onAction="#afficherProfil"

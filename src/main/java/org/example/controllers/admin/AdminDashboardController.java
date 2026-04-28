@@ -25,16 +25,12 @@ import org.example.utils.ValidationUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Optional;
 
 public class AdminDashboardController {
 
-    // Instance statique pour permettre l'accès depuis d'autres contrôleurs
     private static AdminDashboardController instance;
 
     public static AdminDashboardController getInstance() {
@@ -57,16 +53,20 @@ public class AdminDashboardController {
     @FXML private Button btnParticipations;
     @FXML private Button btnSponsors;
     @FXML private Button btnFeedbacks;
+    @FXML private Button btnQuestionnaires;
+    @FXML private Button btnQuestions;
+    // ✅ Nouveau bouton
+    @FXML private Button btnStatQuestionnaire;
 
-    // CONTENU PRINCIPAL (StackPane)
+    // CONTENU PRINCIPAL
     @FXML private StackPane contentArea;
 
-    // PANNEAUX FIXES (à l'intérieur du StackPane)
+    // PANNEAUX FIXES
     @FXML private VBox panneauGestion;
     @FXML private VBox panneauDemandes;
     @FXML private VBox panneauProfil;
 
-    // GESTION USERS : TABLE
+    // GESTION USERS
     @FXML private TableView<User> tableUtilisateurs;
     @FXML private TableColumn<User, String> colNom;
     @FXML private TableColumn<User, String> colPrenom;
@@ -77,7 +77,7 @@ public class AdminDashboardController {
     @FXML private TableColumn<User, Void> colActions;
     @FXML private Label messageGestion;
 
-    // DEMANDES EN ATTENTE
+    // DEMANDES
     @FXML private TableView<User> tableDemandes;
     @FXML private TableColumn<User, String> dColNom;
     @FXML private TableColumn<User, String> dColPrenom;
@@ -92,28 +92,26 @@ public class AdminDashboardController {
     @FXML private Label pErrTel, pErrMdp, pMessageProfil;
     @FXML private ImageView photoProfile;
 
-    @FXML private Button btnQuestionnaires;
-    @FXML private Button btnQuestions;
-
     private AdminService adminService = new AdminService();
     private User adminConnecte;
     private ObservableList<User> tousLesUsers = FXCollections.observableArrayList();
     private Stage modalStage;
     private String currentPhotoPath = null;
 
-    // INITIALISATION
+    // ══════════════════════════════════════════
+    //  INITIALISATION
+    // ══════════════════════════════════════════
+
     @FXML
     public void initialize() {
-        instance = this; // Initialiser l'instance statique
+        instance = this;
 
         configurerTable();
         configurerTableDemandes();
         chargerUtilisateurs();
 
-        // Retirer les trois VBox du StackPane (elles ne seront plus dans l'arbre)
         contentArea.getChildren().removeAll(panneauGestion, panneauDemandes, panneauProfil);
 
-        // Afficher le panneau Gestion par défaut
         afficherGestion();
 
         navRechercheField.textProperty().addListener((obs, o, n) -> filtrer(n));
@@ -123,10 +121,6 @@ public class AdminDashboardController {
         modalStage.initStyle(StageStyle.TRANSPARENT);
     }
 
-    /**
-     * Méthode statique pour charger du contenu dans le contentArea de l'AdminDashboard
-     * Utilisable depuis les contrôleurs de gestion
-     */
     public static void loadContent(String fxmlPath) {
         if (instance != null) {
             try {
@@ -138,9 +132,6 @@ public class AdminDashboardController {
         }
     }
 
-    /**
-     * Surcharge pour charger directement un Node déjà chargé
-     */
     public static void loadContent(Node node) {
         if (instance != null) {
             instance.contentArea.getChildren().setAll(node);
@@ -157,11 +148,12 @@ public class AdminDashboardController {
         chargerPhotoProfile(user);
     }
 
-    // ==================== NAVIGATION (affichage des panneaux) ====================
+    // ══════════════════════════════════════════
+    //  NAVIGATION
+    // ══════════════════════════════════════════
 
     @FXML
     public void afficherGestion() {
-        // S'assurer que la VBox est visible et gérée
         panneauGestion.setVisible(true);
         panneauGestion.setManaged(true);
         contentArea.getChildren().setAll(panneauGestion);
@@ -184,7 +176,6 @@ public class AdminDashboardController {
         panneauProfil.setManaged(true);
         contentArea.getChildren().setAll(panneauProfil);
         setActiveSidebarButton(btnProfil);
-        // Recharger les informations du profil (au cas où)
         if (adminConnecte != null) {
             pNomPrenom.setText(adminConnecte.getPrenom() + " " + adminConnecte.getNom());
             pEmail.setText(adminConnecte.getEmail());
@@ -241,6 +232,13 @@ public class AdminDashboardController {
         setActiveSidebarButton(btnQuestions);
     }
 
+    // ✅ NOUVEAU — Statistiques Questionnaires
+    @FXML
+    public void showStatQuestionnaire() {
+        loadPage("/fxml/StatistiquesView.fxml");
+        setActiveSidebarButton(btnStatQuestionnaire);
+    }
+
     private void loadPage(String fxmlPath) {
         try {
             Node page = FXMLLoader.load(getClass().getResource(fxmlPath));
@@ -250,24 +248,33 @@ public class AdminDashboardController {
         }
     }
 
-    // Gestion du style des boutons de la sidebar
     private void setActiveSidebarButton(Button active) {
-        Button[] allButtons = {btnGestionUsers, btnDemandes, btnProfil, btnStats, btnSeances, btnEvenements, btnParticipations, btnSponsors, btnFeedbacks, btnQuestionnaires, btnQuestions};
+        Button[] allButtons = {
+                btnGestionUsers, btnDemandes, btnProfil, btnStats,
+                btnSeances, btnEvenements, btnParticipations, btnSponsors,
+                btnFeedbacks, btnQuestionnaires, btnQuestions, btnStatQuestionnaire
+        };
         for (Button btn : allButtons) {
-            btn.setStyle(sidebarBtnStyle(false));
+            if (btn != null) btn.setStyle(sidebarBtnStyle(false));
         }
-        active.setStyle(sidebarBtnStyle(true));
+        if (active != null) active.setStyle(sidebarBtnStyle(true));
     }
 
     private String sidebarBtnStyle(boolean actif) {
         if (actif) {
-            return "-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;";
+            return "-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-font-weight: bold; " +
+                    "-fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; " +
+                    "-fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;";
         } else {
-            return "-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;";
+            return "-fx-background-color: transparent; -fx-text-fill: #E9D5FF; " +
+                    "-fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; " +
+                    "-fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;";
         }
     }
 
-    // ==================== GESTION UTILISATEURS ====================
+    // ══════════════════════════════════════════
+    //  GESTION UTILISATEURS
+    // ══════════════════════════════════════════
 
     private void configurerTable() {
         colNom.setCellValueFactory(new PropertyValueFactory<>("nom"));
@@ -289,22 +296,30 @@ public class AdminDashboardController {
         });
 
         colActions.setCellFactory(col -> new TableCell<>() {
-            private final Button btnModifier = createIconButton("✏", "#2563EB");
-            private final Button btnSupprimer = createIconButton("🗑", "#DC2626");
-            private final Button btnBloquer = createIconButton("🔒", "#D97706");
-            private final Button btnDebloquer = createIconButton("🔓", "#059669");
-            private final Button btnActiver = createIconButton("✅", "#0284C7");
+            private final Button btnModifier   = createIconButton("✏", "#2563EB");
+            private final Button btnSupprimer  = createIconButton("🗑", "#DC2626");
+            private final Button btnBloquer    = createIconButton("🔒", "#D97706");
+            private final Button btnDebloquer  = createIconButton("🔓", "#059669");
+            private final Button btnActiver    = createIconButton("✅", "#0284C7");
             private final Button btnDesactiver = createIconButton("⛔", "#6B7280");
-            private final HBox container = new HBox(5, btnModifier, btnSupprimer, btnBloquer, btnDebloquer, btnActiver, btnDesactiver);
+            private final HBox container = new HBox(5,
+                    btnModifier, btnSupprimer, btnBloquer,
+                    btnDebloquer, btnActiver, btnDesactiver);
 
             {
                 container.setAlignment(Pos.CENTER);
-                btnModifier.setOnAction(e -> ouvrirModalModification(getTableView().getItems().get(getIndex())));
-                btnSupprimer.setOnAction(e -> supprimerUtilisateur(getTableView().getItems().get(getIndex())));
-                btnBloquer.setOnAction(e -> bloquerUtilisateur(getTableView().getItems().get(getIndex())));
-                btnDebloquer.setOnAction(e -> debloquerUtilisateur(getTableView().getItems().get(getIndex())));
-                btnActiver.setOnAction(e -> activerUtilisateur(getTableView().getItems().get(getIndex())));
-                btnDesactiver.setOnAction(e -> desactiverUtilisateur(getTableView().getItems().get(getIndex())));
+                btnModifier.setOnAction(e ->
+                        ouvrirModalModification(getTableView().getItems().get(getIndex())));
+                btnSupprimer.setOnAction(e ->
+                        supprimerUtilisateur(getTableView().getItems().get(getIndex())));
+                btnBloquer.setOnAction(e ->
+                        bloquerUtilisateur(getTableView().getItems().get(getIndex())));
+                btnDebloquer.setOnAction(e ->
+                        debloquerUtilisateur(getTableView().getItems().get(getIndex())));
+                btnActiver.setOnAction(e ->
+                        activerUtilisateur(getTableView().getItems().get(getIndex())));
+                btnDesactiver.setOnAction(e ->
+                        desactiverUtilisateur(getTableView().getItems().get(getIndex())));
             }
 
             @Override protected void updateItem(Void item, boolean empty) {
@@ -316,7 +331,8 @@ public class AdminDashboardController {
 
     private Button createIconButton(String icon, String color) {
         Button btn = new Button(icon);
-        btn.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; -fx-font-size: 11; -fx-padding: 4 8; -fx-cursor: hand; -fx-background-radius: 4;");
+        btn.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; " +
+                "-fx-font-size: 11; -fx-padding: 4 8; -fx-cursor: hand; -fx-background-radius: 4;");
         return btn;
     }
 
@@ -355,36 +371,35 @@ public class AdminDashboardController {
 
     private void ouvrirModal(User user) {
         VBox modalContent = new VBox(15);
-        modalContent.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 5);");
+        modalContent.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
+                "-fx-padding: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 5);");
         modalContent.setMaxWidth(450);
 
-        Label titre = new Label(user == null ? "➕ Ajouter un utilisateur" : "✏ Modifier " + user.getPrenom() + " " + user.getNom());
+        Label titre = new Label(user == null ?
+                "➕ Ajouter un utilisateur" :
+                "✏ Modifier " + user.getPrenom() + " " + user.getNom());
         titre.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #4C1D95;");
 
-        TextField nomField = new TextField();
-        nomField.setPromptText("Nom *");
-        nomField.setStyle("-fx-padding: 10; -fx-background-radius: 6; -fx-border-color: #E5E7EB; -fx-border-radius: 6;");
+        TextField nomField    = new TextField();    nomField.setPromptText("Nom *");
+        TextField prenomField = new TextField();    prenomField.setPromptText("Prénom *");
+        TextField emailField  = new TextField();    emailField.setPromptText("Email *");
+        TextField cinField    = new TextField();    cinField.setPromptText("CIN (8 chiffres) *");
+        PasswordField passwordField = new PasswordField(); passwordField.setPromptText("Mot de passe *");
 
-        TextField prenomField = new TextField();
-        prenomField.setPromptText("Prénom *");
-        prenomField.setStyle("-fx-padding: 10; -fx-background-radius: 6; -fx-border-color: #E5E7EB; -fx-border-radius: 6;");
-
-        TextField emailField = new TextField();
-        emailField.setPromptText("Email *");
-        emailField.setStyle("-fx-padding: 10; -fx-background-radius: 6; -fx-border-color: #E5E7EB; -fx-border-radius: 6;");
-
-        TextField cinField = new TextField();
-        cinField.setPromptText("CIN (8 chiffres) *");
-        cinField.setStyle("-fx-padding: 10; -fx-background-radius: 6; -fx-border-color: #E5E7EB; -fx-border-radius: 6;");
-
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Mot de passe *");
-        passwordField.setStyle("-fx-padding: 10; -fx-background-radius: 6; -fx-border-color: #E5E7EB; -fx-border-radius: 6;");
+        String fieldStyle = "-fx-padding: 10; -fx-background-radius: 6; " +
+                "-fx-border-color: #E5E7EB; -fx-border-radius: 6;";
+        nomField.setStyle(fieldStyle);
+        prenomField.setStyle(fieldStyle);
+        emailField.setStyle(fieldStyle);
+        cinField.setStyle(fieldStyle);
+        passwordField.setStyle(fieldStyle);
 
         ComboBox<String> roleCombo = new ComboBox<>();
-        roleCombo.setItems(FXCollections.observableArrayList("Admin", "Etudiant", "Psychologue", "Responsable Etudiant"));
+        roleCombo.setItems(FXCollections.observableArrayList(
+                "Admin", "Etudiant", "Psychologue", "Responsable Etudiant"));
         roleCombo.setValue("Etudiant");
-        roleCombo.setStyle("-fx-padding: 5; -fx-background-radius: 6; -fx-border-color: #E5E7EB; -fx-border-radius: 6;");
+        roleCombo.setStyle("-fx-padding: 5; -fx-background-radius: 6; " +
+                "-fx-border-color: #E5E7EB; -fx-border-radius: 6;");
 
         Label messageLabel = new Label();
         messageLabel.setStyle("-fx-font-size: 12;");
@@ -399,16 +414,20 @@ public class AdminDashboardController {
             passwordField.setManaged(false);
         }
 
-        Button btnSave = new Button("💾 Sauvegarder");
-        btnSave.setStyle("-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-cursor: hand; -fx-padding: 10 20; -fx-background-radius: 6;");
+        Button btnSave    = new Button("💾 Sauvegarder");
+        btnSave.setStyle("-fx-background-color: #7C3AED; -fx-text-fill: white; " +
+                "-fx-cursor: hand; -fx-padding: 10 20; -fx-background-radius: 6;");
 
         Button btnAnnuler = new Button("✕ Annuler");
-        btnAnnuler.setStyle("-fx-background-color: #6B7280; -fx-text-fill: white; -fx-cursor: hand; -fx-padding: 10 20; -fx-background-radius: 6;");
+        btnAnnuler.setStyle("-fx-background-color: #6B7280; -fx-text-fill: white; " +
+                "-fx-cursor: hand; -fx-padding: 10 20; -fx-background-radius: 6;");
 
         HBox btnBox = new HBox(10, btnSave, btnAnnuler);
         btnBox.setAlignment(Pos.CENTER);
 
-        modalContent.getChildren().addAll(titre, nomField, prenomField, emailField, cinField, roleCombo, passwordField, messageLabel, btnBox);
+        modalContent.getChildren().addAll(
+                titre, nomField, prenomField, emailField,
+                cinField, roleCombo, passwordField, messageLabel, btnBox);
 
         Scene scene = new Scene(modalContent);
         scene.setFill(Color.TRANSPARENT);
@@ -419,26 +438,31 @@ public class AdminDashboardController {
         stage.setScene(scene);
 
         btnSave.setOnAction(e -> {
-            String nom = nomField.getText().trim();
-            String prenom = prenomField.getText().trim();
-            String email = emailField.getText().trim();
-            String cin = cinField.getText().trim();
-            String role = roleCombo.getValue();
+            String nom      = nomField.getText().trim();
+            String prenom   = prenomField.getText().trim();
+            String email    = emailField.getText().trim();
+            String cin      = cinField.getText().trim();
+            String role     = roleCombo.getValue();
             String password = passwordField.getText();
+            boolean valide  = true;
 
-            boolean valide = true;
-
-            if (!ValidationUtils.isNomValide(nom)) { messageLabel.setText("Nom invalide"); valide = false; }
-            else if (!ValidationUtils.isNomValide(prenom)) { messageLabel.setText("Prénom invalide"); valide = false; }
-            else if (!ValidationUtils.isEmailValide(email)) { messageLabel.setText(ValidationUtils.messageEmail()); valide = false; }
-            else if (!ValidationUtils.isCinValide(cin)) { messageLabel.setText(ValidationUtils.messageCin()); valide = false; }
-            else if (user == null && !ValidationUtils.isPasswordValide(password)) { messageLabel.setText(ValidationUtils.messagePassword()); valide = false; }
+            if (!ValidationUtils.isNomValide(nom))
+            { messageLabel.setText("Nom invalide"); valide = false; }
+            else if (!ValidationUtils.isNomValide(prenom))
+            { messageLabel.setText("Prénom invalide"); valide = false; }
+            else if (!ValidationUtils.isEmailValide(email))
+            { messageLabel.setText(ValidationUtils.messageEmail()); valide = false; }
+            else if (!ValidationUtils.isCinValide(cin))
+            { messageLabel.setText(ValidationUtils.messageCin()); valide = false; }
+            else if (user == null && !ValidationUtils.isPasswordValide(password))
+            { messageLabel.setText(ValidationUtils.messagePassword()); valide = false; }
 
             if (valide) {
                 try {
                     if (user == null) {
                         User u = new User(nom, prenom, email, password, cin,
-                                org.example.enums.Role.valueOf(role.replace(" ", "_").toUpperCase()), "actif");
+                                org.example.enums.Role.valueOf(
+                                        role.replace(" ", "_").toUpperCase()), "actif");
                         u.setActive(true);
                         u.setVerified(true);
                         adminService.ajouter(u);
@@ -455,7 +479,8 @@ public class AdminDashboardController {
                     }
                     chargerUtilisateurs();
                     new Thread(() -> {
-                        try { Thread.sleep(1200); } catch (InterruptedException ignored) {}
+                        try { Thread.sleep(1200); }
+                        catch (InterruptedException ignored) {}
                         javafx.application.Platform.runLater(stage::close);
                     }).start();
                 } catch (SQLException ex) {
@@ -471,7 +496,8 @@ public class AdminDashboardController {
 
     private void supprimerUtilisateur(User user) {
         Alert c = new Alert(Alert.AlertType.CONFIRMATION,
-                "Supprimer " + user.getPrenom() + " " + user.getNom() + " ?", ButtonType.YES, ButtonType.NO);
+                "Supprimer " + user.getPrenom() + " " + user.getNom() + " ?",
+                ButtonType.YES, ButtonType.NO);
         c.setTitle("Confirmation");
         c.setHeaderText(null);
         if (c.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
@@ -491,9 +517,7 @@ public class AdminDashboardController {
             adminService.bloquer(user.getUserId());
             afficherMsgGestion("✓ Compte bloqué : " + user.getNom(), "#D97706");
             chargerUtilisateurs();
-        } catch (SQLException e) {
-            afficherMsgGestion("Erreur : " + e.getMessage(), "#DC2626");
-        }
+        } catch (SQLException e) { afficherMsgGestion("Erreur : " + e.getMessage(), "#DC2626"); }
     }
 
     private void debloquerUtilisateur(User user) {
@@ -501,9 +525,7 @@ public class AdminDashboardController {
             adminService.debloquer(user.getUserId());
             afficherMsgGestion("✓ Compte débloqué : " + user.getNom(), "#16A34A");
             chargerUtilisateurs();
-        } catch (SQLException e) {
-            afficherMsgGestion("Erreur : " + e.getMessage(), "#DC2626");
-        }
+        } catch (SQLException e) { afficherMsgGestion("Erreur : " + e.getMessage(), "#DC2626"); }
     }
 
     private void activerUtilisateur(User user) {
@@ -511,9 +533,7 @@ public class AdminDashboardController {
             adminService.debloquer(user.getUserId());
             afficherMsgGestion("✓ Compte activé : " + user.getNom(), "#16A34A");
             chargerUtilisateurs();
-        } catch (SQLException e) {
-            afficherMsgGestion("Erreur : " + e.getMessage(), "#DC2626");
-        }
+        } catch (SQLException e) { afficherMsgGestion("Erreur : " + e.getMessage(), "#DC2626"); }
     }
 
     private void desactiverUtilisateur(User user) {
@@ -521,12 +541,12 @@ public class AdminDashboardController {
             adminService.bloquer(user.getUserId());
             afficherMsgGestion("✓ Compte désactivé : " + user.getNom(), "#D97706");
             chargerUtilisateurs();
-        } catch (SQLException e) {
-            afficherMsgGestion("Erreur : " + e.getMessage(), "#DC2626");
-        }
+        } catch (SQLException e) { afficherMsgGestion("Erreur : " + e.getMessage(), "#DC2626"); }
     }
 
-    // ==================== DEMANDES EN ATTENTE ====================
+    // ══════════════════════════════════════════
+    //  DEMANDES EN ATTENTE
+    // ══════════════════════════════════════════
 
     private void configurerTableDemandes() {
         dColNom.setCellValueFactory(new PropertyValueFactory<>("nom"));
@@ -555,7 +575,8 @@ public class AdminDashboardController {
             return;
         }
         Alert c = new Alert(Alert.AlertType.CONFIRMATION,
-                "Accepter " + sel.getPrenom() + " " + sel.getNom() + " ?", ButtonType.YES, ButtonType.NO);
+                "Accepter " + sel.getPrenom() + " " + sel.getNom() + " ?",
+                ButtonType.YES, ButtonType.NO);
         if (c.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
             try {
                 adminService.accepterDemande(sel.getUserId());
@@ -578,7 +599,8 @@ public class AdminDashboardController {
             return;
         }
         Alert c = new Alert(Alert.AlertType.CONFIRMATION,
-                "Refuser " + sel.getPrenom() + " " + sel.getNom() + " ?", ButtonType.YES, ButtonType.NO);
+                "Refuser " + sel.getPrenom() + " " + sel.getNom() + " ?",
+                ButtonType.YES, ButtonType.NO);
         if (c.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
             try {
                 adminService.refuserDemande(sel.getUserId());
@@ -592,7 +614,9 @@ public class AdminDashboardController {
         }
     }
 
-    // ==================== PROFIL ADMIN ====================
+    // ══════════════════════════════════════════
+    //  PROFIL ADMIN
+    // ══════════════════════════════════════════
 
     @FXML
     public void choisirPhoto() {
@@ -607,16 +631,10 @@ public class AdminDashboardController {
                 String projectPath = System.getProperty("user.dir");
                 java.nio.file.Path uploadDir = java.nio.file.Paths.get(projectPath, "uploads");
 
-                if (!java.nio.file.Files.exists(uploadDir)) {
+                if (!java.nio.file.Files.exists(uploadDir))
                     java.nio.file.Files.createDirectories(uploadDir);
-                }
-
-                String extension = ".jpg";
-                int dotIndex = fichier.getName().lastIndexOf(".");
-                if (dotIndex > 0) extension = fichier.getName().substring(dotIndex);
 
                 String nomFichier = fichier.getName();
-
                 java.nio.file.Path destination = uploadDir.resolve(nomFichier);
                 java.nio.file.Files.copy(fichier.toPath(), destination,
                         StandardCopyOption.REPLACE_EXISTING);
@@ -632,7 +650,6 @@ public class AdminDashboardController {
             } catch (IOException e) {
                 pMessageProfil.setStyle("-fx-text-fill: #DC2626;");
                 pMessageProfil.setText("Erreur photo : " + e.getMessage());
-                e.printStackTrace();
             }
         }
     }
@@ -660,16 +677,16 @@ public class AdminDashboardController {
             boolean existe = rs.getInt(1) > 0;
 
             if (existe) {
-                String sql = "UPDATE profil SET bio=?, tel=?, photo=?, updated_at=NOW() WHERE user_id=?";
-                java.sql.PreparedStatement ps = conn.prepareStatement(sql);
+                java.sql.PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE profil SET bio=?, tel=?, photo=?, updated_at=NOW() WHERE user_id=?");
                 ps.setString(1, bio);
                 ps.setString(2, tel);
                 ps.setString(3, currentPhotoPath);
                 ps.setInt(4, adminConnecte.getUserId());
                 ps.executeUpdate();
             } else {
-                String sql = "INSERT INTO profil (user_id, bio, tel, photo, updated_at) VALUES (?,?,?,?,NOW())";
-                java.sql.PreparedStatement ps = conn.prepareStatement(sql);
+                java.sql.PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO profil (user_id, bio, tel, photo, updated_at) VALUES (?,?,?,?,NOW())");
                 ps.setInt(1, adminConnecte.getUserId());
                 ps.setString(2, bio);
                 ps.setString(3, tel);
@@ -683,41 +700,34 @@ public class AdminDashboardController {
         } catch (java.sql.SQLException e) {
             pMessageProfil.setStyle("-fx-text-fill: #DC2626;");
             pMessageProfil.setText("Erreur : " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
     @FXML
     public void changerMotDePasse() {
         pErrMdp.setText(""); pMessageProfil.setText("");
-        String ancien = pAncienMdp.getText();
+        String ancien  = pAncienMdp.getText();
         String nouveau = pNouveauMdp.getText();
         String confirm = pConfirmMdp.getText();
 
-        if (!ValidationUtils.isNonVide(ancien) || !ValidationUtils.isNonVide(nouveau)) {
-            pErrMdp.setText("Tous les champs sont obligatoires");
-            return;
-        }
-        if (!ValidationUtils.isPasswordValide(nouveau)) {
-            pErrMdp.setText(ValidationUtils.messagePassword());
-            return;
-        }
-        if (!ValidationUtils.isPasswordConfirme(nouveau, confirm)) {
-            pErrMdp.setText(ValidationUtils.messagePasswordConfirm());
-            return;
-        }
+        if (!ValidationUtils.isNonVide(ancien) || !ValidationUtils.isNonVide(nouveau))
+        { pErrMdp.setText("Tous les champs sont obligatoires"); return; }
+        if (!ValidationUtils.isPasswordValide(nouveau))
+        { pErrMdp.setText(ValidationUtils.messagePassword()); return; }
+        if (!ValidationUtils.isPasswordConfirme(nouveau, confirm))
+        { pErrMdp.setText(ValidationUtils.messagePasswordConfirm()); return; }
 
         try {
             adminService.changerMotDePasse(adminConnecte.getUserId(), ancien, nouveau);
             pMessageProfil.setStyle("-fx-text-fill: #16A34A;");
             pMessageProfil.setText("✓ Mot de passe modifié !");
             pAncienMdp.clear(); pNouveauMdp.clear(); pConfirmMdp.clear();
-        } catch (SQLException e) {
-            pErrMdp.setText(e.getMessage());
-        }
+        } catch (SQLException e) { pErrMdp.setText(e.getMessage()); }
     }
 
-    // ==================== DÉCONNEXION ====================
+    // ══════════════════════════════════════════
+    //  DÉCONNEXION
+    // ══════════════════════════════════════════
 
     @FXML
     public void seDeconnecter() {
@@ -732,7 +742,9 @@ public class AdminDashboardController {
         } catch (Exception e) { e.printStackTrace(); }
     }
 
-    // ==================== UTILITAIRES ====================
+    // ══════════════════════════════════════════
+    //  UTILITAIRES
+    // ══════════════════════════════════════════
 
     private void chargerPhotoProfile(User user) {
         try {
@@ -758,9 +770,7 @@ public class AdminDashboardController {
             }
             photoProfile.setImage(null);
             navPhotoAdmin.setImage(null);
-        } catch (java.sql.SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (java.sql.SQLException e) { e.printStackTrace(); }
     }
 
     private void supprimerProfilUser(int userId) {
@@ -772,7 +782,12 @@ public class AdminDashboardController {
     }
 
     private void afficherMsgGestion(String msg, String couleur) {
-        messageGestion.setStyle("-fx-text-fill: " + couleur + "; -fx-font-size: 12; -fx-padding: 5 0 0 0;");
+        messageGestion.setStyle("-fx-text-fill: " + couleur +
+                "; -fx-font-size: 12; -fx-padding: 5 0 0 0;");
         messageGestion.setText(msg);
+    }
+
+    public void rafraichirPhotoNavbar() {
+        if (adminConnecte != null) chargerPhotoProfile(adminConnecte);
     }
 }

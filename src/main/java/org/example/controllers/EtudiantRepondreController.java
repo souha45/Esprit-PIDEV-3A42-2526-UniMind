@@ -67,16 +67,7 @@ public class EtudiantRepondreController implements Initializable {
         chargerQuestions();
     }
 
-    // ════════════════════════════════════════════════════════════════
-    //  HELPER : split options (supporte | et ,)
-    // ════════════════════════════════════════════════════════════════
 
-    /**
-     * Découpe une chaîne d'options en tableau.
-     * Supporte les deux formats :
-     *   - généré manuellement : ["oui","non"]  → séparé par ,
-     *   - généré par IA       : Jamais|Parfois|Souvent|Toujours → séparé par |
-     */
     private String[] splitOptions(String raw) {
         String cleaned = raw.replaceAll("[\\[\\]\"]", "").trim();
         if (cleaned.contains("|")) {
@@ -86,10 +77,7 @@ public class EtudiantRepondreController implements Initializable {
         }
     }
 
-    /**
-     * Découpe une chaîne de scores en tableau.
-     * Supporte les deux formats : séparé par | ou par ,
-     */
+
     private String[] splitScores(String raw) {
         String cleaned = raw.replaceAll("[\\[\\]\"\\s]", "").trim();
         if (cleaned.contains("|")) {
@@ -253,10 +241,8 @@ public class EtudiantRepondreController implements Initializable {
         if (question.getOptionsQuest() != null && !question.getOptionsQuest().isEmpty()) {
             ToggleGroup group = new ToggleGroup();
 
-            // ✅ FIX : utilise splitOptions() qui gère | et ,
             String[] options = splitOptions(question.getOptionsQuest());
 
-            // ✅ FIX : utilise splitScores() qui gère | et ,
             String[] scores = question.getScoreOptions() != null && !question.getScoreOptions().isBlank()
                     ? splitScores(question.getScoreOptions())
                     : new String[0];
