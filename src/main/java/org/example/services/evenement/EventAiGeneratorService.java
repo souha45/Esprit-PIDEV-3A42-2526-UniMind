@@ -47,16 +47,16 @@ public class EventAiGeneratorService {
         try (InputStream is = getClass().getClassLoader().getResourceAsStream("event-config.properties")) {
             if (is != null) {
                 props.load(is);
-                String model = props.getProperty("gemini.model", "gemini-1.5-flash").trim();
+                String model = props.getProperty("gemini.model", "gemini-2.5-flash").trim();
                 if (model.isEmpty()) {
-                    return "gemini-1.5-flash";
+                    return "gemini-2.5-flash";
                 }
                 return model;
             }
         } catch (IOException e) {
-            return "gemini-1.5-flash";
+            return "gemini-2.5-flash";
         }
-        return "gemini-1.5-flash";
+        return "gemini-2.5-flash";
     }
 
     /**
@@ -195,9 +195,7 @@ public class EventAiGeneratorService {
                 ? data.get("image_prompt").asText()
                 : "";
 
-            String imageFileName1 = "";
-            String imageFileName2 = "";
-            String imageFileName3 = "";
+            String imageFileName = "";
             if (!imagePrompt.isEmpty()) {
                 try {
                     String encodedPrompt = java.net.URLEncoder.encode(imagePrompt, java.nio.charset.StandardCharsets.UTF_8);
@@ -210,42 +208,20 @@ public class EventAiGeneratorService {
                     
                     long currentTime = System.currentTimeMillis();
                     
-                    // --- Image 1 ---
-                    String imageUrl1 = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=800&height=600&nologo=true&seed=" + currentTime;
-                    String fileName1 = "ai_event_1_" + currentTime + ".jpg";
-                    java.nio.file.Path destination1 = destinationDir.resolve(fileName1);
+                    // --- Génération d'une seule image ---
+                    String imageUrl = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=800&height=600&nologo=true&seed=" + currentTime;
+                    String fileName = "ai_event_" + currentTime + ".jpg";
+                    java.nio.file.Path destination = destinationDir.resolve(fileName);
                     
-                    HttpRequest imgRequest1 = HttpRequest.newBuilder().uri(URI.create(imageUrl1)).GET().build();
-                    HttpResponse<java.nio.file.Path> imgResponse1 = httpClient.send(imgRequest1, HttpResponse.BodyHandlers.ofFile(destination1));
-                    if (imgResponse1.statusCode() >= 200 && imgResponse1.statusCode() < 300) {
-                        imageFileName1 = fileName1;
-                    }
-
-                    // --- Image 2 ---
-                    String imageUrl2 = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=800&height=600&nologo=true&seed=" + (currentTime + 9999);
-                    String fileName2 = "ai_event_2_" + currentTime + ".jpg";
-                    java.nio.file.Path destination2 = destinationDir.resolve(fileName2);
-                    
-                    HttpRequest imgRequest2 = HttpRequest.newBuilder().uri(URI.create(imageUrl2)).GET().build();
-                    HttpResponse<java.nio.file.Path> imgResponse2 = httpClient.send(imgRequest2, HttpResponse.BodyHandlers.ofFile(destination2));
-                    if (imgResponse2.statusCode() >= 200 && imgResponse2.statusCode() < 300) {
-                        imageFileName2 = fileName2;
+                    HttpRequest imgRequest = HttpRequest.newBuilder().uri(URI.create(imageUrl)).GET().build();
+                    HttpResponse<java.nio.file.Path> imgResponse = httpClient.send(imgRequest, HttpResponse.BodyHandlers.ofFile(destination));
+                    if (imgResponse.statusCode() >= 200 && imgResponse.statusCode() < 300) {
+                        imageFileName = fileName;
                     }
                     
-                    // --- Image 3 ---
-                    String imageUrl3 = "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=800&height=600&nologo=true&seed=" + (currentTime + 5555);
-                    String fileName3 = "ai_event_3_" + currentTime + ".jpg";
-                    java.nio.file.Path destination3 = destinationDir.resolve(fileName3);
-                    
-                    HttpRequest imgRequest3 = HttpRequest.newBuilder().uri(URI.create(imageUrl3)).GET().build();
-                    HttpResponse<java.nio.file.Path> imgResponse3 = httpClient.send(imgRequest3, HttpResponse.BodyHandlers.ofFile(destination3));
-                    if (imgResponse3.statusCode() >= 200 && imgResponse3.statusCode() < 300) {
-                        imageFileName3 = fileName3;
-                    }
-                    
-                    System.out.println("3 Images IA générées avec succès.");
+                    System.out.println("1 Image IA générée avec succès.");
                 } catch (Exception ex) {
-                    System.err.println("Erreur lors de la génération des images IA: " + ex.getMessage());
+                    System.err.println("Erreur lors de la génération de l'image IA: " + ex.getMessage());
                 }
             }
 
@@ -254,9 +230,7 @@ public class EventAiGeneratorService {
             result.put("description", description != null ? description.trim() : "");
             result.put("agenda", agenda.stream().filter(s -> s != null && !s.trim().isEmpty()).limit(10).toList());
             result.put("checklist", checklist.stream().filter(s -> s != null && !s.trim().isEmpty()).limit(15).toList());
-            result.put("image_file_1", imageFileName1);
-            result.put("image_file_2", imageFileName2);
-            result.put("image_file_3", imageFileName3);
+            result.put("image_file", imageFileName);
 
             return result;
 

@@ -125,11 +125,7 @@ public class AjoutEvenementController {
 
     @FXML private VBox vboxImagePreview;
     @FXML private javafx.scene.image.ImageView imgPreview1;
-    @FXML private javafx.scene.image.ImageView imgPreview2;
-    @FXML private javafx.scene.image.ImageView imgPreview3;
-    private String currentAiImage1;
-    private String currentAiImage2;
-    private String currentAiImage3;
+    private String currentAiImage;
 
     private final EvenementService evenementService = new EvenementService();
     private final EventAiGeneratorService aiGeneratorService = new EventAiGeneratorService();
@@ -770,9 +766,7 @@ public class AjoutEvenementController {
 
                 List<String> titles = (List<String>) result.get("titles");
                 String description = (String) result.get("description");
-                String imageFile1 = (String) result.get("image_file_1");
-                String imageFile2 = (String) result.get("image_file_2");
-                String imageFile3 = (String) result.get("image_file_3");
+                String imageFile = (String) result.get("image_file");
 
                 // Mettre à jour l'UI sur le thread JavaFX
                 javafx.application.Platform.runLater(() -> {
@@ -785,31 +779,21 @@ public class AjoutEvenementController {
                         txtDescription.setText(description);
                     }
                     
-                    // Afficher les 3 images générées
-                    if (imageFile1 != null && !imageFile1.isEmpty()) {
-                        currentAiImage1 = imageFile1;
-                        currentAiImage2 = imageFile2;
-                        currentAiImage3 = imageFile3;
+                    // Afficher l'image générée
+                    if (imageFile != null && !imageFile.isEmpty()) {
+                        currentAiImage = imageFile;
                         
                         try {
-                            String path1 = "file:///D:/xampp/htdocs/uploadsEvent/evenements/" + imageFile1;
-                            String path2 = "file:///D:/xampp/htdocs/uploadsEvent/evenements/" + imageFile2;
-                            String path3 = "file:///D:/xampp/htdocs/uploadsEvent/evenements/" + imageFile3;
+                            String path = "file:///D:/xampp/htdocs/uploadsEvent/evenements/" + imageFile;
                             if (imgPreview1 != null) {
-                                imgPreview1.setImage(new javafx.scene.image.Image(path1));
-                            }
-                            if (imgPreview2 != null) {
-                                imgPreview2.setImage(new javafx.scene.image.Image(path2));
-                            }
-                            if (imgPreview3 != null && imageFile3 != null) {
-                                imgPreview3.setImage(new javafx.scene.image.Image(path3));
+                                imgPreview1.setImage(new javafx.scene.image.Image(path));
                             }
                             if (vboxImagePreview != null) {
                                 vboxImagePreview.setVisible(true);
                                 vboxImagePreview.setManaged(true);
                             }
                         } catch (Exception e) {
-                            System.err.println("Erreur chargement images IA: " + e.getMessage());
+                            System.err.println("Erreur chargement image IA: " + e.getMessage());
                         }
                     }
                 });
@@ -836,25 +820,9 @@ public class AjoutEvenementController {
 
     @FXML
     private void choisirImage1() {
-        if (currentAiImage1 != null && txtImage != null) {
-            txtImage.setText(currentAiImage1);
-            afficherAlerte("Succès", "Image 1 sélectionnée !");
-        }
-    }
-
-    @FXML
-    private void choisirImage2() {
-        if (currentAiImage2 != null && txtImage != null) {
-            txtImage.setText(currentAiImage2);
-            afficherAlerte("Succès", "Image 2 sélectionnée !");
-        }
-    }
-
-    @FXML
-    private void choisirImage3() {
-        if (currentAiImage3 != null && txtImage != null) {
-            txtImage.setText(currentAiImage3);
-            afficherAlerte("Succès", "Image 3 sélectionnée !");
+        if (currentAiImage != null && txtImage != null) {
+            txtImage.setText(currentAiImage);
+            afficherAlerte("Succès", "Image IA sélectionnée !");
         }
     }
 
