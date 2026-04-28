@@ -3,6 +3,7 @@ package org.example.controllers;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.NodeOrientation;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -67,24 +68,35 @@ public class EtudiantRepondreController implements Initializable {
         chargerQuestions();
     }
 
+    // ════════════════════════════════════════════════════════════════
+    //  HELPERS SPLIT + DETECTION ARABE
+    // ════════════════════════════════════════════════════════════════
 
-    private String[] splitOptions(String raw) {
-        String cleaned = raw.replaceAll("[\\[\\]\"]", "").trim();
-        if (cleaned.contains("|")) {
-            return cleaned.split("\\|");
-        } else {
-            return cleaned.split(",");
+    /**
+     * Détecte si un texte contient des caractères arabes
+     */
+    private boolean isArabic(String text) {
+        if (text == null || text.isEmpty()) return false;
+        for (char c : text.toCharArray()) {
+            if (Character.UnicodeBlock.of(c) == Character.UnicodeBlock.ARABIC) return true;
         }
+        return false;
     }
 
+    /**
+     * Découpe les options — supporte | et ,
+     */
+    private String[] splitOptions(String raw) {
+        String cleaned = raw.replaceAll("[\\[\\]\"]", "").trim();
+        return cleaned.contains("|") ? cleaned.split("\\|") : cleaned.split(",");
+    }
 
+    /**
+     * Découpe les scores — supporte | et ,
+     */
     private String[] splitScores(String raw) {
         String cleaned = raw.replaceAll("[\\[\\]\"\\s]", "").trim();
-        if (cleaned.contains("|")) {
-            return cleaned.split("\\|");
-        } else {
-            return cleaned.split(",");
-        }
+        return cleaned.contains("|") ? cleaned.split("\\|") : cleaned.split(",");
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -125,7 +137,7 @@ public class EtudiantRepondreController implements Initializable {
         setLangActive(btnFR);
         questions = new ArrayList<>(questionsOriginales);
         afficherQuestions();
-        setStatus("Francais", true);
+        setStatus("Français", true);
     }
 
     @FXML
@@ -139,12 +151,10 @@ public class EtudiantRepondreController implements Initializable {
                 try {
                     copie.setTexte(TraductionService.versAnglais(q.getTexte()));
                     if (q.getOptionsQuest() != null && !q.getOptionsQuest().isBlank()) {
-                        // ✅ FIX : supporte | et ,
                         String[] opts = splitOptions(q.getOptionsQuest());
                         StringBuilder newOpts = new StringBuilder();
-                        for (String opt : opts) {
+                        for (String opt : opts)
                             newOpts.append(TraductionService.versAnglais(opt.trim())).append("|");
-                        }
                         copie.setOptionsQuest(newOpts.toString().replaceAll("\\|$", ""));
                     }
                 } catch (Exception e) {
@@ -172,12 +182,10 @@ public class EtudiantRepondreController implements Initializable {
                 try {
                     copie.setTexte(TraductionService.versArabe(q.getTexte()));
                     if (q.getOptionsQuest() != null && !q.getOptionsQuest().isBlank()) {
-                        // ✅ FIX : supporte | et ,
                         String[] opts = splitOptions(q.getOptionsQuest());
                         StringBuilder newOpts = new StringBuilder();
-                        for (String opt : opts) {
+                        for (String opt : opts)
                             newOpts.append(TraductionService.versArabe(opt.trim())).append("|");
-                        }
                         copie.setOptionsQuest(newOpts.toString().replaceAll("\\|$", ""));
                     }
                 } catch (Exception e) {
@@ -222,7 +230,7 @@ public class EtudiantRepondreController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════════
-    //  CONSTRUCTION CARTE QUESTION  ← FIX ICI
+    //  CONSTRUCTION CARTE QUESTION  ← RTL ARABE ICI
     // ════════════════════════════════════════════════════════════════
 
     private VBox buildQuestionBox(int numero, Question question) {
@@ -232,18 +240,29 @@ public class EtudiantRepondreController implements Initializable {
                         "-fx-border-color: #6d28d9; -fx-border-radius: 10; " +
                         "-fx-border-width: 1; -fx-padding: 14;");
 
+        // ✅ Détection arabe → orientation RTL
+        boolean arabe = isArabic(question.getTexte());
+        if (arabe) {
+            box.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+        } else {
+            box.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
+        }
+
         Label lblQuestion = new Label(numero + ". " + question.getTexte());
         lblQuestion.setWrapText(true);
         lblQuestion.setStyle(
                 "-fx-text-fill: #e2e8f0; -fx-font-size: 14px; -fx-font-weight: bold;");
+        // ✅ Alignement texte arabe
+        if (arabe) {
+            lblQuestion.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+        }
         box.getChildren().add(lblQuestion);
 
         if (question.getOptionsQuest() != null && !question.getOptionsQuest().isEmpty()) {
             ToggleGroup group = new ToggleGroup();
 
             String[] options = splitOptions(question.getOptionsQuest());
-
-            String[] scores = question.getScoreOptions() != null && !question.getScoreOptions().isBlank()
+            String[] scores  = question.getScoreOptions() != null && !question.getScoreOptions().isBlank()
                     ? splitScores(question.getScoreOptions())
                     : new String[0];
 
@@ -255,6 +274,11 @@ public class EtudiantRepondreController implements Initializable {
                 RadioButton rb = new RadioButton(option);
                 rb.setToggleGroup(group);
                 rb.setStyle("-fx-text-fill: #c084fc; -fx-font-size: 13px;");
+
+                // ✅ RTL pour chaque RadioButton si arabe
+                if (arabe) {
+                    rb.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+                }
 
                 String reponseExistante = reponsesChoisies.get(question.getQuestionId());
                 if (reponseExistante != null && reponseExistante.equals(option)) {
@@ -281,6 +305,10 @@ public class EtudiantRepondreController implements Initializable {
                     "-fx-background-color: #1a0a2e; -fx-text-fill: #e2e8f0; " +
                             "-fx-border-color: #6d28d9; -fx-border-radius: 6; " +
                             "-fx-background-radius: 6; -fx-padding: 7;");
+            // ✅ RTL pour le champ texte si arabe
+            if (arabe) {
+                tfReponse.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+            }
 
             String reponseExistante = reponsesChoisies.get(question.getQuestionId());
             if (reponseExistante != null) tfReponse.setText(reponseExistante);
@@ -339,10 +367,10 @@ public class EtudiantRepondreController implements Initializable {
             try {
                 String emailUser = SessionManager.getInstance().getCurrentUser().getEmail();
                 if (emailUser != null && !emailUser.isBlank()) {
-                    final String   niveauF         = niveau;
-                    final String   interpretationF = interpretation;
-                    final double   scoreF          = scoreTotale;
-                    final String   nomQ            = questionnaire.getNom();
+                    final String niveauF         = niveau;
+                    final double scoreF          = scoreTotale;
+                    final String nomQ            = questionnaire.getNom();
+                    final String interpretationF = interpretation;
                     new Thread(() ->
                             EmailServiceQuestionnaire.envoyerResultat(
                                     emailUser, nomQ, scoreF, niveauF, interpretationF)

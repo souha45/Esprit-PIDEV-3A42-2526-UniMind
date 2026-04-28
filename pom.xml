@@ -113,7 +113,7 @@
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>org.example.main.MainApp</mainClass>
-                    <!-- ✅ Passe la clé Groq comme propriété système au lancement -->
+
                     <options>
                         <option>-DGROQ_API_KEY=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</option>
                     </options>
