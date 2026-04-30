@@ -187,10 +187,10 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
 
         ajouterBoutonsAction();
 
-        // ✅ AJOUTER LA COLONNE VISIO À LA TABLE
-        // La colonne doit être ajoutée avant colActions dans l'ordre d'affichage
-        configurerColonneVisio();
-        tableViewRendezVous.getColumns().add(colVisio);
+//        // ✅ AJOUTER LA COLONNE VISIO À LA TABLE
+//        // La colonne doit être ajoutée avant colActions dans l'ordre d'affichage
+//        configurerColonneVisio();
+//        tableViewRendezVous.getColumns().add(colVisio);
     }
 
     private String[] statutStyle(String statut) {
