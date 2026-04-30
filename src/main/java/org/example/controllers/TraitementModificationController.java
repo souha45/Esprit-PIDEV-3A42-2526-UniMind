@@ -12,6 +12,7 @@ import org.example.enums.CategorieTraitement;
 import org.example.enums.PrioriteTraitement;
 import org.example.enums.StatutTraitement;
 import org.example.services.EtudiantTraitementService;
+import org.example.services.TraitementEmailService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
 
@@ -427,6 +428,24 @@ public class TraitementModificationController implements Initializable {
         traitementSelectionne.setDescription(txtDescription.getText());
 
         traitementService.modifier(traitementSelectionne);
+
+        // Envoyer un email de notification à l'étudiant
+        try {
+            TraitementEmailService emailService = new TraitementEmailService();
+            SessionManager session = SessionManager.getInstance();
+            var emailResult = emailService.envoyerNotificationModificationTraitementEtudiant(
+                    traitementSelectionne,
+                    session.getCurrentUser()
+            );
+
+            if (!emailResult.isSuccess()) {
+                System.err.println("⚠️ Erreur envoi email modification traitement: " + emailResult.getErrorMessage());
+            } else {
+                System.out.println("✅ Email de modification traitement envoyé à l'étudiant");
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ Erreur lors de l'envoi de l'email de modification: " + e.getMessage());
+        }
     }
 
     private void fermerFenetre() {

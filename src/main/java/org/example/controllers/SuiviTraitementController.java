@@ -1,8 +1,9 @@
 package org.example.controllers;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -50,6 +51,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.collections.transformation.FilteredList;
+import org.example.services.TraitementIAService;
+import java.util.stream.Collectors;
 
 public class SuiviTraitementController implements Initializable, SidebarPsychologueController.PsyPageController {
 
@@ -157,6 +161,121 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
     @FXML private SidebarPsychologueController sidebarPsyController;
     @FXML private StackPane toastContainer;
 
+    // ==================== PAGINATION ====================
+    @FXML private ComboBox<Integer> cmbItemsPerPage;
+    @FXML private Button btnFirstPage;
+    @FXML private Button btnPrevPage;
+    @FXML private Button btnNextPage;
+    @FXML private Button btnLastPage;
+    @FXML private Label lblPageInfo;
+    @FXML private Label lblTotalPagesInfo;
+
+    private List<LigneSuiviGroupée> toutesLesLignes;
+    private int currentPage = 0;
+    private int itemsPerPage = 10;
+
+    /**
+     * Initialise la pagination
+     */
+    private void initialiserPagination() {
+        cmbItemsPerPage.setValue(10);
+        cmbItemsPerPage.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                itemsPerPage = newVal;
+                currentPage = 0;
+                appliquerPagination();
+            }
+        });
+    }
+
+    /**
+     * Applique la pagination sur les données
+     */
+    private void appliquerPagination() {
+        if (toutesLesLignes == null || toutesLesLignes.isEmpty()) {
+            tableViewSuiviTraitements.setItems(FXCollections.observableArrayList());
+            lblPageInfo.setText("Page 0 / 0");
+            lblTotalPagesInfo.setText("0 ligne(s)");
+            btnFirstPage.setDisable(true);
+            btnPrevPage.setDisable(true);
+            btnNextPage.setDisable(true);
+            btnLastPage.setDisable(true);
+            return;
+        }
+
+        int totalPages = (int) Math.ceil((double) toutesLesLignes.size() / itemsPerPage);
+
+        // Ajuster la page courante si elle dépasse
+        if (currentPage >= totalPages) {
+            currentPage = Math.max(0, totalPages - 1);
+        }
+
+        int fromIndex = currentPage * itemsPerPage;
+        int toIndex = Math.min(fromIndex + itemsPerPage, toutesLesLignes.size());
+
+        List<LigneSuiviGroupée> pageLignes = toutesLesLignes.subList(fromIndex, toIndex);
+        lignesSuivisGroupéesList = FXCollections.observableArrayList(pageLignes);
+        tableViewSuiviTraitements.setItems(lignesSuivisGroupéesList);
+
+        // Mettre à jour les infos de pagination
+        lblPageInfo.setText("Page " + (currentPage + 1) + " / " + totalPages);
+        lblTotalPagesInfo.setText(toutesLesLignes.size() + " ligne(s)");
+
+        // Gérer l'état des boutons
+        btnFirstPage.setDisable(currentPage == 0);
+        btnPrevPage.setDisable(currentPage == 0);
+        btnNextPage.setDisable(currentPage >= totalPages - 1);
+        btnLastPage.setDisable(currentPage >= totalPages - 1);
+
+        // Mettre à jour le compteur
+        long totalSuivis = toutesLesLignes.stream().filter(l -> !l.estEntete()).count();
+        lblCount.setText(totalSuivis + " suivi(s)");
+    }
+
+    /**
+     * Va à la première page
+     */
+    @FXML
+    private void handleFirstPage() {
+        currentPage = 0;
+        appliquerPagination();
+    }
+
+    /**
+     * Va à la page précédente
+     */
+    @FXML
+    private void handlePrevPage() {
+        if (currentPage > 0) {
+            currentPage--;
+            appliquerPagination();
+        }
+    }
+
+    /**
+     * Va à la page suivante
+     */
+    @FXML
+    private void handleNextPage() {
+        int totalPages = (int) Math.ceil((double) toutesLesLignes.size() / itemsPerPage);
+        if (currentPage < totalPages - 1) {
+            currentPage++;
+            appliquerPagination();
+        }
+    }
+
+    /**
+     * Va à la dernière page
+     */
+    @FXML
+    private void handleLastPage() {
+        int totalPages = (int) Math.ceil((double) toutesLesLignes.size() / itemsPerPage);
+        if (totalPages > 0) {
+            currentPage = totalPages - 1;
+            appliquerPagination();
+        }
+    }
+
     // ==================== SERVICES ====================
 
     private SuiviTraitementService suiviTraitementService;
@@ -179,9 +298,11 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             traitementService = new TraitementService();
             etudiantTraitementService = new EtudiantTraitementService();
             tousLesSuivisFiltres = new ArrayList<>();
+            toutesLesLignes = new ArrayList<>();
 
             initialiserFiltres();
             initialiserTri();
+            initialiserPagination();
             configurerColonnes();
 
             isInitialized = true;
@@ -272,7 +393,6 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
 
                 boolean peutVoir = false;
 
-                // Utiliser l'utilisateur connecté au lieu de SessionManager
                 if (utilisateur.getRole().equals("PSYCHOLOGUE")) {
                     peutVoir = (psychologueId == utilisateurId);
                 } else if (utilisateur.getRole().equals("ETUDIANT")) {
@@ -298,13 +418,12 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             // Appliquer tri
             suivisFiltres = appliquerTri(suivisFiltres, traitementsMap);
 
-            // Créer les lignes groupées
-            List<LigneSuiviGroupée> lignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
-            lignesSuivisGroupéesList = FXCollections.observableArrayList(lignes);
-            tableViewSuiviTraitements.setItems(lignesSuivisGroupéesList);
+            //  Stocker toutes les lignes pour la pagination
+            toutesLesLignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
+            currentPage = 0;
+            appliquerPagination();
 
-            long totalSuivis = lignes.stream().filter(l -> !l.estEntete()).count();
-            lblCount.setText(totalSuivis + " suivi(s)");
+            long totalSuivis = toutesLesLignes.stream().filter(l -> !l.estEntete()).count();
             lblStatus.setText(totalSuivis + " suivi(s) affiché(s)");
 
         } catch (SQLException e) {
@@ -539,8 +658,6 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
         }
     }
 
-    // ==================== CONFIGURATION DES COLONNES ====================
-
     private void configurerColonnes() {
         tableViewSuiviTraitements.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
@@ -549,55 +666,149 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
         TableColumn<LigneSuiviGroupée, String> colSaisiPar = (TableColumn<LigneSuiviGroupée, String>) tableViewSuiviTraitements.getColumns().get(2);
         TableColumn<LigneSuiviGroupée, String> colNotes = (TableColumn<LigneSuiviGroupée, String>) tableViewSuiviTraitements.getColumns().get(3);
 
-        colEtudiant.setPrefWidth(350);
-        colDateSuivi.setPrefWidth(120);
-        colSaisiPar.setPrefWidth(120);
-        colNotes.setPrefWidth(400);
+        colEtudiant.setPrefWidth(320);
+        colDateSuivi.setPrefWidth(130);
+        colSaisiPar.setPrefWidth(150);
+        colNotes.setPrefWidth(380);
 
-        // Colonne Étudiant / Traitement
-        colEtudiant.setCellValueFactory(param -> {
-            LigneSuiviGroupée ligne = param.getValue();
-            return new javafx.beans.property.SimpleStringProperty(ligne.getAffichage());
-        });
+        colActions.setPrefWidth(180);
+        colActions.setMinWidth(160);
+        colActions.setResizable(false);
+
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        // ===== COLONNE ÉTUDIANT / TRAITEMENT =====
+        colEtudiant.setCellValueFactory(param ->
+                new javafx.beans.property.SimpleStringProperty(param.getValue().getAffichage()));
 
         colEtudiant.setCellFactory(param -> new TableCell<LigneSuiviGroupée, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
+                setGraphic(null);
                 if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText("");
-                    setStyle("");
+                    setText(null); setStyle(""); return;
+                }
+                LigneSuiviGroupée ligne = getTableRow().getItem();
+
+                if (ligne.estEnteteEtudiant()) {
+                    // En-tête étudiant — bandeau bleu clair et lumineux pour les psychologues
+                    HBox box = new HBox(10);
+                    box.setAlignment(Pos.CENTER_LEFT);
+                    box.setStyle("-fx-background-color: #3b82f6; -fx-background-radius: 8; -fx-padding: 10 14;");
+
+                    Label icone = new Label("👤");
+                    icone.setStyle("-fx-font-size: 15px;");
+
+                    Label nom = new Label(ligne.getNomEtudiant());
+                    nom.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: white; -fx-effect: dropshadow(gaussian, rgba(255,255,255,0.3), 2, 0, 0, 1);");
+
+                    Label compteur = new Label(ligne.getSuivis().size() + " suivi(s)");
+                    compteur.setStyle("-fx-font-size: 11px; -fx-text-fill: #dbeafe; " +
+                            "-fx-background-color: rgba(255,255,255,0.25); " +
+                            "-fx-background-radius: 20; -fx-padding: 2 10;");
+
+                    box.getChildren().addAll(icone, nom, compteur);
+                    setGraphic(box);
+                    setText(null);
+                    setStyle("-fx-background-color: #3b82f6; -fx-padding: 6 8;");
+
+                } else if (ligne.estEnteteTraitement()) {
+                    // En-tête traitement — légèrement indenté
+                    HBox box = new HBox(8);
+                    box.setAlignment(Pos.CENTER_LEFT);
+                    box.setStyle("-fx-background-color: #f0fdf4; -fx-background-radius: 6; " +
+                            "-fx-padding: 8 12; -fx-border-color: #86efac; " +
+                            "-fx-border-width: 0 0 0 3; -fx-border-radius: 0 6 6 0;");
+
+                    Label icone = new Label("📋");
+                    icone.setStyle("-fx-font-size: 13px;");
+
+                    Label nom = new Label(ligne.getNomTraitement());
+                    nom.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #166534;");
+
+                    Label compteur = new Label(ligne.getSuivis().size() + " suivi(s)");
+                    compteur.setStyle("-fx-font-size: 10px; -fx-text-fill: #15803d; " +
+                            "-fx-background-color: #dcfce7; -fx-background-radius: 20; -fx-padding: 2 8;");
+
+                    // Indentation
+                    javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
+                    spacer.setPrefWidth(20);
+
+                    box.getChildren().addAll(spacer, icone, nom, compteur);
+                    setGraphic(box);
+                    setText(null);
+                    setStyle("-fx-background-color: #f0fdf4; -fx-padding: 4 8;");
+
                 } else {
-                    LigneSuiviGroupée ligne = getTableRow().getItem();
-                    setText(item);
-                    if (ligne.estEnteteEtudiant()) {
-                        setStyle("-fx-background-color: #ede9fe; -fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #4f46e5; -fx-padding: 12 8;");
-                    } else if (ligne.estEnteteTraitement()) {
-                        setStyle("-fx-background-color: #f5f3ff; -fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #6366f1; -fx-padding: 10 8 10 25;");
-                    } else {
-                        setStyle("-fx-background-color: white; -fx-padding: 10 8 10 35; -fx-font-size: 12px;");
-                    }
+                    // Ligne de données — indentation + point
+                    HBox box = new HBox(6);
+                    box.setAlignment(Pos.CENTER_LEFT);
+
+                    javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
+                    spacer.setPrefWidth(40);
+
+                    Label point = new Label("•");
+                    point.setStyle("-fx-text-fill: #d1d5db; -fx-font-size: 14px;");
+
+                    box.getChildren().addAll(spacer, point);
+                    setGraphic(box);
+                    setText(null);
+                    setStyle("-fx-background-color: white; -fx-padding: 0;");
                 }
             }
         });
 
-        // Colonne Date Suivi
+        // ===== COLONNE DATE SUIVI =====
         colDateSuivi.setCellValueFactory(param -> {
             LigneSuiviGroupée ligne = param.getValue();
-            SuiviTraitement suivi = ligne.getPremierSuivi();
-            if (suivi != null && !ligne.estEntete()) {
-                return new javafx.beans.property.SimpleStringProperty(suivi.getDateSuivi() != null ? suivi.getDateSuivi().toString() : "");
+            if (!ligne.estEntete() && ligne.getSuivi() != null && ligne.getSuivi().getDateSuivi() != null) {
+                return new javafx.beans.property.SimpleStringProperty(
+                        ligne.getSuivi().getDateSuivi().toLocalDate().format(dateFormatter));
             }
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
-        // Colonne Saisi Par
+        colDateSuivi.setCellFactory(param -> new TableCell<LigneSuiviGroupée, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(null);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText(null); setStyle(""); return;
+                }
+                LigneSuiviGroupée ligne = getTableRow().getItem();
+
+                if (ligne.estEnteteEtudiant()) {
+                    setText(null);
+                    setStyle("-fx-background-color: #3b82f6;");
+                } else if (ligne.estEnteteTraitement()) {
+                    setText(null);
+                    setStyle("-fx-background-color: #f0fdf4;");
+                } else if (item != null && !item.isEmpty()) {
+                    VBox box = new VBox(2);
+                    box.setAlignment(Pos.CENTER_LEFT);
+                    Label icone = new Label("📅");
+                    icone.setStyle("-fx-font-size: 11px;");
+                    Label date = new Label(item);
+                    date.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;");
+                    box.getChildren().addAll(icone, date);
+                    setGraphic(box);
+                    setText(null);
+                    setStyle("-fx-background-color: white; -fx-padding: 8 10;");
+                } else {
+                    setText(null);
+                    setStyle("-fx-background-color: white;");
+                }
+            }
+        });
+
+        // ===== COLONNE SAISI PAR =====
         colSaisiPar.setCellValueFactory(param -> {
             LigneSuiviGroupée ligne = param.getValue();
-            SuiviTraitement suivi = ligne.getPremierSuivi();
-            if (suivi != null && !ligne.estEntete()) {
-                String texte = suivi.getSaisiPar() == SaisiPar.PSYCHOLOGUE ? "👨‍⚕️ Psychologue" : "👨‍🎓 Étudiant";
-                return new javafx.beans.property.SimpleStringProperty(texte);
+            if (!ligne.estEntete() && ligne.getSuivi() != null) {
+                return new javafx.beans.property.SimpleStringProperty(
+                        ligne.getSuivi().getSaisiPar() == SaisiPar.PSYCHOLOGUE ? "PSYCHOLOGUE" : "ETUDIANT");
             }
             return new javafx.beans.property.SimpleStringProperty("");
         });
@@ -606,38 +817,50 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
+                setGraphic(null);
                 if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText("");
-                    setStyle("");
+                    setText(null); setStyle(""); return;
+                }
+                LigneSuiviGroupée ligne = getTableRow().getItem();
+
+                if (ligne.estEnteteEtudiant()) {
+                    setText(null);
+                    setStyle("-fx-background-color: #3b82f6;");
+                } else if (ligne.estEnteteTraitement()) {
+                    setText(null);
+                    setStyle("-fx-background-color: #f0fdf4;");
+                } else if ("PSYCHOLOGUE".equals(item)) {
+                    Label badge = new Label("👨‍⚕️  Psychologue");
+                    badge.setStyle("-fx-background-color: #ede9fe; -fx-text-fill: #6d28d9; " +
+                            "-fx-font-weight: bold; -fx-font-size: 11px; " +
+                            "-fx-background-radius: 20; -fx-padding: 5 12;");
+                    setGraphic(badge);
+                    setText(null);
+                    setAlignment(Pos.CENTER);
+                    setStyle("-fx-background-color: white; -fx-padding: 8px;");
+                } else if ("ETUDIANT".equals(item)) {
+                    Label badge = new Label("👨‍🎓  Étudiant");
+                    badge.setStyle("-fx-background-color: #dcfce7; -fx-text-fill: #166534; " +
+                            "-fx-font-weight: bold; -fx-font-size: 11px; " +
+                            "-fx-background-radius: 20; -fx-padding: 5 12;");
+                    setGraphic(badge);
+                    setText(null);
+                    setAlignment(Pos.CENTER);
+                    setStyle("-fx-background-color: white; -fx-padding: 8px;");
                 } else {
-                    LigneSuiviGroupée ligne = getTableRow().getItem();
-                    if (ligne.estEntete()) {
-                        setText("");
-                        setStyle("");
-                    } else if (item != null && !item.isEmpty()) {
-                        setText(item);
-                        if (item.contains("Psychologue")) {
-                            setStyle("-fx-text-fill: #4f46e5; -fx-font-weight: bold; -fx-padding: 10 8;");
-                        } else {
-                            setStyle("-fx-text-fill: #15803d; -fx-font-weight: bold; -fx-padding: 10 8;");
-                        }
-                    } else {
-                        setText("");
-                    }
+                    setText(null);
+                    setStyle("-fx-background-color: white;");
                 }
             }
         });
 
-        // Colonne Observations
+        // ===== COLONNE OBSERVATIONS =====
         colNotes.setCellValueFactory(param -> {
             LigneSuiviGroupée ligne = param.getValue();
-            SuiviTraitement suivi = ligne.getPremierSuivi();
-            if (suivi != null && !ligne.estEntete()) {
-                String notes = suivi.getObservations();
-                if (notes != null && notes.length() > 80) {
-                    notes = notes.substring(0, 77) + "...";
-                }
-                return new javafx.beans.property.SimpleStringProperty(notes != null ? notes : "");
+            if (!ligne.estEntete() && ligne.getSuivi() != null) {
+                String notes = ligne.getSuivi().getObservations();
+                if (notes != null && notes.length() > 80) notes = notes.substring(0, 77) + "...";
+                return new javafx.beans.property.SimpleStringProperty(notes != null ? notes : "Aucune observation");
             }
             return new javafx.beans.property.SimpleStringProperty("");
         });
@@ -646,18 +869,24 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
+                setGraphic(null);
                 if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText("");
-                    setStyle("");
+                    setText(null); setStyle(""); return;
+                }
+                LigneSuiviGroupée ligne = getTableRow().getItem();
+
+                if (ligne.estEnteteEtudiant()) {
+                    setText(null);
+                    setStyle("-fx-background-color: #3b82f6;");
+                } else if (ligne.estEnteteTraitement()) {
+                    setText(null);
+                    setStyle("-fx-background-color: #f0fdf4;");
                 } else {
-                    LigneSuiviGroupée ligne = getTableRow().getItem();
-                    if (ligne.estEntete()) {
-                        setText("");
-                        setStyle("");
-                    } else {
-                        setText(item);
-                        setStyle("-fx-background-color: white; -fx-padding: 10 8;");
-                    }
+                    boolean aucune = "Aucune observation".equals(item);
+                    setText(item);
+                    setStyle("-fx-background-color: white; -fx-padding: 10 12; -fx-font-size: 12px; " +
+                            "-fx-text-fill: " + (aucune ? "#9ca3af" : "#374151") + "; " +
+                            (aucune ? "-fx-font-style: italic;" : ""));
                 }
             }
         });
@@ -667,61 +896,87 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
 
     private void configurerColonneActions() {
         colActions.setCellFactory(param -> new TableCell<LigneSuiviGroupée, Void>() {
-            private final Button btnView = new Button("Afficher");
-            private final Button btnEdit = new Button("Modifier");
-            private final Button btnDelete = new Button("Supprimer");
-            private final HBox container = new HBox(8, btnView, btnEdit, btnDelete);
-
-            {
-                container.setAlignment(Pos.CENTER);
-                btnView.getStyleClass().addAll("table-action-button", "table-action-button-view");
-                btnEdit.getStyleClass().addAll("table-action-button", "table-action-button-edit");
-                btnDelete.getStyleClass().addAll("table-action-button", "table-action-button-delete");
-                btnView.setPrefWidth(70);
-                btnEdit.setPrefWidth(70);
-                btnDelete.setPrefWidth(70);
-
-                btnView.setOnAction(event -> {
-                    LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
-                    SuiviTraitement suivi = ligne.getPremierSuivi();
-                    if (suivi != null && !ligne.estEntete()) {
-                        ouvrirPageAffichage(suivi);
-                    }
-                });
-
-                btnEdit.setOnAction(event -> {
-                    LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
-                    SuiviTraitement suivi = ligne.getPremierSuivi();
-                    if (suivi != null && !ligne.estEntete()) {
-                        if (utilisateur != null && utilisateur.getRole().equals("ETUDIANT") && suivi.getSaisiPar() != SaisiPar.ETUDIANT) {
-                            afficherToast("✗ Vous ne pouvez pas modifier le suivi du psychologue", false);
-                        } else {
-                            ouvrirPageModification(suivi);
-                        }
-                    }
-                });
-
-                btnDelete.setOnAction(event -> {
-                    LigneSuiviGroupée ligne = getTableView().getItems().get(getIndex());
-                    SuiviTraitement suivi = ligne.getPremierSuivi();
-                    if (suivi != null && !ligne.estEntete()) {
-                        if (utilisateur != null && utilisateur.getRole().equals("ETUDIANT") && suivi.getSaisiPar() != SaisiPar.ETUDIANT) {
-                            afficherToast("✗ Vous ne pouvez pas supprimer le suivi du psychologue", false);
-                        } else {
-                            supprimerSuivi(suivi);
-                        }
-                    }
-                });
-            }
 
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null || getTableRow().getItem().estEntete()) {
+
+                if (empty || getTableRow() == null || getTableRow().getItem() == null
+                        || getTableRow().getItem().estEntete()) {
                     setGraphic(null);
-                } else {
-                    setGraphic(container);
+                    if (getTableRow() != null && getTableRow().getItem() != null) {
+                        LigneSuiviGroupée ligne = getTableRow().getItem();
+                        if (ligne.estEnteteEtudiant()) setStyle("-fx-background-color: #3b82f6;");
+                        else if (ligne.estEnteteTraitement()) setStyle("-fx-background-color: #f0fdf4;");
+                        else setStyle("");
+                    }
+                    return;
                 }
+
+                LigneSuiviGroupée ligne = getTableRow().getItem();
+                SuiviTraitement suivi = ligne.getSuivi();
+
+                if (suivi == null) {
+                    setGraphic(null);
+                    return;
+                }
+
+                boolean estPsychologue = (utilisateur != null &&
+                        "PSYCHOLOGUE".equals(utilisateur.getRole().name().trim()));
+                boolean estEtudiant = (utilisateur != null &&
+                        "ETUDIANT".equals(utilisateur.getRole().name().trim()));
+
+                //  Recréer les boutons à chaque appel pour éviter les conflits de cellules
+                Button btnView   = new Button("👁");
+                Button btnEdit   = new Button("✏");
+                Button btnDelete = new Button("🗑");
+
+                btnView.setStyle("-fx-background-color: #eff6ff; -fx-text-fill: #1d4ed8; " +
+                        "-fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold; " +
+                        "-fx-padding: 6 12; -fx-cursor: hand;");
+                btnEdit.setStyle("-fx-background-color: #fef9c3; -fx-text-fill: #a16207; " +
+                        "-fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold; " +
+                        "-fx-padding: 6 12; -fx-cursor: hand;");
+                btnDelete.setStyle("-fx-background-color: #fef2f2; -fx-text-fill: #dc2626; " +
+                        "-fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold; " +
+                        "-fx-padding: 6 10; -fx-cursor: hand;");
+
+                btnView.setOnAction(event -> {
+                    if (suivi != null) ouvrirPageAffichage(suivi);
+                });
+
+                btnEdit.setOnAction(event -> {
+                    if (suivi != null) ouvrirPageModification(suivi);
+                });
+
+                btnDelete.setOnAction(event -> {
+                    if (suivi != null) supprimerSuivi(suivi);
+                });
+
+                HBox container = new HBox(6);
+                container.setAlignment(Pos.CENTER);
+
+                //  Bouton Afficher toujours visible
+                container.getChildren().add(btnView);
+
+                if (estPsychologue) {
+                    //  Psy : Modifier/Supprimer UNIQUEMENT sur SES propres suivis
+                    if (suivi.getSaisiPar() == SaisiPar.PSYCHOLOGUE) {
+                        container.getChildren().addAll(btnEdit, btnDelete);
+                    }
+                    //  Suivi ETUDIANT → bouton 👁️ uniquement
+
+                } else if (estEtudiant) {
+                    //  Étudiant : Modifier/Supprimer UNIQUEMENT sur SES propres suivis
+                    if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
+                        container.getChildren().addAll(btnEdit, btnDelete);
+                    }
+                    //  Suivi PSYCHOLOGUE → bouton 👁️ uniquement
+
+                }
+
+                setGraphic(container);
+                setStyle("-fx-background-color: white; -fx-padding: 6px;");
             }
         });
     }
@@ -744,6 +999,8 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
 
     private void appliquerFiltres() {
         if (tousLesSuivisFiltres == null || tousLesSuivisFiltres.isEmpty()) {
+            toutesLesLignes = new ArrayList<>();
+            appliquerPagination();
             return;
         }
 
@@ -754,18 +1011,19 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             }
 
             List<SuiviTraitement> suivisFiltres = new ArrayList<>(tousLesSuivisFiltres);
-
             suivisFiltres = appliquerRechercheEtFiltres(suivisFiltres, traitementsMap);
             suivisFiltres = appliquerTri(suivisFiltres, traitementsMap);
 
-            List<LigneSuiviGroupée> lignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
-            lignesSuivisGroupéesList = FXCollections.observableArrayList(lignes);
-            tableViewSuiviTraitements.setItems(lignesSuivisGroupéesList);
+            //  Stocker toutes les lignes pour la pagination
+            toutesLesLignes = creerLignesSuivisGroupées(suivisFiltres, traitementsMap);
 
-            long totalSuivis = lignes.stream().filter(l -> !l.estEntete()).count();
-            lblCount.setText(totalSuivis + " suivi(s)");
-            lblStatus.setText(totalSuivis + " suivi(s) affiché(s)");
+            // Réinitialiser à la première page
+            currentPage = 0;
 
+            // Appliquer la pagination
+            appliquerPagination();
+
+            lblStatus.setText(toutesLesLignes.stream().filter(l -> !l.estEntete()).count() + " suivi(s) après filtrage");
         } catch (Exception e) {
             afficherToast("✗ Erreur: " + e.getMessage(), false);
         }
@@ -794,7 +1052,10 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
     }
 
     private void exporterVersCSV(File file) throws IOException {
-        try (FileWriter writer = new FileWriter(file)) {
+        // UTF-8 avec BOM pour Excel
+        try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8")) {
+            // BOM UTF-8 pour Excel
+            writer.write('\uFEFF');
             writer.write("Étudiant;Traitement;Date suivi;Saisi par;Observations\n");
 
             for (LigneSuiviGroupée ligne : lignesSuivisGroupéesList) {
@@ -808,8 +1069,13 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
                         }
                     }
                     String saisiPar = s.getSaisiPar() == SaisiPar.PSYCHOLOGUE ? "Psychologue" : "Étudiant";
+                    // Récupérer le nom de l'étudiant depuis le traitement
+                    String nomEtudiant = "";
+                    if (t != null) {
+                        nomEtudiant = getNomEtudiant(t.getEtudiantId());
+                    }
                     writer.write(String.format("%s;%s;%s;%s;%s\n",
-                            ligne.getNomEtudiant(),
+                            nomEtudiant,
                             t != null ? t.getTitre().replace(";", ",") : "",
                             s.getDateSuivi() != null ? s.getDateSuivi().toString() : "",
                             saisiPar,
@@ -899,6 +1165,72 @@ public class SuiviTraitementController implements Initializable, SidebarPsycholo
             } catch (SQLException e) {
                 afficherToast("✗ Erreur de suppression: " + e.getMessage(), false);
             }
+        }
+    }
+
+    /**
+     * Ouvre la fenêtre d'analyse IA pour le psychologue
+     */
+    @FXML
+    private void handleAnalyseIA() {
+        try {
+            if (utilisateur == null) {
+                afficherToast("⚠️ Utilisateur non connecté", false);
+                return;
+            }
+
+            // Récupérer tous les suivis et traitements
+            List<SuiviTraitement> tousLesSuivis = suiviTraitementService.afficher();
+            List<Traitement> tousLesTraitements = traitementService.afficher();
+
+            Map<Integer, Traitement> traitementsMap = new HashMap<>();
+            for (Traitement t : tousLesTraitements) {
+                traitementsMap.put(t.getTraitementId(), t);
+            }
+
+            int utilisateurId = utilisateur.getUserId();
+
+            // Filtrer les traitements du psychologue connecté
+            List<Traitement> traitementsPsychologue = new ArrayList<>();
+            for (Traitement traitement : tousLesTraitements) {
+                if (traitement.getPsychologueId() == utilisateurId) {
+                    traitementsPsychologue.add(traitement);
+                }
+            }
+
+            // Récupérer les IDs des traitements du psychologue
+            List<Integer> traitementIds = traitementsPsychologue.stream()
+                    .map(Traitement::getTraitementId)
+                    .collect(Collectors.toList());
+
+            // Filtrer les suivis correspondant aux traitements du psychologue
+            List<SuiviTraitement> suivisPsychologue = tousLesSuivis.stream()
+                    .filter(s -> traitementIds.contains(s.getTraitementId()))
+                    .collect(Collectors.toList());
+
+            if (traitementsPsychologue.isEmpty()) {
+                afficherToast("⚠️ Aucun traitement trouvé pour l'analyse", false);
+                return;
+            }
+
+            // Ouvrir la fenêtre d'analyse IA
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/analyse-ia-view.fxml"));
+            Parent root = loader.load();
+
+            AnalyseIAController controller = loader.getController();
+            controller.setDonneesAnalyse(traitementsPsychologue, suivisPsychologue);
+
+            Stage stage = new Stage();
+            stage.setTitle("🤖 Analyse IA - Suivi des Traitements");
+            stage.setScene(new Scene(root, 1000, 800));
+            stage.setMaximized(true);
+            stage.show();
+
+            afficherToast("📊 Analyse IA lancée pour " + traitementsPsychologue.size() + " traitement(s)", true);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            afficherToast("✗ Erreur lors de l'analyse IA: " + e.getMessage(), false);
         }
     }
 

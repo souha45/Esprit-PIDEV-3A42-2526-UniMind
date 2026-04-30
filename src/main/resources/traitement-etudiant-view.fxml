@@ -8,7 +8,7 @@
             fx:controller="org.example.controllers.TraitementEtudiantController"
             stylesheets="@/css/traitements-suivis.css">
 
-    <!-- Sidebar gauche - injecté comme VBox -->
+    <!-- Sidebar gauche  -->
     <left>
         <fx:include source="/SidebarEtudiant.fxml" fx:id="sidebarEtudiant"/>
     </left>
@@ -28,7 +28,7 @@
                 </HBox>
             </VBox>
 
-            <!-- ===== SECTION STATISTIQUES ===== -->
+            <!--  SECTION STATISTIQUES  -->
             <HBox spacing="14" style="-fx-background-color: white; -fx-padding: 20 24; -fx-border-color: #e0e7ff; -fx-border-width: 0 0 1 0;">
 
                 <VBox spacing="5" HBox.hgrow="ALWAYS"
@@ -83,7 +83,7 @@
 
             </HBox>
 
-            <!-- ===== BARRE DE RECHERCHE, FILTRES ET TRI ===== -->
+            <!--  BARRE DE RECHERCHE, FILTRES ET TRI  -->
             <HBox styleClass="filter-bar" spacing="15" alignment="CENTER_LEFT">
                 <HBox styleClass="search-box">
                     <Label text="🔍" styleClass="search-icon"/>
@@ -97,6 +97,7 @@
 
                 <Button fx:id="btnAppliquerFiltres" text="Appliquer" onAction="#handleAppliquerFiltres" styleClass="btn-primary-small"/>
                 <Button fx:id="btnReinitialiserFiltres" text="Réinitialiser" onAction="#handleReinitialiserFiltres" styleClass="btn-secondary-small"/>
+                <Button fx:id="btnAnalyseIA" text="🤖 Analyse IA" onAction="#handleAnalyseIA" styleClass="btn-ia-small"/>
 
                 <Region HBox.hgrow="ALWAYS"/>
             </HBox>
@@ -115,6 +116,28 @@
                     </VBox>
                 </content>
             </ScrollPane>
+
+            <!-- Pagination -->
+            <HBox fx:id="paginationBar" styleClass="pagination-bar" spacing="15" alignment="CENTER"
+                  style="-fx-padding: 15 24; -fx-background-color: white; -fx-border-color: #e5e7eb; -fx-border-width: 1 0 0 0;">
+
+                <Label text="Cartes par page :" style="-fx-font-size: 12px; -fx-text-fill: #6b7280;"/>
+                <ComboBox fx:id="cmbItemsPerPage" prefWidth="80" styleClass="filter-combo"/>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <HBox spacing="10" alignment="CENTER">
+                    <Button fx:id="btnFirstPage" text="⏮" styleClass="pagination-button" onAction="#handleFirstPage"/>
+                    <Button fx:id="btnPrevPage" text="◀" styleClass="pagination-button" onAction="#handlePrevPage"/>
+                    <Label fx:id="lblPageInfo" text="Page 1 / 1" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #4f46e5; -fx-min-width: 80; -fx-alignment: CENTER;"/>
+                    <Button fx:id="btnNextPage" text="▶" styleClass="pagination-button" onAction="#handleNextPage"/>
+                    <Button fx:id="btnLastPage" text="⏭" styleClass="pagination-button" onAction="#handleLastPage"/>
+                </HBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <Label fx:id="lblTotalPagesInfo" style="-fx-font-size: 11px; -fx-text-fill: #9ca3af;"/>
+            </HBox>
 
             <!-- Barre de statut -->
             <HBox styleClass="status-bar">

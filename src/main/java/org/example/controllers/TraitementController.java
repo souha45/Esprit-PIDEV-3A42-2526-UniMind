@@ -1,8 +1,9 @@
 package org.example.controllers;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -20,6 +21,7 @@ import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
 import org.example.entities.User;
 import org.example.services.EtudiantTraitementService;
+import org.example.services.OrdonnancePDFService;
 import org.example.services.SuiviTraitementService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
@@ -86,6 +88,19 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
     // Sidebar et Toast
     @FXML private SidebarPsychologueController sidebarPsyController;
     @FXML private StackPane toastContainer;
+
+    // ==================== PAGINATION ====================
+    @FXML private ComboBox<String> cmbItemsPerPage;
+    @FXML private Button btnFirstPage;
+    @FXML private Button btnPrevPage;
+    @FXML private Button btnNextPage;
+    @FXML private Button btnLastPage;
+    @FXML private Label lblPageInfo;
+    @FXML private Label lblTotalPagesInfo;
+
+    private List<LigneGroupée> toutesLesLignes;
+    private int currentPage = 0;
+    private int itemsPerPage = 10;
 
     private TraitementService traitementService;
     private EtudiantTraitementService etudiantTraitementService;
@@ -190,9 +205,11 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             cacheNbSuivis = new HashMap<>();
             tousLesTraitementsFiltres = new ArrayList<>();
             cacheNomsEtudiants = new HashMap<>();
+            toutesLesLignes = new ArrayList<>();
 
             initialiserFiltres();
             initialiserTri();
+            initialiserPagination();
             configurerColonnes();
 
             isInitialized = true;
@@ -289,6 +306,92 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
         cmbTri.setValue("📅 Date (plus récent)");
     }
 
+    // ==================== PAGINATION ====================
+
+    private void initialiserPagination() {
+        cmbItemsPerPage.getItems().addAll("10", "20", "50", "100");
+        cmbItemsPerPage.setValue("10");
+
+        cmbItemsPerPage.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                itemsPerPage = Integer.parseInt(newVal);
+                currentPage = 0;
+                appliquerPagination();
+            }
+        });
+    }
+
+    private void appliquerPagination() {
+        if (toutesLesLignes == null || toutesLesLignes.isEmpty()) {
+            tableViewTraitements.setItems(FXCollections.observableArrayList());
+            lblPageInfo.setText("Page 0 / 0");
+            lblTotalPagesInfo.setText("0 ligne(s)");
+            btnFirstPage.setDisable(true);
+            btnPrevPage.setDisable(true);
+            btnNextPage.setDisable(true);
+            btnLastPage.setDisable(true);
+            return;
+        }
+
+        int totalPages = (int) Math.ceil((double) toutesLesLignes.size() / itemsPerPage);
+
+        if (totalPages == 0) totalPages = 1;
+
+        if (currentPage >= totalPages) {
+            currentPage = Math.max(0, totalPages - 1);
+        }
+
+        int fromIndex = currentPage * itemsPerPage;
+        int toIndex = Math.min(fromIndex + itemsPerPage, toutesLesLignes.size());
+
+        List<LigneGroupée> pageLignes = toutesLesLignes.subList(fromIndex, toIndex);
+        lignesGroupéesList = FXCollections.observableArrayList(pageLignes);
+        tableViewTraitements.setItems(lignesGroupéesList);
+
+        lblPageInfo.setText("Page " + (currentPage + 1) + " / " + totalPages);
+        lblTotalPagesInfo.setText(toutesLesLignes.size() + " ligne(s)");
+
+        btnFirstPage.setDisable(currentPage == 0);
+        btnPrevPage.setDisable(currentPage == 0);
+        btnNextPage.setDisable(currentPage >= totalPages - 1);
+        btnLastPage.setDisable(currentPage >= totalPages - 1);
+
+        long totalTraitements = toutesLesLignes.stream().filter(l -> l.getTraitement() != null).count();
+        lblCount.setText(totalTraitements + " traitement(s)");
+    }
+
+    @FXML
+    private void handleFirstPage() {
+        currentPage = 0;
+        appliquerPagination();
+    }
+
+    @FXML
+    private void handlePrevPage() {
+        if (currentPage > 0) {
+            currentPage--;
+            appliquerPagination();
+        }
+    }
+
+    @FXML
+    private void handleNextPage() {
+        int totalPages = (int) Math.ceil((double) toutesLesLignes.size() / itemsPerPage);
+        if (currentPage < totalPages - 1) {
+            currentPage++;
+            appliquerPagination();
+        }
+    }
+
+    @FXML
+    private void handleLastPage() {
+        int totalPages = (int) Math.ceil((double) toutesLesLignes.size() / itemsPerPage);
+        if (totalPages > 0) {
+            currentPage = totalPages - 1;
+            appliquerPagination();
+        }
+    }
+
     // ==================== CHARGEMENT DES DONNÉES ====================
 
     private void chargerDonnees() {
@@ -322,13 +425,14 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             traitementsFiltres = appliquerTri(traitementsFiltres);
             mettreAJourStatistiques(tousLesTraitementsFiltres);
 
-            List<LigneGroupée> lignes = creerLignesGroupées(traitementsFiltres);
-            lignesGroupéesList = FXCollections.observableArrayList(lignes);
-            tableViewTraitements.setItems(lignesGroupéesList);
+            toutesLesLignes = creerLignesGroupées(traitementsFiltres);
+            currentPage = 0;
+            appliquerPagination();
 
-            long totalTraitements = lignes.stream().filter(l -> l.getTraitement() != null).count();
-            if (lblCount != null) lblCount.setText(totalTraitements + " traitement(s)");
+            long totalTraitements = toutesLesLignes.stream().filter(l -> l.getTraitement() != null).count();
             if (lblStatus != null) lblStatus.setText(totalTraitements + " traitement(s) affiché(s)");
+
+            System.out.println("✅ Chargement terminé: " + totalTraitements + " traitements affichés");
 
         } catch (Exception e) {
             System.err.println("Erreur: " + e.getMessage());
@@ -375,13 +479,14 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             traitementsFiltres = appliquerTri(traitementsFiltres);
             mettreAJourStatistiques(tousLesTraitementsFiltres);
 
-            List<LigneGroupée> lignes = creerLignesGroupées(traitementsFiltres);
-            lignesGroupéesList = FXCollections.observableArrayList(lignes);
-            tableViewTraitements.setItems(lignesGroupéesList);
+            toutesLesLignes = creerLignesGroupées(traitementsFiltres);
+            currentPage = 0;
+            appliquerPagination();
 
-            long totalTraitements = lignes.stream().filter(l -> l.getTraitement() != null).count();
-            if (lblCount != null) lblCount.setText(totalTraitements + " traitement(s)");
+            long totalTraitements = toutesLesLignes.stream().filter(l -> l.getTraitement() != null).count();
             if (lblStatus != null) lblStatus.setText(totalTraitements + " traitement(s) affiché(s)");
+
+            System.out.println("✅ Chargement terminé: " + totalTraitements + " traitements affichés");
 
         } catch (Exception e) {
             System.err.println("Erreur: " + e.getMessage());
@@ -586,6 +691,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
         colObjectif.setPrefWidth(200);
         colSuivis.setPrefWidth(100);
 
+        // ===== COLONNE ÉTUDIANT (avec VBox stylisé) =====
         colEtudiant.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             if (ligne.isEstLigneSeparateur()) {
@@ -606,7 +712,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                     LigneGroupée ligne = getTableRow().getItem();
                     if (ligne.isEstLigneSeparateur()) {
                         setText("");
-                        setStyle("-fx-background-color: #f3f4f6; -fx-padding: 2px;");
+                        setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
                         setGraphic(null);
                     } else if (ligne.isPremiereLigneDuGroupe()) {
                         VBox vbox = new VBox();
@@ -635,6 +741,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE TITRE =====
         colTitre.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -664,6 +771,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE TYPE =====
         colType.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -693,6 +801,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE CATÉGORIE =====
         colCategorie.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -722,6 +831,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE DURÉE =====
         colDuree.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -744,13 +854,14 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                         setText("");
                         setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
                     } else {
-                        setText(item);
+                        setText(item + "j");
                         setStyle("-fx-background-color: white; -fx-padding: 10 8;");
                     }
                 }
             }
         });
 
+        // ===== COLONNE STATUT (avec badge) =====
         colStatut.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -795,6 +906,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE PRIORITÉ (avec badge) =====
         colPriorite.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -839,6 +951,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE DATE DÉBUT =====
         colDateDebut.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -868,6 +981,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE OBJECTIF =====
         colObjectif.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             Traitement t = ligne.getPremierTraitement();
@@ -901,6 +1015,7 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         });
 
+        // ===== COLONNE SUIVIS (avec badge) =====
         colSuivis.setCellValueFactory(param -> {
             LigneGroupée ligne = param.getValue();
             if (ligne.isEstLigneSeparateur()) {
@@ -946,19 +1061,22 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
         SessionManager session = SessionManager.getInstance();
 
         colActions.setCellFactory(param -> new TableCell<LigneGroupée, Void>() {
-            private final Button btnView = new Button("Afficher");
-            private final Button btnEdit = new Button("Modifier");
-            private final Button btnDelete = new Button("Supprimer");
-            private final HBox container = new HBox(8, btnView, btnEdit, btnDelete);
+            private final Button btnView = new Button("👁");
+            private final Button btnEdit = new Button("✏");
+            private final Button btnDelete = new Button("🗑");
+            private final Button btnTranslate = new Button("🌐");
+            private final HBox container = new HBox(6, btnView, btnEdit, btnDelete, btnTranslate);
 
             {
                 container.setAlignment(Pos.CENTER);
                 btnView.getStyleClass().addAll("table-action-button", "table-action-button-view");
                 btnEdit.getStyleClass().addAll("table-action-button", "table-action-button-edit");
                 btnDelete.getStyleClass().addAll("table-action-button", "table-action-button-delete");
+                btnTranslate.getStyleClass().addAll("table-action-button", "table-action-button-translate");
                 btnView.setPrefWidth(70);
                 btnEdit.setPrefWidth(70);
                 btnDelete.setPrefWidth(70);
+                btnTranslate.setPrefWidth(70);
 
                 btnView.setOnAction(event -> {
                     LigneGroupée ligne = getTableView().getItems().get(getIndex());
@@ -981,6 +1099,14 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                     Traitement traitement = ligne.getPremierTraitement();
                     if (traitement != null && session.peutSupprimerTraitement()) {
                         supprimerTraitement(traitement);
+                    }
+                });
+
+                btnTranslate.setOnAction(event -> {
+                    LigneGroupée ligne = getTableView().getItems().get(getIndex());
+                    Traitement traitement = ligne.getPremierTraitement();
+                    if (traitement != null) {
+                        ouvrirPageTraductionPourTraitement(traitement);
                     }
                 });
             }
@@ -1024,6 +1150,8 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
 
     private void appliquerFiltres() {
         if (tousLesTraitementsFiltres == null || tousLesTraitementsFiltres.isEmpty()) {
+            toutesLesLignes = new ArrayList<>();
+            appliquerPagination();
             return;
         }
 
@@ -1032,13 +1160,11 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             traitementsFiltres = appliquerRechercheEtFiltres(traitementsFiltres);
             traitementsFiltres = appliquerTri(traitementsFiltres);
 
-            List<LigneGroupée> lignes = creerLignesGroupées(traitementsFiltres);
-            lignesGroupéesList = FXCollections.observableArrayList(lignes);
-            tableViewTraitements.setItems(lignesGroupéesList);
+            toutesLesLignes = creerLignesGroupées(traitementsFiltres);
+            currentPage = 0;
+            appliquerPagination();
 
-            long totalTraitements = lignes.stream().filter(l -> l.getTraitement() != null).count();
-            if (lblCount != null) lblCount.setText(totalTraitements + " traitement(s)");
-            if (lblStatus != null) lblStatus.setText(totalTraitements + " traitement(s) affiché(s)");
+            if (lblStatus != null) lblStatus.setText(toutesLesLignes.stream().filter(l -> l.getTraitement() != null).count() + " traitement(s) après filtrage");
 
         } catch (SQLException e) {
             afficherToast("✗ Erreur: " + e.getMessage(), false);
@@ -1068,10 +1194,11 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
     }
 
     private void exporterVersCSV(File file) throws IOException {
-        try (FileWriter writer = new FileWriter(file)) {
+        try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8")) {
+            writer.write('\uFEFF');
             writer.write("Étudiant;Titre;Type;Catégorie;Durée;Statut;Priorité;Date Début;Objectif;Suivis\n");
 
-            for (LigneGroupée ligne : lignesGroupéesList) {
+            for (LigneGroupée ligne : toutesLesLignes) {
                 if (ligne.getTraitement() != null) {
                     Traitement t = ligne.getTraitement();
                     writer.write(String.format("%s;%s;%s;%s;%d;%s;%s;%s;%s;%d\n",
@@ -1091,9 +1218,58 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
         }
     }
 
+    @FXML
+    private void handleExporterPDF() {
+        LigneGroupée selectedLigne = tableViewTraitements.getSelectionModel().getSelectedItem();
+
+        if (selectedLigne == null || selectedLigne.getTraitement() == null) {
+            afficherToast("⚠️ Veuillez sélectionner un traitement à exporter", false);
+            return;
+        }
+
+        try {
+            Traitement traitement = selectedLigne.getTraitement();
+
+            if (utilisateur == null) {
+                afficherToast("⚠️ Utilisateur non connecté", false);
+                return;
+            }
+
+            OrdonnancePDFService pdfService = new OrdonnancePDFService();
+            byte[] pdfBytes = pdfService.genererOrdonnancePDF(traitement, utilisateur);
+
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Enregistrer l'ordonnance PDF");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Fichier PDF", "*.pdf")
+            );
+
+            String nomFichier = pdfService.genererNomFichier(traitement);
+            fileChooser.setInitialFileName(nomFichier);
+
+            File file = fileChooser.showSaveDialog(tableViewTraitements.getScene().getWindow());
+
+            if (file != null) {
+                try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file)) {
+                    fos.write(pdfBytes);
+                }
+
+                afficherToast("✓ Ordonnance exportée: " + file.getName(), true);
+                if (lblStatus != null) {
+                    lblStatus.setText("✓ Ordonnance exportée: " + file.getName());
+                }
+            }
+
+        } catch (Exception e) {
+            afficherToast("✗ Erreur d'export PDF: " + e.getMessage(), false);
+            e.printStackTrace();
+        }
+    }
+
     // ==================== NAVIGATION ====================
 
     @FXML private void handleAjouter() { ouvrirPageAjout(); }
+
     @FXML private void handleRafraichir() {
         prechargerNomsEtudiants();
         if (utilisateur != null) {
@@ -1110,7 +1286,6 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
 
             SuiviTraitementController controller = loader.getController();
             if (controller != null) {
-                // Utiliser l'utilisateur existant ou celui de SessionManager
                 User userToPass = utilisateur;
                 if (userToPass == null) {
                     SessionManager session = SessionManager.getInstance();
@@ -1120,9 +1295,6 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                 }
                 if (userToPass != null) {
                     controller.setUtilisateur(userToPass);
-                    System.out.println("✅ Utilisateur passé à SuiviTraitementController: " + userToPass.getNom());
-                } else {
-                    System.out.println("⚠️ Aucun utilisateur disponible pour SuiviTraitementController");
                 }
             }
 
@@ -1132,6 +1304,35 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             }
         } catch (Exception e) {
             afficherToast("✗ Erreur de navigation: " + e.getMessage(), false);
+        }
+    }
+
+    @FXML
+    private void handleStatistiques() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-statistiques-view.fxml"));
+            Parent root = loader.load();
+
+            TraitementStatistiquesController controller = loader.getController();
+            if (controller != null) {
+                User userToPass = utilisateur;
+                if (userToPass == null) {
+                    SessionManager session = SessionManager.getInstance();
+                    if (session.estConnecte()) {
+                        userToPass = session.getCurrentUser();
+                    }
+                }
+                if (userToPass != null) {
+                    controller.setUtilisateur(userToPass);
+                }
+            }
+
+            Scene currentScene = tableViewTraitements.getScene();
+            if (currentScene != null) {
+                currentScene.setRoot(root);
+            }
+        } catch (Exception e) {
+            afficherToast("✗ Erreur: " + e.getMessage(), false);
             e.printStackTrace();
         }
     }
@@ -1213,6 +1414,29 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
             } catch (Exception e) {
                 afficherToast("✗ Erreur de suppression: " + e.getMessage(), false);
             }
+        }
+    }
+
+    private void ouvrirPageTraductionPourTraitement(Traitement traitement) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-traduction-view.fxml"));
+            Parent root = loader.load();
+
+            TraitementTraductionController controller = loader.getController();
+            if (controller != null) {
+                controller.setTraitement(traitement);
+                controller.setUtilisateur(utilisateur);
+            }
+
+            Stage stage = new Stage();
+            stage.setTitle("Traduction de Traitement");
+            stage.setScene(new Scene(root));
+            stage.setMaximized(true);
+            stage.show();
+
+        } catch (Exception e) {
+            afficherToast("✗ Erreur d'ouverture: " + e.getMessage(), false);
+            e.printStackTrace();
         }
     }
 

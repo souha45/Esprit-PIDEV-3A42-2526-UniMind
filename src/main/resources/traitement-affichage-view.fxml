@@ -125,6 +125,7 @@
 
                 <!-- Boutons d'action -->
                 <HBox spacing="15" alignment="CENTER" styleClass="form-buttons">
+                    <Button text="Exporter Ordonnance" onAction="#handleExporterPDF" styleClass="btn-info"/>
                     <Button text="Fermer" onAction="#handleFermer" styleClass="btn-primary"/>
                 </HBox>
             </VBox>

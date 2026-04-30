@@ -3,6 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.collections.FXCollections?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.controllers.SuiviTraitementController"
@@ -28,10 +29,9 @@
                 </HBox>
             </VBox>
 
-            <!-- ===== SECTION STATISTIQUES ===== -->
+            <!-- SECTION STATISTIQUES -->
             <HBox spacing="14" style="-fx-background-color: white; -fx-padding: 20 24; -fx-border-color: #e0e7ff; -fx-border-width: 0 0 1 0;">
 
-                <!-- Carte Total suivis -->
                 <VBox spacing="5" HBox.hgrow="ALWAYS"
                       style="-fx-background-color: #ffffff; -fx-background-radius: 12;
                              -fx-padding: 16 20; -fx-border-color: #a5b4fc; -fx-border-width: 1;
@@ -42,7 +42,6 @@
                     <Label text="suivis" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #9ca3af;"/>
                 </VBox>
 
-                <!-- Carte Ce mois -->
                 <VBox spacing="5" HBox.hgrow="ALWAYS"
                       style="-fx-background-color: #e0f2fe; -fx-background-radius: 12;
                              -fx-padding: 16 20; -fx-border-color: #7dd3fc; -fx-border-width: 1;
@@ -53,7 +52,6 @@
                     <Label text="suivis" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #7dd3fc;"/>
                 </VBox>
 
-                <!-- Carte Cette semaine -->
                 <VBox spacing="5" HBox.hgrow="ALWAYS"
                       style="-fx-background-color: #ecfdf5; -fx-background-radius: 12;
                              -fx-padding: 16 20; -fx-border-color: #6ee7b7; -fx-border-width: 1;
@@ -64,7 +62,6 @@
                     <Label text="suivis" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #6ee7b7;"/>
                 </VBox>
 
-                <!-- Carte Aujourd'hui -->
                 <VBox spacing="5" HBox.hgrow="ALWAYS"
                       style="-fx-background-color: #fef3c7; -fx-background-radius: 12;
                              -fx-padding: 16 20; -fx-border-color: #fcd34d; -fx-border-width: 1;
@@ -75,7 +72,6 @@
                     <Label text="suivis" style="-fx-font-family: 'Segoe UI'; -fx-font-size: 11px; -fx-text-fill: #fcd34d;"/>
                 </VBox>
 
-                <!-- Carte Par étudiant -->
                 <VBox spacing="5" HBox.hgrow="ALWAYS"
                       style="-fx-background-color: #fef2f2; -fx-background-radius: 12;
                              -fx-padding: 16 20; -fx-border-color: #fecaca; -fx-border-width: 1;
@@ -97,7 +93,6 @@
 
                 <ComboBox fx:id="cmbFiltrePeriode" prefWidth="150" promptText="Période" styleClass="filter-combo"/>
                 <ComboBox fx:id="cmbFiltreSaisiPar" prefWidth="150" promptText="Saisi par" styleClass="filter-combo"/>
-
                 <ComboBox fx:id="cmbTri" prefWidth="200" promptText="Trier par..." styleClass="filter-combo"/>
 
                 <Button fx:id="btnAppliquerFiltres" text="Appliquer" onAction="#handleAppliquerFiltres" styleClass="btn-primary-small"/>
@@ -111,13 +106,14 @@
                 <Button fx:id="btnAjouter" text="+ Nouveau Suivi" onAction="#handleAjouter" styleClass="btn-primary"/>
                 <Button text="⟳ Rafraîchir" onAction="#handleRafraichir" styleClass="btn-secondary"/>
                 <Button text="📊 Voir Traitements" onAction="#ouvrirTraitementView" styleClass="btn-info"/>
+                <Button text="🤖 Analyse IA" onAction="#handleAnalyseIA" styleClass="btn-ia-small"/>
                 <Button text="📎 Exporter Excel" onAction="#handleExporterExcel" styleClass="btn-secondary"/>
 
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label fx:id="lblCount" styleClass="count-badge"/>
             </HBox>
 
-            <!-- Table principale avec colonne SAISI PAR -->
+            <!-- Table principale -->
             <VBox VBox.vgrow="ALWAYS" styleClass="table-container">
                 <TableView fx:id="tableViewSuiviTraitements" styleClass="custom-table" VBox.vgrow="ALWAYS">
                     <columns>
@@ -129,6 +125,28 @@
                     </columns>
                 </TableView>
             </VBox>
+
+            <!-- Pagination -->
+            <HBox styleClass="pagination-bar" spacing="15" alignment="CENTER"
+                  style="-fx-padding: 15 24; -fx-background-color: white; -fx-border-color: #e5e7eb; -fx-border-width: 1 0 0 0;">
+
+                <Label text="Lignes par page :" style="-fx-font-size: 12px; -fx-text-fill: #6b7280;"/>
+                <ComboBox fx:id="cmbItemsPerPage" prefWidth="80" styleClass="filter-combo"/>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <HBox spacing="10" alignment="CENTER">
+                    <Button fx:id="btnFirstPage" text="⏮" styleClass="pagination-button" onAction="#handleFirstPage"/>
+                    <Button fx:id="btnPrevPage" text="◀" styleClass="pagination-button" onAction="#handlePrevPage"/>
+                    <Label fx:id="lblPageInfo" text="Page 1 / 1" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #4f46e5; -fx-min-width: 80; -fx-alignment: CENTER;"/>
+                    <Button fx:id="btnNextPage" text="▶" styleClass="pagination-button" onAction="#handleNextPage"/>
+                    <Button fx:id="btnLastPage" text="⏭" styleClass="pagination-button" onAction="#handleLastPage"/>
+                </HBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <Label fx:id="lblTotalPagesInfo" style="-fx-font-size: 11px; -fx-text-fill: #9ca3af;"/>
+            </HBox>
 
             <!-- Barre de statut -->
             <HBox styleClass="status-bar">

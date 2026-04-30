@@ -6,12 +6,16 @@ import java.util.ResourceBundle;
 
 import org.example.entities.Etudiant;
 import org.example.entities.Traitement;
+import org.example.entities.User;
 import org.example.services.EtudiantTraitementService;
+import org.example.services.OrdonnancePDFService;
 import org.example.utils.SessionManager;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.stage.FileChooser;
 
 public class TraitementAffichageController implements Initializable {
 
@@ -32,6 +36,7 @@ public class TraitementAffichageController implements Initializable {
 
     private EtudiantTraitementService etudiantTraitementService;
     private Traitement traitementAffiche;
+    private Etudiant etudiantAffiche;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -118,15 +123,87 @@ public class TraitementAffichageController implements Initializable {
                         break;
                     }
                 }
+                this.etudiantAffiche = etudiantTrouve;
                 lblEtudiant.setText(etudiantTrouve != null ? etudiantTrouve.getNom() + " " + etudiantTrouve.getPrenom() : "Étudiant non trouvé");
             } else {
+                this.etudiantAffiche = null;
                 lblEtudiant.setText("Non spécifié");
             }
         } catch (Exception e) {
+            this.etudiantAffiche = null;
             lblEtudiant.setText("Erreur de chargement");
         }
     }
 
     @FXML private void handleFermer() { fermerFenetre(); }
+
+    @FXML
+    private void handleExporterPDF() {
+        if (traitementAffiche == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Aucun traitement");
+            alert.setHeaderText(null);
+            alert.setContentText("Aucun traitement à exporter");
+            alert.showAndWait();
+            return;
+        }
+
+        try {
+            // Récupérer l'utilisateur connecté (psychologue)
+            SessionManager session = SessionManager.getInstance();
+            if (!session.estConnecte()) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Erreur d'authentification");
+                alert.setHeaderText(null);
+                alert.setContentText("Vous devez être connecté en tant que psychologue pour exporter une ordonnance");
+                alert.showAndWait();
+                return;
+            }
+
+            User utilisateur = session.getCurrentUser();
+
+            // Créer le service PDF et générer l'ordonnance avec les informations du patient
+            OrdonnancePDFService pdfService = new OrdonnancePDFService();
+            byte[] pdfBytes = pdfService.genererOrdonnancePDF(traitementAffiche, utilisateur, etudiantAffiche);
+
+            // Choix du fichier de sauvegarde
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Enregistrer l'ordonnance PDF");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Fichier PDF", "*.pdf")
+            );
+
+            String nomFichier = pdfService.genererNomFichier(traitementAffiche);
+            fileChooser.setInitialFileName(nomFichier);
+
+            java.io.File file = fileChooser.showSaveDialog(lblTitre.getScene().getWindow());
+
+            if (file != null) {
+                // Sauvegarder le PDF
+                try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file)) {
+                    fos.write(pdfBytes);
+                }
+
+                // Mettre à jour le statut
+                lblStatus.setText("✓ Ordonnance exportée: " + file.getName());
+
+                // Afficher un message de confirmation
+                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                successAlert.setTitle("Export réussi");
+                successAlert.setHeaderText(null);
+                successAlert.setContentText("L'ordonnance a été exportée avec succès :\n" + file.getName());
+                successAlert.showAndWait();
+            }
+
+        } catch (Exception e) {
+            Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+            errorAlert.setTitle("Erreur d'export");
+            errorAlert.setHeaderText(null);
+            errorAlert.setContentText("Une erreur est survenue lors de l'export de l'ordonnance :\n" + e.getMessage());
+            errorAlert.showAndWait();
+            e.printStackTrace();
+        }
+    }
+
     private void fermerFenetre() { ((javafx.stage.Stage) lblTitre.getScene().getWindow()).close(); }
 }

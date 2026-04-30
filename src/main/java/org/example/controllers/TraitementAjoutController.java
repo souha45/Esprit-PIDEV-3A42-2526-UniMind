@@ -12,6 +12,8 @@ import org.example.enums.CategorieTraitement;
 import org.example.enums.PrioriteTraitement;
 import org.example.enums.StatutTraitement;
 import org.example.services.EtudiantTraitementService;
+import org.example.services.TraitementEmailService;
+import org.example.services.TraitementIAService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
 
@@ -20,6 +22,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -54,8 +57,18 @@ public class TraitementAjoutController implements Initializable {
     @FXML private Label lblErreurPriorite, lblErreurDateDebut, lblErreurDateFin, lblErreurDosage;
     @FXML private Label lblErreurEtudiant, lblErreurObjectif, lblErreurDescription;
 
+    // Champs IA
+    @FXML private TextArea txtSymptomesIA;
+    @FXML private TextArea txtDescriptionIA;
+    @FXML private Spinner<Integer> spinnerAgeIA;
+    @FXML private ComboBox<String> cmbNiveauEtudesIA;
+    @FXML private Button btnGenererIA;
+    @FXML private Button btnAnalyserIA;
+    @FXML private Label lblStatusIA;
+
     private TraitementService traitementService;
     private EtudiantTraitementService etudiantTraitementService;
+    private TraitementIAService iaService;
     private ObservableList<Etudiant> etudiantsList;
 
     @Override
@@ -98,11 +111,15 @@ public class TraitementAjoutController implements Initializable {
         try {
             traitementService = new TraitementService();
             etudiantTraitementService = new EtudiantTraitementService();
+            iaService = new TraitementIAService();
 
             List<Etudiant> etudiants = etudiantTraitementService.afficher();
             etudiantsList = FXCollections.observableArrayList(etudiants);
             cmbEtudiant.setItems(etudiantsList);
             configurerComboBoxEtudiant();
+
+            // Configuration des champs IA
+            configurerChampsIA();
 
             // Ajout des listeners pour validation en temps réel
             ajouterListenersValidation();
@@ -325,6 +342,27 @@ public class TraitementAjoutController implements Initializable {
         traitement.setDescription(txtDescription.getText());
 
         traitementService.ajouter(traitement);
+
+        // Envoyer une notification email à l'étudiant
+        try {
+            TraitementEmailService emailService = new TraitementEmailService();
+
+            // Récupérer le psychologue connecté
+            org.example.services.PsychologueService psychologueService = new org.example.services.PsychologueService();
+            org.example.entities.User psychologue = psychologueService.getPsychologueById(session.getUtilisateurConnecteId());
+
+            if (psychologue != null) {
+                var resultat = emailService.envoyerNotificationNouveauTraitementEtudiant(traitement, psychologue);
+                if (resultat.isSuccess()) {
+                    System.out.println("✓ Notification envoyée à l'étudiant pour le nouveau traitement");
+                } else {
+                    System.err.println("✗ Erreur envoi notification étudiant: " + resultat.getErrorMessage());
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'envoi de l'email de notification: " + e.getMessage());
+            // Ne pas bloquer l'ajout du traitement si l'email échoue
+        }
     }
 
     @FXML private void handleAnnuler() { fermerFenetre(); }
@@ -370,5 +408,206 @@ public class TraitementAjoutController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    // =============================================
+    // MÉTHODES IA - GÉNÉRATION INTELLIGENTE
+    // =============================================
+
+    /**
+     * Configure les champs spécifiques à l'IA
+     */
+    private void configurerChampsIA() {
+        // Configuration du spinner pour l'âge
+        SpinnerValueFactory<Integer> ageValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(15, 50, 20);
+        spinnerAgeIA.setValueFactory(ageValueFactory);
+        spinnerAgeIA.setEditable(true);
+
+        // Configuration du ComboBox pour le niveau d'études
+        cmbNiveauEtudesIA.setItems(FXCollections.observableArrayList(
+                "Secondaire",
+                "Baccalauréat",
+                "Licence",
+                "Master",
+                "Doctorat",
+                "Formation professionnelle",
+                "Autre"
+        ));
+        cmbNiveauEtudesIA.setValue("Licence");
+
+        // Configuration des styles pour le statut IA
+        lblStatusIA.getStyleClass().add("ia-status");
+    }
+
+    /**
+     * Gère la génération de traitement par l'IA
+     */
+    @FXML
+    private void handleGenererIA() {
+        String symptomes = txtSymptomesIA.getText();
+        String description = txtDescriptionIA.getText();
+        Integer age = spinnerAgeIA.getValue();
+        String niveauEtudes = cmbNiveauEtudesIA.getValue();
+
+        // Validation des entrées IA
+        if (symptomes == null || symptomes.trim().isEmpty()) {
+            lblStatusIA.setText("❌ Veuillez décrire les symptômes");
+            lblStatusIA.getStyleClass().add("error");
+            return;
+        }
+
+        if (description == null || description.trim().isEmpty()) {
+            lblStatusIA.setText("❌ Veuillez donner une description détaillée");
+            lblStatusIA.getStyleClass().add("error");
+            return;
+        }
+
+        try {
+            lblStatusIA.setText("🤖 Génération en cours...");
+            lblStatusIA.getStyleClass().add("loading");
+
+            // Génération du traitement par l'IA avec validation
+            Traitement traitementGenere = iaService.genererTraitementPersonnalise(
+                    symptomes, description, age, niveauEtudes);
+
+            // Validation du traitement généré
+            if (!iaService.validerTraitement(traitementGenere)) {
+                lblStatusIA.setText("❌ Erreur lors de la génération du traitement");
+                lblStatusIA.getStyleClass().add("error");
+                return;
+            }
+
+            // Remplissage automatique des champs du formulaire
+            remplirFormulaireAvecTraitement(traitementGenere);
+
+            lblStatusIA.setText("✅ Traitement généré avec succès !");
+            lblStatusIA.getStyleClass().removeAll("error", "loading");
+
+            afficherSucces("Génération IA réussie",
+                    "Le traitement a été généré intelligemment. Vous pouvez maintenant le modifier si nécessaire.");
+
+        } catch (IllegalArgumentException e) {
+            // Erreur de validation des symptômes
+            lblStatusIA.setText("❌ " + e.getMessage());
+            lblStatusIA.getStyleClass().removeAll("loading");
+            lblStatusIA.getStyleClass().add("error");
+
+        } catch (Exception e) {
+            // Autres erreurs techniques
+            lblStatusIA.setText("❌ Erreur technique");
+            lblStatusIA.getStyleClass().removeAll("loading");
+            lblStatusIA.getStyleClass().add("error");
+            System.err.println("Erreur lors de la génération IA: " + e.getMessage());
+            afficherErreur("Erreur technique",
+                    "Une erreur est survenue lors de la génération du traitement. Veuillez réessayer.");
+        }
+    }
+
+    @FXML
+    private void handleAnalyserIA() {
+        String description = txtDescriptionIA.getText();
+
+        if (description == null || description.trim().isEmpty()) {
+            lblStatusIA.setText("❌ Veuillez entrer une description à analyser");
+            lblStatusIA.getStyleClass().add("error");
+            return;
+        }
+
+        try {
+            lblStatusIA.setText("🔍 Analyse en cours...");
+            lblStatusIA.getStyleClass().add("loading");
+
+            // Analyse de la description
+            var suggestions = iaService.analyserDescription(description);
+
+            // Affichage des suggestions
+            StringBuilder message = new StringBuilder("Suggestions d'amélioration:\n\n");
+            for (int i = 0; i < suggestions.size(); i++) {
+                message.append((i + 1)).append(". ").append(suggestions.get(i)).append("\n");
+            }
+
+            lblStatusIA.setText("✅ Analyse terminée");
+            lblStatusIA.getStyleClass().removeAll("error", "loading");
+
+            afficherSucces("Analyse IA", message.toString());
+
+        } catch (Exception e) {
+            lblStatusIA.setText("❌ Erreur: " + e.getMessage());
+            lblStatusIA.getStyleClass().add("error");
+            System.err.println("Erreur lors de l'analyse IA: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Remplit le formulaire avec les données du traitement généré par l'IA
+     */
+    private void remplirFormulaireAvecTraitement(Traitement traitement) {
+        // Titre
+        txtTitre.setText(traitement.getTitre());
+
+        // Type
+        if (traitement.getType() != null) {
+            cmbType.setValue(traitement.getType());
+        }
+
+        // Catégorie
+        if (traitement.getCategorie() != null) {
+            cmbCategorie.setValue(traitement.getCategorie());
+        }
+
+        // Priorité
+        if (traitement.getPriorite() != null) {
+            switch (traitement.getPriorite()) {
+                case BASSE:
+                    rbPrioriteBasse.setSelected(true);
+                    break;
+                case MOYENNE:
+                    rbPrioriteMoyenne.setSelected(true);
+                    break;
+                case HAUTE:
+                    rbPrioriteHaute.setSelected(true);
+                    break;
+            }
+        }
+
+        // Date de fin (calculée à partir de la durée)
+        if (traitement.getDureeJours() > 0) {
+            LocalDate dateFin = LocalDate.now().plusDays(traitement.getDureeJours());
+            dpDateFin.setValue(dateFin);
+        }
+
+        // Dosage
+        if (traitement.getDosage() != null && !traitement.getDosage().isEmpty()) {
+            String[] dosageParts = traitement.getDosage().split(" ", 2);
+            if (dosageParts.length >= 1) {
+                try {
+                    int dosageValue = Integer.parseInt(dosageParts[0]);
+                    spinnerDosage.getValueFactory().setValue(dosageValue);
+                } catch (NumberFormatException e) {
+                    // Garder la valeur par défaut
+                }
+            }
+            if (dosageParts.length >= 2) {
+                cmbUniteDosage.setValue(dosageParts[1]);
+            }
+        }
+
+        // Objectif thérapeutique
+        if (traitement.getObjectifTherapeutique() != null) {
+            txtObjectifTherapeutique.setText(traitement.getObjectifTherapeutique());
+        }
+
+        // Description
+        if (traitement.getDescription() != null) {
+            txtDescription.setText(traitement.getDescription());
+        }
+
+        // Validation automatique des champs remplis
+        validerTitre();
+        validerType();
+        validerCategorie();
+        validerPriorite();
+        validerObjectif();
+        validerDescription();
     }
 }

@@ -8,7 +8,7 @@
             fx:controller="org.example.controllers.TraitementController"
             stylesheets="@/css/traitements-suivis.css">
 
-    <!-- Sidebar gauche (intégrée au projet) -->
+    <!-- Sidebar gauche -->
     <left>
         <fx:include fx:id="sidebarPsy" source="/SidebarPsy.fxml"/>
     </left>
@@ -28,7 +28,7 @@
                 </HBox>
             </VBox>
 
-            <!-- ===== SECTION STATISTIQUES ===== -->
+            <!--  SECTION STATISTIQUES  -->
             <HBox spacing="14" style="-fx-background-color: white; -fx-padding: 20 24; -fx-border-color: #e0e7ff; -fx-border-width: 0 0 1 0;">
 
                 <!-- Carte Total -->
@@ -108,32 +108,63 @@
             <!-- Barre d'actions -->
             <HBox styleClass="action-bar" spacing="15" alignment="CENTER_LEFT">
                 <Button fx:id="btnAjouter" text="+ Nouveau Traitement" onAction="#handleAjouter" styleClass="btn-primary"/>
-                <Button text="⟳ Rafraîchir" onAction="#handleRafraichir" styleClass="btn-secondary"/>
-                <Button text="📋 Suivi des Traitements" onAction="#ouvrirSuiviTraitementView" styleClass="btn-info"/>
-                <Button text="📎 Exporter Excel" onAction="#handleExporterExcel" styleClass="btn-secondary"/>
+                <Button text="Rafraîchir" onAction="#handleRafraichir" styleClass="btn-secondary"/>
+                <Button text="Suivi des Traitements" onAction="#ouvrirSuiviTraitementView" styleClass="btn-info"/>
+                <Button text="Exporter Excel" onAction="#handleExporterExcel" styleClass="btn-secondary"/>
+                <Button fx:id="btnStatistiques" text="📊 Statistiques" onAction="#handleStatistiques" styleClass="btn-primary"
+                        style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-padding: 8 16; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 4.0, 0.0, 0.0, 2.0);"/>
 
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label fx:id="lblCount" styleClass="count-badge"/>
             </HBox>
 
-            <!-- Table principale -->
-            <VBox VBox.vgrow="ALWAYS" styleClass="table-container">
-                <TableView fx:id="tableViewTraitements" styleClass="custom-table" VBox.vgrow="ALWAYS">
-                    <columns>
-                        <TableColumn text="ÉTUDIANT" />
-                        <TableColumn text="TITRE" />
-                        <TableColumn text="TYPE" />
-                        <TableColumn text="CATÉGORIE" />
-                        <TableColumn text="DURÉE" />
-                        <TableColumn text="STATUT" />
-                        <TableColumn text="PRIORITÉ" />
-                        <TableColumn text="DATE DÉBUT" />
-                        <TableColumn text="OBJECTIF" />
-                        <TableColumn text="SUIVIS" />
-                        <TableColumn fx:id="colActions" text="ACTIONS" />
-                    </columns>
-                </TableView>
-            </VBox>
+            <!-- Table principale avec pagination -->
+            <ScrollPane styleClass="table-scroll" fitToWidth="true" VBox.vgrow="ALWAYS">
+                <content>
+                    <VBox spacing="0">
+                        <!-- TableView -->
+                        <VBox styleClass="table-container">
+                            <TableView fx:id="tableViewTraitements" styleClass="custom-table">
+                                <columns>
+                                    <TableColumn text="ÉTUDIANT" />
+                                    <TableColumn text="TITRE" />
+                                    <TableColumn text="TYPE" />
+                                    <TableColumn text="CATÉGORIE" />
+                                    <TableColumn text="DURÉE" />
+                                    <TableColumn text="STATUT" />
+                                    <TableColumn text="PRIORITÉ" />
+                                    <TableColumn text="DATE DÉBUT" />
+                                    <TableColumn text="OBJECTIF" />
+                                    <TableColumn text="SUIVIS" />
+                                    <TableColumn fx:id="colActions" text="ACTIONS" />
+                                </columns>
+                            </TableView>
+                        </VBox>
+
+                        <!-- Pagination -->
+                        <HBox styleClass="pagination-bar" spacing="15" alignment="CENTER"
+                              style="-fx-padding: 15 24; -fx-background-color: white; -fx-border-color: #e5e7eb; -fx-border-width: 1 0 0 0;">
+
+                            <Label text="Lignes par page :" style="-fx-font-size: 12px; -fx-text-fill: #6b7280;"/>
+                            <ComboBox fx:id="cmbItemsPerPage" prefWidth="80" styleClass="filter-combo"/>
+
+                            <Region HBox.hgrow="ALWAYS"/>
+
+                            <HBox spacing="10" alignment="CENTER">
+                                <Button fx:id="btnFirstPage" text="⏮" styleClass="pagination-button" onAction="#handleFirstPage"/>
+                                <Button fx:id="btnPrevPage" text="◀" styleClass="pagination-button" onAction="#handlePrevPage"/>
+                                <Label fx:id="lblPageInfo" text="Page 1 / 1" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #4f46e5; -fx-min-width: 80; -fx-alignment: CENTER;"/>
+                                <Button fx:id="btnNextPage" text="▶" styleClass="pagination-button" onAction="#handleNextPage"/>
+                                <Button fx:id="btnLastPage" text="⏭" styleClass="pagination-button" onAction="#handleLastPage"/>
+                            </HBox>
+
+                            <Region HBox.hgrow="ALWAYS"/>
+
+                            <Label fx:id="lblTotalPagesInfo" style="-fx-font-size: 11px; -fx-text-fill: #9ca3af;"/>
+                        </HBox>
+                    </VBox>
+                </content>
+            </ScrollPane>
 
             <!-- Barre de statut -->
             <HBox styleClass="status-bar">

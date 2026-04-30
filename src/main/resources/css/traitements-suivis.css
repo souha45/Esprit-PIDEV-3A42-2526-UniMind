@@ -47,7 +47,7 @@
     -fx-padding: 16 20;
     -fx-min-width: 120;
     -fx-alignment: CENTER;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 8, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 8.0, 0.0, 0.0, 2.0);
 }
 
 .stat-card-total {
@@ -331,41 +331,123 @@
 
 .table-action-button {
     -fx-background-color: transparent;
-    -fx-font-size: 12px;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
     -fx-padding: 5 10;
     -fx-cursor: hand;
     -fx-background-radius: 4;
     -fx-border-radius: 4;
+    -fx-border-width: 1;
 }
 
 .table-action-button-view {
     -fx-text-fill: #4f46e5;
     -fx-border-color: #c4b5fd;
-    -fx-border-width: 1;
 }
 
 .table-action-button-view:hover {
     -fx-background-color: #ede9fe;
+    -fx-text-fill: #4338ca;
 }
 
 .table-action-button-edit {
     -fx-text-fill: #d97706;
     -fx-border-color: #fcd34d;
-    -fx-border-width: 1;
 }
 
 .table-action-button-edit:hover {
     -fx-background-color: #fef3c7;
+    -fx-text-fill: #92400e;
 }
 
 .table-action-button-delete {
     -fx-text-fill: #dc2626;
     -fx-border-color: #fecaca;
-    -fx-border-width: 1;
 }
 
 .table-action-button-delete:hover {
-    -fx-background-color: #fee2e2;
+    -fx-background-color: #ef4444;
+    -fx-border-color: #ef4444;
+}
+
+.table-action-button.analyse-close-btn:hover {
+    -fx-background-color: #ef4444;
+    -fx-border-color: #ef4444;
+}
+
+/* =============================================
+   TRADUCTION DE TRAITEMENT
+   ============================================= */
+
+.main-container {
+    -fx-background-color: #f8fafc;
+    -fx-padding: 0;
+}
+
+.header {
+    -fx-background-color: white;
+    -fx-padding: 16 24;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 0 0 1 0;
+    -fx-alignment: center_left;
+}
+
+.content-container {
+    -fx-padding: 24;
+    -fx-background-color: #f8fafc;
+}
+
+.info-section, .language-section, .translation-section {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 4, 0, 0, 1);
+}
+
+.section-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1e293b;
+    -fx-padding: 0 0 12 0;
+}
+
+.field-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #64748b;
+}
+
+.field-value {
+    -fx-font-size: 14px;
+    -fx-text-fill: #1e293b;
+    -fx-wrap-text: true;
+}
+
+.auto-detect-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #6366f1;
+    -fx-padding: 8 12;
+    -fx-background-color: #eef2ff;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: #c7d2fe;
+    -fx-border-width: 1;
+}
+
+.status-bar {
+    -fx-background-color: white;
+    -fx-padding: 12 24;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1 0 0 0;
+}
+
+.status-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
 }
 
 /* =============================================
@@ -431,7 +513,7 @@
 .form-field:focused {
     -fx-border-color: #6366f1;
     -fx-background-color: white;
-    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 4, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 4.0, 0.0, 0.0, 0.0);
 }
 
 .form-field-full {
@@ -447,7 +529,7 @@
 .form-field-full:focused {
     -fx-border-color: #6366f1;
     -fx-background-color: white;
-    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 4, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 4.0, 0.0, 0.0, 0.0);
 }
 
 .form-field-readonly {
@@ -472,7 +554,7 @@
 
 .form-combo:focused {
     -fx-border-color: #6366f1;
-    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 4, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 4.0, 0.0, 0.0, 0.0);
 }
 
 .form-combo .list-cell {
@@ -523,7 +605,7 @@
 
 .form-datepicker:focused {
     -fx-border-color: #6366f1;
-    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 4, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 4.0, 0.0, 0.0, 0.0);
 }
 
 .date-picker-popup {
@@ -595,7 +677,7 @@
 
 .form-spinner:focused {
     -fx-border-color: #6366f1;
-    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 4, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 4.0, 0.0, 0.0, 0.0);
 }
 
 .form-textarea {
@@ -611,7 +693,7 @@
 .form-textarea:focused {
     -fx-border-color: #6366f1;
     -fx-background-color: white;
-    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 4, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.2), 4.0, 0.0, 0.0, 0.0);
 }
 
 .form-textarea .content {
@@ -686,7 +768,7 @@
 
 .form-field-error:focused, .form-combo-error:focused, .form-datepicker-error:focused, .form-textarea-error:focused {
     -fx-border-color: #dc2626 !important;
-    -fx-effect: dropshadow(gaussian, rgba(220,38,38,0.2), 4, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(220,38,38,0.2), 4.0, 0.0, 0.0, 0.0);
 }
 
 /* =============================================
@@ -716,7 +798,7 @@
 }
 
 .cards-container VBox:hover {
-    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.15), 8, 0, 0, 4);
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.15), 8.0, 0.0, 0.0, 4.0);
     -fx-cursor: hand;
 }
 
@@ -730,12 +812,12 @@
     -fx-border-color: #e5e7eb;
     -fx-border-radius: 12;
     -fx-padding: 16;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 4, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 4.0, 0.0, 0.0, 2.0);
 }
 
 .detail-card:hover {
     -fx-border-color: #c4b5fd;
-    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.1), 8, 0, 0, 4);
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.1), 8.0, 0.0, 0.0, 4.0);
 }
 
 .detail-section-title {
@@ -921,7 +1003,757 @@
     -fx-background-color: #f5f3ff;
     -fx-background-radius: 8;
     -fx-padding: 10 15;
-    -fx-border-color: #c4b5fd;
-    -fx-border-radius: 8;
     -fx-border-style: dashed;
+}
+
+/* =============================================
+   SECTION IA - GÉNÉRATION INTELLIGENTE
+   ============================================= */
+
+.ia-section {
+    -fx-background-color: linear-gradient(to right, #f0f9ff, #e0f2fe);
+}
+
+.header {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #e0e7ff;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 15 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 4.0, 0.0, 0.0, 2.0);
+}
+
+.content-container {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #e0e7ff;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 4.0, 0.0, 0.0, 2.0);
+}
+
+.info-section {
+    -fx-background-color: #f9fafb;
+    -fx-background-radius: 8;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 15;
+}
+
+.language-section {
+    -fx-background-color: #f0f9ff;
+    -fx-background-radius: 8;
+    -fx-border-color: #bae6fd;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 15;
+}
+
+.translation-section {
+    -fx-background-color: #f0fdf4;
+    -fx-background-radius: 8;
+    -fx-border-color: #bbf7d0;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 15;
+    -fx-min-height: 200;
+}
+
+.preview-section {
+    -fx-background-color: #fefce8;
+    -fx-background-radius: 8;
+    -fx-border-color: #fde047;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 15;
+    -fx-min-height: 200;
+}
+
+.section-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e1b4b;
+    -fx-padding: 0 0 10 0;
+}
+
+.field-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6366f1;
+}
+
+.field-value {
+    -fx-font-size: 13px;
+    -fx-text-fill: #374151;
+    -fx-background-color: white;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 6;
+}
+
+.translation-arrow {
+    -fx-font-size: 14px;
+    -fx-text-fill: #6366f1;
+    -fx-font-weight: bold;
+}
+
+.html-preview {
+    -fx-background-color: white;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-font-family: "Courier New", monospace;
+    -fx-font-size: 12px;
+    -fx-padding: 10;
+}
+
+.html-preview .content {
+    -fx-background-color: transparent;
+}
+
+.html-preview .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.html-preview .scroll-bar:vertical .thumb {
+    -fx-background-color: #c4b5fd;
+    -fx-background-radius: 10;
+}
+
+.html-preview .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #a5b4fc;
+}
+
+.translation-result {
+    -fx-background-color: white;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 15;
+    -fx-spacing: 10;
+}
+
+.translation-result:hover {
+    -fx-border-color: #c4b5fd;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.1), 4.0, 0.0, 0.0, 2.0);
+}
+
+.translation-field-name {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #4f46e5;
+}
+
+.translation-original {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6b7280;
+    -fx-font-style: italic;
+    -fx-background-color: #f9fafb;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 6;
+}
+
+.translation-translated {
+    -fx-font-size: 13px;
+    -fx-text-fill: #059669;
+    -fx-font-weight: 500;
+    -fx-background-color: #ecfdf5;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12;
+    -fx-border-color: #10b981;
+    -fx-border-radius: 6;
+}
+
+.translation-error {
+    -fx-font-size: 12px;
+    -fx-text-fill: #dc2626;
+    -fx-font-style: italic;
+    -fx-background-color: #fef2f2;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12;
+    -fx-border-color: #fca5a5;
+    -fx-border-radius: 6;
+}
+
+.table-action-button-translate {
+    -fx-text-fill: #059669;
+    -fx-border-color: #10b981;
+    -fx-border-width: 1;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.table-action-button-translate:hover {
+    -fx-background-color: #ecfdf5;
+    -fx-text-fill: #047857;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   STATISTIQUES — CARTES
+═══════════════════════════════════════════════════════════ */
+.stat-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-padding: 16 20;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.09), 8.0, 0.0, 0.0, 2.0);
+}
+
+.stat-label {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 10px;
+    -fx-text-fill: #a5b4fc;
+}
+
+.stat-value {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6366f1;
+}
+
+.stat-unit {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 11px;
+    -fx-text-fill: #9ca3af;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CONTENEURS DE GRAPHIQUES
+═══════════════════════════════════════════════════════════ */
+.chart-container {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-padding: 16;
+    -fx-border-color: #e0e7ff;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+}
+
+.chart-title {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #4f46e5;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BARCHARTS — FOND ET GRILLE
+═══════════════════════════════════════════════════════════ */
+.chart-plot-background {
+    -fx-background-color: #f8f9ff;
+}
+
+.chart-vertical-grid-lines {
+    -fx-stroke: transparent;
+}
+
+.chart-horizontal-grid-lines {
+    -fx-stroke: #e0e7ff;
+    -fx-stroke-dash-array: 4 4;
+    -fx-stroke-width: 1;
+}
+
+.chart-vertical-zero-line {
+    -fx-stroke: #e5e7eb;
+}
+
+.chart-horizontal-zero-line {
+    -fx-stroke: #e5e7eb;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AXES — TITRES (xlabel / ylabel)
+   -fx-fill car c'est un Text SVG, pas un Label JavaFX
+═══════════════════════════════════════════════════════════ */
+.axis-label {
+    -fx-fill: #4f46e5;
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AXES — TICK LABELS (noms des catégories / valeurs Y)
+   CRITIQUE : utiliser -fx-fill, pas -fx-text-fill
+═══════════════════════════════════════════════════════════ */
+.category-axis {
+    -fx-tick-label-fill: #1f2937;
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 12px;
+}
+
+.number-axis {
+    -fx-tick-label-fill: #1f2937;
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 11px;
+}
+
+/* Tick marks (les petits tirets sur les axes) */
+.axis > .axis-tick-mark {
+    -fx-stroke: #9ca3af;
+    -fx-stroke-width: 1;
+}
+
+.axis > .axis-minor-tick-mark {
+    -fx-stroke: transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BARCHARTS — COULEUR DES BARRES
+═══════════════════════════════════════════════════════════ */
+.default-color0.chart-bar {
+    -fx-bar-fill: #6366f1;
+    -fx-background-radius: 4 4 0 0;
+    -fx-background-insets: 0;
+}
+
+.default-color0.chart-bar:hover {
+    -fx-bar-fill: #4f46e5;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PIECHARTS
+═══════════════════════════════════════════════════════════ */
+.chart-pie-label {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 11px;
+    -fx-fill: #374151;
+}
+
+.chart-pie-label-line {
+    -fx-stroke: #9ca3af;
+}
+
+.chart-legend {
+    -fx-background-color: transparent;
+    -fx-padding: 8 0 0 0;
+}
+
+.chart-legend-item {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 11px;
+    -fx-text-fill: #6b7280;
+}
+
+.default-color0.chart-pie { -fx-pie-color: #6366f1; }
+.default-color1.chart-pie { -fx-pie-color: #10b981; }
+.default-color2.chart-pie { -fx-pie-color: #f59e0b; }
+
+/* ═══════════════════════════════════════════════════════════
+   TABLEAU TOP ÉTUDIANTS
+═══════════════════════════════════════════════════════════ */
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-table-cell-border-color: #f3f4f6;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #f5f3ff;
+    -fx-background-radius: 8 8 0 0;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 10 12;
+}
+
+.table-view .column-header .label {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #4f46e5;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.table-view .table-cell {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 13px;
+    -fx-text-fill: #374151;
+    -fx-padding: 10 12;
+    -fx-border-color: transparent transparent #f3f4f6 transparent;
+}
+
+.table-row-cell:odd  { -fx-background-color: #fafafa; }
+.table-row-cell:even { -fx-background-color: white; }
+
+.table-row-cell:selected { -fx-background-color: #ede9fe; }
+.table-row-cell:selected .table-cell { -fx-text-fill: #4f46e5; }
+
+.table-view .placeholder .label {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 13px;
+    -fx-text-fill: #9ca3af;
+    -fx-font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════
+   FIX ABSOLU — AXES BARCHART TOUJOURS VISIBLES
+   Ces règles ont la priorité maximale
+═══════════════════════════════════════════════ */
+
+/* Tick labels axe X (noms catégories / mois) */
+.bar-chart > .chart-content > .plot-content > .category-axis > .axis-tick-mark,
+.category-axis .tick-mark { -fx-stroke: #6b7280; }
+
+/* Le vrai fix : cibler Text directement */
+.category-axis Text,
+.category-axis .text {
+    -fx-fill: #1f2937 !important;
+    -fx-font-size: 12px !important;
+}
+
+.number-axis Text,
+.number-axis .text {
+    -fx-fill: #1f2937 !important;
+    -fx-font-size: 11px !important;
+}
+
+/* Titre des axes (xlabel / ylabel) */
+.axis-label Text,
+.axis > .axis-label {
+    -fx-fill: #4f46e5 !important;
+    -fx-font-weight: bold !important;
+    -fx-font-size: 12px !important;
+}
+
+/* Annuler tout héritage de couleur blanche sur les axes */
+.bar-chart .axis {
+    -fx-tick-label-fill: #1f2937 !important;
+}
+
+/* =============================================
+   SECTION IA - GÉNÉRATION INTELLIGENTE
+   ============================================= */
+
+.ia-section {
+    -fx-background-color: linear-gradient(to right, #f0f9ff, #e0f2fe);
+    -fx-background-radius: 12;
+    -fx-border-color: #0ea5e9;
+    -fx-border-radius: 12;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(14, 165, 233, 0.15), 8.0, 0.0, 0.0, 4.0);
+}
+
+.ia-icon {
+    -fx-font-size: 24px;
+    -fx-text-fill: #0ea5e9;
+}
+
+.ia-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0c4a6e;
+}
+
+.ia-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #64748b;
+    -fx-font-style: italic;
+}
+
+.form-textarea-small {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 13px;
+    -fx-background-color: white;
+    -fx-background-radius: 6;
+    -fx-border-color: #cbd5e1;
+    -fx-border-radius: 6;
+    -fx-border-width: 1;
+    -fx-padding: 8 12;
+    -fx-wrap-text: true;
+}
+
+.form-textarea-small:focused {
+    -fx-border-color: #0ea5e9;
+    -fx-background-color: #f8fafc;
+}
+
+.btn-ia-primary {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-padding: 8 16;
+    -fx-background-radius: 6;
+    -fx-background-color: linear-gradient(to right, #0ea5e9, #0284c7);
+    -fx-text-fill: white;
+    -fx-border-color: transparent;
+    -fx-border-radius: 6;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(14, 165, 233, 0.3), 4.0, 0.0, 0.0, 2.0);
+}
+
+.btn-ia-primary:hover {
+    -fx-background-color: linear-gradient(to right, #0284c7, #0369a1);
+    -fx-effect: dropshadow(gaussian, rgba(14, 165, 233, 0.4), 6.0, 0.0, 0.0, 2.0);
+}
+
+.btn-ia-primary:pressed {
+    -fx-background-color: linear-gradient(to right, #0369a1, #075985);
+    -fx-effect: dropshadow(gaussian, rgba(14, 165, 233, 0.2), 2.0, 0.0, 0.0, 1.0);
+}
+
+.btn-ia-secondary {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-padding: 8 16;
+    -fx-background-radius: 6;
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #475569;
+    -fx-border-color: #cbd5e1;
+    -fx-border-radius: 6;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+
+.btn-ia-secondary:hover {
+    -fx-background-color: #e2e8f0;
+    -fx-border-color: #94a3b8;
+}
+
+.btn-ia-secondary:pressed {
+    -fx-background-color: #cbd5e1;
+    -fx-border-color: #64748b;
+}
+
+.ia-status {
+    -fx-font-size: 12px;
+    -fx-text-fill: #059669;
+    -fx-font-weight: 500;
+}
+
+.ia-status.error {
+    -fx-text-fill: #dc2626 !important;
+}
+
+.ia-status.loading {
+    -fx-text-fill: #0ea5e9 !important;
+    -fx-font-style: italic;
+}
+
+.btn-ia-small {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-padding: 6 12;
+    -fx-background-radius: 4;
+    -fx-background-color: linear-gradient(to right, #8b5cf6, #7c3aed);
+    -fx-text-fill: white;
+    -fx-border-color: transparent;
+    -fx-border-radius: 4;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(139, 92, 246, 0.3), 3.0, 0.0, 0.0, 1.0);
+}
+
+.btn-ia-small:hover {
+    -fx-background-color: linear-gradient(to right, #7c3aed, #6d28d9);
+    -fx-effect: dropshadow(gaussian, rgba(139, 92, 246, 0.4), 4.0, 0.0, 0.0, 1.0);
+}
+
+.btn-ia-small:pressed {
+    -fx-background-color: linear-gradient(to right, #6d28d9, #5b21b6);
+    -fx-effect: dropshadow(gaussian, rgba(139, 92, 246, 0.2), 2.0, 0.0, 0.0, 1.0);
+}
+
+/* ==================== STYLES POUR LA VUE D'ANALYSE IA ==================== */
+
+.analyse-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.08), 8, 0, 0, 2);
+    -fx-padding: 20;
+}
+
+.analyse-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(139, 92, 246, 0.15), 12, 0, 0, 4);
+}
+
+.analyse-header {
+    -fx-background-color: linear-gradient(to right, #8b5cf6, #7c3aed, #6d28d9);
+    -fx-background-radius: 12 12 0 0;
+    -fx-padding: 16 20;
+}
+
+.analyse-title {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.analyse-subtitle {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 12px;
+    -fx-text-fill: #e0e7ff;
+}
+
+.analyse-stat-box {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 8;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-padding: 12 16;
+    -fx-alignment: center;
+}
+
+.analyse-stat-value {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8b5cf6;
+}
+
+.analyse-stat-label {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 11px;
+    -fx-text-fill: #64748b;
+}
+
+.analyse-tendance-positive {
+    -fx-text-fill: #10b981;
+    -fx-font-weight: bold;
+}
+
+.analyse-tendance-negative {
+    -fx-text-fill: #ef4444;
+    -fx-font-weight: bold;
+}
+
+.analyse-tendance-stable {
+    -fx-text-fill: #64748b;
+    -fx-font-weight: bold;
+}
+
+.analyse-score-positive {
+    -fx-text-fill: #10b981;
+    -fx-font-weight: bold;
+}
+
+.analyse-score-negative {
+    -fx-text-fill: #ef4444;
+    -fx-font-weight: bold;
+}
+
+.analyse-score-neutral {
+    -fx-text-fill: #64748b;
+    -fx-font-weight: bold;
+}
+
+.analyse-risque-eleve {
+    -fx-text-fill: #ef4444;
+    -fx-font-weight: 600;
+}
+
+.analyse-risque-modere {
+    -fx-text-fill: #f59e0b;
+    -fx-font-weight: 600;
+}
+
+.analyse-risque-faible {
+    -fx-text-fill: #3b82f6;
+    -fx-font-weight: 600;
+}
+
+.analyse-risque-minimal {
+    -fx-text-fill: #10b981;
+    -fx-font-weight: 600;
+}
+
+.analyse-section-title {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #0ea5e9;
+}
+
+.analyse-item {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 11px;
+    -fx-text-fill: #64748b;
+    -fx-wrap-text: true;
+    -fx-padding: 2 0;
+}
+
+.analyse-close-btn {
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-background-color: transparent;
+    -fx-border-color: white;
+    -fx-border-radius: 20;
+    -fx-border-width: 2;
+    -fx-pref-width: 36;
+    -fx-pref-height: 36;
+    -fx-cursor: hand;
+}
+
+.analyse-close-btn:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+}
+
+.analyse-close-btn:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+}
+
+.analyse-footer {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 16 32;
+}
+
+/* =============================================
+   PAGINATION STYLES
+   ============================================= */
+
+.pagination-bar {
+    -fx-background-color: white;
+    -fx-padding: 12 24;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1 0 0 0;
+}
+
+.pagination-button {
+    -fx-background-color: #f3f4f6;
+    -fx-text-fill: #374151;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 12;
+    -fx-background-radius: 6;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-min-width: 36;
+}
+
+.pagination-button:hover {
+    -fx-background-color: #e5e7eb;
+}
+
+.pagination-button:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}
+
+.pagination-button:disabled:hover {
+    -fx-background-color: #f3f4f6;
 }

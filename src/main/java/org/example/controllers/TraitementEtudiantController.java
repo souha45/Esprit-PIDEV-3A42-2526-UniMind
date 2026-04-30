@@ -1,5 +1,6 @@
 package org.example.controllers;
 
+import java.io.File;
 import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -14,7 +15,10 @@ import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
 import org.example.entities.User;
 import org.example.enums.SaisiPar;
+import org.example.services.OrdonnancePDFService;
 import org.example.services.SuiviTraitementService;
+import org.example.services.TraitementEmailService;
+import org.example.services.TraitementIAService;
 import org.example.services.TraitementService;
 import org.example.utils.SessionManager;
 
@@ -39,6 +43,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -57,6 +62,8 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
     @FXML
     private Button btnReinitialiserFiltres;
     @FXML
+    private Button btnAnalyseIA;
+    @FXML
     private VBox cardsContainer;
     @FXML
     private Label lblStatus;
@@ -72,15 +79,30 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
     @FXML private Label statSuspendu;
     @FXML private Label statPrioriteHaute;
 
-    // Sidebar (injecté comme VBox, pas comme contrôleur)
+    // Sidebar
     @FXML private SidebarEtudiantController sidebarEtudiantController;
     @FXML private StackPane toastContainer;
 
+    // ==================== PAGINATION ====================
+    @FXML private ComboBox<String> cmbItemsPerPage;
+    @FXML private Button btnFirstPage;
+    @FXML private Button btnPrevPage;
+    @FXML private Button btnNextPage;
+    @FXML private Button btnLastPage;
+    @FXML private Label lblPageInfo;
+    @FXML private Label lblTotalPagesInfo;
+    @FXML private HBox paginationBar;
+
+    private List<VBox> toutesLesCartes;
+    private List<Traitement> tousLesTraitementsFiltres;
+    private int currentPage = 0;
+    private int itemsPerPage = 10;
+
     private TraitementService traitementService;
     private SuiviTraitementService suiviTraitementService;
+    private TraitementIAService traitementIAService;
     private List<Traitement> tousLesTraitements;
     private List<SuiviTraitement> tousLesSuivis;
-    private List<VBox> toutesLesCartes;
     private boolean isInitialized = false;
     private User currentUser;
 
@@ -93,18 +115,18 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         try {
             traitementService = new TraitementService();
             suiviTraitementService = new SuiviTraitementService();
+            traitementIAService = new TraitementIAService();
             toutesLesCartes = new ArrayList<>();
+            tousLesTraitementsFiltres = new ArrayList<>();
 
             initialiserFiltres();
             initialiserTri();
+            initialiserPagination();
 
             isInitialized = true;
             if (lblStatus != null) {
                 lblStatus.setText("✓ Bienvenue sur votre espace personnel");
             }
-
-            // Charger les données via SessionManager
-            //chargerDonneesAvecSession();
 
         } catch (Exception e) {
             if (lblStatus != null) {
@@ -117,12 +139,129 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
     @Override
     public void setUtilisateur(User user) {
         this.currentUser = user;
+
+        if (traitementService == null) {
+            traitementService = new TraitementService();
+        }
+        if (suiviTraitementService == null) {
+            suiviTraitementService = new SuiviTraitementService();
+        }
+        if (traitementIAService == null) {
+            traitementIAService = new TraitementIAService();
+        }
+        if (toutesLesCartes == null) {
+            toutesLesCartes = new ArrayList<>();
+        }
+        if (tousLesTraitementsFiltres == null) {
+            tousLesTraitementsFiltres = new ArrayList<>();
+        }
+
         if (sidebarEtudiantController != null) {
             sidebarEtudiantController.setUtilisateur(user);
             sidebarEtudiantController.setActiveButtonByFxml("/traitement-etudiant-view.fxml");
         }
-        chargerDonnees();  // charge les données avec currentUser
+        chargerDonnees();
     }
+
+    // ==================== PAGINATION ====================
+
+    private void initialiserPagination() {
+        cmbItemsPerPage.getItems().addAll("5", "10", "20", "50");
+        cmbItemsPerPage.setValue("5");
+        itemsPerPage = 5;
+
+        cmbItemsPerPage.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                itemsPerPage = Integer.parseInt(newVal);
+                currentPage = 0;
+                appliquerPagination();
+            }
+        });
+    }
+
+    private void appliquerPagination() {
+        if (toutesLesCartes == null || toutesLesCartes.isEmpty()) {
+            cardsContainer.getChildren().clear();
+            if (lblAucunResultat != null) {
+                lblAucunResultat.setVisible(true);
+                lblAucunResultat.setManaged(true);
+                lblAucunResultat.setText("Aucun traitement trouvé.");
+            }
+            lblPageInfo.setText("Page 0 / 0");
+            lblTotalPagesInfo.setText("0 traitement(s)");
+            btnFirstPage.setDisable(true);
+            btnPrevPage.setDisable(true);
+            btnNextPage.setDisable(true);
+            btnLastPage.setDisable(true);
+            return;
+        }
+
+        int totalPages = (int) Math.ceil((double) toutesLesCartes.size() / itemsPerPage);
+
+        if (totalPages == 0) totalPages = 1;
+
+        if (currentPage >= totalPages) {
+            currentPage = Math.max(0, totalPages - 1);
+        }
+
+        int fromIndex = currentPage * itemsPerPage;
+        int toIndex = Math.min(fromIndex + itemsPerPage, toutesLesCartes.size());
+
+        List<VBox> pageCartes = toutesLesCartes.subList(fromIndex, toIndex);
+
+        cardsContainer.getChildren().clear();
+        for (VBox carte : pageCartes) {
+            cardsContainer.getChildren().add(carte);
+        }
+
+        lblPageInfo.setText("Page " + (currentPage + 1) + " / " + totalPages);
+        lblTotalPagesInfo.setText(toutesLesCartes.size() + " traitement(s)");
+
+        btnFirstPage.setDisable(currentPage == 0);
+        btnPrevPage.setDisable(currentPage == 0);
+        btnNextPage.setDisable(currentPage >= totalPages - 1);
+        btnLastPage.setDisable(currentPage >= totalPages - 1);
+
+        // Masquer le message "aucun résultat" si on a des cartes
+        if (lblAucunResultat != null && !toutesLesCartes.isEmpty()) {
+            lblAucunResultat.setVisible(false);
+            lblAucunResultat.setManaged(false);
+        }
+    }
+
+    @FXML
+    private void handleFirstPage() {
+        currentPage = 0;
+        appliquerPagination();
+    }
+
+    @FXML
+    private void handlePrevPage() {
+        if (currentPage > 0) {
+            currentPage--;
+            appliquerPagination();
+        }
+    }
+
+    @FXML
+    private void handleNextPage() {
+        int totalPages = (int) Math.ceil((double) toutesLesCartes.size() / itemsPerPage);
+        if (currentPage < totalPages - 1) {
+            currentPage++;
+            appliquerPagination();
+        }
+    }
+
+    @FXML
+    private void handleLastPage() {
+        int totalPages = (int) Math.ceil((double) toutesLesCartes.size() / itemsPerPage);
+        if (totalPages > 0) {
+            currentPage = totalPages - 1;
+            appliquerPagination();
+        }
+    }
+
+    // ==================== CHARGEMENT DES DONNÉES ====================
 
     private void chargerDonnees() {
         if (currentUser == null) {
@@ -153,7 +292,6 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             e.printStackTrace();
         }
     }
-
 
     private void initialiserFiltres() {
         ObservableList<String> statuts = FXCollections.observableArrayList(
@@ -193,44 +331,6 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
                 "✅ Statut (En cours → Terminé)"
         ));
         cmbTri.setValue("📅 Date (plus récent)");
-    }
-
-    private void chargerDonneesAvecSession() {
-        SessionManager session = SessionManager.getInstance();
-
-        if (!session.estConnecte()) {
-            if (lblStatus != null) lblStatus.setText("✗ Erreur: utilisateur non connecté");
-            return;
-        }
-
-        if (!session.estEtudiant()) {
-            if (lblStatus != null) lblStatus.setText("✗ Accès réservé aux étudiants");
-            return;
-        }
-
-        try {
-            if (lblStatus != null) lblStatus.setText("Chargement en cours...");
-            int etudiantId = session.getUtilisateurConnecteId();
-
-            List<Traitement> tousTraitements = traitementService.afficher();
-            tousLesTraitements = tousTraitements.stream()
-                    .filter(t -> t.getEtudiantId() == etudiantId)
-                    .collect(Collectors.toList());
-
-            tousLesSuivis = suiviTraitementService.afficher();
-
-            mettreAJourStatistiques(tousLesTraitements);
-            appliquerFiltres();
-
-            if (lblStatus != null) {
-                lblStatus.setText(tousLesTraitements.size() + " traitement(s) trouvé(s)");
-            }
-
-        } catch (SQLException e) {
-            if (lblStatus != null) lblStatus.setText("✗ Erreur: " + e.getMessage());
-            afficherToast("✗ Erreur de chargement: " + e.getMessage(), false);
-            e.printStackTrace();
-        }
     }
 
     private void mettreAJourStatistiques(List<Traitement> traitements) {
@@ -344,46 +444,30 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
 
     private void appliquerFiltres() {
         if (tousLesTraitements == null) {
-            return; // pas encore chargé
-        }
-        if (tousLesTraitements.isEmpty()) {
-            cardsContainer.getChildren().clear();
-            if (lblAucunResultat != null) {
-                lblAucunResultat.setVisible(true);
-                lblAucunResultat.setManaged(true);
-                lblAucunResultat.setText("Aucun traitement trouvé.");
-            }
-            if (lblStatus != null) lblStatus.setText("0 traitement trouvé");
             return;
         }
 
         List<Traitement> traitementsFiltres = new ArrayList<>(tousLesTraitements);
         traitementsFiltres = appliquerRechercheEtFiltres(traitementsFiltres);
         traitementsFiltres = appliquerTri(traitementsFiltres);
-        creerCartesTraitements(traitementsFiltres);
+        tousLesTraitementsFiltres = traitementsFiltres;
+
+        // Créer toutes les cartes
+        creerToutesLesCartes(traitementsFiltres);
+
+        // Appliquer la pagination
+        currentPage = 0;
+        appliquerPagination();
 
         long total = traitementsFiltres.size();
         if (lblStatus != null) lblStatus.setText(total + " traitement(s) trouvé(s)");
     }
 
-    private void creerCartesTraitements(List<Traitement> traitements) {
-        if (cardsContainer == null) return;
-        cardsContainer.getChildren().clear();
+    private void creerToutesLesCartes(List<Traitement> traitements) {
         toutesLesCartes.clear();
 
         if (traitements.isEmpty()) {
-            if (lblAucunResultat != null) {
-                lblAucunResultat.setVisible(true);
-                lblAucunResultat.setManaged(true);
-                lblAucunResultat.setText("Aucun traitement ne correspond aux filtres.");
-            }
             return;
-        }
-
-        // Il y a des traitements → cacher le message
-        if (lblAucunResultat != null) {
-            lblAucunResultat.setVisible(false);
-            lblAucunResultat.setManaged(false);
         }
 
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -397,22 +481,22 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
                     .collect(Collectors.toList());
             VBox carte = creerCarteTraitement(traitement, suivis, dateFormatter);
             toutesLesCartes.add(carte);
-            cardsContainer.getChildren().add(carte);
         }
     }
 
-    @FXML
-    private void handleAppliquerFiltres() {
-        appliquerFiltres();
-    }
-
-    @FXML
-    private void handleReinitialiserFiltres() {
-        txtRecherche.clear();
-        cmbFiltreStatut.setValue("Tous les statuts");
-        cmbFiltrePriorite.setValue("Toutes les priorités");
-        cmbTri.setValue("📅 Date (plus récent)");
-        appliquerFiltres();
+    private String getNomPsychologue(Integer psychologueId) {
+        try {
+            if (psychologueId == null || psychologueId == 0) return "Non assigné";
+            org.example.services.PsychologueService psychologueService = new org.example.services.PsychologueService();
+            User psychologue = psychologueService.getPsychologueById(psychologueId);
+            if (psychologue != null) {
+                return "Dr " + psychologue.getPrenom() + " " + psychologue.getNom();
+            }
+            return "Non assigné";
+        } catch (Exception e) {
+            System.err.println("Erreur récupération nom psychologue: " + e.getMessage());
+            return "Non assigné";
+        }
     }
 
     private VBox creerCarteTraitement(Traitement traitement, List<SuiviTraitement> suivis, DateTimeFormatter dateFormatter) {
@@ -442,7 +526,6 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             case "BASSE": prioriteBadge.getStyleClass().add("priority-BASSE"); break;
         }
 
-        // Indicateur de suivis
         HBox suiviIndicator = new HBox();
         suiviIndicator.setAlignment(Pos.CENTER);
         suiviIndicator.setSpacing(5);
@@ -499,12 +582,15 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         Label dosageLabel = new Label("💊 Dosage: " + (traitement.getDosage() != null && !traitement.getDosage().isEmpty() ? traitement.getDosage() : "Non spécifié"));
         dosageLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #4b5563;");
 
+        Label psychologueLabel = new Label("👨‍⚕️ Psychologue: " + getNomPsychologue(traitement.getPsychologueId()));
+        psychologueLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #1e40af; -fx-font-weight: bold;");
+
         Text objectifText = new Text(traitement.getObjectifTherapeutique() != null && !traitement.getObjectifTherapeutique().isEmpty()
                 ? traitement.getObjectifTherapeutique() : "Aucun objectif spécifié");
         objectifText.setStyle("-fx-font-size: 12px; -fx-text-fill: #374151;");
         objectifText.setWrappingWidth(500);
 
-        details.getChildren().addAll(typeCategorie, dates, dosageLabel, objectifText);
+        details.getChildren().addAll(typeCategorie, dates, dosageLabel, psychologueLabel, objectifText);
 
         // Section suivis
         VBox suivisSection = new VBox();
@@ -536,13 +622,27 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             suivisSection.getChildren().add(aucunSuiviMsg);
         }
 
-        // Bouton ajouter suivi
+        // Boutons d'actions
+        HBox actionsBox = new HBox();
+        actionsBox.setSpacing(10);
+        actionsBox.setAlignment(Pos.CENTER);
+
         Button btnAjouterSuivi = new Button("+ Ajouter un suivi");
         btnAjouterSuivi.getStyleClass().add("btn-primary-small");
         btnAjouterSuivi.setMaxWidth(Double.MAX_VALUE);
         btnAjouterSuivi.setOnAction(e -> ouvrirAjoutSuivi(traitement));
 
-        carte.getChildren().addAll(header, details, suivisSection, btnAjouterSuivi);
+        Button btnExporterPDF = new Button("Exporter Ordonnance");
+        btnExporterPDF.getStyleClass().add("btn-primary-small");
+        btnExporterPDF.setOnAction(e -> handleExporterPDF(traitement));
+
+        Button btnTraduire = new Button("Traduire");
+        btnTraduire.getStyleClass().add("btn-secondary-small");
+        btnTraduire.setOnAction(e -> ouvrirTraduction(traitement));
+
+        actionsBox.getChildren().addAll(btnAjouterSuivi, btnExporterPDF, btnTraduire);
+
+        carte.getChildren().addAll(header, details, suivisSection, actionsBox);
 
         return carte;
     }
@@ -566,21 +666,19 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         notesLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #374151;");
         notesLabel.setWrapText(true);
 
-        // Boutons Modifier/Supprimer
         HBox actionsBox = new HBox();
         actionsBox.setSpacing(10);
         actionsBox.setAlignment(Pos.CENTER_RIGHT);
 
-        Button btnModifier = new Button("Modifier");
-        Button btnSupprimer = new Button("Supprimer");
-
-        btnModifier.getStyleClass().addAll("table-action-button", "table-action-button-edit");
-        btnSupprimer.getStyleClass().addAll("table-action-button", "table-action-button-delete");
-
-        btnModifier.setPrefWidth(70);
-        btnSupprimer.setPrefWidth(70);
-
         if (suivi.getSaisiPar() == SaisiPar.ETUDIANT) {
+            Button btnModifier = new Button("✏");
+            Button btnSupprimer = new Button("🗑");
+
+            btnModifier.getStyleClass().addAll("table-action-button", "table-action-button-edit");
+            btnSupprimer.getStyleClass().addAll("table-action-button", "table-action-button-delete");
+            btnModifier.setPrefWidth(70);
+            btnSupprimer.setPrefWidth(70);
+
             btnModifier.setOnAction(e -> ouvrirModificationSuivi(suivi));
             btnSupprimer.setOnAction(e -> supprimerSuivi(suivi));
             actionsBox.getChildren().addAll(btnModifier, btnSupprimer);
@@ -589,6 +687,20 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
         suiviCard.getChildren().addAll(dateLabel, saisieLabel, notesLabel, actionsBox);
 
         return suiviCard;
+    }
+
+    @FXML
+    private void handleAppliquerFiltres() {
+        appliquerFiltres();
+    }
+
+    @FXML
+    private void handleReinitialiserFiltres() {
+        txtRecherche.clear();
+        cmbFiltreStatut.setValue("Tous les statuts");
+        cmbFiltrePriorite.setValue("Toutes les priorités");
+        cmbTri.setValue("📅 Date (plus récent)");
+        appliquerFiltres();
     }
 
     private void ouvrirModificationSuivi(SuiviTraitement suivi) {
@@ -643,7 +755,10 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             stage.setScene(new Scene(root, 800, 650));
             stage.show();
 
-            stage.setOnHiding(event -> chargerDonnees());
+            stage.setOnHiding(event -> {
+                chargerDonnees();
+                verifierEtNotifierNouveauSuivi(traitement);
+            });
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -651,8 +766,6 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
             afficherToast("✗ Impossible d'ouvrir la page d'ajout", false);
         }
     }
-
-    // ==================== TOAST NOTIFICATION ====================
 
     private void afficherToast(String message, boolean success) {
         if (toastContainer == null) return;
@@ -688,5 +801,171 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
 
         fadeIn.play();
         fadeOut.play();
+    }
+
+    private void handleExporterPDF(Traitement traitement) {
+        try {
+            if (currentUser == null) {
+                afficherToast("⚠️ Utilisateur non connecté", false);
+                return;
+            }
+
+            User psychologue = null;
+            try {
+                org.example.services.PsychologueService psychologueService = new org.example.services.PsychologueService();
+                psychologue = psychologueService.getPsychologueById(traitement.getPsychologueId());
+            } catch (Exception e) {
+                System.err.println("Impossible de récupérer le psychologue: " + e.getMessage());
+            }
+
+            OrdonnancePDFService pdfService = new OrdonnancePDFService();
+            byte[] pdfBytes = pdfService.genererOrdonnancePDF(traitement, psychologue, currentUser);
+
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Enregistrer l'ordonnance PDF");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Fichier PDF", "*.pdf")
+            );
+
+            String nomFichier = pdfService.genererNomFichier(traitement);
+            fileChooser.setInitialFileName(nomFichier);
+
+            File file = fileChooser.showSaveDialog(cardsContainer.getScene().getWindow());
+
+            if (file != null) {
+                try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file)) {
+                    fos.write(pdfBytes);
+                }
+
+                afficherToast("✓ Ordonnance exportée: " + file.getName(), true);
+                if (lblStatus != null) {
+                    lblStatus.setText("✓ Ordonnance exportée: " + file.getName());
+                }
+            }
+
+        } catch (Exception e) {
+        }
+    }
+
+    private void ouvrirTraduction(Traitement traitement) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/traitement-traduction-view.fxml"));
+            Parent root = loader.load();
+
+            TraitementTraductionController controller = loader.getController();
+            controller.setTraitement(traitement);
+            controller.setUtilisateur(currentUser);
+
+            Stage stage = new Stage();
+            stage.setTitle("Traduction de Traitement");
+            stage.setScene(new Scene(root));
+            stage.setMaximized(true);
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (lblStatus != null) lblStatus.setText("Erreur: Impossible d'ouvrir la page de traduction");
+            afficherToast("Impossible d'ouvrir la page de traduction", false);
+        }
+    }
+
+    private void verifierEtNotifierNouveauSuivi(Traitement traitement) {
+        try {
+            List<SuiviTraitement> suivisActuels = suiviTraitementService.afficher().stream()
+                    .filter(s -> s.getTraitementId() == traitement.getTraitementId())
+                    .sorted((s1, s2) -> {
+                        if (s1.getDateSuivi() == null || s2.getDateSuivi() == null) return 0;
+                        return s2.getDateSuivi().compareTo(s1.getDateSuivi());
+                    })
+                    .collect(Collectors.toList());
+
+            if (!suivisActuels.isEmpty()) {
+                SuiviTraitement dernierSuivi = suivisActuels.get(0);
+
+                boolean estRecent = dernierSuivi.getDateSuivi() != null &&
+                        dernierSuivi.getDateSuivi().toLocalDate().equals(LocalDate.now());
+                boolean estEtudiant = dernierSuivi.getSaisiPar() == SaisiPar.ETUDIANT;
+
+                if (estRecent && estEtudiant) {
+                    TraitementEmailService emailService = new TraitementEmailService();
+                    var resultat = emailService.envoyerNotificationNouveauSuiviPsychologue(
+                            dernierSuivi, traitement, currentUser);
+
+                    if (resultat.isSuccess()) {
+                        System.out.println("Notification envoyée au psychologue pour le nouveau suivi");
+                    } else {
+                        System.err.println("Erreur envoi notification: " + resultat.getErrorMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la vérification du nouveau suivi: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void handleAnalyseIA() {
+        if (currentUser == null) {
+            afficherToast("Utilisateur non connecté", false);
+            return;
+        }
+
+        if (traitementIAService == null) {
+            traitementIAService = new TraitementIAService();
+        }
+
+        try {
+            if (lblStatus != null) {
+                lblStatus.setText("Analyse IA en cours...");
+            }
+
+            List<Traitement> traitementsEtudiant = tousLesTraitements.stream()
+                    .filter(t -> t.getEtudiantId() == currentUser.getUserId())
+                    .collect(Collectors.toList());
+
+            if (traitementsEtudiant.isEmpty()) {
+                afficherToast("Aucun traitement trouvé pour l'analyse", true);
+                if (lblStatus != null) {
+                    lblStatus.setText("Aucun traitement trouvé");
+                }
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/analyse-ia-view.fxml"));
+            Parent root = loader.load();
+
+            AnalyseIAController controller = loader.getController();
+            controller.setDonneesAnalyse(traitementsEtudiant, tousLesSuivis);
+
+            Stage stage = new Stage();
+            stage.setTitle("Analyse IA Intelligente");
+            stage.setScene(new Scene(root, 900, 700));
+            stage.setResizable(true);
+            stage.show();
+
+            if (lblStatus != null) {
+                lblStatus.setText("Analyse IA ouverte - " + traitementsEtudiant.size() + " traitement(s)");
+            }
+
+            afficherToast("Analyse IA lancée avec succès", true);
+
+        } catch (Exception e) {
+            String errorMsg = "Erreur lors de l'analyse IA: " + e.getMessage();
+            System.err.println(errorMsg);
+            e.printStackTrace();
+
+            if (lblStatus != null) {
+                lblStatus.setText("Erreur analyse IA");
+            }
+
+            afficherToast("Erreur lors de l'analyse IA", false);
+
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erreur d'analyse IA");
+            alert.setHeaderText("Impossible d'effectuer l'analyse");
+            alert.setContentText(errorMsg);
+            alert.showAndWait();
+        }
     }
 }
