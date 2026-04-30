@@ -12,14 +12,14 @@ import org.json.JSONObject;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class EmailService {
+public class EmailGhofraneService {
 
     private String apiKey;
     private String secretKey;
     private String fromEmail;
     private String fromName;
 
-    public EmailService() {
+    public EmailGhofraneService() {
         chargerConfiguration();
     }
 

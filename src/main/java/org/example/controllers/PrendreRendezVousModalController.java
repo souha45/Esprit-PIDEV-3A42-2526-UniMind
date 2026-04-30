@@ -17,7 +17,6 @@ import org.example.entities.Psychologue;
 import org.example.entities.Etudiant;
 import org.example.entities.RendezVous;
 import org.example.services.*;
-import javafx.stage.Stage;
 import javafx.fxml.FXMLLoader;
 
 import java.io.IOException;
@@ -58,7 +57,7 @@ public class PrendreRendezVousModalController {
     private RendezVousService       rendezVousService;
     private PsychologueService      psychologueService;
     private EtudiantService         etudiantService;
-    private EmailService            emailService;
+    private EmailGhofraneService emailService;
     private ReconnaissanceVocaleService reconnaissanceService;
 
     // ── Cache pour les noms des psychologues ────────────────────────
@@ -94,7 +93,7 @@ public class PrendreRendezVousModalController {
         rendezVousService    = new RendezVousService();
         psychologueService   = new PsychologueService();
         etudiantService      = new EtudiantService();
-        emailService         = new EmailService();
+        emailService         = new EmailGhofraneService();
         reconnaissanceService = new ReconnaissanceVocaleService();
         disponibilitesList   = FXCollections.observableArrayList();
         filteredList         = new FilteredList<>(disponibilitesList, p -> true);

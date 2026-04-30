@@ -1,8 +1,6 @@
 package org.example.controllers;
 
 import javafx.animation.FadeTransition;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,7 +15,7 @@ import org.example.entities.RendezVousDetail;
 import org.example.entities.User;
 import org.example.entities.Etudiant;
 import org.example.services.RendezVousService;
-import org.example.services.EmailService;
+import org.example.services.EmailGhofraneService;
 import org.example.services.EtudiantService;
 import org.example.utils.MyDataBase_Unimind;
 
@@ -60,7 +58,7 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
 
     // ========== SERVICES ==========
     private RendezVousService rendezVousService;
-    private EmailService emailService;
+    private EmailGhofraneService emailService;
     private EtudiantService etudiantService;  // ← CHANGÉ : Utiliser EtudiantService
     private ObservableList<RendezVousDetail> rendezVousList;
     private ObservableList<RendezVousDetail> filteredList;
@@ -73,7 +71,7 @@ public class RendezVousPsyController implements SidebarPsychologueController.Psy
     public void initialize() {
         lblDate.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         rendezVousService = new RendezVousService();
-        emailService = new EmailService();
+        emailService = new EmailGhofraneService();
         etudiantService = new EtudiantService();  // ← CHANGÉ
         rendezVousList    = FXCollections.observableArrayList();
         filteredList      = FXCollections.observableArrayList();

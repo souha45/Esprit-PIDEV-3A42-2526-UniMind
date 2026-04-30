@@ -1,7 +1,5 @@
 package org.example.services;
 
-import org.example.entities.RendezVousDetail;
-import org.example.entities.User;
 import org.example.entities.Etudiant;
 import org.example.utils.MyDataBase_Unimind;
 
@@ -15,13 +13,13 @@ import java.util.concurrent.TimeUnit;
 
 public class RappelRendezVousService {
 
-    private EmailService emailService;
+    private EmailGhofraneService emailService;
     private EtudiantService etudiantService;  // ← Utiliser EtudiantService
     private Connection con;
     private ScheduledExecutorService scheduler;
 
     public RappelRendezVousService() {
-        emailService = new EmailService();
+        emailService = new EmailGhofraneService();
         etudiantService = new EtudiantService();  // ← CHANGÉ
         con = MyDataBase_Unimind.getInstance().getConnection();
         demarrerScheduler();
