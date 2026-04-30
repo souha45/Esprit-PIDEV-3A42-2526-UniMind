@@ -52,33 +52,6 @@
             <version>0.10.2</version>
         </dependency>
 
-        <!-- JUnit Jupiter -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.10.1</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- JavaFX -->
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-controls</artifactId>
-            <version>${javafx.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-fxml</artifactId>
-            <version>${javafx.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-media</artifactId>
-            <version>${javafx.version}</version>
-        </dependency>
-
         <!-- Spring Security Crypto -->
         <dependency>
             <groupId>org.springframework.security</groupId>
@@ -138,7 +111,7 @@
             <version>5.2.5</version>
         </dependency>
 
-        <!-- JavaMail API (alternative) -->
+        <!-- JavaMail API -->
         <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
@@ -202,7 +175,7 @@
         <!-- GRAPHIQUES                                   -->
         <!-- ============================================ -->
 
-        <!-- JFreeChart pour des graphiques plus avancés -->
+        <!-- JFreeChart -->
         <dependency>
             <groupId>org.jfree</groupId>
             <artifactId>jfreechart</artifactId>
@@ -233,17 +206,13 @@
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
             <version>1.2</version>
-        <!-- JavaMail -->
-        <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-            <version>1.6.2</version>
         </dependency>
 
     </dependencies>
 
     <build>
         <plugins>
+            <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -254,12 +223,14 @@
                 </configuration>
             </plugin>
 
+            <!-- Surefire pour JUnit 5 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.1.2</version>
             </plugin>
 
+            <!-- JavaFX Maven Plugin -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
@@ -268,13 +239,10 @@
                     <mainClass>org.example.main.MainApp</mainClass>
                     <options>
                         <option>-Dfile.encoding=UTF-8</option>
-
-                    <options>
                         <option>-DGROQ_API_KEY=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</option>
                     </options>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 
