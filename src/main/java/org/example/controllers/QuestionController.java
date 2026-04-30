@@ -4,9 +4,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -16,6 +18,7 @@ import org.example.entities.Questionnaire;
 import org.example.services.QuestionServices;
 import org.example.services.QuestionnaireServices;
 
+import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.List;
@@ -46,6 +49,14 @@ public class QuestionController implements Initializable {
     // ─── LIST QUESTIONS ───
     @FXML private ListView<Question> listQuestion;
 
+    // ─── PAGINATION ───
+    @FXML private Button btnPrev;
+    @FXML private Button btnNext;
+    @FXML private Label  lblPage;
+    private static final int PAGE_SIZE = 5;
+    private int currentPage = 0;
+    private final ObservableList<Question> pageData = FXCollections.observableArrayList();
+
     private final QuestionServices      service  = new QuestionServices();
     private final QuestionnaireServices qService = new QuestionnaireServices();
     private final ObservableList<Question> data  = FXCollections.observableArrayList();
@@ -65,9 +76,12 @@ public class QuestionController implements Initializable {
         lvScores.setItems(scoresList);
 
         filtered = new FilteredList<>(data, p -> true);
-        listQuestion.setItems(filtered);
+
+        // La ListView affiche pageData (page courante)
+        listQuestion.setItems(pageData);
         listQuestion.setCellFactory(lv -> new QuestionCard());
 
+        // ─── Recherche dynamique ───
         if (tfSearch != null) {
             tfSearch.textProperty().addListener((obs, old, val) -> {
                 String lower = val == null ? "" : val.toLowerCase().trim();
@@ -77,6 +91,8 @@ public class QuestionController implements Initializable {
                                 || (q.getTypeQuestion() != null && q.getTypeQuestion().toLowerCase().contains(lower))
                                 || String.valueOf(q.getQuestionnaireId()).contains(lower)
                 );
+                currentPage = 0;
+                updatePage();
             });
         }
 
@@ -90,6 +106,46 @@ public class QuestionController implements Initializable {
     }
 
     // ══════════════════════════════════════════
+    //  PAGINATION
+    // ══════════════════════════════════════════
+
+    private void updatePage() {
+        int total      = filtered.size();
+        int totalPages = (int) Math.ceil((double) total / PAGE_SIZE);
+        if (totalPages == 0) totalPages = 1;
+
+        if (currentPage >= totalPages) currentPage = totalPages - 1;
+        if (currentPage < 0)           currentPage = 0;
+
+        int from = currentPage * PAGE_SIZE;
+        int to   = Math.min(from + PAGE_SIZE, total);
+
+        pageData.setAll(filtered.subList(from, to));
+
+        lblPage.setText("Page " + (currentPage + 1) + " / " + totalPages
+                + "  (" + total + " question" + (total > 1 ? "s" : "") + ")");
+        btnPrev.setDisable(currentPage == 0);
+        btnNext.setDisable(currentPage >= totalPages - 1);
+    }
+
+    @FXML
+    public void handlePrev() {
+        if (currentPage > 0) {
+            currentPage--;
+            updatePage();
+        }
+    }
+
+    @FXML
+    public void handleNext() {
+        int totalPages = (int) Math.ceil((double) filtered.size() / PAGE_SIZE);
+        if (currentPage < totalPages - 1) {
+            currentPage++;
+            updatePage();
+        }
+    }
+
+    // ══════════════════════════════════════════
     //  AJOUT / SUPPRESSION OPTION
     // ══════════════════════════════════════════
 
@@ -98,20 +154,10 @@ public class QuestionController implements Initializable {
         String opt   = tfOptionInput.getText().trim();
         String score = tfScoreInput.getText().trim();
 
-        if (opt.isEmpty()) {
-            errOptions.setText("⚠ Saisir une option");
-            return;
-        }
-        if (score.isEmpty()) {
-            errScores.setText("⚠ Saisir un score");
-            return;
-        }
-        try {
-            Double.parseDouble(score);
-        } catch (NumberFormatException e) {
-            errScores.setText("⚠ Score doit être un nombre");
-            return;
-        }
+        if (opt.isEmpty()) { errOptions.setText("⚠ Saisir une option"); return; }
+        if (score.isEmpty()) { errScores.setText("⚠ Saisir un score"); return; }
+        try { Double.parseDouble(score); }
+        catch (NumberFormatException e) { errScores.setText("⚠ Score doit être un nombre"); return; }
 
         optionsList.add(opt);
         scoresList.add(score);
@@ -138,19 +184,19 @@ public class QuestionController implements Initializable {
 
     private static class QuestionCard extends ListCell<Question> {
 
-        private final HBox     root      = new HBox(12);
-        private final StackPane avatar   = new StackPane();
-        private final Label    avLetter  = new Label();
-        private final VBox     info      = new VBox(5);
-        private final Label    texteLbl  = new Label();
-        private final HBox     botRow    = new HBox(6);
-        private final Label    typeBadge = new Label();
-        private final Label    qidLbl    = new Label();
-        private final Label    optLbl    = new Label();
-        private final Region   spacer    = new Region();
-        private final VBox     rightBox  = new VBox(4);
-        private final Label    nbOpts    = new Label();
-        private final Label    scoreLbl  = new Label();
+        private final HBox      root      = new HBox(12);
+        private final StackPane avatar    = new StackPane();
+        private final Label     avLetter  = new Label();
+        private final VBox      info      = new VBox(5);
+        private final Label     texteLbl  = new Label();
+        private final HBox      botRow    = new HBox(6);
+        private final Label     typeBadge = new Label();
+        private final Label     qidLbl    = new Label();
+        private final Label     optLbl    = new Label();
+        private final Region    spacer    = new Region();
+        private final VBox      rightBox  = new VBox(4);
+        private final Label     nbOpts    = new Label();
+        private final Label     scoreLbl  = new Label();
 
         QuestionCard() {
             Circle circle = new Circle(19);
@@ -199,11 +245,9 @@ public class QuestionController implements Initializable {
             super.updateItem(q, empty);
             if (empty || q == null) { setGraphic(null); return; }
 
-            // Texte — protection null
             String texte = q.getTexte();
             texteLbl.setText(texte != null && !texte.isBlank() ? texte : "(sans texte)");
 
-            // Type — protection null
             String type = q.getTypeQuestion() != null ? q.getTypeQuestion().toUpperCase().trim() : "?";
             String[] colors = typeColors(type);
 
@@ -219,7 +263,6 @@ public class QuestionController implements Initializable {
 
             qidLbl.setText("Questionnaire #" + q.getQuestionnaireId());
 
-            // Options — parser format ["Jamais","Rarement"]
             String opts = q.getOptionsQuest();
             if (opts != null && !opts.isBlank()) {
                 String raw = opts.trim().replaceAll("^\\[|\\]$", "");
@@ -231,7 +274,6 @@ public class QuestionController implements Initializable {
                 nbOpts.setText("–");
             }
 
-            // Scores
             String sc = q.getScoreOptions();
             scoreLbl.setText(sc != null && !sc.isBlank() ? sc : "");
 
@@ -257,7 +299,7 @@ public class QuestionController implements Initializable {
     }
 
     // ══════════════════════════════════════════
-    //  HANDLERS
+    //  HANDLERS CRUD
     // ══════════════════════════════════════════
 
     @FXML
@@ -317,6 +359,22 @@ public class QuestionController implements Initializable {
     }
 
     // ══════════════════════════════════════════
+    //  HANDLER GÉNÉRER IA  ← NOUVEAU
+    // ══════════════════════════════════════════
+
+    @FXML
+    public void handleGenererIA() {
+        try {
+            Node page = FXMLLoader.load(
+                    getClass().getResource("/fxml/GenerateurQuestionsIAView.fxml"));
+            org.example.controllers.admin.AdminDashboardController.loadContent(page);
+        } catch (IOException e) {
+            setStatus("❌ Erreur : " + e.getMessage(), false);
+            e.printStackTrace();
+        }
+    }
+
+    // ══════════════════════════════════════════
     //  VALIDATION
     // ══════════════════════════════════════════
 
@@ -328,14 +386,9 @@ public class QuestionController implements Initializable {
 
         if (taTexte.getText().trim().isEmpty())         { errTexte.setText("⚠ Obligatoire"); ok = false; }
         else if (taTexte.getText().trim().length() < 5) { errTexte.setText("⚠ Minimum 5 caractères"); ok = false; }
-
         if (cbQuestionnaire.getValue() == null)         { errQuestionnaire.setText("⚠ Sélectionnez un questionnaire"); ok = false; }
-
         if (cbTypeQuestion.getValue() == null)          { errTypeQuestion.setText("⚠ Obligatoire"); ok = false; }
-
-        if (optionsList.size() != scoresList.size()) {
-            errOptions.setText("⚠ Nombre d'options et scores différent"); ok = false;
-        }
+        if (optionsList.size() != scoresList.size())    { errOptions.setText("⚠ Nombre d'options et scores différent"); ok = false; }
 
         return ok;
     }
@@ -348,7 +401,6 @@ public class QuestionController implements Initializable {
         Question q = new Question();
         q.setTexte(taTexte.getText().trim());
 
-        // Format JSON comme Symphony : ["Jamais","Rarement","Parfois"]
         StringBuilder opts = new StringBuilder("[");
         for (int i = 0; i < optionsList.size(); i++) {
             opts.append("\"").append(optionsList.get(i)).append("\"");
@@ -356,7 +408,6 @@ public class QuestionController implements Initializable {
         }
         opts.append("]");
 
-        // Format JSON comme Symphony : [0,1,2,3,4]
         StringBuilder scores = new StringBuilder("[");
         for (int i = 0; i < scoresList.size(); i++) {
             scores.append(scoresList.get(i));
@@ -379,20 +430,16 @@ public class QuestionController implements Initializable {
         optionsList.clear();
         scoresList.clear();
 
-        // Parser le format JSON ["Jamais","Rarement","Parfois"]
         if (q.getOptionsQuest() != null && !q.getOptionsQuest().isBlank()) {
-            String raw = q.getOptionsQuest().trim();
-            raw = raw.replaceAll("^\\[|\\]$", "");
+            String raw = q.getOptionsQuest().trim().replaceAll("^\\[|\\]$", "");
             for (String opt : raw.split(",")) {
                 String clean = opt.trim().replaceAll("^\"|\"$", "");
                 if (!clean.isEmpty()) optionsList.add(clean);
             }
         }
 
-        // Parser le format JSON [0,1,2,3,4]
         if (q.getScoreOptions() != null && !q.getScoreOptions().isBlank()) {
-            String raw = q.getScoreOptions().trim();
-            raw = raw.replaceAll("^\\[|\\]$", "");
+            String raw = q.getScoreOptions().trim().replaceAll("^\\[|\\]$", "");
             for (String sc : raw.split(",")) {
                 String clean = sc.trim();
                 if (!clean.isEmpty()) scoresList.add(clean);
@@ -410,8 +457,11 @@ public class QuestionController implements Initializable {
     }
 
     private void loadData() {
-        try { data.setAll(service.afficher()); }
-        catch (SQLException e) { setStatus("❌ Erreur chargement : " + e.getMessage(), false); }
+        try {
+            data.setAll(service.afficher());
+            currentPage = 0;
+            updatePage();
+        } catch (SQLException e) { setStatus("❌ Erreur chargement : " + e.getMessage(), false); }
     }
 
     private void loadQuestionnaires() {

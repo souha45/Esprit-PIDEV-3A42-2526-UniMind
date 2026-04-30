@@ -15,9 +15,18 @@
 
     <HBox alignment="CENTER_LEFT" spacing="10">
         <Button text="⬅️ Retour" onAction="#handleRetour"
-                style="-fx-background-color: #ede9fe; -fx-text-fill: #7c3aed; -fx-font-weight: bold; -fx-padding: 7 14; -fx-background-radius: 7; -fx-cursor: hand;"/>
+                style="-fx-background-color: #3b1f6e; -fx-text-fill: #a78bfa; -fx-font-weight: bold; -fx-padding: 7 14; -fx-background-radius: 7; -fx-cursor: hand;"/>
         <Label fx:id="lblTitreQuestionnaire" text="Questions"
-               style="-fx-text-fill: #7c3aed; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+               style="-fx-text-fill: #7c3aed; -fx-font-size: 16px; -fx-font-weight: bold;"
+               HBox.hgrow="ALWAYS"/>
+
+        <!-- ✅ Boutons langue -->
+        <Button fx:id="btnFR" text="🇫🇷 FR" onAction="#handleLangFR"
+                style="-fx-background-color: #f5f3ff; -fx-text-fill: #7c3aed; -fx-font-size: 12px; -fx-padding: 6 12; -fx-background-radius: 20; -fx-cursor: hand;"/>
+        <Button fx:id="btnEN" text="🇬🇧 EN" onAction="#handleLangEN"
+                style="-fx-background-color: #f5f3ff; -fx-text-fill: #7c3aed; -fx-font-size: 12px; -fx-padding: 6 12; -fx-background-radius: 20; -fx-cursor: hand;"/>
+        <Button fx:id="btnAR" text="🇸🇦 AR" onAction="#handleLangAR"
+                style="-fx-background-color: #f5f3ff; -fx-text-fill: #7c3aed; -fx-font-size: 12px; -fx-padding: 6 12; -fx-background-radius: 20; -fx-cursor: hand;"/>
     </HBox>
 
     <Label text="Répondez à toutes les questions puis cliquez sur Soumettre"

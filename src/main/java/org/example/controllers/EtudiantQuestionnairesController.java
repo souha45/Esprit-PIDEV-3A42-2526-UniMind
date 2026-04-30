@@ -27,11 +27,31 @@ public class EtudiantQuestionnairesController implements Initializable {
     @FXML private ListView<Questionnaire> listQuestionnaire;
     @FXML private TextField tfSearch;
     @FXML private Label lblStatus;
+    @FXML private Button btnFR;
+    @FXML private Button btnEN;
+    @FXML private Button btnAR;
+
+    private StackPane contentArea;
+    private String langueActuelle = "FR";
+
+    private static final String STYLE_LANG_ACTIVE =
+            "-fx-background-color: #7c3aed; -fx-text-fill: white; " +
+                    "-fx-font-size: 12px; -fx-font-weight: bold; " +
+                    "-fx-padding: 6 14; -fx-background-radius: 20; -fx-cursor: hand;";
+
+    private static final String STYLE_LANG_IDLE =
+            "-fx-background-color: #f5f3ff; -fx-text-fill: #7c3aed; " +
+                    "-fx-font-size: 12px; -fx-padding: 6 14; " +
+                    "-fx-background-radius: 20; -fx-cursor: hand;";
 
     private final QuestionnaireServices service = new QuestionnaireServices();
     private final ReponseQuestionnaireServices reponseService = new ReponseQuestionnaireServices();
     private final ObservableList<Questionnaire> data = FXCollections.observableArrayList();
     private FilteredList<Questionnaire> filtered;
+
+    public void setContentArea(StackPane contentArea) {
+        this.contentArea = contentArea;
+    }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -39,34 +59,66 @@ public class EtudiantQuestionnairesController implements Initializable {
         listQuestionnaire.setItems(filtered);
         listQuestionnaire.setCellFactory(lv -> new QuestionnaireCard());
 
-        // Recherche dynamique
         if (tfSearch != null) {
             tfSearch.textProperty().addListener((obs, old, val) -> {
                 String lower = val == null ? "" : val.toLowerCase().trim();
                 filtered.setPredicate(q ->
                         lower.isEmpty()
-                                || q.getNom().toLowerCase().contains(lower)
-                                || q.getType().toString().toLowerCase().contains(lower)
+                                || q.getNomTraduit().toLowerCase().contains(lower)
+                                || (q.getType() != null && q.getType().toString().toLowerCase().contains(lower))
                                 || q.getCode().toLowerCase().contains(lower)
                 );
             });
         }
 
-        // Afficher le nombre de passages restants aujourd'hui
         afficherPassagesRestants();
-
         loadData();
+        setLangueActive(btnFR);
     }
 
     // ══════════════════════════════════════════
-    //  AFFICHER PASSAGES RESTANTS
+    //  LANGUE
+    // ══════════════════════════════════════════
+
+    @FXML
+    public void handleLangFR() {
+        langueActuelle = "FR";
+        setLangueActive(btnFR);
+        for (Questionnaire q : data) q.setNomTraduit(null);
+        listQuestionnaire.refresh();
+        setStatus("🇫🇷 Français", true);
+    }
+
+    @FXML
+    public void handleLangEN() {
+        langueActuelle = "EN";
+        setLangueActive(btnEN);
+        setStatus("⚠️ Service de traduction non disponible", false);
+    }
+
+    @FXML
+    public void handleLangAR() {
+        langueActuelle = "AR";
+        setLangueActive(btnAR);
+        setStatus("⚠️ Service de traduction non disponible", false);
+    }
+
+    private void setLangueActive(Button actif) {
+        if (btnFR != null) btnFR.setStyle(STYLE_LANG_IDLE);
+        if (btnEN != null) btnEN.setStyle(STYLE_LANG_IDLE);
+        if (btnAR != null) btnAR.setStyle(STYLE_LANG_IDLE);
+        if (actif != null) actif.setStyle(STYLE_LANG_ACTIVE);
+    }
+
+    // ══════════════════════════════════════════
+    //  PASSAGES RESTANTS
     // ══════════════════════════════════════════
 
     private void afficherPassagesRestants() {
         try {
-            int userId =1;
+            int userId = LimiteQuestionnaire.getInstance().getUserId();
             int passages = reponseService.countPassagesAujourdhui(userId);
-            int restants = 2 - passages;
+            int restants = 10 - passages;
 
             if (restants <= 0) {
                 setStatus("🚫 Vous avez atteint la limite de 2 questionnaires aujourd'hui. Revenez demain !", false);
@@ -92,7 +144,7 @@ public class EtudiantQuestionnairesController implements Initializable {
             return;
         }
 
-        // ✅ Vérifier la limite AVANT de naviguer
+        // ✅ Vérifier limite
         try {
             int userId = LimiteQuestionnaire.getInstance().getUserId();
             if (!reponseService.peutPasser(userId)) {
@@ -100,9 +152,8 @@ public class EtudiantQuestionnairesController implements Initializable {
                 alert.setTitle("Limite atteinte");
                 alert.setHeaderText("🚫 Limite quotidienne atteinte");
                 alert.setContentText(
-                        "Vous avez déjà passé 2 questionnaires aujourd'hui.\n" +
-                                "Revenez demain pour continuer !"
-                );
+                        "Vous avez déjà passé 10 questionnaires aujourd'hui.\n" +
+                                "Revenez demain pour continuer !");
                 alert.showAndWait();
                 return;
             }
@@ -111,24 +162,23 @@ public class EtudiantQuestionnairesController implements Initializable {
             return;
         }
 
-        // ✅ Naviguer vers le questionnaire
+        // ✅ Naviguer
         try {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/fxml/EtudiantRepondreView.fxml"));
-            Pane view = loader.load();
+            javafx.scene.Parent view = loader.load();
 
             EtudiantRepondreController controller = loader.getController();
             controller.setQuestionnaire(selected);
 
-            StackPane contentArea = (StackPane) listQuestionnaire
-                    .getScene().lookup("#contentArea");
-            contentArea.getChildren().setAll(view);
+            // ✅ NavigationContext — même système que la Sidebar
+            org.example.utils.NavigationContext.loadContentInCenter(view);
 
         } catch (Exception e) {
             setStatus("❌ Erreur navigation : " + e.getMessage(), false);
             e.printStackTrace();
         }
-    }
+    } // ✅ Accolade fermante de handleRepondre()
 
     // ══════════════════════════════════════════
     //  CARTE QUESTIONNAIRE
@@ -136,18 +186,18 @@ public class EtudiantQuestionnairesController implements Initializable {
 
     private static class QuestionnaireCard extends ListCell<Questionnaire> {
 
-        private final HBox root        = new HBox(14);
-        private final StackPane avatar = new StackPane();
-        private final Label avLetter   = new Label();
-        private final VBox info        = new VBox(5);
-        private final Label nomLbl     = new Label();
-        private final HBox botRow      = new HBox(6);
-        private final Label typeBadge  = new Label();
-        private final Label codeLbl    = new Label();
-        private final Region spacer    = new Region();
-        private final VBox rightBox    = new VBox(4);
-        private final Label nbreLbl    = new Label();
-        private final Label nbreText   = new Label("questions");
+        private final HBox      root      = new HBox(14);
+        private final StackPane avatar    = new StackPane();
+        private final Label     avLetter  = new Label();
+        private final VBox      info      = new VBox(5);
+        private final Label     nomLbl    = new Label();
+        private final HBox      botRow    = new HBox(6);
+        private final Label     typeBadge = new Label();
+        private final Label     codeLbl   = new Label();
+        private final Region    spacer    = new Region();
+        private final VBox      rightBox  = new VBox(4);
+        private final Label     nbreLbl   = new Label();
+        private final Label     nbreText  = new Label("questions");
 
         QuestionnaireCard() {
             Circle circle = new Circle(22);
@@ -161,7 +211,6 @@ public class EtudiantQuestionnairesController implements Initializable {
 
             typeBadge.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; " +
                     "-fx-padding: 2 10 2 10; -fx-background-radius: 20;");
-
             codeLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8;");
 
             Label dot = new Label("·");
@@ -169,7 +218,6 @@ public class EtudiantQuestionnairesController implements Initializable {
 
             botRow.getChildren().addAll(typeBadge, dot, codeLbl);
             botRow.setAlignment(Pos.CENTER_LEFT);
-
             info.getChildren().addAll(nomLbl, botRow);
             HBox.setHgrow(info, Priority.ALWAYS);
 
@@ -186,7 +234,6 @@ public class EtudiantQuestionnairesController implements Initializable {
             root.setPadding(new Insets(12, 16, 12, 16));
             root.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
                     "-fx-border-color: #ede9fe; -fx-border-radius: 12; -fx-border-width: 1;");
-
             setStyle("-fx-background-color: transparent; -fx-padding: 4 0 4 0;");
         }
 
@@ -195,7 +242,7 @@ public class EtudiantQuestionnairesController implements Initializable {
             super.updateItem(q, empty);
             if (empty || q == null) { setGraphic(null); return; }
 
-            nomLbl.setText(q.getNom());
+            nomLbl.setText(q.getNomTraduit() != null ? q.getNomTraduit() : q.getNom());
             codeLbl.setText(q.getCode());
 
             String type = q.getType() != null ? q.getType().toString() : "?";
@@ -221,19 +268,18 @@ public class EtudiantQuestionnairesController implements Initializable {
                 root.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
                         "-fx-border-color: #ede9fe; -fx-border-radius: 12; -fx-border-width: 1;");
             }
-
             setGraphic(root);
         }
 
         private String[] typeColors(String type) {
-            return switch (type) {
-                case "STRESS"     -> new String[]{"#fef3c7","#d97706","#fde68a","#92400e"};
-                case "ANXIETE"    -> new String[]{"#ede9fe","#7c3aed","#ddd6fe","#4c1d95"};
-                case "DEPRESSION" -> new String[]{"#fee2e2","#dc2626","#fecaca","#991b1b"};
-                case "SOMMEIL"    -> new String[]{"#e0f2fe","#0284c7","#bae6fd","#075985"};
-                case "BIEN_ETRE"  -> new String[]{"#dcfce7","#16a34a","#bbf7d0","#14532d"};
-                default           -> new String[]{"#f1f5f9","#475569","#e2e8f0","#334155"};
-            };
+            switch (type) {
+                case "STRESS":     return new String[]{"#fef3c7","#d97706","#fde68a","#92400e"};
+                case "ANXIETE":    return new String[]{"#ede9fe","#7c3aed","#ddd6fe","#4c1d95"};
+                case "DEPRESSION": return new String[]{"#fee2e2","#dc2626","#fecaca","#991b1b"};
+                case "SOMMEIL":    return new String[]{"#e0f2fe","#0284c7","#bae6fd","#075985"};
+                case "BIEN_ETRE":  return new String[]{"#dcfce7","#16a34a","#bbf7d0","#14532d"};
+                default:           return new String[]{"#f1f5f9","#475569","#e2e8f0","#334155"};
+            }
         }
     }
 
@@ -247,8 +293,10 @@ public class EtudiantQuestionnairesController implements Initializable {
     }
 
     private void setStatus(String msg, boolean success) {
-        lblStatus.setText(msg);
-        lblStatus.setStyle("-fx-font-size: 12px; -fx-text-fill: "
-                + (success ? "#22c55e" : "#ef4444") + ";");
+        if (lblStatus != null) {
+            lblStatus.setText(msg);
+            lblStatus.setStyle("-fx-font-size: 12px; -fx-text-fill: "
+                    + (success ? "#22c55e" : "#ef4444") + ";");
+        }
     }
 }

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<ScrollPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.example.controllers.AnalyseIAController"
+            fitToWidth="true"
+            style="-fx-background: #f5f3ff; -fx-background-color: #f5f3ff;">
+
+    <VBox spacing="16" style="-fx-padding: 24; -fx-background-color: #f5f3ff;">
+
+        <!-- ══ EN-TETE ══ -->
+        <VBox spacing="6"
+              style="-fx-background-color: linear-gradient(to bottom right, #4c1d95, #7c3aed);
+                     -fx-background-radius: 16; -fx-padding: 24 28;">
+
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Label text="🤖  Analyse IA Personnalisée"
+                       style="-fx-text-fill: white; -fx-font-size: 20px;
+                              -fx-font-weight: bold; -fx-font-family: 'Segoe UI';"/>
+            </HBox>
+
+            <Label text="UniMind AI analyse vos résultats et vous propose des conseils personnalisés"
+                   style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12px;
+                          -fx-font-family: 'Segoe UI';"/>
+
+            <Region minHeight="8"/>
+
+            <HBox spacing="12" alignment="CENTER_LEFT">
+
+                <Label fx:id="lblTitreQuestionnaire"
+                       text="📋 Questionnaire"
+                       style="-fx-text-fill: white; -fx-font-size: 14px;
+                              -fx-font-weight: bold; -fx-font-family: 'Segoe UI';"/>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <Label fx:id="lblScore"
+                       text="🎯 Score : —"
+                       style="-fx-background-color: rgba(255,255,255,0.2);
+                              -fx-text-fill: white; -fx-font-size: 12px;
+                              -fx-font-weight: bold; -fx-font-family: 'Segoe UI';
+                              -fx-padding: 5 14; -fx-background-radius: 20;"/>
+
+                <Label fx:id="lblNiveau"
+                       text="📊 Niveau"
+                       style="-fx-background-color: rgba(255,255,255,0.2);
+                              -fx-text-fill: white; -fx-font-size: 12px;
+                              -fx-font-weight: bold; -fx-font-family: 'Segoe UI';
+                              -fx-padding: 5 14; -fx-background-radius: 20;"/>
+            </HBox>
+
+            <Label fx:id="lblInterpretation"
+                   text=""
+                   wrapText="true"
+                   style="-fx-text-fill: rgba(255,255,255,0.85); -fx-font-size: 12px;
+                          -fx-font-family: 'Segoe UI'; -fx-font-style: italic;"/>
+        </VBox>
+
+        <!-- ══ SPINNER CHARGEMENT ══ -->
+        <VBox fx:id="boxChargement"
+              alignment="CENTER" spacing="16"
+              style="-fx-background-color: white; -fx-background-radius: 16;
+                     -fx-padding: 60 24;
+                     -fx-border-color: #ddd6fe; -fx-border-width: 1; -fx-border-radius: 16;">
+
+            <ProgressIndicator
+                    prefWidth="64" prefHeight="64"
+                    style="-fx-accent: #7c3aed;"/>
+
+            <Label text="🤖  UniMind AI analyse vos résultats..."
+                   style="-fx-text-fill: #7c3aed; -fx-font-size: 16px;
+                          -fx-font-weight: bold; -fx-font-family: 'Segoe UI';"/>
+
+            <Label text="Génération de conseils personnalisés en cours..."
+                   style="-fx-text-fill: #a78bfa; -fx-font-size: 13px;
+                          -fx-font-family: 'Segoe UI';"/>
+
+            <Label text="Cela peut prendre quelques secondes..."
+                   style="-fx-text-fill: #c4b5fd; -fx-font-size: 11px;
+                          -fx-font-family: 'Segoe UI'; -fx-font-style: italic;"/>
+        </VBox>
+
+        <!-- ══ RESULTAT ANALYSE ══ -->
+        <VBox fx:id="boxResultat"
+              spacing="14" visible="false" managed="false">
+
+            <!-- Erreur si GPT echoue -->
+            <Label fx:id="lblErreur"
+                   text=""
+                   wrapText="true"
+                   visible="false" managed="false"
+                   style="-fx-background-color: #fee2e2; -fx-text-fill: #dc2626;
+                          -fx-font-size: 13px; -fx-font-family: 'Segoe UI';
+                          -fx-padding: 14 18; -fx-background-radius: 10;
+                          -fx-border-color: #fca5a5; -fx-border-width: 1;
+                          -fx-border-radius: 10;"/>
+
+            <!-- Carte analyse principale -->
+            <VBox spacing="12"
+                  style="-fx-background-color: white; -fx-background-radius: 16;
+                         -fx-padding: 24 28;
+                         -fx-border-color: #ddd6fe; -fx-border-width: 1;
+                         -fx-border-radius: 16;
+                         -fx-effect: dropshadow(gaussian,
+                                     rgba(124,58,237,0.08), 8, 0, 0, 2);">
+
+                <!-- Titre section -->
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="✨"
+                           style="-fx-font-size: 20px;"/>
+                    <Label text="Votre analyse personnalisée"
+                           style="-fx-text-fill: #4c1d95; -fx-font-size: 16px;
+                                  -fx-font-weight: bold; -fx-font-family: 'Segoe UI';"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label text="Généré par GPT-3.5"
+                           style="-fx-background-color: #ede9fe; -fx-text-fill: #7c3aed;
+                                  -fx-font-size: 10px; -fx-font-weight: bold;
+                                  -fx-padding: 4 12; -fx-background-radius: 12;"/>
+                </HBox>
+
+                <Separator style="-fx-background-color: #ede9fe;"/>
+
+                <!-- Zone texte analyse IA -->
+                <TextArea fx:id="taAnalyse"
+                          editable="false"
+                          wrapText="true"
+                          prefHeight="460"
+                          style="-fx-background-color: #faf5ff;
+                                 -fx-text-fill: #1e1b4b;
+                                 -fx-font-size: 13px;
+                                 -fx-font-family: 'Segoe UI';
+                                 -fx-border-color: #e9d5ff;
+                                 -fx-border-radius: 8;
+                                 -fx-background-radius: 8;
+                                 -fx-padding: 14;"/>
+            </VBox>
+
+            <!-- ══ BOUTONS ══ -->
+            <HBox spacing="12" alignment="CENTER_RIGHT">
+
+                <Button fx:id="btnCopier"
+                        text="📋  Copier"
+                        style="-fx-background-color: #059669; -fx-text-fill: white;
+                               -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                               -fx-font-weight: bold; -fx-padding: 10 22;
+                               -fx-background-radius: 10; -fx-cursor: hand;"/>
+
+                <Button fx:id="btnMesReponses"
+                        text="📊  Voir mes réponses"
+                        style="-fx-background-color: #7c3aed; -fx-text-fill: white;
+                               -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                               -fx-font-weight: bold; -fx-padding: 10 22;
+                               -fx-background-radius: 10; -fx-cursor: hand;"/>
+
+                <Button fx:id="btnRetour"
+                        text="←  Retour aux questionnaires"
+                        style="-fx-background-color: #6b7280; -fx-text-fill: white;
+                               -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                               -fx-font-weight: bold; -fx-padding: 10 22;
+                               -fx-background-radius: 10; -fx-cursor: hand;"/>
+            </HBox>
+
+            <!-- Note bas de page -->
+            <Label text="⚠️  Cette analyse est générée par intelligence artificielle
+et ne remplace pas un avis médical professionnel."
+                   wrapText="true"
+                   style="-fx-text-fill: #9ca3af; -fx-font-size: 11px;
+                          -fx-font-family: 'Segoe UI'; -fx-font-style: italic;"/>
+
+        </VBox>
+
+    </VBox>
+</ScrollPane>

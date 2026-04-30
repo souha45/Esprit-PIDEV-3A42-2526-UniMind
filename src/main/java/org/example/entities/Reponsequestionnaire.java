@@ -4,37 +4,36 @@ import java.sql.Timestamp;
 
 public class Reponsequestionnaire {
 
-    private int reponseQuestionnaireId;   // AUTO_INCREMENT, NOT NULL
-    private double scoreTotale;           // double, NOT NULL
-    private String reponseQuest;          // longtext, NOT NULL
-    private String interpretation;        // longtext, NULL possible
-    private Timestamp createdAt;          // datetime, NOT NULL
-    private Timestamp updatedAt;          // datetime, NULL possible
-    private Integer dureePassage;         // int(11), NULL possible
-    private String niveau;                // varchar(20), NOT NULL
-    private boolean aBesoinPsy;           // tinyint(4), NOT NULL
-    private String commentaire;           // longtext, NULL possible
-    private int questionnaireId;          // int(11), NOT NULL (FK)
-    private Integer userId;               // int(11), NULL possible (FK)
+    private int reponseQuestionnaireId;
+    private double scoreTotale;
+    private String reponseQuest;
+    private String interpretation;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
+    private Integer dureePassage;
+    private String niveau;
+    private boolean aBesoinPsy;
+    private String commentaire;
+    private int questionnaireId;
+    private Integer userId;
 
     // ─── Constructeur par défaut ───
-    public Reponsequestionnaire() {
-    }
+    public Reponsequestionnaire() {}
 
     // ─── Constructeur pour création (sans ID) ───
     public Reponsequestionnaire(double scoreTotale, String reponseQuest, String interpretation,
                                 Integer dureePassage, String niveau, boolean aBesoinPsy,
                                 String commentaire, int questionnaireId, Integer userId) {
-        this.scoreTotale = scoreTotale;
-        this.reponseQuest = reponseQuest;
-        this.interpretation = interpretation;
-        this.dureePassage = dureePassage;
-        this.niveau = niveau;
-        this.aBesoinPsy = aBesoinPsy;
-        this.commentaire = commentaire;
+        this.scoreTotale     = scoreTotale;
+        this.reponseQuest    = reponseQuest;
+        this.interpretation  = interpretation;
+        this.dureePassage    = dureePassage;
+        this.niveau          = niveau;
+        this.aBesoinPsy      = aBesoinPsy;
+        this.commentaire     = commentaire;
         this.questionnaireId = questionnaireId;
-        this.userId = userId;
-        this.createdAt = new Timestamp(System.currentTimeMillis());
+        this.userId          = userId;
+        this.createdAt       = new Timestamp(System.currentTimeMillis());
     }
 
     // ─── Constructeur complet avec ID ───
@@ -43,17 +42,17 @@ public class Reponsequestionnaire {
                                 Integer dureePassage, String niveau, boolean aBesoinPsy,
                                 String commentaire, int questionnaireId, Integer userId) {
         this.reponseQuestionnaireId = reponseQuestionnaireId;
-        this.scoreTotale = scoreTotale;
-        this.reponseQuest = reponseQuest;
-        this.interpretation = interpretation;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.dureePassage = dureePassage;
-        this.niveau = niveau;
-        this.aBesoinPsy = aBesoinPsy;
-        this.commentaire = commentaire;
-        this.questionnaireId = questionnaireId;
-        this.userId = userId;
+        this.scoreTotale            = scoreTotale;
+        this.reponseQuest           = reponseQuest;
+        this.interpretation         = interpretation;
+        this.createdAt              = createdAt;
+        this.updatedAt              = updatedAt;
+        this.dureePassage           = dureePassage;
+        this.niveau                 = niveau;
+        this.aBesoinPsy             = aBesoinPsy;
+        this.commentaire            = commentaire;
+        this.questionnaireId        = questionnaireId;
+        this.userId                 = userId;
     }
 
     // ─── Getters & Setters ───
@@ -120,6 +119,11 @@ public class Reponsequestionnaire {
 
     public void setNiveau(String niveau) {
         this.niveau = niveau;
+    }
+
+    // ── Getter pour PropertyValueFactory ──
+    public boolean getaBesoinPsy() {
+        return aBesoinPsy;
     }
 
     public boolean isaBesoinPsy() {

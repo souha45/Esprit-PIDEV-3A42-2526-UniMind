@@ -80,20 +80,30 @@
             <Label fx:id="errScores" text="" prefHeight="16" maxHeight="16"
                    style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
 
-            <HBox spacing="8"><padding><Insets top="8"/></padding>
-                <Button text="➕ Ajouter"   onAction="#handleAjouter"
+            <!-- ── BOUTONS CRUD ── -->
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <padding><Insets top="8"/></padding>
+                <Button text="➕ Ajouter" onAction="#handleAjouter"
                         style="-fx-background-color: #22c55e; -fx-text-fill: white; -fx-font-weight: bold;
                                -fx-padding: 7 14; -fx-background-radius: 7; -fx-cursor: hand;"/>
-                <Button text="✏️ Modifier"  onAction="#handleModifier"
+                <Button text="✏️ Modifier" onAction="#handleModifier"
                         style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-font-weight: bold;
                                -fx-padding: 7 14; -fx-background-radius: 7; -fx-cursor: hand;"/>
                 <Button text="🗑 Supprimer" onAction="#handleSupprimer"
                         style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold;
                                -fx-padding: 7 14; -fx-background-radius: 7; -fx-cursor: hand;"/>
-                <Button text="🔄 Reset"     onAction="#handleReset"
+                <Button text="🔄 Reset" onAction="#handleReset"
                         style="-fx-background-color: #94a3b8; -fx-text-fill: white; -fx-font-weight: bold;
                                -fx-padding: 7 14; -fx-background-radius: 7; -fx-cursor: hand;"/>
             </HBox>
+
+            <!-- ── BOUTON GÉNÉRER IA ── -->
+            <Button text="🤖 Générer AI Auto" onAction="#handleGenererIA"
+                    maxWidth="Infinity"
+                    style="-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-font-weight: bold;
+                           -fx-font-size: 13px; -fx-padding: 9 14; -fx-background-radius: 8;
+                           -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(124,58,237,0.35), 6, 0, 0, 2);"/>
+
             <Label fx:id="lblStatus" text="" wrapText="true" prefHeight="18"
                    style="-fx-font-size: 12px;"/>
         </VBox>
@@ -118,5 +128,22 @@
                   style="-fx-background-color: transparent;
                          -fx-border-color: transparent;
                          -fx-padding: 0;"/>
+
+        <!-- ── PAGINATION ── -->
+        <HBox alignment="CENTER" spacing="12">
+            <padding><Insets top="4" bottom="4"/></padding>
+            <Button fx:id="btnPrev" text="◀ Précédent" onAction="#handlePrev"
+                    style="-fx-background-color: #e2e8f0; -fx-text-fill: #64748b;
+                           -fx-font-weight: bold; -fx-padding: 6 14;
+                           -fx-background-radius: 7; -fx-cursor: hand;"/>
+            <Label fx:id="lblPage" text="Page 1 / 1"
+                   style="-fx-text-fill: #64748b; -fx-font-size: 12px;
+                          -fx-font-weight: bold;"/>
+            <Button fx:id="btnNext" text="Suivant ▶" onAction="#handleNext"
+                    style="-fx-background-color: #3b82f6; -fx-text-fill: white;
+                           -fx-font-weight: bold; -fx-padding: 6 14;
+                           -fx-background-radius: 7; -fx-cursor: hand;"/>
+        </HBox>
+
     </VBox>
 </HBox>
