@@ -17,6 +17,8 @@ import org.example.entities.User;
 import org.example.services.*;
 import org.example.utils.ValidationUtils;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -285,6 +287,21 @@ public class ProfilController {
             pMessageProfil.setStyle("-fx-text-fill: red;");
             pMessageProfil.setText("Erreur : " + e.getMessage());
         }
+        if (currentPhotoPath != null && !currentPhotoPath.isEmpty()) {
+            try {
+                File photoFile = new File(currentPhotoPath);
+                BufferedImage bufferedImage = ImageIO.read(photoFile);
+                FacialRecognitionService facialService = new FacialRecognitionService();
+                boolean registered = facialService.registerFace(bufferedImage, utilisateurConnecte.getUserId());
+                if (registered) {
+                    System.out.println("✅ Visage enregistré pour la reconnaissance faciale");
+                } else {
+                    System.out.println("⚠️ Impossible d'enregistrer le visage");
+                }
+            } catch (Exception e) {
+                System.err.println("Erreur enregistrement visage: " + e.getMessage());
+            }
+        }
     }
 
     private void sauvegarderChampsSpecifiques() throws SQLException {
@@ -408,7 +425,35 @@ public class ProfilController {
             e.printStackTrace();
         }
     }
+    @FXML
+    public void enregistrerVisage() {
+        if (utilisateurConnecte == null) return;
 
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Sélectionner une photo de visage");
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Images", "*.jpg", "*.jpeg", "*.png")
+        );
+
+        File faceFile = fileChooser.showOpenDialog(photoProfile.getScene().getWindow());
+        if (faceFile != null) {
+            try {
+                BufferedImage faceImage = ImageIO.read(faceFile);
+                FacialRecognitionService facialService = new FacialRecognitionService();
+                boolean registered = facialService.registerFace(faceImage, utilisateurConnecte.getUserId());
+                if (registered) {
+                    pMessageProfil.setStyle("-fx-text-fill: green;");
+                    pMessageProfil.setText("✓ Visage enregistré avec succès !");
+                } else {
+                    pMessageProfil.setStyle("-fx-text-fill: red;");
+                    pMessageProfil.setText("✗ Aucun visage détecté dans l'image");
+                }
+            } catch (Exception e) {
+                pMessageProfil.setStyle("-fx-text-fill: red;");
+                pMessageProfil.setText("Erreur: " + e.getMessage());
+            }
+        }
+    }
     @FXML
     public void seDeconnecter() {
         try {

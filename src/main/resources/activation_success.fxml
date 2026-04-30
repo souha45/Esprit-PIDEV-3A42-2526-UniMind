@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.geometry.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.controllers.ActivationController"
+            minWidth="500" minHeight="400"
+            style="-fx-background-color: #F0EFFF;">
+
+    <VBox alignment="CENTER" spacing="20"
+          AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
+          style="-fx-background-color: #F8F7FF; -fx-padding: 40;">
+
+        <VBox spacing="20" alignment="CENTER" maxWidth="400"
+              style="-fx-background-color: white; -fx-background-radius: 20; -fx-padding: 40; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 20, 0, 0, 5);">
+
+            <Circle radius="45" fill="#D1FAE5"/>
+            <Label text="✓" style="-fx-font-size: 50px; -fx-text-fill: #059669; -fx-translate-y: -60px;"/>
+
+            <Label text="Compte activé !"
+                   style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1E1B4B; -fx-font-family: 'Segoe UI';"/>
+
+            <Label text="Votre compte a été activé avec succès."
+                   style="-fx-font-size: 13px; -fx-text-fill: #6B7280; -fx-font-family: 'Segoe UI';"/>
+
+            <Label text="Un administrateur va examiner votre demande d'inscription. Vous recevrez un email de confirmation."
+                   style="-fx-font-size: 12px; -fx-text-fill: #7C3AED; -fx-font-family: 'Segoe UI'; -fx-wrap-text: true;" textAlignment="CENTER"/>
+
+            <Button fx:id="loginButton" text="Aller à la connexion" onAction="#goToLogin"
+                    style="-fx-background-color: linear-gradient(to right, #4F46E5, #7C3AED); -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 10; -fx-padding: 12 30; -fx-font-size: 14px; -fx-font-family: 'Segoe UI';"
+                    maxWidth="Infinity"/>
+
+        </VBox>
+
+    </VBox>
+</AnchorPane>

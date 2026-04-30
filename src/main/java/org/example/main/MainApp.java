@@ -1,6 +1,7 @@
 package org.example.main;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -17,18 +18,28 @@ public class MainApp extends Application {
         rappelService = new RappelRendezVousService();
 
         primaryStage = stage;
-        FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("/login.fxml")
-        );
+        LocalCallbackServer.startServer();
+        System.out.println("🚀 Démarrage du serveur d'activation...");
 
-        // 🔥 Utiliser la taille de login.fxml (qui vient d'Islem)
-        // Le login.fxml d'Islem fait 640x480 (défini dans son AnchorPane)
+        Parameters params = getParameters();
+        if (params != null && params.getRaw() != null) {
+            for (String arg : params.getRaw()) {
+                if (arg.contains("reset-password") && arg.contains("token=")) {
+                    String token = extractTokenFromUrl(arg);
+                    if (token != null && !token.isEmpty()) {
+                        System.out.println("🔐 Token reçu: " + token);
+                        openResetPasswordWindow(token);
+                    }
+                }
+            }
+        }
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
         Scene scene = new Scene(loader.load());
         scene.getStylesheets().add(getClass().getResource("/css/etudiant.css").toExternalForm());
         scene.getStylesheets().add(getClass().getResource("/css/admin.css").toExternalForm());
 
         stage.setTitle("UniMind - Plateforme de santé mentale");
-        stage.setResizable(true);  // ← On peut redimensionner
+        stage.setResizable(true);
         stage.setScene(scene);
         stage.show();
 

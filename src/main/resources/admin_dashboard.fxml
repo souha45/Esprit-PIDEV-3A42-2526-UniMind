@@ -4,232 +4,407 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.shape.*?>
 <?import javafx.geometry.*?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.scene.canvas.Canvas?>
 
+<?import java.lang.String?>
 <BorderPane xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.controllers.admin.AdminDashboardController"
-            prefWidth="1200" prefHeight="700"
-            style="-fx-background-color: #F3F0FF;">
+            prefWidth="1280" prefHeight="760"
+            style="-fx-background-color: #F8FAFC;">
 
-    <!-- NAVBAR (inchangée) -->
+    <!-- ==================== TOP NAVBAR ==================== -->
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="15" prefHeight="60"
-              style="-fx-background-color: white; -fx-padding: 0 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 2);">
+        <HBox alignment="CENTER_LEFT" spacing="15" prefHeight="65"
+              style="-fx-background-color: white; -fx-padding: 0 25;
+                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 8, 0, 0, 2);">
             <ImageView fitWidth="36" fitHeight="36" preserveRatio="true">
                 <Image url="@/images/unimind.png"/>
             </ImageView>
-            <Label text="UniMind" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #7C3AED;"/>
-            <Label text="|" style="-fx-text-fill: #D1D5DB; -fx-font-size: 16;"/>
-            <Label text="Administration" style="-fx-font-size: 13; -fx-text-fill: #6B7280;"/>
+            <Label text="UniMind" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #4F46E5;"/>
+            <Label text="|" style="-fx-text-fill: #CBD5E1; -fx-font-size: 16px;"/>
+            <Label text="Administration" style="-fx-font-size: 13px; -fx-text-fill: #64748B;"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <HBox alignment="CENTER" spacing="4" prefHeight="32"
-                  style="-fx-background-color: #F3F0FF; -fx-background-radius: 16; -fx-padding: 4 10;">
-                <Label text="🔍" style="-fx-font-size: 12; -fx-text-fill: #9CA3AF;"/>
+            <HBox alignment="CENTER" spacing="8" prefHeight="36" prefWidth="240"
+                  style="-fx-background-color: #F1F5F9; -fx-background-radius: 18; -fx-padding: 0 15;">
+                <Label text="🔍" style="-fx-font-size: 13px; -fx-text-fill: #94A3B8;"/>
                 <TextField fx:id="navRechercheField" promptText="Rechercher..."
-                           prefWidth="160" prefHeight="26"
-                           style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12;"/>
+                           style="-fx-background-color: transparent; -fx-border-color: transparent;
+                                  -fx-font-size: 12px; -fx-font-family: 'Segoe UI';"/>
             </HBox>
-            <Button text="🔔" style="-fx-background-color: transparent; -fx-font-size: 16; -fx-cursor: hand;"/>
-            <HBox alignment="CENTER" spacing="8">
-                <ImageView fx:id="navPhotoAdmin" fitWidth="34" fitHeight="34">
-                    <clip><Circle centerX="17" centerY="17" radius="17"/></clip>
+            <Button text="🔔" style="-fx-background-color: #F1F5F9; -fx-font-size: 16px; -fx-cursor: hand;
+                                   -fx-min-width: 36; -fx-min-height: 36; -fx-background-radius: 50%;"/>
+            <HBox alignment="CENTER" spacing="10">
+                <ImageView fx:id="navPhotoAdmin" fitWidth="36" fitHeight="36">
+                    <clip><Circle centerX="18" centerY="18" radius="18"/></clip>
                 </ImageView>
-                <Label fx:id="navNomAdmin" style="-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 13;"/>
+                <Label fx:id="navNomAdmin" style="-fx-font-weight: 600; -fx-text-fill: #1E293B; -fx-font-size: 13px;"/>
             </HBox>
         </HBox>
     </top>
 
-    <!-- SIDEBAR (inchangée) -->
+    <!-- ==================== SIDEBAR ==================== -->
     <left>
-        <VBox prefWidth="250" spacing="5" style="-fx-background-color: #5B21B6; -fx-padding: 20 0;">
-            <VBox alignment="CENTER" spacing="8" style="-fx-padding: 10 0 20 0;">
+        <VBox prefWidth="260" spacing="5"
+              style="-fx-background-color: #5B21B6; -fx-padding: 20 0 0 0;">
+
+            <VBox alignment="CENTER" spacing="8" style="-fx-padding: 0 0 20 0;">
                 <ImageView fx:id="sidePhotoAdmin" fitWidth="70" fitHeight="70">
                     <clip><Circle centerX="35" centerY="35" radius="35"/></clip>
                 </ImageView>
-                <Label text="Administrateur" style="-fx-text-fill: #C4B5FD; -fx-font-size: 11;"/>
+                <Label fx:id="sideAdminName" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                <Label text="Administrateur" style="-fx-text-fill: #94A3B8; -fx-font-size: 11px;"/>
             </VBox>
-            <Separator style="-fx-background-color: #7C3AED;"/>
-            <Label text="MENU PRINCIPAL" style="-fx-text-fill: #A78BFA; -fx-font-size: 10; -fx-padding: 15 0 5 20; -fx-font-weight: bold;"/>
 
-            <Button fx:id="btnGestionUsers" text="👥  Gestion Utilisateurs"
-                    onAction="#afficherGestion"
-                    style="-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+            <Separator style="-fx-background-color: #230355;"/>
 
-            <Button fx:id="btnDemandes" text="📋  Demandes en attente"
-                    onAction="#afficherDemandes"
-                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+            <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;
+                                               -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
+                <VBox spacing="5" style="-fx-padding: 15 0;">
 
-            <Button fx:id="btnSeances" text="❤  Séances Méditation"
-                    onAction="#showSeances"
-                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+                    <Label text="MENU PRINCIPAL" style="-fx-text-fill: #64748B; -fx-font-size: 10px;
+                                                      -fx-padding: 0 0 5 20; -fx-font-weight: bold;"/>
 
-            <Button fx:id="btnEvenements" text="🎪  Gestion Événements"
-                    onAction="#showEvenements"
-                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+                    <Button fx:id="btnDashboard" text="📊  Dashboard"
+                            onAction="#afficherDashboard"
+                            maxWidth="Infinity"
+                            style="-fx-background-color: #4F46E5; -fx-text-fill: white; -fx-font-weight: bold;
+                                   -fx-font-size: 13px; -fx-pref-height: 40; -fx-alignment: CENTER_LEFT;
+                                   -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8;"/>
 
-            <Button fx:id="btnParticipations" text="✅  Gestion Participations"
-                    onAction="#showParticipations"
-                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+                    <Button fx:id="btnGestionUsers" text="👥  Gestion Utilisateurs"
+                            onAction="#afficherGestion"
+                            maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: #CBD5E1; -fx-font-size: 13px;
+                                   -fx-pref-height: 40; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20;
+                                   -fx-cursor: hand; -fx-background-radius: 8;"/>
 
-            <Button fx:id="btnSponsors" text="🏢  Gestion Sponsors"
-                    onAction="#showSponsors"
-                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+                    <Button fx:id="btnDemandes" text="📋  Demandes en attente"
+                            onAction="#afficherDemandes"
+                            maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: #CBD5E1; -fx-font-size: 13px;
+                                   -fx-pref-height: 40; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20;
+                                   -fx-cursor: hand; -fx-background-radius: 8;"/>
 
-            <Button fx:id="btnFeedbacks" text="💬  Feedbacks"
-                    onAction="#showFeedbacks"
-                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+                    <Button fx:id="btnProfil" text="👤  Mon Profil"
+                            onAction="#afficherProfil"
+                            maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: #CBD5E1; -fx-font-size: 13px;
+                                   -fx-pref-height: 40; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20;
+                                   -fx-cursor: hand; -fx-background-radius: 8;"/>
 
-            <Button fx:id="btnStats" text="📊  Statistiques"
-                    onAction="#showStats"
-                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
-            <Button fx:id="btnQuestionnaires" text="📋  Questionnaires"
-                    onAction="#showQuestionnaires"
-                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+                    <Separator style="-fx-background-color: #d0def4; -fx-padding: 10 0;"/>
 
-            <Button fx:id="btnQuestions" text="❓  Questions"
-                    onAction="#showQuestions"
-                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+                    <Label text="GESTION" style="-fx-text-fill: #64748B; -fx-font-size: 10px;
+                                               -fx-padding: 0 0 5 20; -fx-font-weight: bold;"/>
 
-            <Button fx:id="btnProfil" text="👤  Mon Profil"
-                    onAction="#afficherProfil"
-                    style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+                    <Button fx:id="btnStats" text="📊  Statistiques"
+                            onAction="#showStats"
+                            maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: #CBD5E1; -fx-font-size: 13px;
+                                   -fx-pref-height: 38; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20;
+                                   -fx-cursor: hand; -fx-background-radius: 8;"/>
 
-            <Region VBox.vgrow="ALWAYS"/>
-            <Separator style="-fx-background-color: #7C3AED;"/>
+                    <Button fx:id="btnSeances" text="❤  Séances Méditation"
+                            onAction="#showSeances"
+                            maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: #CBD5E1; -fx-font-size: 13px;
+                                   -fx-pref-height: 38; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20;
+                                   -fx-cursor: hand; -fx-background-radius: 8;"/>
+
+                    <Button fx:id="btnEvenements" text="🎪  Gestion Événements"
+                            onAction="#showEvenements"
+                            maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: #CBD5E1; -fx-font-size: 13px;
+                                   -fx-pref-height: 38; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20;
+                                   -fx-cursor: hand; -fx-background-radius: 8;"/>
+
+                    <Button fx:id="btnParticipations" text="✅  Gestion Participations"
+                            onAction="#showParticipations"
+                            maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: #CBD5E1; -fx-font-size: 13px;
+                                   -fx-pref-height: 38; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20;
+                                   -fx-cursor: hand; -fx-background-radius: 8;"/>
+
+                    <Button fx:id="btnSponsors" text="🏢  Gestion Sponsors"
+                            onAction="#showSponsors"
+                            maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: #CBD5E1; -fx-font-size: 13px;
+                                   -fx-pref-height: 38; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20;
+                                   -fx-cursor: hand; -fx-background-radius: 8;"/>
+
+                    <Button fx:id="btnFeedbacks" text="💬  Feedbacks"
+                            onAction="#showFeedbacks"
+                            maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: #CBD5E1; -fx-font-size: 13px;
+                                   -fx-pref-height: 38; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20;
+                                   -fx-cursor: hand; -fx-background-radius: 8;"/>
+
+                    <Button fx:id="btnQuestionnaires" text="📋  Questionnaires"
+                            onAction="#showQuestionnaires"
+                            maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: #CBD5E1; -fx-font-size: 13px;
+                                   -fx-pref-height: 38; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20;
+                                   -fx-cursor: hand; -fx-background-radius: 8;"/>
+
+                    <Button fx:id="btnQuestions" text="❓  Questions"
+                            onAction="#showQuestions"
+                            maxWidth="Infinity"
+                            style="-fx-background-color: transparent; -fx-text-fill: #CBD5E1; -fx-font-size: 13px;
+                                   -fx-pref-height: 38; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20;
+                                   -fx-cursor: hand; -fx-background-radius: 8;"/>
+                </VBox>
+            </ScrollPane>
+
+            <Separator style="-fx-background-color: #334155;"/>
+
             <Button fx:id="btnDeconnexion" text="🚪  Déconnexion"
                     onAction="#seDeconnecter"
-                    style="-fx-background-color: transparent; -fx-text-fill: #FCA5A5; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
+                    maxWidth="Infinity"
+                    style="-fx-background-color: transparent; -fx-text-fill: #FCA5A5; -fx-font-size: 13px;
+                           -fx-pref-height: 44; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20;
+                           -fx-cursor: hand; -fx-background-radius: 8;"/>
         </VBox>
     </left>
 
-    <!-- CONTENU PRINCIPAL - MODIFICATION ICI -->
+    <!-- ==================== CONTENU PRINCIPAL ==================== -->
     <center>
-        <StackPane fx:id="contentArea" style="-fx-background-color: #F3F0FF;">
-            <!-- PANNEAU GESTION UTILISATEURS -->
-            <VBox fx:id="panneauGestion" spacing="15" visible="true" managed="true"
-                  style="-fx-padding: 25;">
-                <Label text="Gestion des Utilisateurs"
-                       style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #4C1D95;"/>
-                <HBox spacing="10" alignment="CENTER_LEFT">
-                    <Button text="➕ Ajouter un utilisateur" onAction="#ouvrirModalAjout"
-                            style="-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 8 18; -fx-font-weight: bold; -fx-font-size: 13;"/>
-                    <Label fx:id="messageGestion" style="-fx-font-size: 12;"/>
-                </HBox>
-                <TableView fx:id="tableUtilisateurs" prefHeight="450"
-                           style="-fx-background-color: white; -fx-background-radius: 10; -fx-border-color: #E5E7EB; -fx-border-radius: 10;">
-                    <columns>
-                        <TableColumn fx:id="colNom" text="Nom" prefWidth="120"/>
-                        <TableColumn fx:id="colPrenom" text="Prénom" prefWidth="120"/>
-                        <TableColumn fx:id="colEmail" text="Email" prefWidth="220"/>
-                        <TableColumn fx:id="colRole" text="Rôle" prefWidth="120"/>
-                        <TableColumn fx:id="colStatut" text="Statut" prefWidth="100"/>
-                        <TableColumn fx:id="colActif" text="Actif" prefWidth="80"/>
-                        <TableColumn fx:id="colActions" text="Actions" prefWidth="280"/>
-                    </columns>
-                    <placeholder>
-                        <Label text="Aucun utilisateur" style="-fx-text-fill: #9CA3AF;"/>
-                    </placeholder>
-                    <columnResizePolicy>
-                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
-                    </columnResizePolicy>
-                </TableView>
-            </VBox>
+        <ScrollPane fitToWidth="true" fitToHeight="true"
+                    style="-fx-background-color: #F8FAFC; -fx-background: #F8FAFC; -fx-border-color: transparent;">
+            <StackPane fx:id="contentArea" style="-fx-padding: 25; -fx-background-color: #F8FAFC;">
 
-            <!-- PANNEAU DEMANDES EN ATTENTE -->
-            <VBox fx:id="panneauDemandes" spacing="15" visible="false" managed="false"
-                  style="-fx-padding: 25;">
-                <Label text="Demandes d'inscription en attente"
-                       style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #4C1D95;"/>
-                <Label fx:id="messageDemandes" style="-fx-font-size: 12;"/>
-                <TableView fx:id="tableDemandes" prefHeight="400"
-                           style="-fx-background-color: white; -fx-background-radius: 10; -fx-border-color: #E5E7EB; -fx-border-radius: 10;">
-                    <columns>
-                        <TableColumn fx:id="dColNom" text="Nom" prefWidth="180"/>
-                        <TableColumn fx:id="dColPrenom" text="Prénom" prefWidth="180"/>
-                        <TableColumn fx:id="dColEmail" text="Email" prefWidth="280"/>
-                        <TableColumn fx:id="dColRole" text="Rôle" prefWidth="180"/>
-                    </columns>
-                    <placeholder>
-                        <Label text="Aucune demande en attente ✓" style="-fx-text-fill: #9CA3AF;"/>
-                    </placeholder>
-                </TableView>
-                <HBox spacing="15">
-                    <Button text="✅ Accepter la sélection" onAction="#accepterDemande"
-                            style="-fx-background-color: #059669; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 10 25; -fx-font-weight: bold;"/>
-                    <Button text="❌ Refuser la sélection" onAction="#refuserDemande"
-                            style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 10 25; -fx-font-weight: bold;"/>
-                </HBox>
-            </VBox>
+                <!-- PANEL GESTION UTILISATEURS -->
+                <VBox fx:id="panneauGestion" spacing="20" visible="true" managed="true">
+                    <HBox alignment="CENTER_LEFT" spacing="16">
+                        <VBox spacing="3">
+                            <Label text="Gestion des Utilisateurs"
+                                   style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1E293B;"/>
+                            <Label text="Gérez, modifiez et contrôlez tous les comptes."
+                                   style="-fx-font-size: 12px; -fx-text-fill: #64748B;"/>
+                        </VBox>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="➕  Ajouter un utilisateur" onAction="#ouvrirModalAjout"
+                                style="-fx-background-color: linear-gradient(to right, #4F46E5, #7C3AED);
+                                       -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 10;
+                                       -fx-padding: 10 22; -fx-font-weight: bold; -fx-font-size: 13px;"/>
+                    </HBox>
 
-            <!-- PANNEAU PROFIL ADMIN -->
-            <VBox fx:id="panneauProfil" spacing="20" visible="false" managed="false"
-                  style="-fx-padding: 25;">
-                <Label text="Mon Profil"
-                       style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #4C1D95;"/>
-                <HBox spacing="30" alignment="TOP_LEFT">
-                    <VBox spacing="15" alignment="CENTER"
-                          style="-fx-background-color: white; -fx-padding: 25; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);"
-                          prefWidth="220">
-                        <ImageView fx:id="photoProfile" fitWidth="120" fitHeight="120">
-                            <clip><Circle centerX="60" centerY="60" radius="60"/></clip>
-                        </ImageView>
-                        <Button text="📷 Changer la photo" onAction="#choisirPhoto"
-                                style="-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 8 16; -fx-font-size: 11;"/>
+                    <!-- Filtres -->
+                    <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 16 20; -fx-background-radius: 12;
+                                             -fx-border-color: #E2E8F0; -fx-border-width: 1; -fx-border-radius: 12;">
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="🔎" style="-fx-font-size: 14px;"/>
+                            <Label text="Filtres avancés" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+                        </HBox>
+                        <HBox spacing="16" alignment="CENTER_LEFT">
+                            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                                <Label text="Rôle" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B7280;"/>
+                                <ComboBox fx:id="filtreRole" prefWidth="180">
+                                    <items><FXCollections fx:factory="observableArrayList">
+                                        <String fx:value="Tous les rôles"/><String fx:value="Admin"/>
+                                        <String fx:value="Etudiant"/><String fx:value="Psychologue"/>
+                                        <String fx:value="Responsable Etudiant"/>
+                                    </FXCollections></items>
+                                    <value><String fx:value="Tous les rôles"/></value>
+                                </ComboBox>
+                            </VBox>
+                            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                                <Label text="Statut" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B7280;"/>
+                                <ComboBox fx:id="filtreStatut" prefWidth="180">
+                                    <items><FXCollections fx:factory="observableArrayList">
+                                        <String fx:value="Tous les statuts"/><String fx:value="actif"/>
+                                        <String fx:value="en_attente"/><String fx:value="bloqué"/>
+                                        <String fx:value="inactif"/>
+                                    </FXCollections></items>
+                                    <value><String fx:value="Tous les statuts"/></value>
+                                </ComboBox>
+                            </VBox>
+                            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                                <Label text="Activation" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B7280;"/>
+                                <ComboBox fx:id="filtreActif" prefWidth="140">
+                                    <items><FXCollections fx:factory="observableArrayList">
+                                        <String fx:value="Tous"/><String fx:value="Actif"/><String fx:value="Inactif"/>
+                                    </FXCollections></items>
+                                    <value><String fx:value="Tous"/></value>
+                                </ComboBox>
+                            </VBox>
+                            <VBox spacing="4" alignment="BOTTOM_RIGHT">
+                                <Button text="↺  Réinitialiser" onAction="#reinitialiserFiltres"
+                                        style="-fx-background-color: #F1F5F9; -fx-text-fill: #475569; -fx-cursor: hand;
+                                               -fx-padding: 8 16; -fx-font-size: 12px; -fx-border-color: #E2E8F0;
+                                               -fx-border-radius: 8; -fx-border-width: 1;"/>
+                            </VBox>
+                        </HBox>
+                        <FlowPane hgap="8" vgap="8" alignment="CENTER_LEFT">
+                            <Label text="Accès rapide :" style="-fx-font-size: 11px; -fx-text-fill: #94A3B8;"/>
+                            <Button text="🟣 Admins" onAction="#filtrerAdmins" style="-fx-background-color: #EDE9FE; -fx-text-fill: #6D28D9; -fx-font-size: 11px; -fx-padding: 4 12; -fx-background-radius: 20; -fx-cursor: hand;"/>
+                            <Button text="🔵 Étudiants" onAction="#filtrerEtudiants" style="-fx-background-color: #DBEAFE; -fx-text-fill: #1D4ED8; -fx-font-size: 11px; -fx-padding: 4 12; -fx-background-radius: 20; -fx-cursor: hand;"/>
+                            <Button text="🟢 Psychologues" onAction="#filtrerPsychologues" style="-fx-background-color: #D1FAE5; -fx-text-fill: #065F46; -fx-font-size: 11px; -fx-padding: 4 12; -fx-background-radius: 20; -fx-cursor: hand;"/>
+                            <Button text="🟠 Responsables" onAction="#filtrerResponsables" style="-fx-background-color: #FFEDD5; -fx-text-fill: #C2410C; -fx-font-size: 11px; -fx-padding: 4 12; -fx-background-radius: 20; -fx-cursor: hand;"/>
+                            <Button text="⛔ Bloqués" onAction="#filtrerBloques" style="-fx-background-color: #FEE2E2; -fx-text-fill: #991B1B; -fx-font-size: 11px; -fx-padding: 4 12; -fx-background-radius: 20; -fx-cursor: hand;"/>
+                            <Button text="⏳ En attente" onAction="#filtrerEnAttente" style="-fx-background-color: #FEF9C3; -fx-text-fill: #854D0E; -fx-font-size: 11px; -fx-padding: 4 12; -fx-background-radius: 20; -fx-cursor: hand;"/>
+                            <Button text="✅ Actifs" onAction="#filtrerActifs" style="-fx-background-color: #D1FAE5; -fx-text-fill: #065F46; -fx-font-size: 11px; -fx-padding: 4 12; -fx-background-radius: 20; -fx-cursor: hand;"/>
+                            <Button text="❌ Inactifs" onAction="#filtrerInactifs" style="-fx-background-color: #F3F4F6; -fx-text-fill: #6B7280; -fx-font-size: 11px; -fx-padding: 4 12; -fx-background-radius: 20; -fx-cursor: hand;"/>
+                        </FlowPane>
                     </VBox>
-                    <VBox spacing="15" HBox.hgrow="ALWAYS">
-                        <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);">
-                            <Label text="Informations du compte" style="-fx-font-weight: bold; -fx-text-fill: #4C1D95; -fx-font-size: 15;"/>
-                            <GridPane hgap="15" vgap="10">
-                                <Label text="Nom complet :" GridPane.rowIndex="0" GridPane.columnIndex="0" style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
-                                <Label fx:id="pNomPrenom" GridPane.rowIndex="0" GridPane.columnIndex="1" style="-fx-text-fill: #6B7280;"/>
-                                <Label text="Email :" GridPane.rowIndex="1" GridPane.columnIndex="0" style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
-                                <Label fx:id="pEmail" GridPane.rowIndex="1" GridPane.columnIndex="1" style="-fx-text-fill: #6B7280;"/>
-                                <Label text="Rôle :" GridPane.rowIndex="2" GridPane.columnIndex="0" style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
-                                <Label fx:id="pRole" GridPane.rowIndex="2" GridPane.columnIndex="1" style="-fx-text-fill: #7C3AED; -fx-font-weight: bold;"/>
-                                <Label text="Statut :" GridPane.rowIndex="3" GridPane.columnIndex="0" style="-fx-font-weight: bold; -fx-text-fill: #374151;"/>
-                                <Label fx:id="pStatut" GridPane.rowIndex="3" GridPane.columnIndex="1" style="-fx-text-fill: #6B7280;"/>
-                            </GridPane>
-                        </VBox>
-                        <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);">
-                            <Label text="Modifier le profil" style="-fx-font-weight: bold; -fx-text-fill: #4C1D95; -fx-font-size: 15;"/>
-                            <GridPane hgap="15" vgap="10">
-                                <Label text="Bio :" GridPane.rowIndex="0" GridPane.columnIndex="0" prefWidth="80"/>
-                                <TextField fx:id="pBio" promptText="Parlez de vous..." GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="300"/>
-                                <Label text="Téléphone :" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                                <TextField fx:id="pTel" promptText="8 chiffres" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                                <Label fx:id="pErrTel" style="-fx-text-fill: #DC2626; -fx-font-size: 10;" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
-                            </GridPane>
-                            <Button text="💾 Sauvegarder les modifications" onAction="#sauvegarderProfil"
-                                    style="-fx-background-color: #059669; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 10 20; -fx-font-weight: bold;"/>
-                        </VBox>
-                        <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);">
-                            <Label text="Changer le mot de passe" style="-fx-font-weight: bold; -fx-text-fill: #4C1D95; -fx-font-size: 15;"/>
-                            <GridPane hgap="15" vgap="10">
-                                <Label text="Ancien mot de passe :" GridPane.rowIndex="0" GridPane.columnIndex="0" prefWidth="140"/>
-                                <PasswordField fx:id="pAncienMdp" prefWidth="260" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                                <Label text="Nouveau mot de passe :" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                                <PasswordField fx:id="pNouveauMdp" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                                <Label text="Confirmer :" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                                <PasswordField fx:id="pConfirmMdp" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-                            </GridPane>
-                            <Label fx:id="pErrMdp" style="-fx-text-fill: #DC2626; -fx-font-size: 11;"/>
-                            <Button text="🔑 Changer le mot de passe" onAction="#changerMotDePasse"
-                                    style="-fx-background-color: #D97706; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 10 20; -fx-font-weight: bold;"/>
-                        </VBox>
-                    </VBox>
-                </HBox>
-                <Label fx:id="pMessageProfil" style="-fx-font-size: 13;"/>
-            </VBox>
-            <!-- PANNEAU QUESTIONNAIRES -->
-            <VBox fx:id="panneauQuestionnaires" spacing="15" visible="false" managed="false"
-                  style="-fx-padding: 0;">
-                <fx:include source="/fxml/QuestionnaireView.fxml"/>
-            </VBox>
 
-            <!-- PANNEAU QUESTIONS -->
-            <VBox fx:id="panneauQuestions" spacing="15" visible="false" managed="false"
-                  style="-fx-padding: 0;">
-                <fx:include source="/fxml/QuestionView.fxml"/>
-            </VBox>
-        </StackPane>
+                    <Label fx:id="messageGestion" style="-fx-font-size: 12px;"/>
+
+                    <!-- Tableau -->
+                    <VBox spacing="0" style="-fx-background-color: white; -fx-background-radius: 16;
+                                           -fx-border-color: #E2E8F0; -fx-border-width: 1; -fx-border-radius: 16;">
+                        <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 16 20; -fx-border-color: transparent transparent #F1F5F9 transparent; -fx-border-width: 0 0 1 0;">
+                            <Label text="👥" style="-fx-font-size: 16px;"/>
+                            <Label text="Liste des utilisateurs" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #334155;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="labelNbResultats" style="-fx-font-size: 11px; -fx-text-fill: #94A3B8;
+                                           -fx-background-color: #F1F5F9; -fx-padding: 4 10; -fx-background-radius: 20;"/>
+                        </HBox>
+                        <TableView fx:id="tableUtilisateurs" prefHeight="450" style="-fx-background-color: white;">
+                            <columns>
+                                <TableColumn fx:id="colNom" text="Nom" prefWidth="140"/>
+                                <TableColumn fx:id="colPrenom" text="Prénom" prefWidth="140"/>
+                                <TableColumn fx:id="colEmail" text="Email" prefWidth="240"/>
+                                <TableColumn fx:id="colRole" text="Rôle" prefWidth="130"/>
+                                <TableColumn fx:id="colStatut" text="Statut" prefWidth="110"/>
+                                <TableColumn fx:id="colActif" text="Status" prefWidth="90"/>
+                                <TableColumn fx:id="colActions" text="Actions" prefWidth="320"/>
+                            </columns>
+                            <placeholder><Label text="Aucun utilisateur trouvé" style="-fx-text-fill: #94A3B8;"/></placeholder>
+                        </TableView>
+                    </VBox>
+                </VBox>
+
+                <!-- PANEL DEMANDES -->
+                <VBox fx:id="panneauDemandes" spacing="20" visible="false" managed="false">
+                    <HBox><VBox spacing="3"><Label text="Demandes d'inscription" style="-fx-font-size: 24px; -fx-font-weight: bold;"/><Label text="Validez ou refusez les nouvelles demandes." style="-fx-font-size: 12px; -fx-text-fill: #64748B;"/></VBox></HBox>
+                    <Label fx:id="messageDemandes" style="-fx-font-size: 12px;"/>
+                    <VBox spacing="0" style="-fx-background-color: white; -fx-background-radius: 16; -fx-border-color: #E2E8F0; -fx-border-width: 1; -fx-border-radius: 16;">
+                        <HBox style="-fx-padding: 16 20; -fx-border-color: transparent transparent #F1F5F9 transparent; -fx-border-width: 0 0 1 0;">
+                            <Label text="⏳" style="-fx-font-size: 16px;"/>
+                            <Label text="Comptes en attente de validation" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #334155;"/>
+                        </HBox>
+                        <TableView fx:id="tableDemandes" prefHeight="380">
+                            <columns>
+                                <TableColumn fx:id="dColNom" text="Nom" prefWidth="200"/>
+                                <TableColumn fx:id="dColPrenom" text="Prénom" prefWidth="200"/>
+                                <TableColumn fx:id="dColEmail" text="Email" prefWidth="340"/>
+                                <TableColumn fx:id="dColRole" text="Rôle demandé" prefWidth="180"/>
+                            </columns>
+                            <placeholder><Label text="Aucune demande en attente" style="-fx-text-fill: #94A3B8;"/></placeholder>
+                        </TableView>
+                        <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-padding: 16 20; -fx-border-color: #F1F5F9 transparent transparent transparent; -fx-border-width: 1 0 0 0;">
+                            <Button text="❌  Refuser" onAction="#refuserDemande" style="-fx-background-color: white; -fx-text-fill: #DC2626; -fx-border-color: #DC2626; -fx-border-radius: 8; -fx-border-width: 1.5; -fx-padding: 10 24;"/>
+                            <Button text="✅  Accepter" onAction="#accepterDemande" style="-fx-background-color: #10B981; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 24;"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+
+                <!-- PANEL PROFIL -->
+                <VBox fx:id="panneauProfil" spacing="20" visible="false" managed="false" style="-fx-padding: 0;">
+                    <HBox><VBox spacing="3"><Label text="Mon Profil" style="-fx-font-size: 24px; -fx-font-weight: bold;"/><Label text="Gérez vos informations personnelles." style="-fx-font-size: 12px; -fx-text-fill: #64748B;"/></VBox></HBox>
+                    <HBox spacing="30" alignment="TOP_LEFT">
+                        <VBox spacing="15" alignment="CENTER" style="-fx-background-color: white; -fx-padding: 25; -fx-background-radius: 16; -fx-border-color: #E2E8F0; -fx-border-width: 1; -fx-border-radius: 16;" prefWidth="220">
+                            <ImageView fx:id="photoProfile" fitWidth="120" fitHeight="120"><clip><Circle centerX="60" centerY="60" radius="60"/></clip></ImageView>
+                            <Button text="📷 Changer la photo" onAction="#choisirPhoto" style="-fx-background-color: #4F46E5; -fx-text-fill: white; -fx-padding: 8 16; -fx-background-radius: 8;"/>
+                        </VBox>
+                        <VBox spacing="15" HBox.hgrow="ALWAYS">
+                            <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 16; -fx-border-color: #E2E8F0; -fx-border-width: 1; -fx-border-radius: 16;">
+                                <Label text="Informations du compte" style="-fx-font-weight: bold; -fx-font-size: 15px;"/>
+                                <GridPane hgap="15" vgap="10">
+                                    <Label text="Nom complet :" GridPane.rowIndex="0" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/><Label fx:id="pNomPrenom" GridPane.rowIndex="0" GridPane.columnIndex="1" style="-fx-text-fill: #6B7280;"/>
+                                    <Label text="Email :" GridPane.rowIndex="1" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/><Label fx:id="pEmail" GridPane.rowIndex="1" GridPane.columnIndex="1" style="-fx-text-fill: #6B7280;"/>
+                                    <Label text="Rôle :" GridPane.rowIndex="2" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/><Label fx:id="pRole" GridPane.rowIndex="2" GridPane.columnIndex="1" style="-fx-text-fill: #4F46E5; -fx-font-weight: bold;"/>
+                                    <Label text="Statut :" GridPane.rowIndex="3" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/><Label fx:id="pStatut" GridPane.rowIndex="3" GridPane.columnIndex="1" style="-fx-text-fill: #6B7280;"/>
+                                </GridPane>
+                            </VBox>
+                            <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 16; -fx-border-color: #E2E8F0; -fx-border-width: 1; -fx-border-radius: 16;">
+                                <Label text="Modifier le profil" style="-fx-font-weight: bold; -fx-font-size: 15px;"/>
+                                <GridPane hgap="15" vgap="10">
+                                    <Label text="Bio :" GridPane.rowIndex="0" GridPane.columnIndex="0"/><TextField fx:id="pBio" promptText="Parlez de vous..." GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="300"/>
+                                    <Label text="Téléphone :" GridPane.rowIndex="1" GridPane.columnIndex="0"/><TextField fx:id="pTel" promptText="8 chiffres" GridPane.rowIndex="1" GridPane.columnIndex="1"/><Label fx:id="pErrTel" style="-fx-text-fill: #DC2626; -fx-font-size: 10;" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                                </GridPane>
+                                <Button text="💾 Sauvegarder" onAction="#sauvegarderProfil" style="-fx-background-color: #10B981; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 8;"/>
+                            </VBox>
+                            <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 16; -fx-border-color: #E2E8F0; -fx-border-width: 1; -fx-border-radius: 16;">
+                                <Label text="Changer le mot de passe" style="-fx-font-weight: bold; -fx-font-size: 15px;"/>
+                                <GridPane hgap="15" vgap="10">
+                                    <Label text="Ancien mot de passe :" GridPane.rowIndex="0" GridPane.columnIndex="0"/><PasswordField fx:id="pAncienMdp" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                                    <Label text="Nouveau mot de passe :" GridPane.rowIndex="1" GridPane.columnIndex="0"/><PasswordField fx:id="pNouveauMdp" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                                    <Label text="Confirmer :" GridPane.rowIndex="2" GridPane.columnIndex="0"/><PasswordField fx:id="pConfirmMdp" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                                </GridPane>
+                                <Label fx:id="pErrMdp" style="-fx-text-fill: #DC2626; -fx-font-size: 11px;"/>
+                                <Button text="🔑 Changer" onAction="#changerMotDePasse" style="-fx-background-color: #F59E0B; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 8;"/>
+                            </VBox>
+                        </VBox>
+                    </HBox>
+                    <Label fx:id="pMessageProfil" style="-fx-font-size: 12px;"/>
+                </VBox>
+
+                <!-- PANEL DASHBOARD -->
+                <VBox fx:id="panneauDashboard" spacing="24" visible="false" managed="false">
+                    <VBox spacing="4">
+                        <Label text="📊  Dashboard Administrateur" style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1E293B;"/>
+                        <Label text="Vue d'ensemble des statistiques de la plateforme UniMind" style="-fx-font-size: 13px; -fx-text-fill: #64748B;"/>
+                    </VBox>
+                    <HBox spacing="16">
+                        <VBox spacing="8" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 16; -fx-border-color: #E2E8F0; -fx-border-width: 1;">
+                            <HBox spacing="12"><StackPane><Circle radius="28" fill="#EDE9FE"/><Label text="👥" style="-fx-font-size: 20px;"/></StackPane><VBox><Label text="Total Utilisateurs" style="-fx-font-size: 12px;"/><Label fx:id="statTotalUsers" text="0" style="-fx-font-size: 28px; -fx-font-weight: bold;"/></VBox></HBox>
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 16; -fx-border-color: #E2E8F0; -fx-border-width: 1;">
+                            <HBox spacing="12"><StackPane><Circle radius="28" fill="#D1FAE5"/><Label text="✅" style="-fx-font-size: 20px;"/></StackPane><VBox><Label text="Utilisateurs Actifs" style="-fx-font-size: 12px;"/><Label fx:id="statActifs" text="0" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #059669;"/></VBox></HBox>
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 16; -fx-border-color: #E2E8F0; -fx-border-width: 1;">
+                            <HBox spacing="12"><StackPane><Circle radius="28" fill="#FEF9C3"/><Label text="⏳" style="-fx-font-size: 20px;"/></StackPane><VBox><Label text="Demandes en Attente" style="-fx-font-size: 12px;"/><Label fx:id="statEnAttente" text="0" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #D97706;"/></VBox></HBox>
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 16; -fx-border-color: #E2E8F0; -fx-border-width: 1;">
+                            <HBox spacing="12"><StackPane><Circle radius="28" fill="#FEE2E2"/><Label text="🔒" style="-fx-font-size: 20px;"/></StackPane><VBox><Label text="Comptes Bloqués" style="-fx-font-size: 12px;"/><Label fx:id="statBloques" text="0" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #DC2626;"/></VBox></HBox>
+                        </VBox>
+                    </HBox>
+                    <HBox spacing="16">
+                        <VBox spacing="12" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 16; -fx-border-color: #E2E8F0; -fx-border-width: 1;">
+                            <Label text="🎯 Répartition par Rôle" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                            <Separator/>
+                            <Canvas fx:id="canvasRoles" width="400" height="220"/>
+                            <HBox fx:id="roleLegend"/>
+                        </VBox>
+                        <VBox spacing="12" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 16; -fx-border-color: #E2E8F0; -fx-border-width: 1;">
+                            <Label text="📊 Répartition par Statut" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                            <Separator/>
+                            <Canvas fx:id="canvasStatuts" width="400" height="220"/>
+                        </VBox>
+                    </HBox>
+                    <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 16; -fx-border-color: #E2E8F0; -fx-border-width: 1;">
+                        <Label text="📈 Évolution des inscriptions" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                        <Separator/>
+                        <Canvas fx:id="canvasEvolution" width="1000" height="250"/>
+                    </VBox>
+                    <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 16; -fx-border-color: #E2E8F0; -fx-border-width: 1;">
+                        <Label text="📋 Statistiques détaillées" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                        <Separator/>
+                        <TableView fx:id="tableStats" prefHeight="200">
+                            <placeholder>
+                                <Label text="Chargement des statistiques..." style="-fx-text-fill: #94A3B8; -fx-font-size: 14px;"/>
+                            </placeholder>
+                            <columns>
+                                <TableColumn fx:id="colCategorie" text="Catégorie" prefWidth="200"/>
+                                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="150"/>
+                                <TableColumn fx:id="colPourcentage" text="Pourcentage" prefWidth="150"/>
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </VBox>
+
+                <!-- PANEL QUESTIONNAIRES -->
+                <VBox fx:id="panneauQuestionnaires" spacing="15" visible="false" managed="false">
+                    <fx:include source="/fxml/QuestionnaireView.fxml"/>
+                </VBox>
+
+                <!-- PANEL QUESTIONS -->
+                <VBox fx:id="panneauQuestions" spacing="15" visible="false" managed="false">
+                    <fx:include source="/fxml/QuestionView.fxml"/>
+                </VBox>
+            </StackPane>
+        </ScrollPane>
     </center>
 </BorderPane>
