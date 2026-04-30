@@ -44,6 +44,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -231,11 +232,64 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
     @Override
     public void setUtilisateur(User user) {
         this.utilisateur = user;
+
+        SessionManager session = SessionManager.getInstance();
+        if (user != null) {
+            if (!session.estConnecte()) {
+                session.initSession(user);
+            } else if (session.getCurrentUser() == null || session.getCurrentUser().getUserId() != user.getUserId()) {
+                session.updateSession(user);
+            }
+        }
+
+        ensureServicesAndCachesInitialized();
+
+        if (!isInitialized) {
+            Platform.runLater(() -> {
+                try {
+                    if (!isInitialized && tableViewTraitements != null) {
+                        ensureServicesAndCachesInitialized();
+                        initialiserFiltres();
+                        initialiserTri();
+                        initialiserPagination();
+                        configurerColonnes();
+                        isInitialized = true;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
         if (sidebarPsyController != null) {
             sidebarPsyController.setUtilisateur(user);
             sidebarPsyController.setActiveButtonByFxml("/traitement-view.fxml");
         }
         chargerDonnees();
+    }
+
+    private void ensureServicesAndCachesInitialized() {
+        if (traitementService == null) {
+            traitementService = new TraitementService();
+        }
+        if (etudiantTraitementService == null) {
+            etudiantTraitementService = new EtudiantTraitementService();
+        }
+        if (suiviTraitementService == null) {
+            suiviTraitementService = new SuiviTraitementService();
+        }
+        if (cacheNbSuivis == null) {
+            cacheNbSuivis = new HashMap<>();
+        }
+        if (tousLesTraitementsFiltres == null) {
+            tousLesTraitementsFiltres = new ArrayList<>();
+        }
+        if (cacheNomsEtudiants == null) {
+            cacheNomsEtudiants = new HashMap<>();
+        }
+        if (toutesLesLignes == null) {
+            toutesLesLignes = new ArrayList<>();
+        }
     }
 
     private void prechargerNomsEtudiants() {
@@ -496,7 +550,11 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
     }
 
     private List<Traitement> appliquerRechercheEtFiltres(List<Traitement> traitements) {
-        String recherche = txtRecherche.getText().toLowerCase().trim();
+        if (txtRecherche == null || cmbFiltreStatut == null || cmbFiltrePriorite == null) {
+            return traitements;
+        }
+
+        String recherche = txtRecherche.getText() != null ? txtRecherche.getText().toLowerCase().trim() : "";
         String statutFiltre = cmbFiltreStatut.getValue();
         String prioriteFiltre = cmbFiltrePriorite.getValue();
 
@@ -509,10 +567,10 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                                         (t.getObjectifTherapeutique() != null && t.getObjectifTherapeutique().toLowerCase().contains(recherche));
                         if (!correspondRecherche) return false;
                     }
-                    if (!"Tous les statuts".equals(statutFiltre)) {
+                    if (statutFiltre != null && !"Tous les statuts".equals(statutFiltre)) {
                         if (t.getStatut() == null || !t.getStatut().name().equals(statutFiltre)) return false;
                     }
-                    if (!"Toutes les priorités".equals(prioriteFiltre)) {
+                    if (prioriteFiltre != null && !"Toutes les priorités".equals(prioriteFiltre)) {
                         if (t.getPriorite() == null || !t.getPriorite().name().equals(prioriteFiltre)) return false;
                     }
                     return true;
@@ -1060,6 +1118,11 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
     private void configurerColonneActions() {
         SessionManager session = SessionManager.getInstance();
 
+        colActions.setMinWidth(220);
+        colActions.setPrefWidth(220);
+        colActions.setMaxWidth(220);
+        colActions.setResizable(false);
+
         colActions.setCellFactory(param -> new TableCell<LigneGroupée, Void>() {
             private final Button btnView = new Button("👁");
             private final Button btnEdit = new Button("✏");
@@ -1073,38 +1136,76 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                 btnEdit.getStyleClass().addAll("table-action-button", "table-action-button-edit");
                 btnDelete.getStyleClass().addAll("table-action-button", "table-action-button-delete");
                 btnTranslate.getStyleClass().addAll("table-action-button", "table-action-button-translate");
-                btnView.setPrefWidth(70);
-                btnEdit.setPrefWidth(70);
-                btnDelete.setPrefWidth(70);
-                btnTranslate.setPrefWidth(70);
+
+                String compactStyle = "-fx-font-size: 11px; -fx-padding: 3 6;";
+                btnView.setStyle(compactStyle);
+                btnEdit.setStyle(compactStyle);
+                btnDelete.setStyle(compactStyle);
+                btnTranslate.setStyle(compactStyle);
+
+                btnView.setTextOverrun(OverrunStyle.CLIP);
+                btnEdit.setTextOverrun(OverrunStyle.CLIP);
+                btnDelete.setTextOverrun(OverrunStyle.CLIP);
+                btnTranslate.setTextOverrun(OverrunStyle.CLIP);
+
+                btnView.setEllipsisString("");
+                btnEdit.setEllipsisString("");
+                btnDelete.setEllipsisString("");
+                btnTranslate.setEllipsisString("");
+
+                btnView.setMinWidth(48);
+                btnEdit.setMinWidth(48);
+                btnDelete.setMinWidth(48);
+                btnTranslate.setMinWidth(48);
+
+                btnView.setPrefWidth(48);
+                btnEdit.setPrefWidth(48);
+                btnDelete.setPrefWidth(48);
+                btnTranslate.setPrefWidth(48);
+
+                btnView.setMaxWidth(Double.MAX_VALUE);
+                btnEdit.setMaxWidth(Double.MAX_VALUE);
+                btnDelete.setMaxWidth(Double.MAX_VALUE);
+                btnTranslate.setMaxWidth(Double.MAX_VALUE);
+
+                btnView.setFocusTraversable(false);
+                btnEdit.setFocusTraversable(false);
+                btnDelete.setFocusTraversable(false);
+                btnTranslate.setFocusTraversable(false);
 
                 btnView.setOnAction(event -> {
-                    LigneGroupée ligne = getTableView().getItems().get(getIndex());
-                    Traitement traitement = ligne.getPremierTraitement();
+                    LigneGroupée ligne = getTableRow() != null ? getTableRow().getItem() : null;
+                    Traitement traitement = ligne != null ? ligne.getPremierTraitement() : null;
                     if (traitement != null) {
                         ouvrirPageAffichage(traitement);
                     }
                 });
 
                 btnEdit.setOnAction(event -> {
-                    LigneGroupée ligne = getTableView().getItems().get(getIndex());
-                    Traitement traitement = ligne.getPremierTraitement();
-                    if (traitement != null && session.peutModifierTraitement()) {
-                        ouvrirPageModification(traitement);
+                    LigneGroupée ligne = getTableRow() != null ? getTableRow().getItem() : null;
+                    Traitement traitement = ligne != null ? ligne.getPremierTraitement() : null;
+                    if (traitement == null) return;
+                    if (!session.peutModifierTraitement()) {
+                        afficherToast("⚠️ Accès refusé : modification non autorisée", false);
+                        return;
                     }
+                    ouvrirPageModification(traitement);
                 });
 
                 btnDelete.setOnAction(event -> {
-                    LigneGroupée ligne = getTableView().getItems().get(getIndex());
-                    Traitement traitement = ligne.getPremierTraitement();
-                    if (traitement != null && session.peutSupprimerTraitement()) {
-                        supprimerTraitement(traitement);
+                    LigneGroupée ligne = getTableRow() != null ? getTableRow().getItem() : null;
+                    Traitement traitement = ligne != null ? ligne.getPremierTraitement() : null;
+                    if (traitement == null) return;
+                    if (!session.peutSupprimerTraitement()) {
+                        afficherToast("⚠️ Accès refusé : suppression non autorisée", false);
+                        return;
                     }
+                    supprimerTraitement(traitement);
                 });
 
                 btnTranslate.setOnAction(event -> {
-                    LigneGroupée ligne = getTableView().getItems().get(getIndex());
-                    Traitement traitement = ligne.getPremierTraitement();
+                    LigneGroupée ligne = getTableRow() != null ? getTableRow().getItem() : null;
+                    Traitement traitement = ligne != null ? ligne.getPremierTraitement() : null;
                     if (traitement != null) {
                         ouvrirPageTraductionPourTraitement(traitement);
                     }
@@ -1122,6 +1223,10 @@ public class TraitementController implements Initializable, SidebarPsychologueCo
                         setGraphic(null);
                         setStyle("-fx-background-color: #e5e7eb; -fx-padding: 4px;");
                     } else if (ligne.getTraitement() != null) {
+                        boolean autoriseModif = session.peutModifierTraitement();
+                        boolean autoriseSupp = session.peutSupprimerTraitement();
+                        btnEdit.setDisable(!autoriseModif);
+                        btnDelete.setDisable(!autoriseSupp);
                         setGraphic(container);
                         setStyle("-fx-background-color: white; -fx-padding: 8px;");
                     } else {

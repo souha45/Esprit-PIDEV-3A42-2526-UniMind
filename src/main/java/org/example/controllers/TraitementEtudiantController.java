@@ -140,6 +140,15 @@ public class TraitementEtudiantController implements Initializable, SidebarEtudi
     public void setUtilisateur(User user) {
         this.currentUser = user;
 
+        SessionManager session = SessionManager.getInstance();
+        if (user != null) {
+            if (!session.estConnecte()) {
+                session.initSession(user);
+            } else if (session.getCurrentUser() == null || session.getCurrentUser().getUserId() != user.getUserId()) {
+                session.updateSession(user);
+            }
+        }
+
         if (traitementService == null) {
             traitementService = new TraitementService();
         }

@@ -18,6 +18,7 @@ import org.example.utils.SessionManager;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
@@ -181,9 +182,22 @@ public class SuiviTraitementAjoutController implements Initializable {
 
     public void setTraitementPreSelectionne(Traitement traitement) {
         this.traitementPreSelectionne = traitement;
-        if (cmbTraitement != null) {
-            cmbTraitement.setValue(traitement);
-        }
+
+        Platform.runLater(() -> {
+            if (cmbTraitement != null) {
+                cmbTraitement.setValue(traitement);
+            }
+            if (infoTraitementContainer != null && lblInfoTraitement != null && traitement != null) {
+                infoTraitementContainer.setVisible(true);
+                infoTraitementContainer.setManaged(true);
+                lblInfoTraitement.setText("Traitement: " + traitement.getTitre());
+            }
+
+            SessionManager session = SessionManager.getInstance();
+            if (session.estEtudiant()) {
+                initialiserFormulaireEtudiant();
+            }
+        });
     }
 
     private void chargerTraitements() throws SQLException {
