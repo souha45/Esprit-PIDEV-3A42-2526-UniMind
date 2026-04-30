@@ -9,7 +9,7 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-public class GeminiService {
+public class GeminiGhofraneService {
 
     // ✅ Utilise la MÊME version que FlutterFlow (gemini-2.5-flash)
     private static final String API_URL =
@@ -18,7 +18,7 @@ public class GeminiService {
     private final String       apiKey;
     private final OkHttpClient client;
 
-    public GeminiService() {
+    public GeminiGhofraneService() {
         this.client = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)

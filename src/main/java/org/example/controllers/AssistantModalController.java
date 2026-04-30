@@ -6,7 +6,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import org.example.services.GeminiService;
+import org.example.services.GeminiGhofraneService;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -30,7 +30,7 @@ public class AssistantModalController {
     @FXML private Button btnSugg3;
 
     // ── Données ─────────────────────────────────────────────────────
-    private GeminiService  geminiService;
+    private GeminiGhofraneService geminiService;
     private StringBuilder  historique;
     private Stage          modalStage;
     private boolean        enAttente = false;
@@ -38,7 +38,7 @@ public class AssistantModalController {
     // ────────────────────────────────────────────────────────────────
     @FXML
     public void initialize() {
-        geminiService = new GeminiService();
+        geminiService = new GeminiGhofraneService();
         historique    = new StringBuilder();
 
         // ── Envoi message ────────────────────────────────────────────

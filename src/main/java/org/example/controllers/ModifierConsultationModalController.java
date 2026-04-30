@@ -6,14 +6,13 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.example.entities.Consultation;
 import org.example.entities.ConsultationDetail;
 import org.example.entities.User;
 import org.example.services.ConsultationService;
-import org.example.services.GeminiService;
+import org.example.services.GeminiGhofraneService;
 
 import java.sql.SQLException;
 
@@ -114,7 +113,7 @@ public class ModifierConsultationModalController {
 
         new Thread(() -> {
             try {
-                GeminiService geminiService = new GeminiService();
+                GeminiGhofraneService geminiService = new GeminiGhofraneService();
                 String avisGenere = geminiService.envoyerMessage(prompt, "");
                 avisGenere = avisGenere.replaceAll("^\"+|\"+$", "").trim();
                 final String avisFinal = avisGenere;
