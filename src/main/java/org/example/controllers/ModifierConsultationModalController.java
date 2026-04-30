@@ -86,43 +86,50 @@ public class ModifierConsultationModalController {
         btnGenererAvisIA.setDisable(true);
 
         StringBuilder contexte = new StringBuilder();
-
-        // ✅ Utilisation des bonnes méthodes de ConsultationDetail
         contexte.append("Patient : ").append(consultationDetail.getEtudiantPrenom())
                 .append(" ").append(consultationDetail.getEtudiantNom()).append("\n");
-        contexte.append("Date de consultation : ").append(consultationDetail.getDateDispo().toLocalDate())
-                .append("\n");
+        contexte.append("Date : ").append(consultationDetail.getDateDispo().toLocalDate()).append("\n");
         contexte.append("Heure : ").append(consultationDetail.getHeureDebut().toString().substring(0, 5))
                 .append(" - ").append(consultationDetail.getHeureFin().toString().substring(0, 5)).append("\n");
 
+        // ✅ PROMPT CORRIGÉ pour générer un avis (pas un dialogue)
         String prompt = """
-            Tu es un assistant pour psychologue. Rédige un avis professionnel et bienveillant.
-            
-            Contexte de la consultation :
-            %s
-            
-            L'avis doit :
-            - Faire 3-5 phrases
-            - Être à la 2ème personne (tu)
-            - Être encourageant et empathique
-            - Proposer des pistes d'amélioration concrètes
-            - Terminer par une phrase d'encouragement
-            
-            N'inclus PAS de diagnostic médical.
-            """.formatted(contexte.toString());
+        Tu es un assistant pour psychologue. Tu dois REDIGER UN AVIS PROFESSIONNEL pour le patient.
+        
+        IMPORTANT : Tu ne dois PAS discuter avec le psychologue. Tu dois ECRIRE DIRECTEMENT l'avis comme si tu étais le psychologue s'adressant au patient.
+        
+        Contexte de la consultation :
+        %s
+        
+        Rédige un avis de 3 à 5 phrases qui :
+        - S'adresse directement au patient (utilise "tu")
+        - Reconnaît ses difficultés avec empathie
+        - Propose des pistes d'amélioration concrètes
+        - Termine par une phrase d'encouragement
+        
+        Écris UNIQUEMENT l'avis, sans introduction ni explication.
+        Commence directement par "Bonjour [prénom du patient]" ou par une phrase d'ouverture.
+        """.formatted(contexte.toString());
 
         new Thread(() -> {
             try {
                 GeminiGhofraneService geminiService = new GeminiGhofraneService();
                 String avisGenere = geminiService.envoyerMessage(prompt, "");
                 avisGenere = avisGenere.replaceAll("^\"+|\"+$", "").trim();
+
+                // Nettoyer si l'IA a encore mis des instructions
+                if (avisGenere.contains("Désolé") || avisGenere.contains("spécialiste")) {
+                    // Générer un avis par défaut en cas d'erreur
+                    avisGenere = genererAvisParDefaut();
+                }
+
                 final String avisFinal = avisGenere;
 
                 javafx.application.Platform.runLater(() -> {
                     txtAvis.setText(avisFinal);
                     txtAvis.setDisable(false);
                     btnGenererAvisIA.setDisable(false);
-                    showToast("✅ Avis généré avec succès ! Vous pouvez le modifier.", ToastType.SUCCESS);
+                    showToast("✅ Avis généré avec succès !", ToastType.SUCCESS);
                 });
             } catch (Exception e) {
                 javafx.application.Platform.runLater(() -> {
@@ -134,6 +141,20 @@ public class ModifierConsultationModalController {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    /**
+     * Avis par défaut en cas d'échec de l'API
+     */
+    private String genererAvisParDefaut() {
+        String prenom = consultationDetail.getEtudiantPrenom();
+        if (prenom == null || prenom.isEmpty()) prenom = "l'étudiant";
+
+        return "Bonjour " + prenom + ",\n\n" +
+                "Je tiens à te féliciter pour ta démarche et ton investissement. " +
+                "Continue tes efforts, tu es sur la bonne voie. " +
+                "N'hésite pas à appliquer les conseils discutés et à revenir vers moi si besoin. " +
+                "Prends soin de toi !";
     }
 
     // ══════════════════════════════════════════════════════════════
