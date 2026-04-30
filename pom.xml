@@ -16,7 +16,6 @@
         <javafx.version>21.0.10</javafx.version>
     </properties>
 
-    <!-- ✅ AJOUTER LE REPOSITORY JCenter -->
     <repositories>
         <repository>
             <id>maven-central</id>
@@ -26,8 +25,12 @@
             <id>calendarfx-repo</id>
             <url>https://raw.githubusercontent.com/calendarfx/calendarfx/mvn-repo</url>
         </repository>
+        <repository>
+            <id>google-maven-central</id>
+            <name>Google Maven Central</name>
+            <url>https://maven.google.com</url>
+        </repository>
     </repositories>
-
 
     <dependencies>
         <!-- MySQL Connector -->
@@ -37,7 +40,7 @@
             <version>8.0.33</version>
         </dependency>
 
-        <!-- BCrypt - pour le hashage des mots de passe -->
+        <!-- BCrypt -->
         <dependency>
             <groupId>at.favre.lib</groupId>
             <artifactId>bcrypt</artifactId>
@@ -58,23 +61,24 @@
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-media</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-
-        <!-- ✅ AJOUT OBLIGATOIRE : JavaFX Web pour la carte OpenStreetMap -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-web</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
             <version>${javafx.version}</version>
         </dependency>
 
@@ -99,49 +103,6 @@
             <version>3.0.1</version>
         </dependency>
 
-        <!-- Mailjet API -->
-        <dependency>
-            <groupId>com.mailjet</groupId>
-            <artifactId>mailjet-client</artifactId>
-            <version>5.2.0</version>
-        </dependency>
-
-
-        <!-- Vosk - Reconnaissance vocale hors ligne -->
-        <dependency>
-            <groupId>com.alphacephei</groupId>
-            <artifactId>vosk</artifactId>
-            <version>0.3.45</version>
-        </dependency>
-
-        <!-- Pour la gestion du microphone -->
-        <dependency>
-            <groupId>javax.sound</groupId>
-            <artifactId>javax.sound-api</artifactId>
-            <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${java.home}/lib/jrt-fs.jar</systemPath>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- OkHttp pour appeler l'API Gemini -->
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>4.12.0</version>
-        </dependency>
-
-        <!-- Pour traiter les réponses JSON -->
-        <!-- CalendarFX - Version plus récente sur Maven Central -->
-        <!--<dependency>
-            <groupId>com.calendarfx</groupId>
-            <artifactId>calendarfx</artifactId>
-            <version>11.13.0</version>
-        </dependency>-->
-
-
-    </dependencies>
-
         <!-- Mailjet -->
         <dependency>
             <groupId>com.mailjet</groupId>
@@ -149,6 +110,19 @@
             <version>5.2.5</version>
         </dependency>
 
+        <!-- Vosk - Reconnaissance vocale -->
+        <dependency>
+            <groupId>com.alphacephei</groupId>
+            <artifactId>vosk</artifactId>
+            <version>0.3.45</version>
+        </dependency>
+
+        <!-- OkHttp pour API Gemini -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.12.0</version>
+        </dependency>
 
         <!-- Apache HttpClient -->
         <dependency>
@@ -164,20 +138,6 @@
             <version>20231013</version>
         </dependency>
 
-        <!-- JavaFX WebView -->
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-web</artifactId>
-            <version>${javafx.version}</version>
-        </dependency>
-
-        <!-- JavaFX Swing (pour webcam) -->
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-swing</artifactId>
-            <version>${javafx.version}</version>
-        </dependency>
-
         <!-- Webcam Capture -->
         <dependency>
             <groupId>com.github.sarxos</groupId>
@@ -189,22 +149,10 @@
             <artifactId>slf4j-nop</artifactId>
             <version>2.0.9</version>
         </dependency>
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20231013</version>
-        </dependency>
     </dependencies>
-    <repositories>
-        <repository>
-            <id>google-maven-central</id>
-            <name>Google Maven Central</name>
-            <url>https://maven.google.com</url>
-        </repository>
-    </repositories>
+
     <build>
         <plugins>
-            <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -215,24 +163,20 @@
                 </configuration>
             </plugin>
 
-            <!-- Surefire pour JUnit 5 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.1.2</version>
             </plugin>
 
-            <!-- JavaFX Maven Plugin -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>org.example.main.MainApp</mainClass>
-                    <!-- AJOUTER CES LIGNES : -->
                     <options>
                         <option>-Dfile.encoding=UTF-8</option>
-                        <option>-Dstdout.encoding=UTF-8</option>
                     </options>
                 </configuration>
             </plugin>

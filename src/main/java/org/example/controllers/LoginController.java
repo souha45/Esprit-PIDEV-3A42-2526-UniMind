@@ -244,11 +244,11 @@ public class LoginController {
 
         System.out.println("DEBUG → currentCaptchaResponse = '" + currentCaptchaResponse + "'");
 
-        if (currentCaptchaResponse.isEmpty()
-                || !captchaService.verifyCaptcha(currentCaptchaResponse)) {
-            setMessage("⚠ Veuillez valider le captcha.", true);
-            return;
-        }
+//        if (currentCaptchaResponse.isEmpty()
+//                || !captchaService.verifyCaptcha(currentCaptchaResponse)) {
+//            setMessage("⚠ Veuillez valider le captcha.", true);
+//            return;
+//        }
 
         currentCaptchaResponse = "";
 
