@@ -16,6 +16,7 @@
         <javafx.version>21.0.10</javafx.version>
     </properties>
 
+    <!-- Repositories -->
     <repositories>
         <repository>
             <id>maven-central</id>
@@ -33,6 +34,10 @@
     </repositories>
 
     <dependencies>
+        <!-- ============================================ -->
+        <!-- BASE DE DONNÉES & SÉCURITÉ                  -->
+        <!-- ============================================ -->
+
         <!-- MySQL Connector -->
         <dependency>
             <groupId>mysql</groupId>
@@ -40,22 +45,24 @@
             <version>8.0.33</version>
         </dependency>
 
-        <!-- BCrypt -->
+        <!-- BCrypt - pour le hashage des mots de passe -->
         <dependency>
             <groupId>at.favre.lib</groupId>
             <artifactId>bcrypt</artifactId>
             <version>0.10.2</version>
         </dependency>
 
-        <!-- JUnit Jupiter -->
+        <!-- Spring Security Crypto -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.10.1</version>
-            <scope>test</scope>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+            <version>6.1.5</version>
         </dependency>
 
-        <!-- JavaFX Modules -->
+        <!-- ============================================ -->
+        <!-- JAVAFX                                       -->
+        <!-- ============================================ -->
+
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -82,42 +89,50 @@
             <version>${javafx.version}</version>
         </dependency>
 
-        <!-- Spring Security Crypto -->
+        <!-- ============================================ -->
+        <!-- TESTS                                        -->
+        <!-- ============================================ -->
+
         <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-crypto</artifactId>
-            <version>6.1.5</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.1</version>
+            <scope>test</scope>
         </dependency>
 
-        <!-- Commons Logging -->
-        <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <version>1.2</version>
-        </dependency>
+        <!-- ============================================ -->
+        <!-- EMAIL & NOTIFICATIONS                        -->
+        <!-- ============================================ -->
 
-        <!-- PDFBox -->
-        <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>pdfbox</artifactId>
-            <version>3.0.1</version>
-        </dependency>
-
-        <!-- Mailjet -->
+        <!-- Mailjet API -->
         <dependency>
             <groupId>com.mailjet</groupId>
             <artifactId>mailjet-client</artifactId>
             <version>5.2.5</version>
         </dependency>
 
-        <!-- Vosk - Reconnaissance vocale -->
+        <!-- JavaMail API (alternative) -->
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <version>1.6.2</version>
+        </dependency>
+
+        <!-- ============================================ -->
+        <!-- RECONNAISSANCE VOCALE (VOSK)                 -->
+        <!-- ============================================ -->
+
         <dependency>
             <groupId>com.alphacephei</groupId>
             <artifactId>vosk</artifactId>
             <version>0.3.45</version>
         </dependency>
 
-        <!-- OkHttp pour API Gemini -->
+        <!-- ============================================ -->
+        <!-- API & RÉSEAU                                 -->
+        <!-- ============================================ -->
+
+        <!-- OkHttp pour appeler l'API Gemini -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
@@ -138,46 +153,66 @@
             <version>20231013</version>
         </dependency>
 
-        <!-- Webcam Capture -->
+        <!-- ============================================ -->
+        <!-- PDF & GÉNÉRATION DE DOCUMENTS                -->
+        <!-- ============================================ -->
+
+        <!-- PDFBox -->
         <dependency>
-            <groupId>com.github.sarxos</groupId>
-            <artifactId>webcam-capture</artifactId>
-            <version>0.3.12</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-nop</artifactId>
-            <version>2.0.9</version>
-        <!-- JFreeChart pour des graphiques plus avancés (optionnel pour traitements) -->
-        <dependency>
-            <groupId>org.jfree</groupId>
-            <artifactId>jfreechart</artifactId>
-            <version>1.5.3</version>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.1</version>
         </dependency>
 
+        <!-- iTextPDF pour HTML vers PDF -->
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>html2pdf</artifactId>
             <version>4.0.3</version>
         </dependency>
 
-        <!-- SLF4J Logging pour corriger le warning -->
+        <!-- ============================================ -->
+        <!-- GRAPHIQUES                                   -->
+        <!-- ============================================ -->
+
+        <!-- JFreeChart pour des graphiques plus avancés -->
+        <dependency>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>1.5.3</version>
+        </dependency>
+
+        <!-- ============================================ -->
+        <!-- WEBCAM                                       -->
+        <!-- ============================================ -->
+
+        <dependency>
+            <groupId>com.github.sarxos</groupId>
+            <artifactId>webcam-capture</artifactId>
+            <version>0.3.12</version>
+        </dependency>
+
+        <!-- ============================================ -->
+        <!-- LOGGING                                      -->
+        <!-- ============================================ -->
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.36</version>
         </dependency>
 
-        <!-- JavaMail API -->
         <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-            <version>1.6.2</version>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.2</version>
         </dependency>
+
     </dependencies>
 
     <build>
         <plugins>
+            <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -188,12 +223,14 @@
                 </configuration>
             </plugin>
 
+            <!-- Surefire pour JUnit 5 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.1.2</version>
             </plugin>
 
+            <!-- JavaFX Maven Plugin -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
