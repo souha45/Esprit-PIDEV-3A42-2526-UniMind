@@ -16,13 +16,54 @@
     <!-- ── Brand header ───────────────────────────────────────── -->
     <VBox alignment="CENTER_LEFT" spacing="2"
           style="-fx-background-color: linear-gradient(to bottom right, #6366f1, #8b5cf6);
-                 -fx-padding: 24 18 20 18;">
-        <Label text="Unimind"
-               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 20px;
-                      -fx-font-weight: bold; -fx-text-fill: #ffffff;" />
-        <Label text="Espace Étudiant"
-               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px;
-                      -fx-text-fill: rgba(255,255,255,0.75); -fx-letter-spacing: 1px;" />
+                 -fx-padding: 20 18 16 18;">
+
+        <!-- Ligne Unimind + bouton micro -->
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <VBox spacing="1" HBox.hgrow="ALWAYS">
+                <Label text="Unimind"
+                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 20px;
+                              -fx-font-weight: bold; -fx-text-fill: #ffffff;" />
+                <Label text="Espace Étudiant"
+                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 10px;
+                              -fx-text-fill: rgba(255,255,255,0.75); -fx-letter-spacing: 1px;" />
+            </VBox>
+
+            <!-- Bouton microphone assistant vocal -->
+            <VBox alignment="CENTER" spacing="4">
+                <Button fx:id="btnVoice"
+                        text="🎙"
+                        onAction="#toggleVoiceAssistant"
+                        style="-fx-background-color: rgba(255,255,255,0.18);
+               -fx-text-fill: white; -fx-font-size: 16px;
+               -fx-background-radius: 50%; -fx-min-width: 38px;
+               -fx-min-height: 38px; -fx-max-width: 38px;
+               -fx-max-height: 38px; -fx-cursor: hand;
+               -fx-border-color: rgba(255,255,255,0.35);
+               -fx-border-radius: 50%; -fx-border-width: 1.5;">
+                    <tooltip>
+                        <Tooltip text="Assistant vocal" />
+                    </tooltip>
+                </Button>
+                <Label fx:id="lblVoiceHint" text="vocal"
+                       style="-fx-font-size: 8px; -fx-text-fill: rgba(255,255,255,0.65);"/>
+            </VBox>
+        </HBox>
+
+        <!-- Feedback assistant vocal (transcript + statut) -->
+        <VBox fx:id="voiceFeedbackBox" spacing="3"
+              visible="false" managed="false"
+              style="-fx-background-color: rgba(0,0,0,0.20);
+                     -fx-background-radius: 8; -fx-padding: 8 10 8 10;">
+            <Label fx:id="lblVoiceStatus" text="🎤 En écoute..."
+                   wrapText="true"
+                   style="-fx-font-size: 10px; -fx-text-fill: #e0e7ff;
+                          -fx-font-family: 'Segoe UI';"/>
+            <Label fx:id="lblVoiceTranscript" text=""
+                   wrapText="true"
+                   style="-fx-font-size: 11px; -fx-text-fill: white;
+                          -fx-font-weight: bold; -fx-font-family: 'Segoe UI';"/>
+        </VBox>
     </VBox>
 
     <!-- ── Zone utilisateur ───────────────────────────────────── -->
@@ -51,7 +92,6 @@
     <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
                 style="-fx-background-color: transparent; -fx-background: transparent;
                        -fx-border-width: 0; -fx-padding: 0;">
-
         <VBox spacing="2" style="-fx-padding: 20 12 12 12;">
 
             <Label text="NAVIGATION"
@@ -135,11 +175,10 @@
                            -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
                            -fx-alignment: CENTER_LEFT; -fx-padding: 11 16;
                            -fx-background-radius: 10; -fx-cursor: hand;" />
-
         </VBox>
     </ScrollPane>
 
-    <!-- ── Pied : déconnexion (fixe en bas) ─────────────────────── -->
+    <!-- ── Pied : déconnexion ─────────────────────────────────── -->
     <VBox spacing="6"
           style="-fx-padding: 10 12 18 12; -fx-border-color: #e0e7ff; -fx-border-width: 1 0 0 0;">
         <Button fx:id="btnDeconnexion" text="  🚪  Déconnexion" maxWidth="Infinity"

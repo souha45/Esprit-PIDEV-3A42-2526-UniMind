@@ -4,6 +4,11 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.*?>
 
+<!--
+  EtudiantSeancesCategorie.fxml — VERSION MODIFIÉE
+  Changement principal : la section-container devient un HBox à 3 colonnes :
+     [Conseils]  [Séances grid]  [Sons ambiants ← NOUVEAU]
+-->
 <ScrollPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="org.example.controllers.EtudiantSeancesCategorieController"
@@ -22,9 +27,12 @@
             <Label fx:id="lblDescCategorie" text="" styleClass="page-subtitle" wrapText="true"/>
         </VBox>
 
-        <!-- CONSEILS BOX -->
-        <HBox styleClass="section-container" spacing="20">
-            <VBox styleClass="conseils-card" prefWidth="300" spacing="10">
+        <!-- CONTENU PRINCIPAL : 3 colonnes -->
+        <HBox styleClass="section-container" spacing="20" alignment="TOP_LEFT">
+            <HBox.margin><Insets top="16" right="16" bottom="16" left="16"/></HBox.margin>
+
+            <!-- ① Conseils (largeur fixe) -->
+            <VBox styleClass="conseils-card" prefWidth="300" minWidth="220" spacing="10">
                 <Label text="💡 Conseils pour une bonne séance" styleClass="conseils-title"/>
                 <Separator/>
                 <HBox spacing="10" alignment="CENTER_LEFT">
@@ -61,11 +69,21 @@
                 </HBox>
             </VBox>
 
-            <!-- Séances grid -->
+            <!-- ② Séances grid (s'étire) -->
             <VBox HBox.hgrow="ALWAYS" spacing="12">
                 <Label text="🎵 Séances disponibles" styleClass="section-title"/>
                 <FlowPane fx:id="seancesGrid" hgap="16" vgap="16"/>
             </VBox>
+
+            <!-- ③ Sons ambiants (injecté dynamiquement via fx:id) -->
+            <!--
+                Le VBox est créé par buildAmbientPanel() dans le contrôleur.
+                On déclare ici un placeholder fx:id="ambientPanelContainer"
+                dans lequel le contrôleur injectera le panneau.
+            -->
+            <VBox fx:id="ambientPanelContainer" prefWidth="260" minWidth="240" spacing="0"
+                  alignment="TOP_CENTER"/>
+
         </HBox>
 
     </VBox>

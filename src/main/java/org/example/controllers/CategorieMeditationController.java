@@ -150,6 +150,7 @@ public class CategorieMeditationController implements Initializable {
                 setGraphic(empty ? null : box);
             }
         });
+        tableCategories.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
     // ==================== DATA LOADING ====================

@@ -12,151 +12,211 @@
       stylesheets="/css/admin.css"
       spacing="0">
 
-    <!-- PAGE HEADER -->
     <VBox styleClass="page-header">
         <Label text="📊 Statistiques" styleClass="page-title"/>
         <Label text="Vue d'ensemble de la plateforme Unimind" styleClass="page-subtitle"/>
     </VBox>
 
-    <!-- SCROLLABLE CONTENT -->
-    <ScrollPane fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                style="-fx-background-color: transparent; -fx-border-color: transparent;">
         <VBox spacing="0">
 
-    <!-- KPI CARDS -->
-    <HBox spacing="16">
-        <VBox.margin><Insets top="20" right="24" bottom="0" left="24"/></VBox.margin>
+            <!-- TITRE MODULE SÉANCES -->
+            <VBox><VBox.margin><Insets top="0" right="24" bottom="0" left="24"/></VBox.margin>
+                <Label text="🌼  Statistiques Séances de Méditation"
+                       style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3730a3; -fx-padding: 24 0 12 0;"/>
+            </VBox>
 
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
-            <Label text="🌼" styleClass="stat-icon"/>
-            <Label fx:id="lblTotalCategories" text="0" styleClass="stat-number"/>
-            <Label text="Catégories" styleClass="stat-label"/>
-        </VBox>
+            <!-- FILTRE BAR -->
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <VBox.margin><Insets top="0" right="24" bottom="14" left="24"/></VBox.margin>
+                <Label text="🔧 Filtres :"
+                       style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #6366f1;"/>
 
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
-            <Label text="🎵" styleClass="stat-icon"/>
-            <Label fx:id="lblTotalSeances" text="0" styleClass="stat-number"/>
-            <Label text="Séances totales" styleClass="stat-label"/>
-        </VBox>
+                <VBox spacing="3">
+                    <Label text="Type" style="-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                    <ComboBox fx:id="cbFilterType" promptText="Tous les types"
+                              styleClass="filter-combo" prefWidth="145" onAction="#onFilterChanged"/>
+                </VBox>
 
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
-            <Label text="✅" styleClass="stat-icon"/>
-            <Label fx:id="lblSeancesActives" text="0" styleClass="stat-number"/>
-            <Label text="Séances actives" styleClass="stat-label"/>
-        </VBox>
+                <VBox spacing="3">
+                    <Label text="Niveau" style="-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                    <ComboBox fx:id="cbFilterNiveau" promptText="Tous les niveaux"
+                              styleClass="filter-combo" prefWidth="155" onAction="#onFilterChanged"/>
+                </VBox>
 
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS"
-              style="-fx-border-color: #fbbf24; -fx-background-color: #fffbeb;">
-            <Label text="🎬" styleClass="stat-icon"/>
-            <Label fx:id="lblSeancesVideo" text="0" styleClass="stat-number"
-                   style="-fx-text-fill: #d97706;"/>
-            <Label text="Séances vidéo" styleClass="stat-label"/>
-        </VBox>
-    </HBox>
+                <VBox spacing="3">
+                    <Label text="Statut" style="-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                    <ComboBox fx:id="cbFilterStatut" promptText="Tous les statuts"
+                              styleClass="filter-combo" prefWidth="145" onAction="#onFilterChanged"/>
+                </VBox>
 
-    <!-- CHARTS ROW -->
-    <HBox spacing="16" prefHeight="350">
-        <VBox.margin><Insets top="20" right="24" bottom="24" left="24"/></VBox.margin>
+                <VBox spacing="3">
+                    <Label text="Période" style="-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                    <ComboBox fx:id="cbFilterPeriode" promptText="Toute période"
+                              styleClass="filter-combo" prefWidth="155" onAction="#onFilterChanged"/>
+                </VBox>
 
-        <!-- LINE CHART: Evolution mensuelle -->
-        <VBox styleClass="chart-card" HBox.hgrow="ALWAYS">
-            <Label text="📈  Évolution mensuelle des séances" styleClass="chart-title"/>
-            <Label text="Nombre de séances créées par mois" styleClass="chart-subtitle"/>
-            <LineChart fx:id="lineChart" VBox.vgrow="ALWAYS"
-                       styleClass="custom-chart" animated="true"
-                       legendVisible="false">
-                <xAxis>
-                    <CategoryAxis label="" fx:id="xAxis" styleClass="chart-axis"/>
-                </xAxis>
-                <yAxis>
-                    <NumberAxis label="Séances" lowerBound="0" tickUnit="1"
-                                minorTickVisible="false" styleClass="chart-axis"/>
-                </yAxis>
-            </LineChart>
-        </VBox>
+                <VBox spacing="3">
+                    <Label text="Catégorie" style="-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                    <ComboBox fx:id="cbFilterCategorie" promptText="Toutes"
+                              styleClass="filter-combo" prefWidth="175" onAction="#onFilterChanged"/>
+                </VBox>
 
-        <!-- PIE CHART: Séances par catégorie -->
-        <VBox styleClass="chart-card" prefWidth="380">
-            <Label text="❤  Séances par catégorie" styleClass="chart-title"/>
-            <Label text="Répartition des séances selon les catégories" styleClass="chart-subtitle"/>
-            <PieChart fx:id="pieChart" VBox.vgrow="ALWAYS"
-                      styleClass="custom-chart" animated="true"
-                      labelsVisible="true" legendVisible="true"
-                      legendSide="BOTTOM"/>
-        </VBox>
+                <VBox spacing="3">
+                    <Label text=" " style="-fx-font-size: 11px;"/>
+                    <Button text="↺  Réinitialiser" styleClass="btn-secondary"
+                            onAction="#onResetFilters"
+                            style="-fx-padding: 7 14 7 14; -fx-font-size: 12px;"/>
+                </VBox>
 
-    </HBox>
+                <!-- Export CSV button -->
+                <VBox spacing="3">
+                    <Label text=" " style="-fx-font-size: 11px;"/>
+                    <Button fx:id="btnExportCSV" text="📥  Exporter CSV"
+                            onAction="#onExportCSV"
+                            style="-fx-background-color: #10b981; -fx-text-fill: white;
+                                   -fx-font-size: 12px; -fx-font-weight: bold;
+                                   -fx-padding: 7 14 7 14; -fx-background-radius: 8;
+                                   -fx-cursor: hand;"/>
+                </VBox>
 
-    <!-- ── MODULE ÉVÉNEMENTS: KPI CARDS ── -->
-    <VBox spacing="0">
-        <VBox.margin><Insets top="0" right="24" bottom="0" left="24"/></VBox.margin>
-        <Label text="🎪 Statistiques Événements"
-               style="-fx-font-family: 'Segoe UI'; -fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3730a3; -fx-padding: 24 0 16 0;"/>
-    </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <VBox spacing="3" alignment="CENTER_RIGHT">
+                    <Label text=" " style="-fx-font-size: 11px;"/>
+                    <Label fx:id="lblFilterResult" text=""
+                           style="-fx-font-size: 12px; -fx-text-fill: #6366f1; -fx-font-weight: bold;"/>
+                </VBox>
+            </HBox>
 
-    <HBox spacing="16">
-        <VBox.margin><Insets top="0" right="24" bottom="0" left="24"/></VBox.margin>
+            <!-- KPI CARDS -->
+            <HBox spacing="12">
+                <VBox.margin><Insets top="0" right="24" bottom="0" left="24"/></VBox.margin>
 
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
-            <Label text="🎪" styleClass="stat-icon"/>
-            <Label fx:id="lblTotalEvenements" text="0" styleClass="stat-number"/>
-            <Label text="Total événements" styleClass="stat-label"/>
-        </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                    <Label text="🌼" styleClass="stat-icon"/>
+                    <Label fx:id="lblTotalCategories" text="0" styleClass="stat-number"/>
+                    <Label text="Catégories" styleClass="stat-label"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                    <Label text="🎵" styleClass="stat-icon"/>
+                    <Label fx:id="lblTotalSeances" text="0" styleClass="stat-number"/>
+                    <Label fx:id="lblTotalSeancesLabel" text="Séances" styleClass="stat-label"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                    <Label text="✅" styleClass="stat-icon"/>
+                    <Label fx:id="lblSeancesActives" text="0" styleClass="stat-number"/>
+                    <Label text="Actives" styleClass="stat-label"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS"
+                      style="-fx-border-color: #fbbf24; -fx-background-color: #fffbeb;">
+                    <Label text="🎬" styleClass="stat-icon"/>
+                    <Label fx:id="lblSeancesVideo" text="0" styleClass="stat-number"
+                           style="-fx-text-fill: #d97706;"/>
+                    <Label text="Vidéo" styleClass="stat-label"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS"
+                      style="-fx-border-color: #ec4899; -fx-background-color: #fdf2f8;">
+                    <Label text="🎙" styleClass="stat-icon"/>
+                    <Label fx:id="lblSeancesAudio" text="0" styleClass="stat-number"
+                           style="-fx-text-fill: #ec4899;"/>
+                    <Label text="Audio" styleClass="stat-label"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS"
+                      style="-fx-border-color: #8b5cf6; -fx-background-color: #f5f3ff;">
+                    <Label text="⏱" styleClass="stat-icon"/>
+                    <Label fx:id="lblDureeMoyenne" text="0 min" styleClass="stat-number"
+                           style="-fx-font-size: 18px; -fx-text-fill: #8b5cf6;"/>
+                    <Label text="Durée moy." styleClass="stat-label"/>
+                </VBox>
+            </HBox>
 
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
-            <Label text="📅" styleClass="stat-icon"/>
-            <Label fx:id="lblEvenementsAVenir" text="0" styleClass="stat-number"/>
-            <Label text="Événements à venir" styleClass="stat-label"/>
-        </VBox>
+            <!-- CHARTS ROW -->
+            <HBox spacing="16" prefHeight="340">
+                <VBox.margin><Insets top="20" right="24" bottom="24" left="24"/></VBox.margin>
 
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
-            <Label text="✅" styleClass="stat-icon"/>
-            <Label fx:id="lblTotalParticipations" text="0" styleClass="stat-number"/>
-            <Label text="Total participations" styleClass="stat-label"/>
-        </VBox>
+                <VBox styleClass="chart-card" HBox.hgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="📈  Évolution mensuelle" styleClass="chart-title" HBox.hgrow="ALWAYS"/>
+                        <ComboBox fx:id="cbPeriodeLine" styleClass="filter-combo" prefWidth="140"
+                                  onAction="#onPeriodLineChanged"/>
+                    </HBox>
+                    <Label fx:id="lblLineSubtitle" text="Séances créées — 12 derniers mois"
+                           styleClass="chart-subtitle"/>
+                    <LineChart fx:id="lineChart" VBox.vgrow="ALWAYS"
+                               styleClass="custom-chart" animated="true" legendVisible="false">
+                        <xAxis><CategoryAxis fx:id="xAxis" styleClass="chart-axis"/></xAxis>
+                        <yAxis><NumberAxis label="Séances" lowerBound="0" tickUnit="1"
+                                           minorTickVisible="false" styleClass="chart-axis"/></yAxis>
+                    </LineChart>
+                </VBox>
 
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS"
-              style="-fx-border-color: #10b981; -fx-background-color: #ecfdf5;">
-            <Label text="👥" styleClass="stat-icon"/>
-            <Label fx:id="lblParticipationsConfirmees" text="0" styleClass="stat-number"
-                   style="-fx-text-fill: #059669;"/>
-            <Label text="Participations confirmées" styleClass="stat-label"/>
-        </VBox>
-    </HBox>
+                <VBox styleClass="chart-card" prefWidth="360">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="🌼  Répartition" styleClass="chart-title" HBox.hgrow="ALWAYS"/>
+                        <ComboBox fx:id="cbPieSplit" styleClass="filter-combo" prefWidth="155"
+                                  onAction="#onPieSplitChanged"/>
+                    </HBox>
+                    <Label fx:id="lblPieSubtitle" text="Par catégorie" styleClass="chart-subtitle"/>
+                    <PieChart fx:id="pieChart" VBox.vgrow="ALWAYS"
+                              styleClass="custom-chart" animated="true"
+                              labelsVisible="true" legendVisible="true" legendSide="BOTTOM"/>
+                </VBox>
+            </HBox>
 
-    <!-- ── MODULE ÉVÉNEMENTS: CHARTS ROW ── -->
-    <HBox spacing="16" prefHeight="350">
-        <VBox.margin><Insets top="20" right="24" bottom="24" left="24"/></VBox.margin>
+            <!-- MODULE ÉVÉNEMENTS -->
+            <VBox><VBox.margin><Insets top="0" right="24" bottom="0" left="24"/></VBox.margin>
+                <Label text="🎪 Statistiques Événements"
+                       style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3730a3; -fx-padding: 24 0 16 0;"/>
+            </VBox>
 
-        <!-- BAR CHART: Événements par type -->
-        <VBox styleClass="chart-card" HBox.hgrow="ALWAYS">
-            <Label text="📊 Événements par type" styleClass="chart-title"/>
-            <Label text="Répartition des événements selon leur type" styleClass="chart-subtitle"/>
-            <BarChart fx:id="barChartEvenements" VBox.vgrow="ALWAYS"
-                      styleClass="custom-chart" animated="true"
-                      legendVisible="false">
-                <xAxis>
-                    <CategoryAxis label="Type" fx:id="xAxisEvenements" styleClass="chart-axis"/>
-                </xAxis>
-                <yAxis>
-                    <NumberAxis label="Nombre" lowerBound="0" tickUnit="1"
-                                minorTickVisible="false" styleClass="chart-axis"/>
-                </yAxis>
-            </BarChart>
-        </VBox>
+            <HBox spacing="16">
+                <VBox.margin><Insets top="0" right="24" bottom="0" left="24"/></VBox.margin>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                    <Label text="🎪" styleClass="stat-icon"/>
+                    <Label fx:id="lblTotalEvenements" text="0" styleClass="stat-number"/>
+                    <Label text="Total événements" styleClass="stat-label"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                    <Label text="📅" styleClass="stat-icon"/>
+                    <Label fx:id="lblEvenementsAVenir" text="0" styleClass="stat-number"/>
+                    <Label text="À venir" styleClass="stat-label"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                    <Label text="✅" styleClass="stat-icon"/>
+                    <Label fx:id="lblTotalParticipations" text="0" styleClass="stat-number"/>
+                    <Label text="Total participations" styleClass="stat-label"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS"
+                      style="-fx-border-color: #10b981; -fx-background-color: #ecfdf5;">
+                    <Label text="👥" styleClass="stat-icon"/>
+                    <Label fx:id="lblParticipationsConfirmees" text="0" styleClass="stat-number"
+                           style="-fx-text-fill: #059669;"/>
+                    <Label text="Confirmées" styleClass="stat-label"/>
+                </VBox>
+            </HBox>
 
-        <!-- PIE CHART: Participations par statut -->
-        <VBox styleClass="chart-card" prefWidth="380">
-            <Label text="❤ Participations par statut" styleClass="chart-title"/>
-            <Label text="Répartition des participations selon le statut" styleClass="chart-subtitle"/>
-            <PieChart fx:id="pieChartParticipations" VBox.vgrow="ALWAYS"
-                      styleClass="custom-chart" animated="true"
-                      labelsVisible="true" legendVisible="true"
-                      legendSide="BOTTOM"/>
-        </VBox>
-
-    </HBox>
+            <HBox spacing="16" prefHeight="340">
+                <VBox.margin><Insets top="20" right="24" bottom="32" left="24"/></VBox.margin>
+                <VBox styleClass="chart-card" HBox.hgrow="ALWAYS">
+                    <Label text="📊 Événements par type" styleClass="chart-title"/>
+                    <Label text="Répartition selon le type" styleClass="chart-subtitle"/>
+                    <BarChart fx:id="barChartEvenements" VBox.vgrow="ALWAYS"
+                              styleClass="custom-chart" animated="true" legendVisible="false">
+                        <xAxis><CategoryAxis fx:id="xAxisEvenements" styleClass="chart-axis"/></xAxis>
+                        <yAxis><NumberAxis label="Nombre" lowerBound="0" tickUnit="1"
+                                           minorTickVisible="false" styleClass="chart-axis"/></yAxis>
+                    </BarChart>
+                </VBox>
+                <VBox styleClass="chart-card" prefWidth="360">
+                    <Label text="🌼 Participations par statut" styleClass="chart-title"/>
+                    <Label text="Répartition selon le statut" styleClass="chart-subtitle"/>
+                    <PieChart fx:id="pieChartParticipations" VBox.vgrow="ALWAYS"
+                              styleClass="custom-chart" animated="true"
+                              labelsVisible="true" legendVisible="true" legendSide="BOTTOM"/>
+                </VBox>
+            </HBox>
 
         </VBox>
     </ScrollPane>
-
 </VBox>

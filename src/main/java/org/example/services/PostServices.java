@@ -16,19 +16,32 @@ public class PostServices implements ICrud<Post> {
 
     @Override
     public void ajouter(Post post) throws SQLException {
-        String sql = "INSERT INTO `post` (`titre`, `contenu`, `is_anonyme`, `created_at`, `updated_at`, `user_id`, `categorie_id`) " +
+        String sql = "INSERT INTO `post` (`titre`, `contenu`, `is_anonyme`, " +
+                "`created_at`, `updated_at`, `user_id`, `categorie_id`) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        PreparedStatement preparedStatement = con.prepareStatement(sql);
-        preparedStatement.setString(1, post.getTitre());
-        preparedStatement.setString(2, post.getContenu());
-        preparedStatement.setBoolean(3, post.isIsAnonyme());
+
+        // ✅ RETURN_GENERATED_KEYS pour récupérer l'ID auto-incrémenté
+        PreparedStatement ps = con.prepareStatement(sql,
+                Statement.RETURN_GENERATED_KEYS);
+
+        ps.setString(1, post.getTitre());
+        ps.setString(2, post.getContenu());
+        ps.setBoolean(3, post.isIsAnonyme());
         Timestamp now = new Timestamp(System.currentTimeMillis());
-        preparedStatement.setTimestamp(4, now); // created_at
-        preparedStatement.setTimestamp(5, now); // updated_at
-        preparedStatement.setInt(6, post.getUserId());
-        preparedStatement.setInt(7, post.getCategorieId()); // jamais NULL
-        preparedStatement.executeUpdate();
-        System.out.println("Ajout du post : " + post.getTitre());
+        ps.setTimestamp(4, now);
+        ps.setTimestamp(5, now);
+        ps.setInt(6, post.getUserId());
+        ps.setInt(7, post.getCategorieId());
+        ps.executeUpdate();
+
+        // ✅ Récupérer l'ID généré et le setter dans l'objet post
+        ResultSet generatedKeys = ps.getGeneratedKeys();
+        if (generatedKeys.next()) {
+            post.setPostId(generatedKeys.getInt(1));
+            System.out.println("Post ajouté avec ID: " + post.getPostId());
+        }
+        generatedKeys.close();
+        ps.close();
     }
 
     @Override

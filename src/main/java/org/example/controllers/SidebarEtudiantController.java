@@ -9,8 +9,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.example.entities.User;
+import org.example.services.VoiceAssistantService;
+import org.example.services.VoiceAssistantService.NavigationCommand;
 import org.example.utils.MyDataBase_Unimind;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -20,8 +24,10 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import org.example.utils.NavigationContext;
 
 public class SidebarEtudiantController {
@@ -31,11 +37,16 @@ public class SidebarEtudiantController {
     @FXML private Label     sidebarNomLabel;
     @FXML private Label     sidebarPrenomLabel;
     @FXML private Label     sidebarRoleLabel;
+    @FXML private Label     lblInitiales;
+    @FXML private Label     lblNomComplet;
+    @FXML private Label     lblRole;
 
-    // Labels initiales (style moderne)
-    @FXML private Label lblInitiales;
-    @FXML private Label lblNomComplet;
-    @FXML private Label lblRole;
+    // ── FXML — assistant vocal ─────────────────────────────────────
+    @FXML private Button btnVoice;
+    @FXML private Label  lblVoiceHint;
+    @FXML private VBox   voiceFeedbackBox;
+    @FXML private Label  lblVoiceStatus;
+    @FXML private Label  lblVoiceTranscript;
 
     // ── FXML — boutons de navigation ──────────────────────────────
     @FXML private Button btnDashboard;
@@ -52,7 +63,211 @@ public class SidebarEtudiantController {
     @FXML private Button btnMesParticipations;
     @FXML private Button btnFavorisEvenements;
     @FXML private StackPane contentArea;
-    //vérification
+
+    // ── Design tokens ──────────────────────────────────────────────
+    private static final String STYLE_ACTIVE =
+            "-fx-background-color: #ede9fe; -fx-text-fill: #6366f1; " +
+                    "-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; -fx-font-weight: bold; " +
+                    "-fx-alignment: CENTER_LEFT; -fx-padding: 11 16; -fx-background-radius: 10; " +
+                    "-fx-border-color: #c4b5fd; -fx-border-width: 0 0 0 3; " +
+                    "-fx-border-radius: 10; -fx-cursor: hand;";
+
+    private static final String STYLE_IDLE =
+            "-fx-background-color: transparent; -fx-text-fill: #6b7280; " +
+                    "-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; " +
+                    "-fx-alignment: CENTER_LEFT; -fx-padding: 11 16; " +
+                    "-fx-background-radius: 10; -fx-cursor: hand;";
+
+    private static final String STYLE_HOVER =
+            "-fx-background-color: #ede9fe; -fx-text-fill: #6366f1; " +
+                    "-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; " +
+                    "-fx-alignment: CENTER_LEFT; -fx-padding: 11 16; " +
+                    "-fx-background-radius: 10; -fx-cursor: hand;";
+
+    private static final String STYLE_LOGOUT_IDLE =
+            "-fx-background-color: transparent; -fx-text-fill: #ef4444; " +
+                    "-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; " +
+                    "-fx-alignment: CENTER_LEFT; -fx-padding: 11 16; " +
+                    "-fx-background-radius: 10; -fx-cursor: hand;";
+
+    private static final String STYLE_LOGOUT_HOVER =
+            "-fx-background-color: #fee2e2; -fx-text-fill: #dc2626; " +
+                    "-fx-font-family: 'Segoe UI'; -fx-font-size: 13px; " +
+                    "-fx-alignment: CENTER_LEFT; -fx-padding: 11 16; " +
+                    "-fx-background-radius: 10; -fx-cursor: hand;";
+
+    // Styles bouton micro
+    private static final String VOICE_IDLE =
+            "-fx-background-color: rgba(255,255,255,0.18); -fx-text-fill: white; " +
+                    "-fx-font-size: 16px; -fx-background-radius: 50%; " +
+                    "-fx-min-width: 38px; -fx-min-height: 38px; " +
+                    "-fx-max-width: 38px; -fx-max-height: 38px; -fx-cursor: hand; " +
+                    "-fx-border-color: rgba(255,255,255,0.35); -fx-border-radius: 50%; -fx-border-width: 1.5;";
+
+    private static final String VOICE_ACTIVE =
+            "-fx-background-color: #ef4444; -fx-text-fill: white; " +
+                    "-fx-font-size: 16px; -fx-background-radius: 50%; " +
+                    "-fx-min-width: 38px; -fx-min-height: 38px; " +
+                    "-fx-max-width: 38px; -fx-max-height: 38px; -fx-cursor: hand; " +
+                    "-fx-border-color: #fca5a5; -fx-border-radius: 50%; -fx-border-width: 2;" +
+                    "-fx-effect: dropshadow(gaussian, rgba(239,68,68,0.55), 10, 0, 0, 0);";
+
+    // ── État interne ───────────────────────────────────────────────
+    private User                   utilisateur;
+    private BaseDashboardController parentController;
+    private Connection             connection;
+    private Button                 activeButton;
+    private VoiceAssistantService  voiceService;
+    private Timeline               pulseTimeline;    // animation pendant écoute
+
+    // ══════════════════════════════════════════════════════════════
+    //  INITIALISATION
+    // ══════════════════════════════════════════════════════════════
+
+    @FXML
+    public void initialize() {
+        // Navigation classique
+        btnDashboard    .setOnAction(e -> naviguer("/dashboard_etudiant.fxml",                  "Dashboard",        btnDashboard));
+        btnMesRendezVous.setOnAction(e -> naviguer("/RendezVousEtudiant.fxml",                  "Mes Rendez-vous",  btnMesRendezVous));
+        btnConsultations.setOnAction(e -> naviguer("/ConsultationsEtudiant.fxml",               "Consultations",    btnConsultations));
+        btnTraitements  .setOnAction(e -> naviguer("/traitement-etudiant-view.fxml",            "Traitements",      btnTraitements));
+        btnQuestionnaires.setOnAction(e -> naviguer("/fxml/EtudiantQuestionnairesView.fxml",    "Questionnaires",   btnQuestionnaires));
+        btnMesReponses  .setOnAction(e -> naviguer("/fxml/EtudiantMesReponsesView.fxml",        "Mes Réponses",     btnMesReponses));
+        btnSeances      .setOnAction(e -> naviguer("/org/example/views/EtudiantSeances.fxml",   "Séances",          btnSeances));
+        btnFavoris      .setOnAction(e -> showMesFavoris());
+        btnEvenements   .setOnAction(e -> showEvenements());
+        btnMesParticipations.setOnAction(e -> showMesParticipations());
+        btnFavorisEvenements.setOnAction(e -> showFavorisEvenements());
+        btnProfil       .setOnAction(e -> ouvrirProfil());
+        btnDeconnexion  .setOnAction(e -> seDeconnecter());
+
+        styliserBoutons();
+        setActiveButton(btnDashboard);
+        initVoiceAssistant();
+    }
+
+    // ── Init assistant vocal ──────────────────────────────────────
+    private void initVoiceAssistant() {
+        voiceService = new VoiceAssistantService();
+
+        // Callback : commande reconnue → naviguer
+        voiceService.onCommandRecognized(cmd -> executeVoiceCommand(cmd));
+
+        // Callback : statut (chargement, écoute, erreur...)
+        voiceService.onStatusChanged(status -> {
+            if (lblVoiceStatus != null) lblVoiceStatus.setText(status);
+        });
+
+        // Callback : transcript temps réel
+        voiceService.onTranscriptChanged(text -> {
+            if (lblVoiceTranscript != null) lblVoiceTranscript.setText("\"" + text + "\"");
+        });
+
+        // Hover du bouton micro
+        if (btnVoice != null) {
+            btnVoice.setOnMouseEntered(e -> {
+                if (!voiceService.isListening())
+                    btnVoice.setStyle(VOICE_IDLE.replace("0.18", "0.30"));
+            });
+            btnVoice.setOnMouseExited(e -> {
+                if (!voiceService.isListening())
+                    btnVoice.setStyle(VOICE_IDLE);
+            });
+        }
+    }
+
+    // ── Bouton micro : toggle ─────────────────────────────────────
+    @FXML
+    public void toggleVoiceAssistant() {
+        if (voiceService.isListening()) {
+            // Arrêter
+            voiceService.stopListening();
+            stopPulse();
+            if (btnVoice != null) {
+                btnVoice.setText("\uD83C\uDF99");
+                btnVoice.setStyle(VOICE_IDLE);
+            }
+            if (lblVoiceHint  != null) lblVoiceHint.setText("vocal");
+            if (voiceFeedbackBox != null) {
+                voiceFeedbackBox.setVisible(false);
+                voiceFeedbackBox.setManaged(false);
+            }
+        } else {
+            // Démarrer
+            voiceService.startListening();
+            startPulse();
+            if (btnVoice != null) {
+                btnVoice.setText("⏹");
+                btnVoice.setStyle(VOICE_ACTIVE);
+            }
+            if (lblVoiceHint  != null) lblVoiceHint.setText("arrêter");
+            if (voiceFeedbackBox != null) {
+                voiceFeedbackBox.setVisible(true);
+                voiceFeedbackBox.setManaged(true);
+            }
+            if (lblVoiceStatus != null)
+                lblVoiceStatus.setText("⏳ Chargement du modèle...");
+            if (lblVoiceTranscript != null)
+                lblVoiceTranscript.setText("");
+        }
+    }
+
+    // ── Exécute la commande vocale reconnue ───────────────────────
+    private void executeVoiceCommand(NavigationCommand cmd) {
+        // Feedback visuel bref
+        if (lblVoiceTranscript != null)
+            lblVoiceTranscript.setStyle(
+                    "-fx-font-size:11px;-fx-text-fill:#86efac;-fx-font-weight:bold;");
+
+        // Remettre le style normal après 2s
+        new Timeline(new KeyFrame(Duration.seconds(2), e -> {
+            if (lblVoiceTranscript != null)
+                lblVoiceTranscript.setStyle(
+                        "-fx-font-size:11px;-fx-text-fill:white;-fx-font-weight:bold;");
+        })).play();
+
+        switch (cmd) {
+            case DASHBOARD        -> { naviguer("/dashboard_etudiant.fxml",                  "Dashboard",        btnDashboard);     }
+            case RENDEZ_VOUS      -> { naviguer("/RendezVousEtudiant.fxml",                  "Mes Rendez-vous",  btnMesRendezVous); }
+            case CONSULTATIONS    -> { naviguer("/ConsultationsEtudiant.fxml",               "Consultations",    btnConsultations); }
+            case TRAITEMENTS      -> { naviguer("/traitement-etudiant-view.fxml",            "Traitements",      btnTraitements);   }
+            case QUESTIONNAIRES   -> { naviguer("/fxml/EtudiantQuestionnairesView.fxml",     "Questionnaires",   btnQuestionnaires);}
+            case MES_REPONSES     -> { naviguer("/fxml/EtudiantMesReponsesView.fxml",        "Mes Réponses",     btnMesReponses);   }
+            case SEANCES          -> { naviguer("/org/example/views/EtudiantSeances.fxml",   "Séances",          btnSeances);       }
+            case FAVORIS_SEANCES  -> { showMesFavoris();        }
+            case EVENEMENTS       -> { showEvenements();        }
+            case MES_PARTICIPATIONS -> { showMesParticipations(); }
+            case FAVORIS_EVENEMENTS -> { showFavorisEvenements(); }
+            case PROFIL           -> { ouvrirProfil();          }
+            case DECONNEXION      -> { seDeconnecter();         }
+            case INCONNU          -> { /* rien */ }
+        }
+    }
+
+    // ── Animation pulsation pendant écoute ───────────────────────
+    private void startPulse() {
+        if (pulseTimeline != null) pulseTimeline.stop();
+        pulseTimeline = new Timeline(
+                new KeyFrame(Duration.ZERO, e -> {
+                    if (btnVoice != null) btnVoice.setOpacity(1.0);
+                }),
+                new KeyFrame(Duration.millis(600), e -> {
+                    if (btnVoice != null) btnVoice.setOpacity(0.55);
+                }),
+                new KeyFrame(Duration.millis(1200))
+        );
+        pulseTimeline.setCycleCount(Timeline.INDEFINITE);
+        pulseTimeline.play();
+    }
+
+    private void stopPulse() {
+        if (pulseTimeline != null) { pulseTimeline.stop(); pulseTimeline = null; }
+        if (btnVoice != null) btnVoice.setOpacity(1.0);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  NAVIGATION (inchangée)
+    // ══════════════════════════════════════════════════════════════
 
     private void loadPage(String fxmlPath) {
         try {
@@ -61,136 +276,47 @@ public class SidebarEtudiantController {
             contentArea.getChildren().setAll(page);
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Erreur chargement: " + fxmlPath);
         }
     }
 
-    @FXML
-    public void showSeancesMeditation() {
+    @FXML public void showSeancesMeditation() {
         naviguer("/org/example/views/EtudiantSeances.fxml", "Séances de méditation", btnSeances);
     }
-
-    @FXML
-    public void showMesFavoris() {
-        naviguer("/org/example/views/MesFavorisSeances.fxml", "Mes favoris", null);
+    @FXML public void showMesFavoris() {
+        naviguer("/org/example/views/MesFavorisSeances.fxml", "Mes favoris", btnFavoris);
     }
-
-    @FXML
-    public void showEvenements() {
+    @FXML public void showEvenements() {
         naviguer("/evenement/EvenementsEtudiant.fxml", "Événements", btnEvenements);
     }
-
-    @FXML
-    public void showMesParticipations() {
+    @FXML public void showMesParticipations() {
         naviguer("/participation/ParticipationsEtudiant.fxml", "Mes Participations", btnMesParticipations);
     }
-
-    @FXML
-    public void showFavorisEvenements() {
+    @FXML public void showFavorisEvenements() {
         naviguer("/favori/FavorisEtudiant.fxml", "Favoris Événements", btnFavorisEvenements);
     }
 
+    private void naviguer(String fxmlPath, String titre, Button boutonActif) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            javafx.scene.Parent content = loader.load();
+            Object controller = loader.getController();
+            if (controller instanceof EtudiantPageController)
+                ((EtudiantPageController) controller).setUtilisateur(resolveUser());
+            NavigationContext.loadContentInCenter(content);
+            setActiveButton(boutonActif);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-    // ── Design tokens ──────────────────────────────────────────────
-    private static final String STYLE_ACTIVE =
-            "-fx-background-color: #ede9fe; " +
-                    "-fx-text-fill: #6366f1; " +
-                    "-fx-font-family: 'Segoe UI'; " +
-                    "-fx-font-size: 13px; " +
-                    "-fx-font-weight: bold; " +
-                    "-fx-alignment: CENTER_LEFT; " +
-                    "-fx-padding: 11 16; " +
-                    "-fx-background-radius: 10; " +
-                    "-fx-border-color: #c4b5fd; " +
-                    "-fx-border-width: 0 0 0 3; " +
-                    "-fx-border-radius: 10; " +
-                    "-fx-cursor: hand;";
-
-    private static final String STYLE_IDLE =
-            "-fx-background-color: transparent; " +
-                    "-fx-text-fill: #6b7280; " +
-                    "-fx-font-family: 'Segoe UI'; " +
-                    "-fx-font-size: 13px; " +
-                    "-fx-alignment: CENTER_LEFT; " +
-                    "-fx-padding: 11 16; " +
-                    "-fx-background-radius: 10; " +
-                    "-fx-cursor: hand;";
-
-    private static final String STYLE_HOVER =
-            "-fx-background-color: #ede9fe; " +
-                    "-fx-text-fill: #6366f1; " +
-                    "-fx-font-family: 'Segoe UI'; " +
-                    "-fx-font-size: 13px; " +
-                    "-fx-alignment: CENTER_LEFT; " +
-                    "-fx-padding: 11 16; " +
-                    "-fx-background-radius: 10; " +
-                    "-fx-cursor: hand;";
-
-    private static final String STYLE_LOGOUT_IDLE =
-            "-fx-background-color: transparent; " +
-                    "-fx-text-fill: #ef4444; " +
-                    "-fx-font-family: 'Segoe UI'; " +
-                    "-fx-font-size: 13px; " +
-                    "-fx-alignment: CENTER_LEFT; " +
-                    "-fx-padding: 11 16; " +
-                    "-fx-background-radius: 10; " +
-                    "-fx-cursor: hand;";
-
-    private static final String STYLE_LOGOUT_HOVER =
-            "-fx-background-color: #fee2e2; " +
-                    "-fx-text-fill: #dc2626; " +
-                    "-fx-font-family: 'Segoe UI'; " +
-                    "-fx-font-size: 13px; " +
-                    "-fx-alignment: CENTER_LEFT; " +
-                    "-fx-padding: 11 16; " +
-                    "-fx-background-radius: 10; " +
-                    "-fx-cursor: hand;";
-
-    // ── État interne ───────────────────────────────────────────────
-    private User               utilisateur;
-    private BaseDashboardController parentController;
-    private Connection         connection;
-    private Button             activeButton;
-
-    // ══════════════════════════════════════════════════════════════
-    //  INITIALISATION
-    // ══════════════════════════════════════════════════════════════
-
-    @FXML
-    public void initialize() {
-        // Navigation
-        btnDashboard.setOnAction(e ->
-                naviguer("/dashboard_etudiant.fxml",       "Dashboard",        btnDashboard));
-        btnMesRendezVous.setOnAction(e ->
-                naviguer("/RendezVousEtudiant.fxml",        "Mes Rendez-vous",  btnMesRendezVous));
-        btnConsultations.setOnAction(e ->
-                naviguer("/ConsultationsEtudiant.fxml",     "Consultations",    btnConsultations));
-        btnTraitements.setOnAction(e ->
-                naviguer("/traitement-etudiant-view.fxml",       "Traitements",      btnTraitements));
-        btnQuestionnaires.setOnAction(e ->
-                naviguer("/fxml/EtudiantQuestionnairesView.fxml", "Questionnaires", btnQuestionnaires));
-        btnMesReponses.setOnAction(e ->
-                naviguer("/fxml/EtudiantMesReponsesView.fxml", "Mes Réponses", btnMesReponses));
-        btnProfil.setOnAction(e -> ouvrirProfil());
-        btnDeconnexion.setOnAction(e -> seDeconnecter());
-        btnSeances.setOnAction(e ->
-                naviguer("/org/example/views/EtudiantSeances.fxml", "Séances de méditation", btnSeances));
-        btnEvenements.setOnAction(e -> showEvenements());
-        btnMesParticipations.setOnAction(e -> showMesParticipations());
-        btnFavorisEvenements.setOnAction(e -> showFavorisEvenements());
-
-        styliserBoutons();
-        setActiveButton(btnDashboard);
+    public interface EtudiantPageController {
+        void setUtilisateur(User user);
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  SETTERS — deux modes d'alimentation possibles
+    //  SETTERS
     // ══════════════════════════════════════════════════════════════
 
-    /**
-     * Mode 1 — alimentation via le dashboard parent (BaseDashboardController).
-     * Utilisé quand la sidebar est incluse dans un FXML géré par un BaseDashboardController.
-     */
     public void setParentController(BaseDashboardController controller) {
         this.parentController = controller;
         if (controller != null) {
@@ -200,17 +326,11 @@ public class SidebarEtudiantController {
         }
     }
 
-    /**
-     * Mode 2 — alimentation directe de l'utilisateur.
-     * Utilisé lors de la navigation inter-pages (SidebarEtudiantController passe l'user lui-même).
-     */
     public void setUtilisateur(User user) {
         this.utilisateur = user;
         if (user == null) return;
-        // Si on n'a pas encore de connexion, on en récupère une via le parent si dispo
-        if (connection == null && parentController != null) {
+        if (connection == null && parentController != null)
             this.connection = parentController.getConnection();
-        }
         rafraichirAffichage();
     }
 
@@ -218,30 +338,16 @@ public class SidebarEtudiantController {
     //  AFFICHAGE
     // ══════════════════════════════════════════════════════════════
 
-    /** Met à jour tous les widgets de la zone utilisateur. */
-    private void rafraichirAffichage() {
-        afficherInfosSidebar();
-        chargerPhotoSidebar();
-    }
+    private void rafraichirAffichage() { afficherInfosSidebar(); chargerPhotoSidebar(); }
 
     private void afficherInfosSidebar() {
         User user = resolveUser();
         if (user == null) return;
-
-        // ── Labels style "moderne" (initiales + nom complet + rôle) ──
-        if (lblNomComplet != null) {
-            lblNomComplet.setText(user.getPrenom() + " " + user.getNom());
-        }
-        if (lblInitiales != null) {
-            lblInitiales.setText(
-                    String.valueOf(user.getPrenom().charAt(0)).toUpperCase() +
-                            String.valueOf(user.getNom().charAt(0)).toUpperCase());
-        }
-        if (lblRole != null) {
-            lblRole.setText("ÉTUDIANT");
-        }
-
-        // ── Labels style "photo + texte" ──────────────────────────────
+        if (lblNomComplet  != null) lblNomComplet.setText(user.getPrenom() + " " + user.getNom());
+        if (lblInitiales   != null) lblInitiales.setText(
+                String.valueOf(user.getPrenom().charAt(0)).toUpperCase() +
+                        String.valueOf(user.getNom().charAt(0)).toUpperCase());
+        if (lblRole        != null) lblRole.setText("ÉTUDIANT");
         if (sidebarNomLabel    != null) sidebarNomLabel.setText(user.getNom());
         if (sidebarPrenomLabel != null) sidebarPrenomLabel.setText(user.getPrenom());
         if (sidebarRoleLabel   != null) sidebarRoleLabel.setText("Étudiant");
@@ -250,114 +356,30 @@ public class SidebarEtudiantController {
     private void chargerPhotoSidebar() {
         if (sidebarPhoto == null) return;
         User user = resolveUser();
-        if (user == null) {
-            System.out.println("❌ Sidebar - User is null");
-            return;
-        }
-
-        System.out.println("=== SIDEBAR CHARGEMENT PHOTO ===");
-        System.out.println("User ID: " + user.getUserId());
-        System.out.println("User Nom: " + user.getNom());
-
+        if (user == null) return;
         String photoPath = getPhotoChemin(user);
-        System.out.println("Photo path from DB: " + photoPath);
-
         if (photoPath != null && !photoPath.isEmpty()) {
             File file = new File(photoPath);
-            System.out.println("File exists: " + file.exists());
-            System.out.println("File absolute path: " + file.getAbsolutePath());
-
             if (file.exists()) {
-                try {
-                    Image img = new Image(file.toURI().toString());
-                    sidebarPhoto.setImage(img);
-                    System.out.println("✅ Photo chargée avec succès");
-                    return;
-                } catch (Exception e) {
-                    System.err.println("❌ Erreur chargement image: " + e.getMessage());
-                }
+                try { sidebarPhoto.setImage(new Image(file.toURI().toString())); return; }
+                catch (Exception e) { System.err.println("Photo load error: " + e.getMessage()); }
             }
         }
-
-        // Fallback
-        try {
-            sidebarPhoto.setImage(new Image(getClass().getResourceAsStream("/images/default_avatar.png")));
-            System.out.println("📷 Avatar par défaut chargé");
-        } catch (Exception e) {
-            System.err.println("❌ Impossible de charger l'avatar par défaut");
-        }
+        try { sidebarPhoto.setImage(new Image(getClass().getResourceAsStream("/images/default_avatar.png"))); }
+        catch (Exception ignored) {}
     }
+
     private String getPhotoChemin(User user) {
-        if (user == null) {
-            System.out.println("❌ getPhotoChemin - User is null");
-            return null;
-        }
-
-        System.out.println("🔍 Recherche photo pour user_id: " + user.getUserId());
-
-        // 🔥 FORCER LA CONNEXION DIRECTE
-        Connection conn = null;
+        if (user == null) return null;
         try {
-            conn = MyDataBase_Unimind.getInstance().getConnection();
-            System.out.println("🔗 Connexion directe obtenue: " + (conn != null ? "OK" : "NULL"));
-        } catch (Exception e) {
-            System.err.println("❌ Impossible d'obtenir la connexion: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
-
-        String query = "SELECT photo FROM profil WHERE user_id = ?";
-        try (PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setInt(1, user.getUserId());
-            var rs = ps.executeQuery();
-
-            if (rs.next()) {
-                String photo = rs.getString("photo");
-                System.out.println("📸 Photo trouvée: " + photo);
-                return photo;
-            } else {
-                System.out.println("⚠️ Aucun profil trouvé pour user_id: " + user.getUserId());
-                // 🔥 Afficher tous les profils existants pour debug
-                Statement stmt = conn.createStatement();
-                ResultSet allRs = stmt.executeQuery("SELECT user_id, photo FROM profil");
-                System.out.println("📋 Profils existants dans la BDD:");
-                while (allRs.next()) {
-                    System.out.println("   - user_id: " + allRs.getInt("user_id") + ", photo: " + allRs.getString("photo"));
-                }
+            Connection conn = MyDataBase_Unimind.getInstance().getConnection();
+            try (PreparedStatement ps = conn.prepareStatement("SELECT photo FROM profil WHERE user_id = ?")) {
+                ps.setInt(1, user.getUserId());
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) return rs.getString("photo");
             }
-        } catch (SQLException e) {
-            System.err.println("❌ Erreur SQL: " + e.getMessage());
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { System.err.println("getPhotoChemin: " + e.getMessage()); }
         return null;
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    //  NAVIGATION
-    // ══════════════════════════════════════════════════════════════
-
-    private void naviguer(String fxmlPath, String titre, Button boutonActif) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            javafx.scene.Parent content = loader.load();
-
-            Object controller = loader.getController();
-
-            if (controller instanceof EtudiantPageController) {
-                ((EtudiantPageController) controller).setUtilisateur(resolveUser());
-            }
-
-            org.example.utils.NavigationContext.loadContentInCenter(content);
-
-            setActiveButton(boutonActif);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    /** Interface que chaque page-étudiant doit implémenter pour recevoir l'utilisateur. */
-    public interface EtudiantPageController {
-        void setUtilisateur(User user);
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -366,27 +388,28 @@ public class SidebarEtudiantController {
 
     public void setActiveButtonByFxml(String fxmlPath) {
         switch (fxmlPath) {
-            case "/dashboard_etudiant.fxml"      -> setActiveButton(btnDashboard);
-            case "/RendezVousEtudiant.fxml"       -> setActiveButton(btnMesRendezVous);
-            case "/ConsultationsEtudiant.fxml"    -> setActiveButton(btnConsultations);
-            case "/traitement-etudiant-view.fxml"      -> setActiveButton(btnTraitements);
-            case "/fxml/EtudiantQuestionnairesView.fxml" -> setActiveButton(btnQuestionnaires);
-            case "/fxml/EtudiantMesReponsesView.fxml"    -> setActiveButton(btnMesReponses);
-            case "/org/example/views/EtudiantSeances.fxml" -> setActiveButton(btnSeances);
-            case "/org/example/views/MesFavorisSeances.fxml" -> setActiveButton(btnFavoris);
-            case "/evenement/EvenementsEtudiant.fxml" -> setActiveButton(btnEvenements);
-            case "/participation/ParticipationsEtudiant.fxml" -> setActiveButton(btnMesParticipations);
-            case "/favori/FavorisEtudiant.fxml" -> setActiveButton(btnFavorisEvenements);
+            case "/dashboard_etudiant.fxml"                    -> setActiveButton(btnDashboard);
+            case "/RendezVousEtudiant.fxml"                    -> setActiveButton(btnMesRendezVous);
+            case "/ConsultationsEtudiant.fxml"                 -> setActiveButton(btnConsultations);
+            case "/traitement-etudiant-view.fxml"              -> setActiveButton(btnTraitements);
+            case "/fxml/EtudiantQuestionnairesView.fxml"       -> setActiveButton(btnQuestionnaires);
+            case "/fxml/EtudiantMesReponsesView.fxml"          -> setActiveButton(btnMesReponses);
+            case "/org/example/views/EtudiantSeances.fxml"     -> setActiveButton(btnSeances);
+            case "/org/example/views/MesFavorisSeances.fxml"   -> setActiveButton(btnFavoris);
+            case "/evenement/EvenementsEtudiant.fxml"          -> setActiveButton(btnEvenements);
+            case "/participation/ParticipationsEtudiant.fxml"  -> setActiveButton(btnMesParticipations);
+            case "/favori/FavorisEtudiant.fxml"                -> setActiveButton(btnFavorisEvenements);
         }
     }
 
     private void setActiveButton(Button button) {
+        if (button == null) return;
         Button[] boutons = {
                 btnDashboard, btnMesRendezVous, btnConsultations,
                 btnTraitements, btnQuestionnaires, btnMesReponses, btnSeances, btnFavoris,
                 btnEvenements, btnMesParticipations, btnFavorisEvenements
         };
-        for (Button btn : boutons) btn.setStyle(STYLE_IDLE);
+        for (Button btn : boutons) if (btn != null) btn.setStyle(STYLE_IDLE);
         button.setStyle(STYLE_ACTIVE);
         activeButton = button;
     }
@@ -394,15 +417,18 @@ public class SidebarEtudiantController {
     private void styliserBoutons() {
         Button[] boutons = {
                 btnDashboard, btnMesRendezVous, btnConsultations,
-                btnTraitements, btnQuestionnaires, btnMesReponses, btnSeances,
+                btnTraitements, btnQuestionnaires, btnMesReponses, btnSeances, btnFavoris,
                 btnEvenements, btnMesParticipations, btnFavorisEvenements
         };
         for (Button btn : boutons) {
+            if (btn == null) continue;
             btn.setOnMouseEntered(e -> { if (btn != activeButton) btn.setStyle(STYLE_HOVER); });
             btn.setOnMouseExited (e -> { if (btn != activeButton) btn.setStyle(STYLE_IDLE);  });
         }
-        btnDeconnexion.setOnMouseEntered(e -> btnDeconnexion.setStyle(STYLE_LOGOUT_HOVER));
-        btnDeconnexion.setOnMouseExited (e -> btnDeconnexion.setStyle(STYLE_LOGOUT_IDLE));
+        if (btnDeconnexion != null) {
+            btnDeconnexion.setOnMouseEntered(e -> btnDeconnexion.setStyle(STYLE_LOGOUT_HOVER));
+            btnDeconnexion.setOnMouseExited (e -> btnDeconnexion.setStyle(STYLE_LOGOUT_IDLE));
+        }
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -412,10 +438,7 @@ public class SidebarEtudiantController {
     @FXML
     public void ouvrirProfil() {
         User user = resolveUser();
-        if (user == null) {
-            System.err.println("❌ SidebarEtudiant — utilisateur null, impossible d'ouvrir le profil");
-            return;
-        }
+        if (user == null) return;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/profil.fxml"));
             Stage stage = new Stage();
@@ -425,14 +448,9 @@ public class SidebarEtudiantController {
             ProfilController ctrl = loader.getController();
             ctrl.setUser(user);
             stage.showAndWait();
-
-            // Rafraîchir la photo après fermeture
             chargerPhotoSidebar();
             if (parentController != null) parentController.rafraichirPhotoNavbar();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -441,12 +459,15 @@ public class SidebarEtudiantController {
 
     @FXML
     public void seDeconnecter() {
+        // Arrêter l'assistant vocal proprement
+        if (voiceService != null && voiceService.isListening()) {
+            voiceService.stopListening();
+        }
         NavigationContext.clear();
+        EtudiantSeancesController.CitationCache.clear();
         if (parentController != null) {
-            // Délègue au parent qui gère la navigation vers login
             parentController.seDeconnecter();
         } else {
-            // Déconnexion autonome (pas de parent)
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
                 Scene scene = new Scene(loader.load());
@@ -454,9 +475,7 @@ public class SidebarEtudiantController {
                 stage.setScene(scene);
                 stage.setTitle("UniMind — Connexion");
                 stage.show();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            } catch (IOException e) { e.printStackTrace(); }
         }
     }
 
@@ -464,14 +483,12 @@ public class SidebarEtudiantController {
     //  HELPERS PRIVÉS
     // ══════════════════════════════════════════════════════════════
 
-    /** Résout l'utilisateur : priorité au champ local, sinon on demande au parent. */
     private User resolveUser() {
         if (utilisateur != null) return utilisateur;
         if (parentController != null) return parentController.getUtilisateurConnecte();
         return null;
     }
 
-    /** Résout la connexion : champ local en priorité, sinon celle du parent. */
     private Connection resolveConnection() {
         if (connection != null) return connection;
         if (parentController != null) return parentController.getConnection();
