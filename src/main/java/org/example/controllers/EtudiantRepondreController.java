@@ -51,10 +51,6 @@ public class EtudiantRepondreController implements Initializable {
                     "-fx-font-size: 12px; -fx-padding: 6 12; " +
                     "-fx-background-radius: 20; -fx-cursor: hand;";
 
-    // ════════════════════════════════════════════════════════════════
-    //  INIT
-    // ════════════════════════════════════════════════════════════════
-
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         if (btnFR != null) btnFR.setOnAction(e -> handleLangFR());
@@ -68,13 +64,6 @@ public class EtudiantRepondreController implements Initializable {
         chargerQuestions();
     }
 
-    // ════════════════════════════════════════════════════════════════
-    //  HELPERS SPLIT + DETECTION ARABE
-    // ════════════════════════════════════════════════════════════════
-
-    /**
-     * Détecte si un texte contient des caractères arabes
-     */
     private boolean isArabic(String text) {
         if (text == null || text.isEmpty()) return false;
         for (char c : text.toCharArray()) {
@@ -83,25 +72,15 @@ public class EtudiantRepondreController implements Initializable {
         return false;
     }
 
-    /**
-     * Découpe les options — supporte | et ,
-     */
     private String[] splitOptions(String raw) {
         String cleaned = raw.replaceAll("[\\[\\]\"]", "").trim();
         return cleaned.contains("|") ? cleaned.split("\\|") : cleaned.split(",");
     }
 
-    /**
-     * Découpe les scores — supporte | et ,
-     */
     private String[] splitScores(String raw) {
         String cleaned = raw.replaceAll("[\\[\\]\"\\s]", "").trim();
         return cleaned.contains("|") ? cleaned.split("\\|") : cleaned.split(",");
     }
-
-    // ════════════════════════════════════════════════════════════════
-    //  CHARGEMENT QUESTIONS
-    // ════════════════════════════════════════════════════════════════
 
     private void chargerQuestions() {
         try {
@@ -128,16 +107,12 @@ public class EtudiantRepondreController implements Initializable {
         }
     }
 
-    // ════════════════════════════════════════════════════════════════
-    //  TRADUCTION
-    // ════════════════════════════════════════════════════════════════
-
     @FXML
     public void handleLangFR() {
         setLangActive(btnFR);
         questions = new ArrayList<>(questionsOriginales);
         afficherQuestions();
-        setStatus("Français", true);
+        setStatus("Francais", true);
     }
 
     @FXML
@@ -158,7 +133,6 @@ public class EtudiantRepondreController implements Initializable {
                         copie.setOptionsQuest(newOpts.toString().replaceAll("\\|$", ""));
                     }
                 } catch (Exception e) {
-                    System.err.println("Erreur traduction EN: " + e.getMessage());
                     copie = copierQuestion(q);
                 }
                 traduits.add(copie);
@@ -189,7 +163,6 @@ public class EtudiantRepondreController implements Initializable {
                         copie.setOptionsQuest(newOpts.toString().replaceAll("\\|$", ""));
                     }
                 } catch (Exception e) {
-                    System.err.println("Erreur traduction AR: " + e.getMessage());
                     copie = copierQuestion(q);
                 }
                 traduits.add(copie);
@@ -229,10 +202,6 @@ public class EtudiantRepondreController implements Initializable {
         if (actif != null) actif.setStyle(LANG_ACTIVE);
     }
 
-    // ════════════════════════════════════════════════════════════════
-    //  CONSTRUCTION CARTE QUESTION  ← RTL ARABE ICI
-    // ════════════════════════════════════════════════════════════════
-
     private VBox buildQuestionBox(int numero, Question question) {
         VBox box = new VBox(8);
         box.setStyle(
@@ -240,31 +209,20 @@ public class EtudiantRepondreController implements Initializable {
                         "-fx-border-color: #6d28d9; -fx-border-radius: 10; " +
                         "-fx-border-width: 1; -fx-padding: 14;");
 
-        // ✅ Détection arabe → orientation RTL
         boolean arabe = isArabic(question.getTexte());
-        if (arabe) {
-            box.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
-        } else {
-            box.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
-        }
+        box.setNodeOrientation(arabe ? NodeOrientation.RIGHT_TO_LEFT : NodeOrientation.LEFT_TO_RIGHT);
 
         Label lblQuestion = new Label(numero + ". " + question.getTexte());
         lblQuestion.setWrapText(true);
-        lblQuestion.setStyle(
-                "-fx-text-fill: #e2e8f0; -fx-font-size: 14px; -fx-font-weight: bold;");
-        // ✅ Alignement texte arabe
-        if (arabe) {
-            lblQuestion.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
-        }
+        lblQuestion.setStyle("-fx-text-fill: #e2e8f0; -fx-font-size: 14px; -fx-font-weight: bold;");
+        if (arabe) lblQuestion.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
         box.getChildren().add(lblQuestion);
 
         if (question.getOptionsQuest() != null && !question.getOptionsQuest().isEmpty()) {
             ToggleGroup group = new ToggleGroup();
-
             String[] options = splitOptions(question.getOptionsQuest());
             String[] scores  = question.getScoreOptions() != null && !question.getScoreOptions().isBlank()
-                    ? splitScores(question.getScoreOptions())
-                    : new String[0];
+                    ? splitScores(question.getScoreOptions()) : new String[0];
 
             for (int i = 0; i < options.length; i++) {
                 String option = options[i].trim();
@@ -274,16 +232,10 @@ public class EtudiantRepondreController implements Initializable {
                 RadioButton rb = new RadioButton(option);
                 rb.setToggleGroup(group);
                 rb.setStyle("-fx-text-fill: #c084fc; -fx-font-size: 13px;");
-
-                // ✅ RTL pour chaque RadioButton si arabe
-                if (arabe) {
-                    rb.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
-                }
+                if (arabe) rb.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
 
                 String reponseExistante = reponsesChoisies.get(question.getQuestionId());
-                if (reponseExistante != null && reponseExistante.equals(option)) {
-                    rb.setSelected(true);
-                }
+                if (reponseExistante != null && reponseExistante.equals(option)) rb.setSelected(true);
 
                 rb.setOnAction(e -> {
                     reponsesChoisies.put(question.getQuestionId(), option);
@@ -305,10 +257,7 @@ public class EtudiantRepondreController implements Initializable {
                     "-fx-background-color: #1a0a2e; -fx-text-fill: #e2e8f0; " +
                             "-fx-border-color: #6d28d9; -fx-border-radius: 6; " +
                             "-fx-background-radius: 6; -fx-padding: 7;");
-            // ✅ RTL pour le champ texte si arabe
-            if (arabe) {
-                tfReponse.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
-            }
+            if (arabe) tfReponse.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
 
             String reponseExistante = reponsesChoisies.get(question.getQuestionId());
             if (reponseExistante != null) tfReponse.setText(reponseExistante);
@@ -320,10 +269,6 @@ public class EtudiantRepondreController implements Initializable {
 
         return box;
     }
-
-    // ════════════════════════════════════════════════════════════════
-    //  SOUMISSION
-    // ════════════════════════════════════════════════════════════════
 
     @FXML
     public void handleSoumettre() {
@@ -396,21 +341,25 @@ public class EtudiantRepondreController implements Initializable {
         }
     }
 
+    // ✅ CORRECTION : utilise NermineIAAnalyseController (le vrai nom)
+    //                et appelle setDonnees() qui existe déjà dedans
     private void naviguerVersAnalyseIA(
             double score, String niveau,
             String interpretation, String reponsesJson) {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/AnalyseIAViewNermine.fxml"));
+                    getClass().getResource("/fxml/AnalyseIAView.fxml"));
             Parent view = loader.load();
 
-            NermineIAAnalyseController  ctrl = loader.getController();
+            // ✅ Bon nom de classe
+            NermineIAAnalyseController ctrl = loader.getController();
 
             org.example.entities.User user = null;
             try {
                 user = SessionManager.getInstance().getCurrentUser();
             } catch (Exception ignored) {}
 
+            // ✅ setDonnees() existe bien dans NermineIAAnalyseController
             ctrl.setDonnees(questionnaire, score, niveau, interpretation, reponsesJson, user);
 
             if (NavigationContext.getContentScrollPane() != null) {
@@ -425,10 +374,6 @@ public class EtudiantRepondreController implements Initializable {
         }
     }
 
-    // ════════════════════════════════════════════════════════════════
-    //  RETOUR
-    // ════════════════════════════════════════════════════════════════
-
     @FXML
     public void handleRetour() {
         try {
@@ -437,10 +382,6 @@ public class EtudiantRepondreController implements Initializable {
             System.out.println("Erreur retour : " + e.getMessage());
         }
     }
-
-    // ════════════════════════════════════════════════════════════════
-    //  HELPER
-    // ════════════════════════════════════════════════════════════════
 
     private void setStatus(String msg, boolean success) {
         lblStatus.setText(msg);
