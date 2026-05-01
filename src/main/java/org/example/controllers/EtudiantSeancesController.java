@@ -11,13 +11,10 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
-import javafx.scene.media.MediaView;
 import javafx.stage.FileChooser;
 import org.example.entities.*;
 import org.example.services.*;
-import org.example.services.GeminiRecommandationService.Recommandation;
 import org.example.utils.Session;
 
 import java.io.*;
@@ -62,7 +59,7 @@ public class EtudiantSeancesController implements Initializable,
     private final EtudiantService             etudiantService= new EtudiantService();
     private final ReactionService             reactionService= new ReactionService();
     private final ModerationService           moderationSvc  = new ModerationService();
-    private final EmailService                emailService   = new EmailService();
+    private final EmailForumService emailForumService = new EmailForumService();
     private final GeminiRecommandationService geminiService     = new GeminiRecommandationService();
 
 
@@ -1440,7 +1437,7 @@ public class EtudiantSeancesController implements Initializable,
                 User postOwner = etudiantService.getUserById(postOwnerId);
                 if(postOwner==null||postOwner.getEmail()==null) return;
                 String prenomAuteur = commAuteurAnonyme ? "Anonyme" : currentUser.getPrenom();
-                emailService.sendNotificationReponse(
+                emailForumService.sendNotificationReponse(
                         postOwner.getEmail(),
                         postOwner.getPrenom(),
                         prenomAuteur,

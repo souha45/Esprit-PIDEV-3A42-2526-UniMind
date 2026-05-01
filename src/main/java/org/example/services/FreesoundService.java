@@ -42,7 +42,7 @@ public class FreesoundService {
 
     public static final List<SoundCategory> CATEGORIES = List.of(
             new SoundCategory("Mer",       "🌊", "ocean waves relaxing"),
-            new SoundCategory("Pluie",     "🌧️", "rain relaxing sleep"),
+            new SoundCategory("Pluie",     "🌧", "rain relaxing sleep"),
             new SoundCategory("Forêt",     "🌿", "forest birds nature"),
             new SoundCategory("Feu",       "🔥", "fireplace crackling"),
             new SoundCategory("Rivière",   "💧", "river stream water"),

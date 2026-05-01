@@ -16,10 +16,10 @@ import java.util.Properties;
  *  - Utiliser un "Mot de passe d'application" (recommandé)
  *    depuis https://myaccount.google.com/apppasswords
  */
-public class EmailService {
+public class EmailForumService {
 
     private static final String FROM_EMAIL    = "souhakhenissi3@gmail.com";
-    private static final String FROM_PASSWORD = "bfdmpqsjupyvictq"; // ← à remplacer
+    private static final String FROM_PASSWORD = "bfdmpqsjupyvictq";
     private static final String FROM_NAME     = "Unimind — Plateforme";
 
     // ─── Configuration SMTP Gmail ───────────────────────────

@@ -326,7 +326,7 @@ public class StatsController implements Initializable {
         // Header
         HBox header = new HBox(12);
         header.setAlignment(Pos.CENTER_LEFT);
-        Label titleLbl = new Label("🥧  " + label);
+        Label titleLbl = new Label(" 📋 " + label);
         titleLbl.setStyle("-fx-font-size: 17px; -fx-font-weight: bold; -fx-text-fill: #3730a3;");
         Label countBadge = new Label(sliceSeances.size() + " séance(s)");
         countBadge.setStyle("-fx-background-color: #ede9fe; -fx-text-fill: #6366f1; "

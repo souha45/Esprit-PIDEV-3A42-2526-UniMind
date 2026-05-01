@@ -17,7 +17,7 @@ import java.util.Locale;
 public class ModerationService {
 
     private final Connection con;
-    private final EmailService emailService = new EmailService();
+    private final EmailForumService emailForumService = new EmailForumService();
 
     // ── Liste de mots interdits ──────────────────────────────
     // Complétez cette liste selon vos besoins
@@ -66,12 +66,12 @@ public class ModerationService {
             bloquerCompte(user.getUserId());
             // Email sévère en arrière-plan
             new Thread(() ->
-                    emailService.sendEmailBlocage(user.getEmail(), user.getPrenom(), motDetecte)
+                    emailForumService.sendEmailBlocage(user.getEmail(), user.getPrenom(), motDetecte)
             ).start();
         } else {
             // Email d'avertissement en arrière-plan
             new Thread(() ->
-                    emailService.sendAvertissementModeration(
+                    emailForumService.sendAvertissementModeration(
                             user.getEmail(), user.getPrenom(), motDetecte, nbInfractions)
             ).start();
         }
