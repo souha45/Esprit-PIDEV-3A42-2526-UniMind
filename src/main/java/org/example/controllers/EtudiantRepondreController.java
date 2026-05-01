@@ -401,10 +401,10 @@ public class EtudiantRepondreController implements Initializable {
             String interpretation, String reponsesJson) {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/AnalyseIAView.fxml"));
+                    getClass().getResource("/fxml/AnalyseIAViewNermine.fxml"));
             Parent view = loader.load();
 
-            AnalyseIAController ctrl = loader.getController();
+            NermineIAAnalyseController  ctrl = loader.getController();
 
             org.example.entities.User user = null;
             try {

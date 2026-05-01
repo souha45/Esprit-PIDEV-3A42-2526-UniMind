@@ -16,6 +16,7 @@ public class ConsultationDetail {
     private short noteSatisfaction;
     private Timestamp dateRedaction;
     private Timestamp dateModification;
+    private String motif;
 
     // Infos du rendez-vous
     private Date dateDispo;
@@ -142,6 +143,14 @@ public class ConsultationDetail {
             return "Aucun avis";
         }
         return avisPsy;
+    }
+
+    public String getMotif() {
+        return motif;
+    }
+
+    public void setMotif(String motif) {
+        this.motif = motif;
     }
 
     @Override

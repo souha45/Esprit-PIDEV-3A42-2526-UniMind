@@ -107,8 +107,6 @@ public class AdminDashboardController {
     @FXML private Label pErrTel, pErrMdp, pMessageProfil;
     @FXML private ImageView photoProfile;
 
-    @FXML private Button btnQuestionnaires;
-    @FXML private Button btnQuestions;
     // Dashboard
     @FXML private VBox panneauDashboard;
     @FXML private Button btnDashboard;
@@ -877,7 +875,6 @@ public class AdminDashboardController {
             String password = passwordField.getText();
             boolean valide  = true;
 
-            boolean valide = true;
 
             if (!ValidationUtils.isNomValide(nom)) { showMessage(messageLabel, "Nom invalide", "error"); valide = false; }
             else if (!ValidationUtils.isNomValide(prenom)) { showMessage(messageLabel, "Prénom invalide", "error"); valide = false; }

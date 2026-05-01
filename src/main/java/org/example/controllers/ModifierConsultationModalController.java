@@ -12,7 +12,7 @@ import org.example.entities.Consultation;
 import org.example.entities.ConsultationDetail;
 import org.example.entities.User;
 import org.example.services.ConsultationService;
-import org.example.services.GeminiGhofraneService;
+import org.example.services.GeminiAvisService;
 
 import java.sql.SQLException;
 
@@ -74,6 +74,7 @@ public class ModifierConsultationModalController {
     // ══════════════════════════════════════════════════════════════
     //  GÉNÉRATION AVIS IA
     // ══════════════════════════════════════════════════════════════
+    // Dans la méthode genererAvisAvecIA()
     private void genererAvisAvecIA() {
         if (consultationDetail == null) {
             showToast("❌ Aucune consultation sélectionnée", ToastType.ERROR);
@@ -85,41 +86,25 @@ public class ModifierConsultationModalController {
         txtAvis.setDisable(true);
         btnGenererAvisIA.setDisable(true);
 
+        // Construire le contexte
         StringBuilder contexte = new StringBuilder();
-        contexte.append("Patient : ").append(consultationDetail.getEtudiantPrenom())
-                .append(" ").append(consultationDetail.getEtudiantNom()).append("\n");
+        contexte.append("Prénom du patient : ").append(consultationDetail.getEtudiantPrenom()).append("\n");
+        contexte.append("Nom du patient : ").append(consultationDetail.getEtudiantNom()).append("\n");
         contexte.append("Date : ").append(consultationDetail.getDateDispo().toLocalDate()).append("\n");
-        contexte.append("Heure : ").append(consultationDetail.getHeureDebut().toString().substring(0, 5))
+        contexte.append("Horaire : ").append(consultationDetail.getHeureDebut().toString().substring(0, 5))
                 .append(" - ").append(consultationDetail.getHeureFin().toString().substring(0, 5)).append("\n");
 
-        // ✅ PROMPT CORRIGÉ pour générer un avis (pas un dialogue)
-        String prompt = """
-        Tu es un assistant pour psychologue. Tu dois REDIGER UN AVIS PROFESSIONNEL pour le patient.
-        
-        IMPORTANT : Tu ne dois PAS discuter avec le psychologue. Tu dois ECRIRE DIRECTEMENT l'avis comme si tu étais le psychologue s'adressant au patient.
-        
-        Contexte de la consultation :
-        %s
-        
-        Rédige un avis de 3 à 5 phrases qui :
-        - S'adresse directement au patient (utilise "tu")
-        - Reconnaît ses difficultés avec empathie
-        - Propose des pistes d'amélioration concrètes
-        - Termine par une phrase d'encouragement
-        
-        Écris UNIQUEMENT l'avis, sans introduction ni explication.
-        Commence directement par "Bonjour [prénom du patient]" ou par une phrase d'ouverture.
-        """.formatted(contexte.toString());
+        String motif = consultationDetail.getMotif();
+        if (motif != null && !motif.isEmpty()) {
+            contexte.append("Motif : ").append(motif).append("\n");
+        }
 
         new Thread(() -> {
             try {
-                GeminiGhofraneService geminiService = new GeminiGhofraneService();
-                String avisGenere = geminiService.envoyerMessage(prompt, "");
-                avisGenere = avisGenere.replaceAll("^\"+|\"+$", "").trim();
+                GeminiAvisService geminiService = new GeminiAvisService();
+                String avisGenere = geminiService.genererAvis(contexte.toString());
 
-                // Nettoyer si l'IA a encore mis des instructions
-                if (avisGenere.contains("Désolé") || avisGenere.contains("spécialiste")) {
-                    // Générer un avis par défaut en cas d'erreur
+                if (avisGenere == null || avisGenere.isEmpty()) {
                     avisGenere = genererAvisParDefaut();
                 }
 

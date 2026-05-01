@@ -6,7 +6,7 @@
 
 <ScrollPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="org.example.controllers.AnalyseIAController"
+            fx:controller="org.example.controllers.NermineIAAnalyseController"
             fitToWidth="true"
             style="-fx-background: #f5f3ff; -fx-background-color: #f5f3ff;">
 
