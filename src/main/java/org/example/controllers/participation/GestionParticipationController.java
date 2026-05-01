@@ -6,7 +6,12 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import org.example.entities.Participation;
@@ -344,8 +349,48 @@ public class GestionParticipationController {
     }
 
     @FXML
-    private void ajouterParticipation(ActionEvent event) throws IOException {
-        NavigationContext.loadContentInCenter("/participation/AjoutParticipation.fxml");
+    private void ajouterParticipation(ActionEvent event) {
+        ouvrirDialogAjout();
+    }
+
+    private void ouvrirDialogAjout() {
+        try {
+            // Créer une nouvelle fenêtre (Stage) pour le dialog
+            Stage dialogStage = new Stage();
+            dialogStage.initStyle(StageStyle.UTILITY);
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.setTitle("Inscrire un étudiant");
+
+            // Charger le FXML du dialog
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/participation/AjoutParticipationDialog.fxml"));
+            VBox dialogRoot = loader.load();
+
+            // Obtenir le contrôleur et configurer le callback
+            AjoutParticipationDialogController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setOnSaveCallback(v -> {
+                // Rafraîchir la liste après l'ajout
+                chargerParticipations();
+            });
+
+            // Créer la scène et afficher
+            Scene scene = new Scene(dialogRoot);
+            scene.getStylesheets().add(getClass().getResource("/css/EventBack.css").toExternalForm());
+            dialogStage.setScene(scene);
+            dialogStage.setResizable(false);
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            afficherErreur("Erreur lors de l'ouverture du dialog : " + e.getMessage());
+        }
+    }
+
+    private void afficherErreur(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Erreur");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     @FXML

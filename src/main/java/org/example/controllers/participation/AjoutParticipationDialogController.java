@@ -3,19 +3,17 @@ package org.example.controllers.participation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.example.entities.Participation;
 import org.example.enums.Role;
 import org.example.enums.StatutParticipation;
 import org.example.services.ParticipationService;
 import org.example.utils.MyDataBase_Unimind;
-import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
-import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -25,8 +23,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
-public class AjoutParticipationController {
+public class AjoutParticipationDialogController {
 
     @FXML
     private ComboBox<EvenementInfo> comboEvenement;
@@ -34,7 +33,6 @@ public class AjoutParticipationController {
     private ComboBox<EtudiantInfo> comboEtudiant;
     @FXML
     private DatePicker dateInscription;
-
     @FXML
     private ComboBox<StatutParticipation> comboStatut;
 
@@ -51,10 +49,11 @@ public class AjoutParticipationController {
 
     private final ParticipationService participationService = new ParticipationService();
     private boolean isAdmin = false;
+    private Stage dialogStage;
+    private Consumer<Void> onSaveCallback;
 
     @FXML
     public void initialize() {
-        // Vérifier si l'utilisateur est admin
         isAdmin = SessionManager.getInstance().getCurrentUserRole()
                 .map(role -> role == Role.ADMIN)
                 .orElse(false);
@@ -65,23 +64,28 @@ public class AjoutParticipationController {
         chargerEvenements();
         chargerEtudiants();
 
-        // Date par défaut : aujourd'hui
         dateInscription.setValue(LocalDate.now());
 
-        // Forcer la couleur du texte en noir pour tous les champs
         appliquerCouleurTexteNoir();
     }
 
     private void appliquerCouleurTexteNoir() {
-        // Appliquer le style inline pour forcer le texte noir
         if (comboEvenement != null) comboEvenement.setStyle("-fx-text-fill: #000000;");
         if (comboEtudiant != null) comboEtudiant.setStyle("-fx-text-fill: #000000;");
         if (comboStatut != null) comboStatut.setStyle("-fx-text-fill: #000000;");
         if (dateInscription != null) dateInscription.setStyle("-fx-text-fill: #000000;");
     }
 
+    public void setDialogStage(Stage dialogStage) {
+        this.dialogStage = dialogStage;
+    }
+
+    public void setOnSaveCallback(Consumer<Void> callback) {
+        this.onSaveCallback = callback;
+    }
+
     @FXML
-    private void enregistrerParticipation(ActionEvent event) {
+    private void enregistrer() {
         cacherErreurs();
         lblSucces.setVisible(false);
 
@@ -95,11 +99,15 @@ public class AjoutParticipationController {
             participationService.ajouter(participation);
 
             lblSucces.setVisible(true);
+
+            // Notifier le parent et fermer après un délai
             Timeline timeline = new Timeline(new KeyFrame(
-                    Duration.seconds(1.5),
+                    Duration.seconds(1.0),
                     ae -> {
-                        lblSucces.setVisible(false);
-                        retour(event);
+                        if (onSaveCallback != null) {
+                            onSaveCallback.accept(null);
+                        }
+                        fermerDialog();
                     }
             ));
             timeline.play();
@@ -112,16 +120,13 @@ public class AjoutParticipationController {
     }
 
     @FXML
-    private void retour(ActionEvent event) {
-        Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ADMIN);
-        if (role == Role.ADMIN) {
-            org.example.controllers.admin.AdminDashboardController.loadContent("/participation/GestionParticipation.fxml");
-        } else {
-            try {
-                NavigationContext.loadContentInCenter("/participation/GestionParticipation.fxml");
-            } catch (IOException e) {
-                afficherErreur("Erreur lors de la navigation: " + e.getMessage());
-            }
+    private void annuler() {
+        fermerDialog();
+    }
+
+    private void fermerDialog() {
+        if (dialogStage != null) {
+            dialogStage.close();
         }
     }
 
@@ -138,7 +143,6 @@ public class AjoutParticipationController {
             erreurs.add("Étudiant : obligatoire");
         }
 
-        // Valider unicité (evenementId + etudiantId)
         if (comboEvenement.getValue() != null && comboEtudiant.getValue() != null) {
             try {
                 int evenementId = comboEvenement.getValue().getEvenementId();
@@ -148,7 +152,6 @@ public class AjoutParticipationController {
                     erreurs.add("Unicité : cette participation existe déjà");
                 }
 
-                // Vérifier la capacité maximale de l'événement
                 if (!verifierCapaciteEvenement(evenementId)) {
                     lblErreurCapacite.setVisible(true);
                     erreurs.add("Capacité : l'événement a atteint sa capacité maximale");
@@ -159,7 +162,6 @@ public class AjoutParticipationController {
         }
 
         if (!erreurs.isEmpty()) {
-            afficherErreur("Le formulaire contient des erreurs. Vérifiez les champs marqués en rouge.");
             return false;
         }
 
@@ -173,7 +175,6 @@ public class AjoutParticipationController {
         int etudiantId = etudiant.getEtudiantId();
         StatutParticipation statut = comboStatut.getValue();
 
-        // Date d'inscription : utilise la date du DatePicker ou la date actuelle
         LocalDate date = dateInscription.getValue();
         LocalDateTime dateTime = date != null ? LocalDateTime.of(date, LocalTime.now()) : LocalDateTime.now();
         Timestamp dateInscriptionTs = Timestamp.valueOf(dateTime);
@@ -191,13 +192,7 @@ public class AjoutParticipationController {
         lblErreurCapacite.setVisible(false);
     }
 
-    /**
-     * Vérifie si l'événement a encore de la place disponible
-     * @param evenementId L'ID de l'événement
-     * @return true si l'événement a encore de la place, false sinon
-     */
     private boolean verifierCapaciteEvenement(int evenementId) throws SQLException {
-        // Récupérer la capacité maximale de l'événement
         String sqlCapacite = "SELECT capacite_max FROM evenement WHERE evenement_id = ?";
         int capaciteMax = 0;
         try (PreparedStatement ps = MyDataBase_Unimind.getInstance().getConnection().prepareStatement(sqlCapacite)) {
@@ -209,12 +204,10 @@ public class AjoutParticipationController {
             }
         }
 
-        // Si capacite_max est 0 ou null, pas de limite
         if (capaciteMax <= 0) {
             return true;
         }
 
-        // Compter le nombre actuel de participations pour cet événement
         String sqlCount = "SELECT COUNT(*) as nombre_participations FROM participation WHERE evenement_id = ?";
         int nombreParticipations = 0;
         try (PreparedStatement ps = MyDataBase_Unimind.getInstance().getConnection().prepareStatement(sqlCount)) {
@@ -226,7 +219,6 @@ public class AjoutParticipationController {
             }
         }
 
-        // Vérifier si le nombre de participations est inférieur à la capacité maximale
         return nombreParticipations < capaciteMax;
     }
 
@@ -234,14 +226,12 @@ public class AjoutParticipationController {
         try {
             String sql;
             if (isAdmin) {
-                // Admin : voir tous les événements à venir et en cours
                 sql = "SELECT evenement_id, titre FROM evenement WHERE statut IN ('a_venir', 'en_cours') ORDER BY titre";
             } else {
-                // Responsable : voir seulement ses événements à venir et en cours
                 sql = "SELECT evenement_id, titre FROM evenement WHERE organisateur_id = ? AND statut IN ('a_venir', 'en_cours') ORDER BY titre";
             }
 
-            java.util.List<EvenementInfo> evenements = new ArrayList<>();
+            List<EvenementInfo> evenements = new ArrayList<>();
 
             try (PreparedStatement ps = MyDataBase_Unimind.getInstance().getConnection().prepareStatement(sql)) {
                 if (!isAdmin) {
@@ -265,18 +255,15 @@ public class AjoutParticipationController {
 
     private void chargerEtudiants() {
         try {
-            String sql = "SELECT user_id, nom, prenom FROM user WHERE role = 'Etudiant' ORDER BY nom, prenom";
-            java.util.List<EtudiantInfo> etudiants = new ArrayList<>();
+            String sql = "SELECT user_id, CONCAT(prenom, ' ', nom) as full_name FROM user WHERE role = 'ETUDIANT' ORDER BY nom, prenom";
+            List<EtudiantInfo> etudiants = new ArrayList<>();
 
             try (PreparedStatement ps = MyDataBase_Unimind.getInstance().getConnection().prepareStatement(sql);
                  ResultSet rs = ps.executeQuery()) {
-
                 while (rs.next()) {
                     int etudiantId = rs.getInt("user_id");
-                    String nom = rs.getString("nom");
-                    String prenom = rs.getString("prenom");
-                    String fullName = (prenom != null ? prenom + " " : "") + (nom != null ? nom : "");
-                    etudiants.add(new EtudiantInfo(etudiantId, fullName.trim()));
+                    String fullName = rs.getString("full_name");
+                    etudiants.add(new EtudiantInfo(etudiantId, fullName));
                 }
             }
             comboEtudiant.setItems(FXCollections.observableArrayList(etudiants));
@@ -293,9 +280,7 @@ public class AjoutParticipationController {
         alert.showAndWait();
     }
 
-    /**
-     * Classe interne pour représenter un événement avec ID et titre
-     */
+    // Classes internes pour les ComboBox
     public static class EvenementInfo {
         private final int evenementId;
         private final String titre;
@@ -305,23 +290,13 @@ public class AjoutParticipationController {
             this.titre = titre;
         }
 
-        public int getEvenementId() {
-            return evenementId;
-        }
-
-        public String getTitre() {
-            return titre;
-        }
+        public int getEvenementId() { return evenementId; }
+        public String getTitre() { return titre; }
 
         @Override
-        public String toString() {
-            return titre;
-        }
+        public String toString() { return titre; }
     }
 
-    /**
-     * Classe interne pour représenter un étudiant avec ID et nom
-     */
     public static class EtudiantInfo {
         private final int etudiantId;
         private final String fullName;
@@ -331,17 +306,10 @@ public class AjoutParticipationController {
             this.fullName = fullName;
         }
 
-        public int getEtudiantId() {
-            return etudiantId;
-        }
-
-        public String getFullName() {
-            return fullName;
-        }
+        public int getEtudiantId() { return etudiantId; }
+        public String getFullName() { return fullName; }
 
         @Override
-        public String toString() {
-            return fullName;
-        }
+        public String toString() { return fullName; }
     }
 }
