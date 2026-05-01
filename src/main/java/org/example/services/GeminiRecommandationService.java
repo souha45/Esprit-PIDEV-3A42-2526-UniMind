@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  */
 public class GeminiRecommandationService {
 
-    private static final String API_KEY  = "AIzaSyBPzBUd-aHPjhAbbF0eomX8C8DnhAi3qSM";
+    private static final String API_KEY  = "AIzaSyDUVh0DKV5hwGvT8OLPJWxTPZtPEOuAoQ8";
     private static final String ENDPOINT =
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY;
 

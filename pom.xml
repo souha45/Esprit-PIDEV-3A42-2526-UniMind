@@ -215,11 +215,11 @@
         </dependency>
 
         <!-- JavaMail API pour l'envoi d'emails -->
-        <dependency>
+        <!--<dependency>
             <groupId>org.eclipse.angus</groupId>
             <artifactId>jakarta.mail</artifactId>
             <version>2.0.2</version>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>com.alphacephei</groupId>
