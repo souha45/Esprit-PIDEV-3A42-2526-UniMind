@@ -128,11 +128,22 @@ public class GestionEvenementController {
             System.err.println("Erreur lors de la mise à jour automatique des images: " + e.getMessage());
         }
 
-        // Cacher le bouton ajouter et export pour les étudiants
+        // Gérer la visibilité des boutons selon le rôle
         Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ETUDIANT);
+        System.out.println("[GestionEvenement] Rôle détecté: " + role);
+
         if (role == Role.ETUDIANT) {
+            // Cacher les boutons pour les étudiants
             btnAjouter.setVisible(false);
+            btnAjouter.setManaged(false);
             btnExportExcel.setVisible(false);
+            btnExportExcel.setManaged(false);
+        } else {
+            // Afficher les boutons pour ADMIN et RESPONSABLE_ETUDIANT
+            btnAjouter.setVisible(true);
+            btnAjouter.setManaged(true);
+            btnExportExcel.setVisible(true);
+            btnExportExcel.setManaged(true);
         }
 
         // Initialiser les filtres
@@ -278,6 +289,13 @@ public class GestionEvenementController {
                     int currentUserId = SessionManager.getInstance().getCurrentUserId().orElse(-1);
                     boolean isOrganisateur = evenement.getOrganisateurId() == currentUserId;
                     boolean peutModifier = isAdmin || isOrganisateur;
+
+                    // Debug logs
+                    System.out.println("[GestionEvenement] Événement: " + evenement.getTitre() +
+                            " | OrganisateurId: " + evenement.getOrganisateurId() +
+                            " | CurrentUserId: " + currentUserId +
+                            " | isAdmin: " + isAdmin + " | isOrganisateur: " + isOrganisateur +
+                            " | peutModifier: " + peutModifier);
 
                     // Créer les boutons selon les permissions
                     Button btnVoir = new Button("👁");

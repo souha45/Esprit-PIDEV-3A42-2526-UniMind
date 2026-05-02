@@ -8,6 +8,7 @@ import javafx.stage.Stage;
 import javafx.scene.Parent;
 import org.example.controllers.ResetPasswordController;
 import org.example.services.RappelRendezVousService;
+import org.example.services.evenement.EventStatusSchedulerService;
 import org.example.utils.LocalCallbackServer;
 
 import java.net.URLDecoder;
@@ -18,6 +19,7 @@ public class MainApp extends Application {
     private static final Logger logger = Logger.getLogger(MainApp.class.getName());
     private static Stage primaryStage;
     private static RappelRendezVousService rappelService;  // 🔥 Changé en static
+    private static EventStatusSchedulerService eventStatusScheduler;  // Scheduler pour les statuts d'événements
 
     @Override
     public void start(Stage stage) {
@@ -29,6 +31,11 @@ public class MainApp extends Application {
             // Démarrer le service de rappel de rendez-vous
             rappelService = new RappelRendezVousService();
             logger.info("🔔 Service de rappel de rendez-vous démarré...");
+
+            // Démarrer le scheduler de mise à jour des statuts d'événements
+            eventStatusScheduler = new EventStatusSchedulerService();
+            eventStatusScheduler.start();
+            logger.info("📅 Scheduler des statuts d'événements démarré...");
 
             primaryStage = stage;
 
@@ -68,10 +75,13 @@ public class MainApp extends Application {
             stage.setScene(scene);
             stage.show();
 
-            // Arrêter le service à la fermeture
+            // Arrêter les services à la fermeture
             stage.setOnCloseRequest(e -> {
                 if (rappelService != null) {
                     rappelService.arreterScheduler();
+                }
+                if (eventStatusScheduler != null) {
+                    eventStatusScheduler.stop();
                 }
             });
 
@@ -149,6 +159,10 @@ public class MainApp extends Application {
         // Arrêter le service de rappel
         if (rappelService != null) {
             rappelService.arreterScheduler();
+        }
+        // Arrêter le scheduler des statuts d'événements
+        if (eventStatusScheduler != null) {
+            eventStatusScheduler.stop();
         }
         logger.info("🛑 Services arrêtés");
     }

@@ -95,6 +95,12 @@ public class VoirEvenementController {
     private Label lblAucunAvis;
 
     @FXML
+    private Button btnExportPdfEvenement;
+
+    @FXML
+    private Button btnExportPdfParticipants;
+
+    @FXML
     private void initialize() {
         lierManagedAuVisible(btnParticiper);
         lierManagedAuVisible(lblDejaInscrit);
@@ -103,6 +109,18 @@ public class VoirEvenementController {
         lierManagedAuVisible(lblAvisDonne);
         lierManagedAuVisible(btnModifier);
         lierManagedAuVisible(btnSupprimer);
+        lierManagedAuVisible(btnExportPdfEvenement);
+        lierManagedAuVisible(btnExportPdfParticipants);
+
+        Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ETUDIANT);
+        if (role == Role.ETUDIANT) {
+            if (btnExportPdfEvenement != null) {
+                btnExportPdfEvenement.setVisible(false);
+            }
+            if (btnExportPdfParticipants != null) {
+                btnExportPdfParticipants.setVisible(false);
+            }
+        }
     }
 
     private void lierManagedAuVisible(javafx.scene.Node node) {

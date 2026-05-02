@@ -117,6 +117,54 @@
                                    style="-fx-font-family: 'Segoe UI'; -fx-font-size: 20px;
                                           -fx-font-weight: bold; -fx-text-fill: #3730a3;" />
 
+                            <!-- BARRE DE FILTRES -->
+                            <HBox spacing="12" alignment="CENTER_LEFT"
+                                  style="-fx-background-color: #ffffff; -fx-background-radius: 12;
+                                         -fx-padding: 16 20; -fx-border-color: #e0e7ff; -fx-border-width: 1;
+                                         -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.08), 10, 0, 0, 3);">
+                                <Label text="🔧 Filtres :"
+                                       style="-fx-font-family: 'Segoe UI'; -fx-font-size: 13px;
+                                              -fx-font-weight: bold; -fx-text-fill: #6366f1;"/>
+
+                                <VBox spacing="3">
+                                    <Label text="Type" style="-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                                    <ComboBox fx:id="cbFilterEventType" promptText="Tous les types"
+                                              style="-fx-background-radius: 6; -fx-border-color: #e0e7ff; -fx-border-radius: 6;"
+                                              prefWidth="140" onAction="#onEventFilterChanged"/>
+                                </VBox>
+
+                                <VBox spacing="3">
+                                    <Label text="Statut" style="-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                                    <ComboBox fx:id="cbFilterEventStatut" promptText="Tous les statuts"
+                                              style="-fx-background-radius: 6; -fx-border-color: #e0e7ff; -fx-border-radius: 6;"
+                                              prefWidth="150" onAction="#onEventFilterChanged"/>
+                                </VBox>
+
+                                <VBox spacing="3">
+                                    <Label text="Période" style="-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                                    <ComboBox fx:id="cbFilterEventPeriode" promptText="Toute période"
+                                              style="-fx-background-radius: 6; -fx-border-color: #e0e7ff; -fx-border-radius: 6;"
+                                              prefWidth="150" onAction="#onEventFilterChanged"/>
+                                </VBox>
+
+                                <VBox spacing="3">
+                                    <Label text=" " style="-fx-font-size: 11px;"/>
+                                    <Button text="↺  Réinitialiser"
+                                            onAction="#onResetEventFilters"
+                                            style="-fx-background-color: #f3f4f6; -fx-text-fill: #6b7280;
+                                                   -fx-font-size: 12px; -fx-font-weight: bold;
+                                                   -fx-padding: 7 14; -fx-background-radius: 6;
+                                                   -fx-cursor: hand;"/>
+                                </VBox>
+
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <VBox spacing="3" alignment="CENTER_RIGHT">
+                                    <Label text=" " style="-fx-font-size: 11px;"/>
+                                    <Label fx:id="lblFilterEventResult" text=""
+                                           style="-fx-font-size: 12px; -fx-text-fill: #6366f1; -fx-font-weight: bold;"/>
+                                </VBox>
+                            </HBox>
+
                             <HBox spacing="20" prefHeight="350">
 
                                 <!-- BAR CHART: Événements par type -->

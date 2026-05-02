@@ -380,6 +380,11 @@ public class AdminDashboardController {
     public static void loadContent(String fxmlPath) {
         if (instance != null) {
             try {
+                // Initialiser le SessionManager avec l'admin connecté
+                if (instance.adminConnecte != null && instance.adminConnecte.getRole() != null) {
+                    org.example.utils.SessionManager.getInstance().initSession(instance.adminConnecte);
+                }
+
                 Node page = FXMLLoader.load(instance.getClass().getResource(fxmlPath));
                 instance.contentArea.getChildren().setAll(page);
             } catch (IOException e) {
@@ -524,6 +529,14 @@ public class AdminDashboardController {
 
     private void loadPage(String fxmlPath) {
         try {
+            // Initialiser le SessionManager avec l'admin connecté avant de charger la page
+            if (adminConnecte != null && adminConnecte.getRole() != null) {
+                org.example.utils.SessionManager.getInstance().initSession(adminConnecte);
+                System.out.println("[AdminDashboard] Session initialisée pour: " + adminConnecte.getPrenom() + " " + adminConnecte.getNom() + " (ID: " + adminConnecte.getUserId() + ", Role: " + adminConnecte.getRole() + ")");
+            } else {
+                System.err.println("[AdminDashboard] ERREUR: adminConnecte est null ou n'a pas de rôle!");
+            }
+
             Node page = FXMLLoader.load(getClass().getResource(fxmlPath));
             contentArea.getChildren().setAll(page);
         } catch (IOException e) {

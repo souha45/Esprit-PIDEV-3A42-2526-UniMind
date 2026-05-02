@@ -7,6 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.chart.*;
@@ -52,8 +53,18 @@ public class DashboardResponsableController extends BaseDashboardController {
     @FXML private CategoryAxis xAxisEvenements;
     @FXML private PieChart pieChartParticipations;
 
+    // ── Filtres ──
+    @FXML private ComboBox<String> cbFilterEventType;
+    @FXML private ComboBox<String> cbFilterEventStatut;
+    @FXML private ComboBox<String> cbFilterEventPeriode;
+    @FXML private Label lblFilterEventResult;
+
     private final EvenementService evenementService = new EvenementService();
     private final ParticipationService participationService = new ParticipationService();
+
+    // ── State pour les filtres ──
+    private List<Evenement> allEvenements = new ArrayList<>();
+    private List<Participation> allParticipations = new ArrayList<>();
 
     private Node originalDashboardContent;
 
@@ -75,10 +86,19 @@ public class DashboardResponsableController extends BaseDashboardController {
             sidebarResponsableController.setParentController(this);
         }
 
-        // Charger les statistiques
-        chargerStatistiques();
+        // Les statistiques/charts sont chargés dans setUser(),
+        // car initialize() est appelé avant que l'utilisateur connecté soit injecté.
+    }
 
-        // Charger les charts
+    @Override
+    public void setUser(org.example.entities.User user) {
+        super.setUser(user);
+
+        if (user != null && user.getRole() != null) {
+            SessionManager.getInstance().initSession(user);
+        }
+
+        chargerStatistiques();
         chargerCharts();
     }
 
@@ -145,6 +165,18 @@ public class DashboardResponsableController extends BaseDashboardController {
 
         FXMLLoader loader = new FXMLLoader(resource);
         Parent content = loader.load();
+
+        // Passer l'utilisateur connecté au controller si possible
+        Object controller = loader.getController();
+        if (controller != null && utilisateurConnecte != null) {
+            System.out.println("[DashboardResponsable] Passage de l'utilisateur au controller: " + utilisateurConnecte.getPrenom() + " " + utilisateurConnecte.getNom() + " (ID: " + utilisateurConnecte.getUserId() + ", Role: " + utilisateurConnecte.getRole() + ")");
+
+            // Initialiser aussi la SessionManager pour les controllers qui l'utilisent
+            if (utilisateurConnecte.getRole() != null) {
+                org.example.utils.SessionManager.getInstance().initSession(utilisateurConnecte);
+            }
+        }
+
         contentScrollPane.setContent(content);
     }
 
@@ -234,27 +266,27 @@ public class DashboardResponsableController extends BaseDashboardController {
             if (userId == -1) return;
 
             // Charger tous les événements puis filtrer par organisateur
-            List<Evenement> allEvenements = evenementService.afficher();
-            List<Evenement> evenements = allEvenements.stream()
+            List<Evenement> evenementsList = evenementService.afficher();
+            allEvenements = evenementsList.stream()
                     .filter(e -> e.getOrganisateurId() == userId)
                     .collect(java.util.stream.Collectors.toList());
-            
+
             // Récupérer les IDs des événements du responsable
-            List<Integer> mesEvenementIds = evenements.stream()
+            List<Integer> mesEvenementIds = allEvenements.stream()
                     .map(Evenement::getEvenementId)
                     .collect(java.util.stream.Collectors.toList());
-            
+
             // Charger toutes les participations puis filtrer
-            List<Participation> allParticipations = participationService.afficher();
-            List<Participation> participations = allParticipations.stream()
+            List<Participation> participationsList = participationService.afficher();
+            allParticipations = participationsList.stream()
                     .filter(p -> mesEvenementIds.contains(p.getEvenementId()))
                     .collect(java.util.stream.Collectors.toList());
 
-            // Charger le bar chart événements
-            loadEventBarChart(evenements);
+            // Initialiser les combos de filtres
+            setupEventFilterCombos();
 
-            // Charger le pie chart participations
-            loadParticipationPieChart(participations);
+            // Appliquer les filtres et rafraîchir les charts
+            applyEventFiltersAndRefresh();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -398,5 +430,108 @@ public class DashboardResponsableController extends BaseDashboardController {
 
             index++;
         }
+    }
+
+    // ══════════════════════════════════════════
+    //  FILTRES ÉVÉNEMENTS
+    // ══════════════════════════════════════════
+
+    private void setupEventFilterCombos() {
+        // Types d'événements
+        cbFilterEventType.setItems(FXCollections.observableArrayList(
+                "Tous les types", "CONFERENCE", "ATELIER", "SEMINAIRE", "FORMATIONS", "AUTRE"));
+        cbFilterEventType.getSelectionModel().selectFirst();
+
+        // Statuts
+        cbFilterEventStatut.setItems(FXCollections.observableArrayList(
+                "Tous les statuts", "A_VENIR", "EN_COURS", "TERMINE", "ANNULE"));
+        cbFilterEventStatut.getSelectionModel().selectFirst();
+
+        // Périodes
+        cbFilterEventPeriode.setItems(FXCollections.observableArrayList(
+                "Toute période", "Cette semaine", "Ce mois-ci",
+                "3 derniers mois", "6 derniers mois", "Cette année"));
+        cbFilterEventPeriode.getSelectionModel().selectFirst();
+    }
+
+    @FXML
+    private void onEventFilterChanged() {
+        applyEventFiltersAndRefresh();
+    }
+
+    @FXML
+    private void onResetEventFilters() {
+        cbFilterEventType.getSelectionModel().selectFirst();
+        cbFilterEventStatut.getSelectionModel().selectFirst();
+        cbFilterEventPeriode.getSelectionModel().selectFirst();
+        applyEventFiltersAndRefresh();
+    }
+
+    private void applyEventFiltersAndRefresh() {
+        List<Evenement> filteredEvents = getFilteredEvents();
+        List<Participation> filteredParticipations = getFilteredParticipations();
+
+        // Rafraîchir les charts
+        barChartEvenements.getData().clear();
+        loadEventBarChart(filteredEvents);
+
+        pieChartParticipations.getData().clear();
+        loadParticipationPieChart(filteredParticipations);
+
+        // Mettre à jour le label de résultat
+        lblFilterEventResult.setText(filteredEvents.size() + " événement(s) trouvé(s)");
+    }
+
+    private List<Evenement> getFilteredEvents() {
+        return allEvenements.stream()
+                .filter(e -> filterByType(e))
+                .filter(e -> filterByStatut(e))
+                .filter(e -> filterByPeriode(e))
+                .collect(Collectors.toList());
+    }
+
+    private List<Participation> getFilteredParticipations() {
+        // Récupérer les IDs des événements filtrés
+        List<Integer> filteredEventIds = getFilteredEvents().stream()
+                .map(Evenement::getEvenementId)
+                .collect(Collectors.toList());
+
+        // Filtrer les participations pour ne garder que celles des événements visibles
+        return allParticipations.stream()
+                .filter(p -> filteredEventIds.contains(p.getEvenementId()))
+                .collect(Collectors.toList());
+    }
+
+    private boolean filterByType(Evenement e) {
+        String selected = cbFilterEventType.getValue();
+        if (selected == null || selected.equals("Tous les types")) return true;
+        return e.getType() != null && e.getType().name().equals(selected);
+    }
+
+    private boolean filterByStatut(Evenement e) {
+        String selected = cbFilterEventStatut.getValue();
+        if (selected == null || selected.equals("Tous les statuts")) return true;
+        return e.getStatut() != null && e.getStatut().name().equals(selected);
+    }
+
+    private boolean filterByPeriode(Evenement e) {
+        String selected = cbFilterEventPeriode.getValue();
+        if (selected == null || selected.equals("Toute période")) return true;
+        if (e.getDateDebut() == null) return false;
+
+        java.time.LocalDate eventDate = e.getDateDebut().toLocalDateTime().toLocalDate();
+        java.time.LocalDate today = java.time.LocalDate.now();
+
+        return switch (selected) {
+            case "Cette semaine" -> {
+                java.time.LocalDate startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
+                yield !eventDate.isBefore(startOfWeek) && !eventDate.isAfter(today);
+            }
+            case "Ce mois-ci" -> eventDate.getMonth() == today.getMonth() && eventDate.getYear() == today.getYear();
+            case "3 derniers mois" -> !eventDate.isBefore(today.minusMonths(3));
+            case "6 derniers mois" -> !eventDate.isBefore(today.minusMonths(6));
+            case "Cette année" -> eventDate.getYear() == today.getYear();
+            default -> true;
+        };
     }
 }

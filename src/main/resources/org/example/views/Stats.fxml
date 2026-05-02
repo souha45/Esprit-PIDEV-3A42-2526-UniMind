@@ -167,8 +167,58 @@
             <!-- MODULE ÉVÉNEMENTS -->
             <VBox><VBox.margin><Insets top="0" right="24" bottom="0" left="24"/></VBox.margin>
                 <Label text="🎪 Statistiques Événements"
-                       style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3730a3; -fx-padding: 24 0 16 0;"/>
+                       style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3730a3; -fx-padding: 24 0 12 0;"/>
             </VBox>
+
+            <!-- FILTRES ÉVÉNEMENTS -->
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <VBox.margin><Insets top="0" right="24" bottom="14" left="24"/></VBox.margin>
+                <Label text="🔧 Filtres :"
+                       style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #6366f1;"/>
+
+                <VBox spacing="3">
+                    <Label text="Type" style="-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                    <ComboBox fx:id="cbFilterEventType" promptText="Tous les types"
+                              styleClass="filter-combo" prefWidth="145" onAction="#onEventFilterChanged"/>
+                </VBox>
+
+                <VBox spacing="3">
+                    <Label text="Statut" style="-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                    <ComboBox fx:id="cbFilterEventStatut" promptText="Tous les statuts"
+                              styleClass="filter-combo" prefWidth="155" onAction="#onEventFilterChanged"/>
+                </VBox>
+
+                <VBox spacing="3">
+                    <Label text="Période" style="-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-weight: bold;"/>
+                    <ComboBox fx:id="cbFilterEventPeriode" promptText="Toute période"
+                              styleClass="filter-combo" prefWidth="155" onAction="#onEventFilterChanged"/>
+                </VBox>
+
+                <VBox spacing="3">
+                    <Label text=" " style="-fx-font-size: 11px;"/>
+                    <Button text="↺  Réinitialiser" styleClass="btn-secondary"
+                            onAction="#onResetEventFilters"
+                            style="-fx-padding: 7 14 7 14; -fx-font-size: 12px;"/>
+                </VBox>
+
+                <!-- Export CSV button -->
+                <VBox spacing="3">
+                    <Label text=" " style="-fx-font-size: 11px;"/>
+                    <Button fx:id="btnExportEventCSV" text="📥  Exporter CSV"
+                            onAction="#onExportEventCSV"
+                            style="-fx-background-color: #10b981; -fx-text-fill: white;
+                                   -fx-font-size: 12px; -fx-font-weight: bold;
+                                   -fx-padding: 7 14 7 14; -fx-background-radius: 8;
+                                   -fx-cursor: hand;"/>
+                </VBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+                <VBox spacing="3" alignment="CENTER_RIGHT">
+                    <Label text=" " style="-fx-font-size: 11px;"/>
+                    <Label fx:id="lblFilterEventResult" text=""
+                           style="-fx-font-size: 12px; -fx-text-fill: #6366f1; -fx-font-weight: bold;"/>
+                </VBox>
+            </HBox>
 
             <HBox spacing="16">
                 <VBox.margin><Insets top="0" right="24" bottom="0" left="24"/></VBox.margin>

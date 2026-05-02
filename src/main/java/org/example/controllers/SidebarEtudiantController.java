@@ -303,6 +303,14 @@ public class SidebarEtudiantController {
             Object controller = loader.getController();
             if (controller instanceof EtudiantPageController)
                 ((EtudiantPageController) controller).setUtilisateur(resolveUser());
+            
+            // Initialiser le SessionManager avec l'étudiant connecté pour les controllers événement/participation/favori
+            User etudiant = resolveUser();
+            if (etudiant != null && etudiant.getRole() != null) {
+                org.example.utils.SessionManager.getInstance().initSession(etudiant);
+                System.out.println("[SidebarEtudiant] Session initialisée pour: " + etudiant.getPrenom() + " " + etudiant.getNom() + " (ID: " + etudiant.getUserId() + ", Role: " + etudiant.getRole() + ")");
+            }
+            
             NavigationContext.loadContentInCenter(content);
             setActiveButton(boutonActif);
         } catch (IOException e) {

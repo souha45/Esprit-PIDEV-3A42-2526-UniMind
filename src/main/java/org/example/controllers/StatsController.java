@@ -71,6 +71,12 @@ public class StatsController implements Initializable {
     @FXML private CategoryAxis xAxisEvenements;
     @FXML private PieChart pieChartParticipations;
 
+    // ── Filtres Événements ──
+    @FXML private ComboBox<String> cbFilterEventType;
+    @FXML private ComboBox<String> cbFilterEventStatut;
+    @FXML private ComboBox<String> cbFilterEventPeriode;
+    @FXML private Label lblFilterEventResult;
+
     // ── Services ──
     private final SeanceMeditationServices seanceService    = new SeanceMeditationServices();
     private final CategorieMeditationServices categorieService = new CategorieMeditationServices();
@@ -81,6 +87,10 @@ public class StatsController implements Initializable {
     private List<SeanceMeditation>   allSeances    = new ArrayList<>();
     private List<CategorieMeditation> allCategories = new ArrayList<>();
     private Map<Integer, String>     catNamesMap   = new HashMap<>();
+
+    // ── State Événements ──
+    private List<Evenement>          allEvenements    = new ArrayList<>();
+    private List<Participation>      allParticipations = new ArrayList<>();
 
     private static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
@@ -111,11 +121,10 @@ public class StatsController implements Initializable {
             applyFiltersAndRefresh();
 
             // Module Événements
-            List<Evenement>     evenements     = evenementService.afficher();
-            List<Participation> participations = participationService.afficher();
-            loadEventKPIs(evenements, participations);
-            loadEventBarChart(evenements);
-            loadParticipationPieChart(participations);
+            allEvenements     = evenementService.afficher();
+            allParticipations = participationService.afficher();
+            setupEventFilterCombos();
+            applyEventFiltersAndRefresh();
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -735,6 +744,156 @@ public class StatsController implements Initializable {
         pieChartParticipations.getData().forEach(data ->
                 Tooltip.install(data.getNode(),
                         new Tooltip(data.getName() + "\n" + (int) data.getPieValue() + " participation(s)")));
+    }
+
+    // ══════════════════════════════════════════
+    //  MODULE ÉVÉNEMENTS - FILTRES & ACTIONS
+    // ══════════════════════════════════════════
+
+    private void setupEventFilterCombos() {
+        // Types d'événements
+        cbFilterEventType.setItems(FXCollections.observableArrayList(
+                "Tous les types", "CONFERENCE", "ATELIER", "SEMINAIRE", "FORMATIONS", "AUTRE"));
+        cbFilterEventType.getSelectionModel().selectFirst();
+
+        // Statuts
+        cbFilterEventStatut.setItems(FXCollections.observableArrayList(
+                "Tous les statuts", "A_VENIR", "EN_COURS", "TERMINE", "ANNULE"));
+        cbFilterEventStatut.getSelectionModel().selectFirst();
+
+        // Périodes
+        cbFilterEventPeriode.setItems(FXCollections.observableArrayList(
+                "Toute période", "Cette semaine", "Ce mois-ci",
+                "3 derniers mois", "6 derniers mois", "Cette année"));
+        cbFilterEventPeriode.getSelectionModel().selectFirst();
+    }
+
+    @FXML
+    private void onEventFilterChanged() {
+        applyEventFiltersAndRefresh();
+    }
+
+    @FXML
+    private void onResetEventFilters() {
+        cbFilterEventType.getSelectionModel().selectFirst();
+        cbFilterEventStatut.getSelectionModel().selectFirst();
+        cbFilterEventPeriode.getSelectionModel().selectFirst();
+        applyEventFiltersAndRefresh();
+    }
+
+    private void applyEventFiltersAndRefresh() {
+        List<Evenement> filteredEvents = getFilteredEvents();
+        List<Participation> filteredParticipations = getFilteredParticipations();
+
+        // Mettre à jour les KPI
+        loadEventKPIs(filteredEvents, filteredParticipations);
+
+        // Rafraîchir les charts
+        barChartEvenements.getData().clear();
+        loadEventBarChart(filteredEvents);
+
+        pieChartParticipations.getData().clear();
+        loadParticipationPieChart(filteredParticipations);
+
+        // Mettre à jour le label de résultat
+        lblFilterEventResult.setText(filteredEvents.size() + " événement(s) trouvé(s)");
+    }
+
+    private List<Evenement> getFilteredEvents() {
+        return allEvenements.stream()
+                .filter(e -> filterByType(e))
+                .filter(e -> filterByStatut(e))
+                .filter(e -> filterByPeriode(e))
+                .collect(Collectors.toList());
+    }
+
+    private List<Participation> getFilteredParticipations() {
+        // Récupérer les IDs des événements filtrés
+        List<Integer> filteredEventIds = getFilteredEvents().stream()
+                .map(Evenement::getEvenementId)
+                .collect(Collectors.toList());
+
+        // Filtrer les participations pour ne garder que celles des événements visibles
+        return allParticipations.stream()
+                .filter(p -> filteredEventIds.contains(p.getEvenementId()))
+                .collect(Collectors.toList());
+    }
+
+    private boolean filterByType(Evenement e) {
+        String selected = cbFilterEventType.getValue();
+        if (selected == null || selected.equals("Tous les types")) return true;
+        return e.getType() != null && e.getType().name().equals(selected);
+    }
+
+    private boolean filterByStatut(Evenement e) {
+        String selected = cbFilterEventStatut.getValue();
+        if (selected == null || selected.equals("Tous les statuts")) return true;
+        return e.getStatut() != null && e.getStatut().name().equals(selected);
+    }
+
+    private boolean filterByPeriode(Evenement e) {
+        String selected = cbFilterEventPeriode.getValue();
+        if (selected == null || selected.equals("Toute période")) return true;
+        if (e.getDateDebut() == null) return false;
+
+        LocalDate eventDate = e.getDateDebut().toLocalDateTime().toLocalDate();
+        LocalDate today = LocalDate.now();
+
+        return switch (selected) {
+            case "Cette semaine" -> {
+                LocalDate startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
+                yield !eventDate.isBefore(startOfWeek) && !eventDate.isAfter(today);
+            }
+            case "Ce mois-ci" -> eventDate.getMonth() == today.getMonth() && eventDate.getYear() == today.getYear();
+            case "3 derniers mois" -> !eventDate.isBefore(today.minusMonths(3));
+            case "6 derniers mois" -> !eventDate.isBefore(today.minusMonths(6));
+            case "Cette année" -> eventDate.getYear() == today.getYear();
+            default -> true;
+        };
+    }
+
+    @FXML
+    private void onExportEventCSV() {
+        List<Evenement> filtered = getFilteredEvents();
+
+        if (filtered.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Export CSV", "Aucun événement à exporter avec les filtres actuels.");
+            return;
+        }
+
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Enregistrer les événements filtrés");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        fc.setInitialFileName("evenements_" + new SimpleDateFormat("yyyyMMdd").format(new Date()) + ".csv");
+
+        File file = fc.showSaveDialog(null);
+        if (file == null) return;
+
+        try (FileWriter writer = new FileWriter(file)) {
+            // Header
+            writer.write("ID,Titre,Type,Description,Date Début,Date Fin,Lieu,Capacité,Statut,Organisateur ID\n");
+
+            // Data
+            for (Evenement e : filtered) {
+                writer.write(String.format("%d,\"%s\",%s,\"%s\",%s,%s,\"%s\",%d,%s,%d\n",
+                        e.getEvenementId(),
+                        e.getTitre() != null ? e.getTitre().replace("\"", "\"") : "",
+                        e.getType(),
+                        e.getDescription() != null ? e.getDescription().replace("\"", "\"") : "",
+                        e.getDateDebut() != null ? DATE_FMT.format(e.getDateDebut()) : "",
+                        e.getDateFin() != null ? DATE_FMT.format(e.getDateFin()) : "",
+                        e.getLieu() != null ? e.getLieu().replace("\"", "\"") : "",
+                        e.getCapaciteMax(),
+                        e.getStatut(),
+                        e.getOrganisateurId()));
+            }
+
+            showAlert(Alert.AlertType.INFORMATION, "Export CSV",
+                    filtered.size() + " événement(s) exporté(s) avec succès.");
+
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Export CSV", "Erreur lors de l'export : " + e.getMessage());
+        }
     }
 
     // ══════════════════════════════════════════
