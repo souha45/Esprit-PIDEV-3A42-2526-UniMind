@@ -55,10 +55,15 @@ public class DashboardResponsableController extends BaseDashboardController {
     private final EvenementService evenementService = new EvenementService();
     private final ParticipationService participationService = new ParticipationService();
 
+    private Node originalDashboardContent;
+
     @FXML
     public void initialize() {
         // Initialiser le contexte de navigation
         NavigationContext.setContentScrollPane(contentScrollPane);
+
+        // Sauvegarder le contenu original du dashboard
+        originalDashboardContent = contentScrollPane.getContent();
 
         // Initialiser le navbar controller
         if (navbarController != null) {
@@ -97,10 +102,13 @@ public class DashboardResponsableController extends BaseDashboardController {
 
     @FXML
     public void dashboard(ActionEvent event) {
-        // Recharger le dashboard par défaut (les statistiques sont déjà dans le FXML)
-        // On recharge juste les données
-        chargerStatistiques();
-        chargerCharts();
+        // Restaurer le contenu original du dashboard
+        if (originalDashboardContent != null) {
+            contentScrollPane.setContent(originalDashboardContent);
+            // Recharger les statistiques et charts
+            chargerStatistiques();
+            chargerCharts();
+        }
     }
 
     @FXML
@@ -155,22 +163,43 @@ public class DashboardResponsableController extends BaseDashboardController {
 
     private void chargerStatistiques() {
         try {
+            // Récupérer l'ID du responsable connecté
+            int userId = SessionManager.getInstance().getCurrentUserId().orElse(-1);
+            if (userId == -1) {
+                lblTotalEvenements.setText("—");
+                lblTotalParticipations.setText("—");
+                lblTotalSponsors.setText("—");
+                lblTotalFeedbacks.setText("—");
+                return;
+            }
+
             java.sql.Connection conn = org.example.utils.MyDataBase_Unimind.getInstance().getConnection();
 
-            // Total événements
-            int totalEvenements = queryInt(conn, "SELECT COUNT(*) FROM evenement");
+            // Total événements DU RESPONSABLE
+            int totalEvenements = queryInt(conn, 
+                "SELECT COUNT(*) FROM evenement WHERE organisateur_id = ?", userId);
             lblTotalEvenements.setText(String.valueOf(totalEvenements));
 
-            // Total participations
-            int totalParticipations = queryInt(conn, "SELECT COUNT(*) FROM participation");
+            // Total participations aux événements DU RESPONSABLE
+            int totalParticipations = queryInt(conn, 
+                "SELECT COUNT(*) FROM participation p " +
+                "JOIN evenement e ON p.evenement_id = e.evenement_id " +
+                "WHERE e.organisateur_id = ?", userId);
             lblTotalParticipations.setText(String.valueOf(totalParticipations));
 
-            // Total sponsors
-            int totalSponsors = queryInt(conn, "SELECT COUNT(*) FROM sponsor");
+            // Total sponsors attribués aux événements DU RESPONSABLE
+            int totalSponsors = queryInt(conn, 
+                "SELECT COUNT(DISTINCT s.sponsor_id) FROM sponsor s " +
+                "JOIN evenement_sponsor es ON s.sponsor_id = es.sponsor_id " +
+                "JOIN evenement e ON es.evenement_id = e.evenement_id " +
+                "WHERE e.organisateur_id = ?", userId);
             lblTotalSponsors.setText(String.valueOf(totalSponsors));
 
-            // Total feedbacks
-            int totalFeedbacks = queryInt(conn, "SELECT COUNT(*) FROM feedback");
+            // Total feedbacks sur les événements DU RESPONSABLE
+            int totalFeedbacks = queryInt(conn, 
+                "SELECT COUNT(*) FROM participation p " +
+                "JOIN evenement e ON p.evenement_id = e.evenement_id " +
+                "WHERE e.organisateur_id = ? AND p.feedback_commentaire IS NOT NULL", userId);
             lblTotalFeedbacks.setText(String.valueOf(totalFeedbacks));
 
         } catch (Exception e) {
@@ -182,11 +211,15 @@ public class DashboardResponsableController extends BaseDashboardController {
         }
     }
 
-    private int queryInt(java.sql.Connection conn, String sql) {
-        try (java.sql.PreparedStatement ps = conn.prepareStatement(sql);
-             java.sql.ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
+    private int queryInt(java.sql.Connection conn, String sql, Integer userId) {
+        try (java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (userId != null) {
+                ps.setInt(1, userId);
+            }
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -196,9 +229,26 @@ public class DashboardResponsableController extends BaseDashboardController {
 
     private void chargerCharts() {
         try {
-            // Charger les événements et participations
-            List<Evenement> evenements = evenementService.afficher();
-            List<Participation> participations = participationService.afficher();
+            // Récupérer l'ID du responsable connecté
+            int userId = SessionManager.getInstance().getCurrentUserId().orElse(-1);
+            if (userId == -1) return;
+
+            // Charger tous les événements puis filtrer par organisateur
+            List<Evenement> allEvenements = evenementService.afficher();
+            List<Evenement> evenements = allEvenements.stream()
+                    .filter(e -> e.getOrganisateurId() == userId)
+                    .collect(java.util.stream.Collectors.toList());
+            
+            // Récupérer les IDs des événements du responsable
+            List<Integer> mesEvenementIds = evenements.stream()
+                    .map(Evenement::getEvenementId)
+                    .collect(java.util.stream.Collectors.toList());
+            
+            // Charger toutes les participations puis filtrer
+            List<Participation> allParticipations = participationService.afficher();
+            List<Participation> participations = allParticipations.stream()
+                    .filter(p -> mesEvenementIds.contains(p.getEvenementId()))
+                    .collect(java.util.stream.Collectors.toList());
 
             // Charger le bar chart événements
             loadEventBarChart(evenements);
@@ -257,28 +307,36 @@ public class DashboardResponsableController extends BaseDashboardController {
                         Collectors.counting()
                 ));
 
-        // Build pie slices
+        // Définir les couleurs pour chaque statut (ordre fixe)
+        Map<StatutParticipation, String> statutColors = new HashMap<>();
+        statutColors.put(StatutParticipation.CONFIRME, "#10b981");   // Vert
+        statutColors.put(StatutParticipation.EN_ATTENTE, "#f59e0b"); // Orange
+        statutColors.put(StatutParticipation.ANNULE, "#ef4444");     // Rouge
+
+        // Ordre fixe des statuts pour le graphique
+        List<StatutParticipation> statutOrder = Arrays.asList(
+                StatutParticipation.CONFIRME,
+                StatutParticipation.EN_ATTENTE,
+                StatutParticipation.ANNULE
+        );
+
+        // Build pie slices dans l'ordre fixe
         List<PieChart.Data> pieData = new ArrayList<>();
-        String[] colors = {
-                "#10b981", // CONFIRME - green
-                "#f59e0b", // EN_ATTENTE - orange
-                "#ef4444"  // ANNULE - red
-        };
+        for (StatutParticipation statut : statutOrder) {
+            Long count = countByStatut.getOrDefault(statut, 0L);
+            if (count > 0) {
+                String statutName = statut.getDbValue();
+                PieChart.Data slice = new PieChart.Data(statutName + " (" + count + ")", count);
+                pieData.add(slice);
 
-        int colorIdx = 0;
-        for (Map.Entry<StatutParticipation, Long> entry : countByStatut.entrySet()) {
-            String statutName = entry.getKey().getDbValue();
-            PieChart.Data slice = new PieChart.Data(statutName + " (" + entry.getValue() + ")", entry.getValue());
-            pieData.add(slice);
-
-            // Apply color after rendering
-            final String color = colors[Math.min(colorIdx, colors.length - 1)];
-            slice.nodeProperty().addListener((obs, old, node) -> {
-                if (node != null) {
-                    node.setStyle("-fx-pie-color: " + color + ";");
-                }
-            });
-            colorIdx++;
+                // Apply color spécifique au statut
+                final String color = statutColors.get(statut);
+                slice.nodeProperty().addListener((obs, old, node) -> {
+                    if (node != null) {
+                        node.setStyle("-fx-pie-color: " + color + ";");
+                    }
+                });
+            }
         }
 
         if (pieData.isEmpty()) {
@@ -287,6 +345,9 @@ public class DashboardResponsableController extends BaseDashboardController {
 
         pieChartParticipations.setData(FXCollections.observableArrayList(pieData));
 
+        // Corriger les couleurs de la légende
+        corrigerCouleursLegende();
+
         // Tooltips on hover
         pieChartParticipations.getData().forEach(data ->
                 javafx.scene.control.Tooltip.install(data.getNode(),
@@ -294,5 +355,48 @@ public class DashboardResponsableController extends BaseDashboardController {
                                 data.getName() + "\n" + (int) data.getPieValue() + " participation(s)"
                         ))
         );
+    }
+
+    private void corrigerCouleursLegende() {
+        // Attendre que le PieChart soit rendu
+        pieChartParticipations.applyCss();
+        pieChartParticipations.layout();
+
+        // Map des couleurs par statut
+        Map<String, String> legendColors = new HashMap<>();
+        legendColors.put("confirme", "#10b981");   // Vert
+        legendColors.put("attente", "#f59e0b");    // Orange
+        legendColors.put("annule", "#ef4444");     // Rouge
+
+        // Appliquer les couleurs aux items de la légende
+        int index = 0;
+        for (PieChart.Data data : pieChartParticipations.getData()) {
+            String name = data.getName();
+            String statut = name.split(" ")[0]; // Extraire le statut avant l'espace
+
+            String color = legendColors.getOrDefault(statut, "#888888");
+
+            // Appliquer la couleur au symbole de la légende
+            final int idx = index;
+            final String finalColor = color;
+
+            javafx.application.Platform.runLater(() -> {
+                try {
+                    // Chercher le symbole de légende par index
+                    Set<Node> legendItems = pieChartParticipations.lookupAll(".chart-legend-item");
+                    if (legendItems.size() > idx) {
+                        Node legendItem = (Node) legendItems.toArray()[idx];
+                        Node symbol = legendItem.lookup(".chart-legend-item-symbol");
+                        if (symbol != null) {
+                            symbol.setStyle("-fx-background-color: " + finalColor + ";");
+                        }
+                    }
+                } catch (Exception e) {
+                    // Ignorer les erreurs de rendu
+                }
+            });
+
+            index++;
+        }
     }
 }

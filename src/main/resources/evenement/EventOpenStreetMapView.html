@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniMind - Carte de l'événement</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        .no-coords-msg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #95a5a6;
+            font-size: 14px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let map;
+        let marker;
+
+        function fixSize() {
+            if (map) {
+                map.invalidateSize({reset: true});
+            }
+        }
+
+        // Initialiser la carte avec les coordonnées fournies
+        function initMap(lat, lng, address) {
+            if (lat && lng) {
+                map = L.map('map', {
+                    center: [lat, lng],
+                    zoom: 15,
+                    zoomAnimation: false,
+                    fadeAnimation: false,
+                    markerZoomAnimation: false
+                });
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(map);
+
+                marker = L.marker([lat, lng]).addTo(map);
+                
+                if (address) {
+                    marker.bindPopup(address).openPopup();
+                }
+
+                // JavaFX WebView: multiple invalidateSize calls at different delays
+                // to ensure Leaflet picks up the correct container dimensions
+                [100, 300, 600, 1000].forEach(delay => {
+                    setTimeout(() => {
+                        fixSize();
+                        map.setView([lat, lng], 15);
+                    }, delay);
+                });
+
+                // Also fix size on any window resize
+                window.addEventListener('resize', () => {
+                    fixSize();
+                });
+            } else {
+                document.getElementById('map').innerHTML = 
+                    '<div class="no-coords-msg">Coordonnées non disponibles pour cet événement</div>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -7,13 +7,17 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import org.example.entities.EvenementSponsor;
 import org.example.enums.Role;
 import org.example.enums.StatutSponsor;
 import org.example.enums.TypeContribution;
 import org.example.services.EvenementSponsorService;
+import org.example.services.evenement.PdfExportAttributionSponsorService;
+import org.example.services.evenement.ExcelExportAttributionSponsorService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -69,6 +73,9 @@ public class GestionAttributionSponsorController {
     @FXML
     private TextField txtRecherche;
 
+    @FXML
+    private Button btnExportExcel;
+
     // Filtres avancés
     @FXML
     private ComboBox<StatutSponsor> comboStatut;
@@ -82,9 +89,17 @@ public class GestionAttributionSponsorController {
     @FXML
     private DatePicker dateFin;
 
+    @FXML
+    private Pagination paginationAttributions;
+
+    @FXML
+    private Label lblPageInfo;
+
     private final EvenementSponsorService attributionService = new EvenementSponsorService();
     private ObservableList<EvenementSponsorService.AttributionAvecInfos> listeAttributions;
     private ObservableList<EvenementSponsorService.AttributionAvecInfos> listeFiltree;
+
+    private static final int ITEMS_PER_PAGE = 10;
 
     @FXML
     public void initialize() {
@@ -92,6 +107,103 @@ public class GestionAttributionSponsorController {
         configurerColonnes();
         configurerColorationLignes();
         chargerAttributions();
+
+        if (paginationAttributions != null) {
+            paginationAttributions.currentPageIndexProperty().addListener((obs, oldIdx, newIdx) -> {
+                if (newIdx != null) {
+                    updateTableForPage(newIdx.intValue());
+                }
+            });
+        }
+    }
+
+    @FXML
+    public void exporterPdf(ActionEvent event) {
+        try {
+            List<EvenementSponsorService.AttributionAvecInfos> toExport;
+            if (listeFiltree != null && !listeFiltree.isEmpty()) {
+                toExport = new ArrayList<>(listeFiltree);
+            } else {
+                toExport = attributionService.afficherAvecInfos();
+            }
+
+            if (toExport.isEmpty()) {
+                afficherErreur("Aucune attribution à exporter.");
+                return;
+            }
+
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            String fileName = "attributions_sponsors_" + timestamp + ".pdf";
+            String userHome = System.getProperty("user.home");
+            String filePath = userHome + File.separator + "Downloads" + File.separator + fileName;
+
+            PdfExportAttributionSponsorService pdfService = new PdfExportAttributionSponsorService();
+            pdfService.exportAttributions(toExport, new File(filePath));
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Succès");
+            alert.setHeaderText("Export PDF réussi !");
+            alert.setContentText("Fichier enregistré dans :\n" + filePath);
+            alert.getDialogPane().setMinWidth(500);
+            alert.showAndWait();
+
+        } catch (IOException e) {
+            afficherErreur("Erreur lors de l'export PDF : " + e.getMessage());
+        } catch (SQLException e) {
+            afficherErreur("Erreur lors de l'export PDF : " + e.getMessage());
+        }
+    }
+
+    private void applyFilteredList(java.util.List<EvenementSponsorService.AttributionAvecInfos> newList, String totalLabel) {
+        if (listeFiltree == null) {
+            listeFiltree = FXCollections.observableArrayList();
+        }
+        listeFiltree.setAll(newList);
+
+        if (lblTotal != null) {
+            lblTotal.setText(totalLabel);
+        }
+
+        if (paginationAttributions != null) {
+            int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+            paginationAttributions.setPageCount(Math.max(pageCount, 1));
+            paginationAttributions.setCurrentPageIndex(0);
+            updateTableForPage(0);
+        } else {
+            tableAttributions.setItems(listeFiltree);
+            if (lblPageInfo != null) lblPageInfo.setText("");
+        }
+
+        calculerStatistiques();
+    }
+
+    private void updateTableForPage(int pageIndex) {
+        if (listeFiltree == null) {
+            tableAttributions.setItems(FXCollections.observableArrayList());
+            if (lblPageInfo != null) lblPageInfo.setText("");
+            return;
+        }
+
+        int fromIndex = pageIndex * ITEMS_PER_PAGE;
+        int toIndex = Math.min(fromIndex + ITEMS_PER_PAGE, listeFiltree.size());
+
+        ObservableList<EvenementSponsorService.AttributionAvecInfos> pageItems;
+        if (fromIndex >= listeFiltree.size() || fromIndex < 0) {
+            pageItems = FXCollections.observableArrayList();
+        } else {
+            pageItems = FXCollections.observableArrayList(listeFiltree.subList(fromIndex, toIndex));
+        }
+
+        tableAttributions.setItems(pageItems);
+
+        if (lblPageInfo != null) {
+            int total = listeFiltree.size();
+            if (total == 0) {
+                lblPageInfo.setText("Aucun résultat");
+            } else {
+                lblPageInfo.setText("Affichage " + (fromIndex + 1) + " - " + toIndex + " sur " + total);
+            }
+        }
     }
 
     private void initialiserFiltres() {
@@ -259,25 +371,25 @@ public class GestionAttributionSponsorController {
                 );
             }
 
-            listeFiltree = FXCollections.observableArrayList(listeAttributions);
-            tableAttributions.setItems(listeFiltree);
-            lblTotal.setText("Total : " + listeFiltree.size());
-            calculerStatistiques();
+            listeFiltree = FXCollections.observableArrayList();
+            applyFilteredList(listeAttributions, "Total : " + listeAttributions.size());
         } catch (SQLException e) {
             afficherErreur("Erreur lors du chargement des attributions : " + e.getMessage());
         }
     }
 
     private void calculerStatistiques() {
-        lblTotalAttributions.setText(listeFiltree.size() + " attributions");
-        lblTotal.setText("Total : " + listeFiltree.size());
+        if (lblTotalAttributions != null) lblTotalAttributions.setText(listeFiltree.size() + " attributions");
+        if (lblTotal != null && (lblTotal.getText() == null || lblTotal.getText().isBlank())) {
+            lblTotal.setText("Total : " + listeFiltree.size());
+        }
 
         // Montant total
         BigDecimal montantTotal = listeFiltree.stream()
             .map(EvenementSponsorService.AttributionAvecInfos::getMontantContribution)
             .filter(Objects::nonNull)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
-        lblMontantTotal.setText(montantTotal.toString() + " DT");
+        if (lblMontantTotal != null) lblMontantTotal.setText(montantTotal.toString() + " DT");
 
         // Répartition par statut
         long confirmes = listeFiltree.stream().filter(a -> a.getStatut() == StatutSponsor.CONFIRME).count();
@@ -285,10 +397,10 @@ public class GestionAttributionSponsorController {
         long refuses = listeFiltree.stream().filter(a -> a.getStatut() == StatutSponsor.REFUSE).count();
         long annules = listeFiltree.stream().filter(a -> a.getStatut() == StatutSponsor.ANNULE).count();
 
-        lblStatutConfirme.setText(confirmes + " confirmées");
-        lblStatutEnAttente.setText(enAttente + " en attente");
-        lblStatutRefuse.setText(refuses + " refusées");
-        lblStatutAnnule.setText(annules + " annulées");
+        if (lblStatutConfirme != null) lblStatutConfirme.setText(confirmes + " confirmées");
+        if (lblStatutEnAttente != null) lblStatutEnAttente.setText(enAttente + " en attente");
+        if (lblStatutRefuse != null) lblStatutRefuse.setText(refuses + " refusées");
+        if (lblStatutAnnule != null) lblStatutAnnule.setText(annules + " annulées");
 
         // Top sponsor (celui avec le plus de contributions)
         Map<String, Long> countBySponsor = listeFiltree.stream()
@@ -298,9 +410,9 @@ public class GestionAttributionSponsorController {
             .max(Map.Entry.comparingByValue());
         
         if (topSponsor.isPresent()) {
-            lblTopSponsor.setText(topSponsor.get().getKey() + " (" + topSponsor.get().getValue() + ")");
+            if (lblTopSponsor != null) lblTopSponsor.setText(topSponsor.get().getKey() + " (" + topSponsor.get().getValue() + ")");
         } else {
-            lblTopSponsor.setText("-");
+            if (lblTopSponsor != null) lblTopSponsor.setText("-");
         }
     }
 
@@ -331,35 +443,31 @@ public class GestionAttributionSponsorController {
             }
         }
 
-        listeFiltree.clear();
-        listeFiltree.addAll(resultats);
-        tableAttributions.setItems(listeFiltree);
-        lblTotal.setText("Total : " + resultats.size() + " (filtrés)");
-        calculerStatistiques();
+        applyFilteredList(resultats, "Total : " + resultats.size() + " (filtrés)");
     }
 
     @FXML
     private void appliquerFiltres() {
-        listeFiltree.clear();
-        listeFiltree.addAll(listeAttributions);
+        ObservableList<EvenementSponsorService.AttributionAvecInfos> resultats = FXCollections.observableArrayList();
+        resultats.addAll(listeAttributions);
 
         // Filtrer par statut
         StatutSponsor statut = comboStatut.getValue();
         if (statut != null) {
-            listeFiltree.removeIf(a -> a.getStatut() != statut);
+            resultats.removeIf(a -> a.getStatut() != statut);
         }
 
         // Filtrer par type de contribution
         TypeContribution type = comboType.getValue();
         if (type != null) {
-            listeFiltree.removeIf(a -> a.getTypeContribution() != type);
+            resultats.removeIf(a -> a.getTypeContribution() != type);
         }
 
         // Filtrer par période
         LocalDate debut = dateDebut.getValue();
         LocalDate fin = dateFin.getValue();
         if (debut != null || fin != null) {
-            listeFiltree.removeIf(a -> {
+            resultats.removeIf(a -> {
                 if (a.getDateContribution() == null) return true;
                 LocalDate dateContribution = a.getDateContribution().toLocalDateTime().toLocalDate();
                 if (debut != null && dateContribution.isBefore(debut)) return true;
@@ -368,9 +476,7 @@ public class GestionAttributionSponsorController {
             });
         }
 
-        tableAttributions.setItems(listeFiltree);
-        lblTotal.setText("Total : " + listeFiltree.size() + " (filtrés)");
-        calculerStatistiques();
+        applyFilteredList(resultats, "Total : " + resultats.size() + " (filtrés)");
     }
 
     @FXML
@@ -432,6 +538,45 @@ public class GestionAttributionSponsorController {
             } catch (SQLException e) {
                 afficherErreur("Erreur lors de la suppression : " + e.getMessage());
             }
+        }
+    }
+
+    @FXML
+    public void exporterExcel(ActionEvent event) {
+        try {
+            // Récupérer toutes les attributions
+            List<EvenementSponsor> attributionsToExport = attributionService.afficher();
+
+            if (attributionsToExport.isEmpty()) {
+                afficherErreur("Aucune attribution à exporter.");
+                return;
+            }
+
+            // Créer le service d'export
+            ExcelExportAttributionSponsorService exportService = new ExcelExportAttributionSponsorService();
+
+            // Générer le nom du fichier avec la date actuelle
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            String fileName = "attributions_sponsors_export_" + timestamp + ".xlsx";
+
+            // Chemin du dossier de téléchargements de l'utilisateur
+            String userHome = System.getProperty("user.home");
+            String downloadPath = userHome + File.separator + "Downloads" + File.separator + fileName;
+
+            // Exporter vers Excel
+            exportService.exportAttributionsToExcel(attributionsToExport, downloadPath);
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Succès");
+            alert.setHeaderText("Export réussi !");
+            alert.setContentText("Fichier enregistré dans :\n" + downloadPath);
+            alert.getDialogPane().setMinWidth(500);
+            alert.showAndWait();
+
+        } catch (IOException e) {
+            afficherErreur("Erreur lors de l'export Excel : " + e.getMessage());
+        } catch (SQLException e) {
+            afficherErreur("Erreur lors de l'export Excel : " + e.getMessage());
         }
     }
 

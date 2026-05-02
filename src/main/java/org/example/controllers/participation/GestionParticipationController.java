@@ -6,15 +6,22 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import org.example.entities.Participation;
 import org.example.enums.Role;
 import org.example.services.ParticipationService;
+import org.example.services.evenement.ExcelExportParticipationService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -58,6 +65,9 @@ public class GestionParticipationController {
     @FXML
     private Button btnAjouter;
 
+    @FXML
+    private Button btnExportExcel;
+
     // Filtres avancés
     @FXML
     private ComboBox<StatutParticipation> comboStatut;
@@ -85,10 +95,18 @@ public class GestionParticipationController {
     @FXML
     private Label lblTotalParticipations;
 
+    @FXML
+    private Pagination paginationParticipations;
+
+    @FXML
+    private Label lblPageInfo;
+
     private ParticipationService participationService;
     private EvenementService evenementService;
     private ObservableList<ParticipationService.ParticipationAvecNoms> listeParticipations;
     private ObservableList<ParticipationService.ParticipationAvecNoms> listeFiltree;
+
+    private static final int ITEMS_PER_PAGE = 10;
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -103,9 +121,10 @@ public class GestionParticipationController {
         Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ETUDIANT);
         boolean estEtudiant = (role == Role.ETUDIANT);
 
-        // Cacher le bouton ajouter pour les étudiants
+        // Cacher le bouton ajouter et export pour les étudiants
         if (estEtudiant) {
             btnAjouter.setVisible(false);
+            btnExportExcel.setVisible(false);
             colActions.setVisible(false);
             colEtudiant.setVisible(false);
             colDateInscription.setVisible(false);
@@ -121,6 +140,14 @@ public class GestionParticipationController {
         configurerColonnes();
         configurerColorationLignes();
         chargerParticipations();
+
+        if (paginationParticipations != null) {
+            paginationParticipations.currentPageIndexProperty().addListener((obs, oldIdx, newIdx) -> {
+                if (newIdx != null) {
+                    updateTableForPage(newIdx.intValue());
+                }
+            });
+        }
     }
 
     private void configurerColorationLignes() {
@@ -243,12 +270,55 @@ public class GestionParticipationController {
                 listeParticipations.addAll(participationService.afficherAvecNoms());
             }
 
-            listeFiltree.clear();
-            listeFiltree.addAll(listeParticipations);
-            tableParticipations.setItems(listeFiltree);
-            calculerStatistiques();
+            applyFilteredList(listeParticipations);
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible de charger les participations: " + e.getMessage());
+        }
+    }
+
+    private void applyFilteredList(List<ParticipationService.ParticipationAvecNoms> newList) {
+        listeFiltree.setAll(newList);
+
+        // Mettre à jour pagination
+        if (paginationParticipations != null) {
+            int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+            paginationParticipations.setPageCount(Math.max(pageCount, 1));
+            paginationParticipations.setCurrentPageIndex(0);
+            updateTableForPage(0);
+        } else {
+            tableParticipations.setItems(listeFiltree);
+            if (lblPageInfo != null) lblPageInfo.setText("");
+        }
+
+        calculerStatistiques();
+    }
+
+    private void updateTableForPage(int pageIndex) {
+        if (listeFiltree == null) {
+            tableParticipations.setItems(FXCollections.observableArrayList());
+            if (lblPageInfo != null) lblPageInfo.setText("");
+            return;
+        }
+
+        int fromIndex = pageIndex * ITEMS_PER_PAGE;
+        int toIndex = Math.min(fromIndex + ITEMS_PER_PAGE, listeFiltree.size());
+
+        ObservableList<ParticipationService.ParticipationAvecNoms> pageItems;
+        if (fromIndex >= listeFiltree.size() || fromIndex < 0) {
+            pageItems = FXCollections.observableArrayList();
+        } else {
+            pageItems = FXCollections.observableArrayList(listeFiltree.subList(fromIndex, toIndex));
+        }
+
+        tableParticipations.setItems(pageItems);
+
+        if (lblPageInfo != null) {
+            int total = listeFiltree.size();
+            if (total == 0) {
+                lblPageInfo.setText("Aucun résultat");
+            } else {
+                lblPageInfo.setText("Affichage " + (fromIndex + 1) + " - " + toIndex + " sur " + total);
+            }
         }
     }
 
@@ -271,16 +341,56 @@ public class GestionParticipationController {
             }
         }
 
-        lblStatutConfirme.setText(confirmes + " confirmées");
-        lblStatutEnAttente.setText(enAttente + " en attente");
-        lblStatutAnnule.setText(annulees + " annulées");
-        lblTotalParticipations.setText(listeFiltree.size() + " participations");
-        lblTotal.setText(listeFiltree.size() + " participations");
+        if (lblStatutConfirme != null) lblStatutConfirme.setText(confirmes + " confirmées");
+        if (lblStatutEnAttente != null) lblStatutEnAttente.setText(enAttente + " en attente");
+        if (lblStatutAnnule != null) lblStatutAnnule.setText(annulees + " annulées");
+        if (lblTotalParticipations != null) lblTotalParticipations.setText(listeFiltree.size() + " participations");
+        if (lblTotal != null) lblTotal.setText(listeFiltree.size() + " participations");
     }
 
     @FXML
-    private void ajouterParticipation(ActionEvent event) throws IOException {
-        NavigationContext.loadContentInCenter("/participation/AjoutParticipation.fxml");
+    private void ajouterParticipation(ActionEvent event) {
+        ouvrirDialogAjout();
+    }
+
+    private void ouvrirDialogAjout() {
+        try {
+            // Créer une nouvelle fenêtre (Stage) pour le dialog
+            Stage dialogStage = new Stage();
+            dialogStage.initStyle(StageStyle.UTILITY);
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.setTitle("Inscrire un étudiant");
+
+            // Charger le FXML du dialog
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/participation/AjoutParticipationDialog.fxml"));
+            VBox dialogRoot = loader.load();
+
+            // Obtenir le contrôleur et configurer le callback
+            AjoutParticipationDialogController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setOnSaveCallback(v -> {
+                // Rafraîchir la liste après l'ajout
+                chargerParticipations();
+            });
+
+            // Créer la scène et afficher
+            Scene scene = new Scene(dialogRoot);
+            scene.getStylesheets().add(getClass().getResource("/css/EventBack.css").toExternalForm());
+            dialogStage.setScene(scene);
+            dialogStage.setResizable(false);
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            afficherErreur("Erreur lors de l'ouverture du dialog : " + e.getMessage());
+        }
+    }
+
+    private void afficherErreur(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Erreur");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     @FXML
@@ -301,10 +411,7 @@ public class GestionParticipationController {
             }
         }
 
-        listeFiltree.clear();
-        listeFiltree.addAll(resultats);
-        tableParticipations.setItems(listeFiltree);
-        calculerStatistiques();
+        applyFilteredList(resultats);
     }
 
     @FXML
@@ -336,10 +443,7 @@ public class GestionParticipationController {
             });
         }
 
-        listeFiltree.clear();
-        listeFiltree.addAll(resultats);
-        tableParticipations.setItems(listeFiltree);
-        calculerStatistiques();
+        applyFilteredList(resultats);
     }
 
     @FXML
@@ -398,6 +502,45 @@ public class GestionParticipationController {
     @FXML
     public void retourAccueil(ActionEvent event) throws IOException {
         NavigationContext.loadContentInCenter("/participation/GestionParticipation.fxml");
+    }
+
+    @FXML
+    public void exporterExcel(ActionEvent event) {
+        try {
+            // Récupérer toutes les participations
+            List<Participation> participationsToExport = participationService.afficher();
+
+            if (participationsToExport.isEmpty()) {
+                afficherAlerte("Information", "Aucune participation à exporter.");
+                return;
+            }
+
+            // Créer le service d'export
+            ExcelExportParticipationService exportService = new ExcelExportParticipationService();
+
+            // Générer le nom du fichier avec la date actuelle
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            String fileName = "participations_export_" + timestamp + ".xlsx";
+
+            // Chemin du dossier de téléchargements de l'utilisateur
+            String userHome = System.getProperty("user.home");
+            String downloadPath = userHome + File.separator + "Downloads" + File.separator + fileName;
+
+            // Exporter vers Excel
+            exportService.exportParticipationsToExcel(participationsToExport, downloadPath);
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Succès");
+            alert.setHeaderText("Export réussi !");
+            alert.setContentText("Fichier enregistré dans :\n" + downloadPath);
+            alert.getDialogPane().setMinWidth(500);
+            alert.showAndWait();
+
+        } catch (IOException e) {
+            afficherAlerte("Erreur", "Erreur lors de l'export Excel : " + e.getMessage());
+        } catch (SQLException e) {
+            afficherAlerte("Erreur", "Erreur lors de l'export Excel : " + e.getMessage());
+        }
     }
 
     private void afficherAlerte(String type, String message) {

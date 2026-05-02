@@ -3,19 +3,24 @@ package org.example.controllers.evenement;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
+import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import netscape.javascript.JSObject;
 import org.example.entities.Evenement;
 import org.example.enums.Role;
 import org.example.enums.StatutEvenement;
 import org.example.enums.TypeEvenement;
 import org.example.services.EvenementService;
+import org.example.services.evenement.EventAiGeneratorService;
 import org.example.utils.MyDataBase_Unimind;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
@@ -36,6 +41,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class AjoutEvenementController {
 
@@ -61,6 +67,10 @@ public class AjoutEvenementController {
     private TextField txtHeureLimite;
     @FXML
     private TextField txtLieu;
+    @FXML
+    private TextField txtLatitude;
+    @FXML
+    private TextField txtLongitude;
     @FXML
     private TextField txtCapacite;
     @FXML
@@ -99,7 +109,26 @@ public class AjoutEvenementController {
     @FXML
     private Label lblSucces;
 
+    // Champs IA
+    @FXML
+    private TextField txtTopicAi;
+    @FXML
+    private CheckBox chkGenererDescription;
+    @FXML
+    private ComboBox<String> comboTitresIA;
+    @FXML
+    private VBox vboxResultatsIA;
+    @FXML
+    private Label lblErreurIA;
+    @FXML
+    private ProgressIndicator progressIA;
+
+    @FXML private VBox vboxImagePreview;
+    @FXML private javafx.scene.image.ImageView imgPreview1;
+    private String currentAiImage;
+
     private final EvenementService evenementService = new EvenementService();
+    private final EventAiGeneratorService aiGeneratorService = new EventAiGeneratorService();
     private boolean isAdmin = false;
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
@@ -237,6 +266,8 @@ public class AjoutEvenementController {
         txtTitre.clear();
         txtDescription.clear();
         txtLieu.clear();
+        txtLatitude.clear();
+        txtLongitude.clear();
         txtCapacite.clear();
         txtImage.clear();
         if (isAdmin && comboOrganisateur != null && !comboOrganisateur.getItems().isEmpty()) {
@@ -400,7 +431,8 @@ public class AjoutEvenementController {
         }
 
         if (!erreurs.isEmpty()) {
-            afficherErreur("Le formulaire contient des erreurs. Vérifiez les champs marqués en rouge.");
+            String message = "Erreurs détectées :\n" + String.join("\n", erreurs);
+            afficherErreur(message);
             return false;
         }
 
@@ -450,6 +482,34 @@ public class AjoutEvenementController {
 
         // Créer l'événement
         String image = txtImage.getText() != null && !txtImage.getText().trim().isEmpty() ? txtImage.getText().trim() : null;
+        
+        // Récupérer les coordonnées si disponibles
+        Double latitude = null;
+        Double longitude = null;
+        System.out.println("=== DEBUG creerEvenement ===");
+        System.out.println("txtLatitude field: " + (txtLatitude != null ? txtLatitude.getText() : "FIELD IS NULL"));
+        System.out.println("txtLongitude field: " + (txtLongitude != null ? txtLongitude.getText() : "FIELD IS NULL"));
+        if (txtLatitude != null && txtLatitude.getText() != null && !txtLatitude.getText().trim().isEmpty()) {
+            try {
+                latitude = Double.parseDouble(txtLatitude.getText().trim());
+                System.out.println("Latitude parsée: " + latitude);
+            } catch (NumberFormatException e) {
+                System.out.println("ERREUR parsing latitude: " + txtLatitude.getText());
+                latitude = null;
+            }
+        }
+        if (txtLongitude != null && txtLongitude.getText() != null && !txtLongitude.getText().trim().isEmpty()) {
+            try {
+                longitude = Double.parseDouble(txtLongitude.getText().trim());
+                System.out.println("Longitude parsée: " + longitude);
+            } catch (NumberFormatException e) {
+                System.out.println("ERREUR parsing longitude: " + txtLongitude.getText());
+                longitude = null;
+            }
+        }
+        System.out.println("Latitude finale: " + latitude + ", Longitude finale: " + longitude);
+        System.out.println("Lieu: " + lieu);
+        
         return new Evenement(
                 titre,
                 description.isEmpty() ? null : description,
@@ -463,8 +523,8 @@ public class AjoutEvenementController {
                 dateLimiteTimestamp,
                 organisateurId,
                 image, // image
-                null, // latitude
-                null  // longitude
+                latitude,
+                longitude
         );
     }
 
@@ -500,6 +560,128 @@ public class AjoutEvenementController {
             } catch (IOException e) {
                 afficherAlerte("Erreur", "Impossible de copier l'image : " + e.getMessage());
             }
+        }
+    }
+
+    @FXML
+    private void ouvrirCarteLieu(ActionEvent event) {
+        // Créer une nouvelle fenêtre pour la carte
+        Stage mapStage = new Stage();
+        mapStage.setTitle("Sélectionner le lieu sur la carte");
+        mapStage.setWidth(900);
+        mapStage.setHeight(600);
+
+        // Créer un WebView pour afficher la carte
+        WebView webView = new WebView();
+        WebEngine webEngine = webView.getEngine();
+
+        // Charger le fichier HTML de la carte
+        String mapHtmlPath = getClass().getResource("/evenement/EventOpenStreetMap.html").toExternalForm();
+        webEngine.load(mapHtmlPath);
+
+        // Créer le bridge Java-JavaScript
+        webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+            if (newState == Worker.State.SUCCEEDED) {
+                System.out.println("Page HTML chargée avec succès");
+                
+                // Attendre un peu que le DOM soit complètement chargé
+                javafx.application.Platform.runLater(() -> {
+                    try {
+                        Thread.sleep(500); // Attendre 500ms
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    
+                    // Injecter le bridge JavaScript
+                    JSObject window = (JSObject) webEngine.executeScript("window");
+                    EventMapJavaBridge bridge = new EventMapJavaBridge(mapStage);
+                    window.setMember("javaBridge", bridge);
+                    System.out.println("Bridge Java injecté: " + bridge);
+                    
+                    // Vérifier que le bridge est accessible
+                    try {
+                        Object test = webEngine.executeScript("typeof window.javaBridge");
+                        System.out.println("Type de javaBridge: " + test);
+                        
+                        Object testMethod = webEngine.executeScript("typeof window.javaBridge.onLocationSelected");
+                        System.out.println("Type de onLocationSelected: " + testMethod);
+                    } catch (Exception e) {
+                        System.err.println("Erreur lors de la vérification du bridge: " + e.getMessage());
+                    }
+                });
+            }
+        });
+
+        // Quand le WebView est redimensionné, Leaflet doit recalculer la taille
+        webView.widthProperty().addListener((obsW, oldW, newW) -> {
+            javafx.application.Platform.runLater(() -> {
+                try {
+                    webEngine.executeScript("if(typeof fixSize==='function')fixSize();");
+                } catch (Exception ignored) {}
+            });
+        });
+        webView.heightProperty().addListener((obsH, oldH, newH) -> {
+            javafx.application.Platform.runLater(() -> {
+                try {
+                    webEngine.executeScript("if(typeof fixSize==='function')fixSize();");
+                } catch (Exception ignored) {}
+            });
+        });
+
+        // Créer la scène et afficher la fenêtre
+        javafx.scene.Scene scene = new javafx.scene.Scene(webView);
+        mapStage.setScene(scene);
+        mapStage.show();
+    }
+
+    /**
+     * Bridge Java pour communiquer avec JavaScript
+     * Doit être public pour être accessible depuis JavaScript
+     */
+    public class EventMapJavaBridge {
+        private final Stage mapStage;
+        
+        public EventMapJavaBridge(Stage mapStage) {
+            this.mapStage = mapStage;
+        }
+        
+        /**
+         * Méthode appelée depuis JavaScript
+         * Doit être publique
+         */
+        public void onLocationSelected(String address, double lat, double lng) {
+            System.out.println("=== Bridge Java appelé ===");
+            System.out.println("Adresse: " + address);
+            System.out.println("Latitude: " + lat);
+            System.out.println("Longitude: " + lng);
+            System.out.println("txtLieu est null: " + (txtLieu == null));
+            System.out.println("txtLatitude est null: " + (txtLatitude == null));
+            System.out.println("txtLongitude est null: " + (txtLongitude == null));
+            
+            // Mettre à jour les champs du formulaire
+            javafx.application.Platform.runLater(() -> {
+                System.out.println("Dans Platform.runLater");
+                System.out.println("txtLieu avant: " + (txtLieu != null ? txtLieu.getText() : "null"));
+                
+                if (txtLieu != null) {
+                    txtLieu.setText(address);
+                    System.out.println("txtLieu après: " + txtLieu.getText());
+                }
+                if (txtLatitude != null) {
+                    txtLatitude.setText(String.valueOf(lat));
+                }
+                if (txtLongitude != null) {
+                    txtLongitude.setText(String.valueOf(lng));
+                }
+                
+                System.out.println("Champs mis à jour avec succès");
+                
+                // Fermer la fenêtre de la carte
+                if (mapStage != null) {
+                    mapStage.close();
+                    System.out.println("Fenêtre de carte fermée");
+                }
+            });
         }
     }
 
@@ -558,6 +740,90 @@ public class AjoutEvenementController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    /**
+     * Générer des suggestions avec l'IA
+     */
+    @FXML
+    private void genererAvecIA() {
+        String topic = txtTopicAi.getText().trim();
+        if (topic.isEmpty()) {
+            lblErreurIA.setText("Veuillez entrer un sujet");
+            lblErreurIA.setVisible(true);
+            return;
+        }
+
+        lblErreurIA.setVisible(false);
+        progressIA.setVisible(true);
+        vboxResultatsIA.setVisible(false);
+
+        // Exécuter dans un thread séparé pour ne pas bloquer l'UI
+        new Thread(() -> {
+            try {
+                String type = comboType.getValue() != null ? comboType.getValue().getDbValue() : "";
+                Map<String, Object> result = aiGeneratorService.generate(type, "", topic, "", "fr");
+
+                List<String> titles = (List<String>) result.get("titles");
+                String description = (String) result.get("description");
+                String imageFile = (String) result.get("image_file");
+
+                // Mettre à jour l'UI sur le thread JavaFX
+                javafx.application.Platform.runLater(() -> {
+                    progressIA.setVisible(false);
+                    comboTitresIA.setItems(FXCollections.observableArrayList(titles));
+                    vboxResultatsIA.setVisible(true);
+
+                    // Si la case est cochée, appliquer aussi la description
+                    if (chkGenererDescription.isSelected() && description != null && !description.isEmpty()) {
+                        txtDescription.setText(description);
+                    }
+                    
+                    // Afficher l'image générée
+                    if (imageFile != null && !imageFile.isEmpty()) {
+                        currentAiImage = imageFile;
+                        
+                        try {
+                            String path = "file:///D:/xampp/htdocs/uploadsEvent/evenements/" + imageFile;
+                            if (imgPreview1 != null) {
+                                imgPreview1.setImage(new javafx.scene.image.Image(path));
+                            }
+                            if (vboxImagePreview != null) {
+                                vboxImagePreview.setVisible(true);
+                                vboxImagePreview.setManaged(true);
+                            }
+                        } catch (Exception e) {
+                            System.err.println("Erreur chargement image IA: " + e.getMessage());
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                javafx.application.Platform.runLater(() -> {
+                    progressIA.setVisible(false);
+                    lblErreurIA.setText("Erreur: " + e.getMessage());
+                    lblErreurIA.setVisible(true);
+                });
+            }
+        }).start();
+    }
+
+    /**
+     * Appliquer le titre sélectionné depuis l'IA
+     */
+    @FXML
+    private void appliquerTitreIA() {
+        String selectedTitle = comboTitresIA.getValue();
+        if (selectedTitle != null && !selectedTitle.isEmpty()) {
+            txtTitre.setText(selectedTitle);
+        }
+    }
+
+    @FXML
+    private void choisirImage1() {
+        if (currentAiImage != null && txtImage != null) {
+            txtImage.setText(currentAiImage);
+            afficherAlerte("Succès", "Image IA sélectionnée !");
+        }
     }
 
     /**

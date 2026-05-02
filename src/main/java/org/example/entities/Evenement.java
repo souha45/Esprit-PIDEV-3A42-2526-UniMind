@@ -226,6 +226,10 @@ public class Evenement {
         if (statut == StatutEvenement.ANNULE || statut == StatutEvenement.TERMINE) {
             return false;
         }
+        // Vérifier si la date de début est passée
+        if (dateDebut != null && dateDebut.before(new Timestamp(System.currentTimeMillis()))) {
+            return false;
+        }
         if (dateLimiteInscription != null && dateLimiteInscription.before(new Timestamp(System.currentTimeMillis()))) {
             return false;
         }

@@ -14,14 +14,17 @@ import org.example.enums.Role;
 import org.example.enums.TypeEvenement;
 import org.example.enums.StatutEvenement;
 import org.example.services.EvenementService;
+import org.example.services.evenement.ExcelExportEventService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class GestionEvenementController {
 
@@ -65,6 +68,9 @@ public class GestionEvenementController {
     private Button btnAjouter;
 
     @FXML
+    private Button btnExportExcel;
+
+    @FXML
     private ComboBox<TypeEvenement> comboType;
 
     @FXML
@@ -94,8 +100,17 @@ public class GestionEvenementController {
     @FXML
     private Label lblPleins;
 
+    @FXML
+    private Pagination paginationEvenements;
+
+    @FXML
+    private Label lblPageInfo;
+
     private EvenementService evenementService;
     private ObservableList<EvenementService.EvenementAvecOrganisateurNom> listeEvenements;
+    private ObservableList<EvenementService.EvenementAvecOrganisateurNom> listeFiltre;
+
+    private static final int ITEMS_PER_PAGE = 10;
 
     // Formatter pour les dates
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -104,6 +119,7 @@ public class GestionEvenementController {
     public void initialize() {
         evenementService = new EvenementService();
         listeEvenements = FXCollections.observableArrayList();
+        listeFiltre = FXCollections.observableArrayList();
 
         // Mettre à jour automatiquement les images (une seule fois)
         try {
@@ -112,10 +128,11 @@ public class GestionEvenementController {
             System.err.println("Erreur lors de la mise à jour automatique des images: " + e.getMessage());
         }
 
-        // Cacher le bouton ajouter pour les étudiants
+        // Cacher le bouton ajouter et export pour les étudiants
         Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ETUDIANT);
         if (role == Role.ETUDIANT) {
             btnAjouter.setVisible(false);
+            btnExportExcel.setVisible(false);
         }
 
         // Initialiser les filtres
@@ -126,6 +143,15 @@ public class GestionEvenementController {
 
         // Charger les données
         chargerEvenements();
+
+        // Pagination
+        if (paginationEvenements != null) {
+            paginationEvenements.currentPageIndexProperty().addListener((obs, oldIdx, newIdx) -> {
+                if (newIdx != null) {
+                    updateTableForPage(newIdx.intValue());
+                }
+            });
+        }
     }
 
     private void initialiserFiltres() {
@@ -330,20 +356,74 @@ public class GestionEvenementController {
 
                 listeEvenements.add(evenementAvecNom);
             }
-            tableEvenements.setItems(listeEvenements);
-            lblTotal.setText(listeEvenements.size() + " événements");
 
-            // Calculer et afficher les statistiques
-            calculerStatistiques();
+            applyFilteredList(listeEvenements, listeEvenements.size() + " événements");
         } catch (SQLException e) {
             afficherAlerte("Erreur", "Impossible de charger les événements: " + e.getMessage());
+        }
+    }
+
+    private void applyFilteredList(ObservableList<EvenementService.EvenementAvecOrganisateurNom> newList, String totalLabel) {
+        listeFiltre.setAll(newList);
+        if (lblTotal != null) {
+            lblTotal.setText(totalLabel);
+        }
+
+        // Calculer et afficher les statistiques sur la liste filtrée
+        calculerStatistiques();
+
+        if (paginationEvenements == null) {
+            tableEvenements.setItems(listeFiltre);
+            if (lblPageInfo != null) lblPageInfo.setText("");
+            return;
+        }
+
+        // Mettre à jour pagination
+        int pageCount = (int) Math.ceil((double) listeFiltre.size() / ITEMS_PER_PAGE);
+        paginationEvenements.setPageCount(Math.max(pageCount, 1));
+        paginationEvenements.setCurrentPageIndex(0);
+
+        // Rafraîchir la première page
+        updateTableForPage(0);
+    }
+
+    private void updateTableForPage(int pageIndex) {
+        if (listeFiltre == null) {
+            tableEvenements.setItems(FXCollections.observableArrayList());
+            if (lblPageInfo != null) lblPageInfo.setText("");
+            return;
+        }
+
+        int fromIndex = pageIndex * ITEMS_PER_PAGE;
+        int toIndex = Math.min(fromIndex + ITEMS_PER_PAGE, listeFiltre.size());
+
+        ObservableList<EvenementService.EvenementAvecOrganisateurNom> pageItems;
+        if (fromIndex >= listeFiltre.size() || fromIndex < 0) {
+            pageItems = FXCollections.observableArrayList();
+        } else {
+            pageItems = FXCollections.observableArrayList(listeFiltre.subList(fromIndex, toIndex));
+        }
+
+        tableEvenements.setItems(pageItems);
+
+        if (lblPageInfo != null) {
+            int total = listeFiltre.size();
+            if (total == 0) {
+                lblPageInfo.setText("Aucun résultat");
+            } else {
+                lblPageInfo.setText("Affichage " + (fromIndex + 1) + " - " + toIndex + " sur " + total);
+            }
         }
     }
 
     private void calculerStatistiques() {
         int aVenir = 0, enCours = 0, termine = 0, annule = 0, pleins = 0;
 
-        for (EvenementService.EvenementAvecOrganisateurNom item : listeEvenements) {
+        ObservableList<EvenementService.EvenementAvecOrganisateurNom> base = (listeFiltre != null)
+                ? listeFiltre
+                : listeEvenements;
+
+        for (EvenementService.EvenementAvecOrganisateurNom item : base) {
             Evenement e = item.getEvenement();
 
             // Compter par statut
@@ -433,8 +513,7 @@ public class GestionEvenementController {
             }
         }
 
-        tableEvenements.setItems(resultat);
-        lblTotal.setText(resultat.size() + " événements (filtrés)");
+        applyFilteredList(resultat, resultat.size() + " événements (filtrés)");
     }
 
     @FXML
@@ -489,8 +568,7 @@ public class GestionEvenementController {
             resultats.add(item);
         }
 
-        tableEvenements.setItems(resultats);
-        lblTotal.setText(resultats.size() + " événements (filtrés)");
+        applyFilteredList(resultats, resultats.size() + " événements (filtrés)");
     }
 
     @FXML
@@ -540,6 +618,52 @@ public class GestionEvenementController {
     @FXML
     public void retourAccueil(ActionEvent event) throws IOException {
         NavigationContext.loadContentInCenter("/evenement/GestionEvenement.fxml");
+    }
+
+    @FXML
+    public void exporterExcel(ActionEvent event) {
+        try {
+            // Récupérer la liste des événements (filtrés si applicable)
+            List<Evenement> evenementsToExport;
+            if (listeFiltre.isEmpty()) {
+                evenementsToExport = evenementService.afficher();
+            } else {
+                evenementsToExport = listeFiltre.stream()
+                        .map(EvenementService.EvenementAvecOrganisateurNom::getEvenement)
+                        .toList();
+            }
+
+            if (evenementsToExport.isEmpty()) {
+                afficherAlerte("Information", "Aucun événement à exporter.");
+                return;
+            }
+
+            // Créer le service d'export
+            ExcelExportEventService exportService = new ExcelExportEventService();
+
+            // Générer le nom du fichier avec la date actuelle
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            String fileName = "evenements_export_" + timestamp + ".xlsx";
+
+            // Chemin du dossier de téléchargements de l'utilisateur
+            String userHome = System.getProperty("user.home");
+            String downloadPath = userHome + File.separator + "Downloads" + File.separator + fileName;
+
+            // Exporter vers Excel
+            exportService.exportEvenementsToExcel(evenementsToExport, downloadPath);
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Succès");
+            alert.setHeaderText("Export réussi !");
+            alert.setContentText("Fichier enregistré dans :\n" + downloadPath);
+            alert.getDialogPane().setMinWidth(500);
+            alert.showAndWait();
+
+        } catch (IOException e) {
+            afficherAlerte("Erreur", "Erreur lors de l'export Excel : " + e.getMessage());
+        } catch (SQLException e) {
+            afficherAlerte("Erreur", "Erreur lors de l'export Excel : " + e.getMessage());
+        }
     }
 
     private void afficherAlerte(String type, String message) {

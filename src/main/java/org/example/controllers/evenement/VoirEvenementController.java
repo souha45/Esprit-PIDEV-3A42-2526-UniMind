@@ -1,5 +1,7 @@
 package org.example.controllers.evenement;
 
+import javafx.application.Platform;
+import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -8,15 +10,21 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import org.example.entities.Evenement;
 import org.example.entities.Participation;
 import org.example.enums.Role;
 import org.example.services.EvenementService;
 import org.example.services.FavoriService;
 import org.example.services.ParticipationService;
+import org.example.services.evenement.PdfExportEventDetailsService;
+import org.example.services.evenement.PdfExportParticipantsService;
+import org.example.services.evenement.EventNominatimService;
 import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +34,7 @@ import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class VoirEvenementController {
 
@@ -36,6 +45,7 @@ public class VoirEvenementController {
     private final ParticipationService participationService = new ParticipationService();
     private final FavoriService favoriService = new FavoriService();
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private final EventNominatimService nominatimService = new EventNominatimService();
 
     @FXML
     private Label lblTitre;
@@ -51,6 +61,8 @@ public class VoirEvenementController {
     private Label lblDateFin;
     @FXML
     private Label lblLieu;
+    @FXML
+    private WebView mapView;
     @FXML
     private TextArea txtDescription;
     @FXML
@@ -134,6 +146,9 @@ public class VoirEvenementController {
         lblLieu.setText(evenementCourant.getLieu() != null ? evenementCourant.getLieu() : "-");
         txtDescription.setText(evenementCourant.getDescription() != null ? evenementCourant.getDescription() : "");
 
+        // Charger la carte si les coordonnées sont disponibles
+        chargerCarte();
+
         // Afficher le nom de l'organisateur au lieu de l'ID
         try {
             String nomOrganisateur = evenementService.getNomOrganisateur(evenementCourant.getOrganisateurId());
@@ -185,6 +200,112 @@ public class VoirEvenementController {
         chargerAvis();
     }
 
+    private void chargerCarte() {
+        if (mapView == null) {
+            return;
+        }
+
+        if (evenementCourant == null) {
+            mapView.setVisible(false);
+            mapView.setManaged(false);
+            return;
+        }
+
+        Double latitude = evenementCourant.getLatitude();
+        Double longitude = evenementCourant.getLongitude();
+        String address = evenementCourant.getLieu();
+
+        System.out.println("=== DEBUG VoirEvenement chargerCarte ===");
+        System.out.println("Lieu: " + address);
+        System.out.println("Latitude stockée: " + latitude);
+        System.out.println("Longitude stockée: " + longitude);
+
+        // Afficher la carte même si les coordonnées ne sont pas disponibles : on tentera le géocodage
+        mapView.setVisible(true);
+        mapView.setManaged(true);
+
+        // Préparer l'adresse (popup) = texte exact du champ lieu
+        final String popupAddress = address != null ? address : "";
+
+        // Priorité: si on a des coordonnées stockées, elles représentent le lieu réellement choisi
+        // (évite les décalages/ambiguïtés de la recherche Nominatim)
+        if (latitude != null && longitude != null) {
+            afficherCarte(latitude, longitude, popupAddress);
+            return;
+        }
+
+        // 1) Priorité: géocoder le texte du lieu pour obtenir une position cohérente avec ce qui est affiché
+        if (address != null && !address.trim().isEmpty()) {
+            var task = nominatimService.searchLocationsAsync(address.trim());
+            task.setOnSucceeded(evt -> {
+                var suggestions = task.getValue();
+                if (suggestions != null && !suggestions.isEmpty()) {
+                    var best = suggestions.get(0);
+                    afficherCarte(best.getLatitude(), best.getLongitude(), popupAddress);
+                } else {
+                    mapView.setVisible(false);
+                    mapView.setManaged(false);
+                }
+            });
+            task.setOnFailed(evt -> {
+                mapView.setVisible(false);
+                mapView.setManaged(false);
+            });
+            Thread t = new Thread(task);
+            t.setDaemon(true);
+            t.start();
+            return;
+        }
+
+        // Si pas de coordonnées et pas de texte lieu exploitable
+        mapView.setVisible(false);
+        mapView.setManaged(false);
+    }
+
+    private void afficherCarte(double latitude, double longitude, String address) {
+        if (mapView == null) {
+            return;
+        }
+
+        Platform.runLater(() -> {
+            WebEngine webEngine = mapView.getEngine();
+            String mapHtmlPath = getClass().getResource("/evenement/EventOpenStreetMapView.html").toExternalForm();
+            webEngine.load(mapHtmlPath);
+
+            webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+                if (newState == Worker.State.SUCCEEDED) {
+                    String escapedAddress = address != null
+                            ? address.replace("\\", "\\\\")
+                            .replace("'", "\\'")
+                            .replace("\"", "\\\"")
+                            .replace("\n", "\\n")
+                            .replace("\r", "\\r")
+                            : "";
+
+                    String script = String.format(Locale.US, "initMap(%f, %f, '%s')", latitude, longitude, escapedAddress);
+                    webEngine.executeScript(script);
+                }
+            });
+
+            // Quand le WebView est redimensionné par le layout JavaFX (ScrollPane, VBox),
+            // Leaflet doit recalculer la taille de la carte sinon les tuiles sont décalées/grises
+            mapView.widthProperty().addListener((obsW, oldW, newW) -> {
+                Platform.runLater(() -> {
+                    try {
+                        webEngine.executeScript("if(typeof fixSize==='function')fixSize();");
+                    } catch (Exception ignored) {}
+                });
+            });
+            mapView.heightProperty().addListener((obsH, oldH, newH) -> {
+                Platform.runLater(() -> {
+                    try {
+                        webEngine.executeScript("if(typeof fixSize==='function')fixSize();");
+                    } catch (Exception ignored) {}
+                });
+            });
+        });
+    }
+
     private void verifierPermissions() {
         // Vérifier le rôle de l'utilisateur
         Role role = SessionManager.getInstance().getCurrentUserRole().orElse(Role.ETUDIANT);
@@ -225,7 +346,10 @@ public class VoirEvenementController {
                         btnLaisserAvis.setVisible(false);
                         lblAvisDonne.setVisible(true);
                     } else {
-                        btnLaisserAvis.setVisible(true);
+                        // Autoriser l'avis seulement si la participation est confirmée
+                        boolean confirme = participationEtudiant != null
+                                && participationEtudiant.getStatut() == org.example.enums.StatutParticipation.CONFIRME;
+                        btnLaisserAvis.setVisible(confirme);
                         lblAvisDonne.setVisible(false);
                     }
                 } else {
@@ -483,6 +607,77 @@ public class VoirEvenementController {
         alert.showAndWait();
     }
 
+    @FXML
+    private void exporterPdfEvenement(ActionEvent event) {
+        if (evenementCourant == null) {
+            afficherAlerte("Erreur", "Aucun événement sélectionné");
+            return;
+        }
+
+        try {
+            String organisateurNom;
+            try {
+                organisateurNom = evenementService.getNomOrganisateur(evenementCourant.getOrganisateurId());
+            } catch (SQLException e) {
+                organisateurNom = "-";
+            }
+
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            String fileName = "fiche_evenement_" + timestamp + ".pdf";
+            String userHome = System.getProperty("user.home");
+            String filePath = userHome + File.separator + "Downloads" + File.separator + fileName;
+
+            PdfExportEventDetailsService pdfService = new PdfExportEventDetailsService();
+            pdfService.exportEventDetails(evenementCourant, organisateurNom, new File(filePath));
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Succès");
+            alert.setHeaderText("Export PDF réussi !");
+            alert.setContentText("Fichier enregistré dans :\n" + filePath);
+            alert.getDialogPane().setMinWidth(500);
+            alert.showAndWait();
+
+        } catch (IOException e) {
+            afficherAlerte("Erreur", "Erreur lors de l'export PDF : " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void exporterPdfParticipants(ActionEvent event) {
+        if (evenementCourant == null) {
+            afficherAlerte("Erreur", "Aucun événement sélectionné");
+            return;
+        }
+
+        try {
+            List<ParticipationService.ParticipantInfo> participants = participationService.getParticipantsByEvenementId(evenementCourant.getEvenementId());
+            if (participants.isEmpty()) {
+                afficherAlerte("Information", "Aucun participant à exporter.");
+                return;
+            }
+
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            String fileName = "participants_evenement_" + timestamp + ".pdf";
+            String userHome = System.getProperty("user.home");
+            String filePath = userHome + File.separator + "Downloads" + File.separator + fileName;
+
+            PdfExportParticipantsService pdfService = new PdfExportParticipantsService();
+            pdfService.exportParticipants(evenementCourant.getTitre(), participants, new File(filePath));
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Succès");
+            alert.setHeaderText("Export PDF réussi !");
+            alert.setContentText("Fichier enregistré dans :\n" + filePath);
+            alert.getDialogPane().setMinWidth(500);
+            alert.showAndWait();
+
+        } catch (IOException e) {
+            afficherAlerte("Erreur", "Erreur lors de l'export PDF : " + e.getMessage());
+        } catch (SQLException e) {
+            afficherAlerte("Erreur", "Erreur lors de l'export PDF : " + e.getMessage());
+        }
+    }
+
     private void chargerAvis() {
         try {
             int currentUserId = SessionManager.getInstance().getCurrentUserId().orElse(-1);
@@ -581,6 +776,11 @@ public class VoirEvenementController {
 
             if (participation[0] == null) {
                 afficherAlerte("Erreur", "Vous devez être inscrit à cet événement pour laisser un avis");
+                return;
+            }
+
+            if (participation[0].getStatut() != org.example.enums.StatutParticipation.CONFIRME) {
+                afficherAlerte("Erreur", "Vous ne pouvez laisser un avis que si votre participation est confirmée");
                 return;
             }
 

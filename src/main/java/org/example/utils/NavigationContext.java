@@ -114,3 +114,4 @@ public class NavigationContext {
         sidebar = null;
     }
 }
+

@@ -10,6 +10,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Pagination;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.Node;
@@ -62,13 +63,22 @@ public class EvenementsEtudiantController {
     @FXML
     private Label lblTotal;
 
+    @FXML
+    private Pagination paginationEvenements;
+
+    @FXML
+    private Label lblPageInfo;
+
     private EvenementService evenementService;
     private FavoriService favoriService;
     private ParticipationService participationService;
     private List<Evenement> listeEvenements;
+    private List<Evenement> listeFiltree;
     private Set<Integer> favoriEvenementIds;
     private Set<Integer> participationEvenementIds;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    private static final int ITEMS_PER_PAGE = 6;
 
     @FXML
     public void initialize() {
@@ -114,10 +124,47 @@ public class EvenementsEtudiantController {
             chargerFavorisEtudiant();
             chargerParticipationsEtudiant();
             chargerEvenements();
+
+            if (paginationEvenements != null) {
+                paginationEvenements.currentPageIndexProperty().addListener((obs, oldIdx, newIdx) -> {
+                    if (newIdx != null) {
+                        updateTileForPage(newIdx.intValue());
+                    }
+                });
+            }
         } catch (Exception e) {
             System.err.println("Erreur lors de l'initialisation: " + e.getMessage());
             e.printStackTrace();
             afficherErreur("Erreur lors de l'initialisation: " + e.getMessage());
+        }
+    }
+
+    private void updateTileForPage(int pageIndex) {
+        if (listeFiltree == null) {
+            tileEvenements.getChildren().clear();
+            if (lblPageInfo != null) lblPageInfo.setText("");
+            return;
+        }
+
+        int fromIndex = pageIndex * ITEMS_PER_PAGE;
+        int toIndex = Math.min(fromIndex + ITEMS_PER_PAGE, listeFiltree.size());
+
+        List<Evenement> pageItems;
+        if (fromIndex >= listeFiltree.size() || fromIndex < 0) {
+            pageItems = new ArrayList<>();
+        } else {
+            pageItems = listeFiltree.subList(fromIndex, toIndex);
+        }
+
+        afficherCartesEvenements(pageItems);
+
+        if (lblPageInfo != null) {
+            int total = listeFiltree.size();
+            if (total == 0) {
+                lblPageInfo.setText("Aucun résultat");
+            } else {
+                lblPageInfo.setText("Affichage " + (fromIndex + 1) + " - " + toIndex + " sur " + total);
+            }
         }
     }
 
@@ -130,12 +177,25 @@ public class EvenementsEtudiantController {
         }
 
         List<Evenement> resultats = filtrerEvenements(listeEvenements);
+        listeFiltree = resultats;
         System.out.println("Résultats filtrés: " + resultats.size());
         if (resultats.isEmpty()) {
             afficherMessageAucunEvenement();
             lblTotal.setText("0 événements (filtrés)");
+            if (paginationEvenements != null) {
+                paginationEvenements.setPageCount(1);
+                paginationEvenements.setCurrentPageIndex(0);
+            }
+            if (lblPageInfo != null) lblPageInfo.setText("Aucun résultat");
         } else {
-            afficherCartesEvenements(resultats);
+            if (paginationEvenements != null) {
+                int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+                paginationEvenements.setPageCount(Math.max(pageCount, 1));
+                paginationEvenements.setCurrentPageIndex(0);
+                updateTileForPage(0);
+            } else {
+                afficherCartesEvenements(resultats);
+            }
             lblTotal.setText(resultats.size() + " événements (filtrés)");
         }
     }
@@ -153,8 +213,16 @@ public class EvenementsEtudiantController {
             return;
         }
 
-        afficherCartesEvenements(listeEvenements);
-        lblTotal.setText(listeEvenements.size() + " événements");
+        listeFiltree = new ArrayList<>(listeEvenements);
+        if (paginationEvenements != null) {
+            int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+            paginationEvenements.setPageCount(Math.max(pageCount, 1));
+            paginationEvenements.setCurrentPageIndex(0);
+            updateTileForPage(0);
+        } else {
+            afficherCartesEvenements(listeFiltree);
+        }
+        lblTotal.setText(listeFiltree.size() + " événements");
     }
 
     private List<Evenement> filtrerEvenements(List<Evenement> base) {
@@ -307,15 +375,28 @@ public class EvenementsEtudiantController {
         System.out.println("Chargement des événements...");
         try {
             listeEvenements = evenementService.afficher();
+            listeFiltree = new ArrayList<>(listeEvenements);
             System.out.println("Nombre d'événements chargés: " + listeEvenements.size());
 
-            if (listeEvenements.isEmpty()) {
+            if (listeFiltree.isEmpty()) {
                 System.out.println("Aucun événement trouvé");
                 afficherMessageAucunEvenement();
                 lblTotal.setText("0 événements");
+                if (paginationEvenements != null) {
+                    paginationEvenements.setPageCount(1);
+                    paginationEvenements.setCurrentPageIndex(0);
+                }
+                if (lblPageInfo != null) lblPageInfo.setText("Aucun résultat");
             } else {
-                afficherCartesEvenements(listeEvenements);
-                lblTotal.setText(listeEvenements.size() + " événements");
+                if (paginationEvenements != null) {
+                    int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+                    paginationEvenements.setPageCount(Math.max(pageCount, 1));
+                    paginationEvenements.setCurrentPageIndex(0);
+                    updateTileForPage(0);
+                } else {
+                    afficherCartesEvenements(listeFiltree);
+                }
+                lblTotal.setText(listeFiltree.size() + " événements");
             }
             System.out.println("Événements affichés avec succès");
         } catch (SQLException e) {

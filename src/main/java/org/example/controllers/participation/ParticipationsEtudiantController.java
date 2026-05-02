@@ -38,6 +38,12 @@ public class ParticipationsEtudiantController {
     private Label lblTotal;
 
     @FXML
+    private Pagination paginationParticipations;
+
+    @FXML
+    private Label lblPageInfo;
+
+    @FXML
     private TextField txtRecherche;
 
     @FXML
@@ -51,8 +57,11 @@ public class ParticipationsEtudiantController {
 
     private ParticipationService participationService;
     private List<Participation> listeParticipations;
+    private List<Participation> listeFiltree;
     private List<Evenement> listeEvenements;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    private static final int ITEMS_PER_PAGE = 6;
 
     @FXML
     public void initialize() {
@@ -112,6 +121,14 @@ public class ParticipationsEtudiantController {
             });
 
             chargerParticipationsEtudiant();
+
+            if (paginationParticipations != null) {
+                paginationParticipations.currentPageIndexProperty().addListener((obs, oldIdx, newIdx) -> {
+                    if (newIdx != null) {
+                        updateTileForPage(newIdx.intValue());
+                    }
+                });
+            }
         } catch (Exception e) {
             System.err.println("Erreur lors de l'initialisation: " + e.getMessage());
             e.printStackTrace();
@@ -134,6 +151,7 @@ public class ParticipationsEtudiantController {
                     listeParticipations.add(p);
                 }
             }
+            listeFiltree = new ArrayList<>(listeParticipations);
 
             // Charger les événements associés
             listeEvenements = new ArrayList<>();
@@ -146,13 +164,25 @@ public class ParticipationsEtudiantController {
 
             System.out.println("Nombre de participations chargées: " + listeParticipations.size());
 
-            if (listeParticipations.isEmpty()) {
+            if (listeFiltree.isEmpty()) {
                 System.out.println("Aucune participation trouvée");
                 afficherMessageAucuneParticipation();
                 lblTotal.setText("0 participations");
+                if (paginationParticipations != null) {
+                    paginationParticipations.setPageCount(1);
+                    paginationParticipations.setCurrentPageIndex(0);
+                }
+                if (lblPageInfo != null) lblPageInfo.setText("Aucun résultat");
             } else {
-                afficherCartesParticipations(listeParticipations);
-                lblTotal.setText(listeParticipations.size() + " participations");
+                if (paginationParticipations != null) {
+                    int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+                    paginationParticipations.setPageCount(Math.max(pageCount, 1));
+                    paginationParticipations.setCurrentPageIndex(0);
+                    updateTileForPage(0);
+                } else {
+                    afficherCartesParticipations(listeFiltree);
+                }
+                lblTotal.setText(listeFiltree.size() + " participations");
             }
             System.out.println("Participations affichées avec succès");
         } catch (SQLException e) {
@@ -161,6 +191,35 @@ public class ParticipationsEtudiantController {
         } catch (Exception e) {
             System.err.println("Erreur inattendue lors du chargement des participations: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void updateTileForPage(int pageIndex) {
+        if (listeFiltree == null) {
+            tileParticipations.getChildren().clear();
+            if (lblPageInfo != null) lblPageInfo.setText("");
+            return;
+        }
+
+        int fromIndex = pageIndex * ITEMS_PER_PAGE;
+        int toIndex = Math.min(fromIndex + ITEMS_PER_PAGE, listeFiltree.size());
+
+        List<Participation> pageItems;
+        if (fromIndex >= listeFiltree.size() || fromIndex < 0) {
+            pageItems = new ArrayList<>();
+        } else {
+            pageItems = listeFiltree.subList(fromIndex, toIndex);
+        }
+
+        afficherCartesParticipations(pageItems);
+
+        if (lblPageInfo != null) {
+            int total = listeFiltree.size();
+            if (total == 0) {
+                lblPageInfo.setText("Aucun résultat");
+            } else {
+                lblPageInfo.setText("Affichage " + (fromIndex + 1) + " - " + toIndex + " sur " + total);
+            }
         }
     }
 
@@ -216,12 +275,26 @@ public class ParticipationsEtudiantController {
             });
         }
 
+        listeFiltree = filtres;
+
         // Afficher les résultats
         if (filtres.isEmpty()) {
             afficherMessageAucuneParticipation();
             lblTotal.setText("0 participations");
+            if (paginationParticipations != null) {
+                paginationParticipations.setPageCount(1);
+                paginationParticipations.setCurrentPageIndex(0);
+            }
+            if (lblPageInfo != null) lblPageInfo.setText("Aucun résultat");
         } else {
-            afficherCartesParticipations(filtres);
+            if (paginationParticipations != null) {
+                int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+                paginationParticipations.setPageCount(Math.max(pageCount, 1));
+                paginationParticipations.setCurrentPageIndex(0);
+                updateTileForPage(0);
+            } else {
+                afficherCartesParticipations(filtres);
+            }
             lblTotal.setText(filtres.size() + " participations");
         }
     }
@@ -232,7 +305,17 @@ public class ParticipationsEtudiantController {
         comboStatutParticipation.setValue(null);
         comboType.setValue(null);
         comboTri.setValue("Date (plus proche)");
-        appliquerFiltres();
+
+        listeFiltree = new ArrayList<>(listeParticipations);
+        if (paginationParticipations != null) {
+            int pageCount = (int) Math.ceil((double) listeFiltree.size() / ITEMS_PER_PAGE);
+            paginationParticipations.setPageCount(Math.max(pageCount, 1));
+            paginationParticipations.setCurrentPageIndex(0);
+            updateTileForPage(0);
+        } else {
+            afficherCartesParticipations(listeFiltree);
+        }
+        lblTotal.setText(listeFiltree.size() + " participations");
     }
 
     private void afficherCartesParticipations(List<Participation> participations) {
@@ -339,11 +422,12 @@ public class ParticipationsEtudiantController {
             Button btnLaisserAvis = null;
             Label lblAvisDonne = null;
             if (evenementTermine) {
-                if (!participation.hasFeedback()) {
+                boolean confirme = participation.getStatut() == StatutParticipation.CONFIRME;
+                if (confirme && !participation.hasFeedback()) {
                     btnLaisserAvis = new Button("💬 Laisser un avis");
                     btnLaisserAvis.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 8 16; -fx-cursor: hand; -fx-font-weight: bold;");
                     btnLaisserAvis.setOnAction(event -> voirEvenement(evenement)); // Redirige vers le détail où le bouton laisser avis est disponible
-                } else {
+                } else if (participation.hasFeedback()) {
                     lblAvisDonne = new Label("✓ Avis donné");
                     lblAvisDonne.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 8 16; -fx-background-radius: 10; -fx-font-size: 12px; -fx-font-weight: bold;");
                 }

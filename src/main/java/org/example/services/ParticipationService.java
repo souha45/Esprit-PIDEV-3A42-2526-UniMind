@@ -1,24 +1,81 @@
 package org.example.services;
 
 import org.example.entities.Participation;
+import org.example.entities.Evenement;
 import org.example.enums.StatutParticipation;
+import org.example.services.evenement.EventEmailService;
 import org.example.utils.MyDataBase_Unimind;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class ParticipationService implements ICrud<Participation> {
 
     private final Connection connection;
+    private final EventEmailService emailService;
+    private EvenementService evenementService;
 
     public ParticipationService() {
         this.connection = MyDataBase_Unimind.getInstance().getConnection();
+        this.emailService = new EventEmailService();
+
+        // Chargement des credentials email depuis event-config.properties
+        Properties props = new Properties();
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("event-config.properties")) {
+            if (is != null) {
+                props.load(is);
+                this.emailService.setUsername(props.getProperty("mail.username", ""));
+                this.emailService.setPassword(props.getProperty("mail.password", ""));
+            }
+        } catch (IOException e) {
+            System.err.println("Impossible de charger event-config.properties : " + e.getMessage());
+        }
+    }
+
+    private EvenementService getEvenementService() {
+        if (evenementService == null) {
+            evenementService = new EvenementService();
+        }
+        return evenementService;
     }
 
     @Override
     public void ajouter(Participation p) throws SQLException {
         System.out.println("Ajout d'une participation pour l'etudiant ID: " + p.getEtudiantId() + " a l'evenement ID: " + p.getEvenementId());
+
+        Evenement evenement = getEvenementService().findById(p.getEvenementId());
+        if (evenement == null) {
+            throw new SQLException("Événement introuvable (ID=" + p.getEvenementId() + ")");
+        }
+
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+
+        if (evenement.getStatut() != null && (evenement.getStatut() == org.example.enums.StatutEvenement.ANNULE
+                || evenement.getStatut() == org.example.enums.StatutEvenement.TERMINE)) {
+            throw new SQLException("Inscription impossible : l'événement est " + evenement.getStatut().toString().toLowerCase());
+        }
+
+        if (evenement.getDateDebut() != null && evenement.getDateDebut().before(now)) {
+            throw new SQLException("Inscription impossible : l'événement est déjà passé (date de début dépassée)");
+        }
+
+        if (evenement.getDateLimiteInscription() != null && evenement.getDateLimiteInscription().before(now)) {
+            throw new SQLException("Inscription impossible : la date limite d'inscription est dépassée");
+        }
+
+        if (evenement.isComplet()) {
+            throw new SQLException("Inscription impossible : l'événement est complet");
+        }
+
+        if (!evenement.isInscriptionPossible()) {
+            throw new SQLException("Inscription impossible");
+        }
+
         String sql = "INSERT INTO participation (date_inscription, statut, created_at, updated_at, evenement_id, etudiant_id, note_satisfaction, feedback_commentaire, feedback_at, qr_token, scanned_at, present) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -56,12 +113,42 @@ public class ParticipationService implements ICrud<Participation> {
                     System.out.println("ID genere pour la participation: " + p.getParticipationId());
                 }
             }
+
+            // Envoyer l'email de confirmation d'inscription
+            sendInscriptionEmail(p.getEtudiantId(), p.getEvenementId());
         }
     }
 
     @Override
     public void modifier(Participation p) throws SQLException {
         System.out.println("Modification de la participation ID: " + p.getParticipationId());
+
+        // Récupérer l'ancien statut pour détecter le changement vers ANNULE
+        Participation current = findById(p.getParticipationId());
+        if (current == null) {
+            throw new SQLException("Participation introuvable (ID=" + p.getParticipationId() + ")");
+        }
+        StatutParticipation oldStatut = current.getStatut();
+
+        boolean wantsToSaveFeedback = p.getNoteSatisfaction() != null
+                || (p.getFeedbackCommentaire() != null && !p.getFeedbackCommentaire().trim().isEmpty());
+
+        if (wantsToSaveFeedback) {
+            if (oldStatut != StatutParticipation.CONFIRME) {
+                throw new SQLException("Avis impossible : votre participation n'est pas confirmée");
+            }
+
+            Evenement ev = getEvenementService().findById(current.getEvenementId());
+            if (ev == null) {
+                throw new SQLException("Événement introuvable (ID=" + current.getEvenementId() + ")");
+            }
+
+            Timestamp now = new Timestamp(System.currentTimeMillis());
+            if (ev.getDateFin() != null && ev.getDateFin().after(now)) {
+                throw new SQLException("Avis impossible : l'événement n'est pas encore terminé");
+            }
+        }
+
         String sql = "UPDATE participation SET date_inscription=?, statut=?, updated_at=?, evenement_id=?, etudiant_id=?, note_satisfaction=?, feedback_commentaire=?, feedback_at=?, qr_token=?, scanned_at=?, present=? " +
                 "WHERE participation_id=?";
 
@@ -92,14 +179,41 @@ public class ParticipationService implements ICrud<Participation> {
             ps.setInt(12, p.getParticipationId());
             ps.executeUpdate();
         }
+
+        // Envoyer l'email d'annulation si le statut passe à ANNULE
+        if (oldStatut != StatutParticipation.ANNULE && p.getStatut() == StatutParticipation.ANNULE) {
+            System.out.println("Statut de participation changé à ANNULE - envoi de l'email");
+            sendAnnulationEmail(current.getEtudiantId(), current.getEvenementId());
+        }
     }
 
     @Override
     public void supprimer(int id) throws SQLException {
+        // Récupérer les détails de la participation avant suppression pour l'email
+        String selectSql = "SELECT etudiant_id, evenement_id FROM participation WHERE participation_id=?";
+        int etudiantId = -1;
+        int evenementId = -1;
+
+        try (PreparedStatement ps = connection.prepareStatement(selectSql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    etudiantId = rs.getInt("etudiant_id");
+                    evenementId = rs.getInt("evenement_id");
+                }
+            }
+        }
+
+        // Supprimer la participation
         String sql = "DELETE FROM participation WHERE participation_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, id);
             ps.executeUpdate();
+        }
+
+        // Envoyer l'email de confirmation d'annulation
+        if (etudiantId != -1 && evenementId != -1) {
+            sendAnnulationEmail(etudiantId, evenementId);
         }
     }
 
@@ -220,6 +334,146 @@ public class ParticipationService implements ICrud<Participation> {
             }
         }
         return result;
+    }
+
+    /**
+     * Récupérer l'email d'un utilisateur par son ID
+     */
+    private String getUserEmail(int userId) throws SQLException {
+        String sql = "SELECT email FROM user WHERE user_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("email");
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Récupérer le nom complet d'un utilisateur par son ID
+     */
+    private String getUserName(int userId) throws SQLException {
+        String sql = "SELECT prenom, nom FROM user WHERE user_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("prenom") + " " + rs.getString("nom");
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Récupérer les participants confirmés d'un événement
+     * (seulement ceux avec statut = 'confirme')
+     */
+    public java.util.List<ParticipantInfo> getParticipantsByEvenementId(int evenementId) throws SQLException {
+        String sql = "SELECT p.etudiant_id, u.email, u.prenom, u.nom, p.date_inscription " +
+                     "FROM participation p " +
+                     "LEFT JOIN user u ON p.etudiant_id = u.user_id " +
+                     "WHERE p.evenement_id = ? " +
+                     "AND p.statut = 'confirme'";
+        java.util.List<ParticipantInfo> result = new java.util.ArrayList<>();
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, evenementId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ParticipantInfo info = new ParticipantInfo();
+                    info.setEtudiantId(rs.getInt("etudiant_id"));
+                    info.setEmail(rs.getString("email"));
+                    info.setPrenom(rs.getString("prenom"));
+                    info.setNom(rs.getString("nom"));
+                    info.setDateInscription(rs.getTimestamp("date_inscription"));
+                    result.add(info);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Classe interne pour les infos participant
+     */
+    public static class ParticipantInfo {
+        private int etudiantId;
+        private String email;
+        private String prenom;
+        private String nom;
+        private java.sql.Timestamp dateInscription;
+
+        public int getEtudiantId() { return etudiantId; }
+        public void setEtudiantId(int etudiantId) { this.etudiantId = etudiantId; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getPrenom() { return prenom; }
+        public void setPrenom(String prenom) { this.prenom = prenom; }
+        public String getNom() { return nom; }
+        public void setNom(String nom) { this.nom = nom; }
+        public java.sql.Timestamp getDateInscription() { return dateInscription; }
+        public void setDateInscription(java.sql.Timestamp dateInscription) { this.dateInscription = dateInscription; }
+    }
+
+    /**
+     * Récupérer les détails de l'événement pour l'email
+     */
+    private Evenement getEvenementDetails(int evenementId) throws SQLException {
+        return getEvenementService().findById(evenementId);
+    }
+
+    /**
+     * Envoyer l'email de confirmation d'inscription
+     */
+    private void sendInscriptionEmail(int etudiantId, int evenementId) {
+        try {
+            String email = getUserEmail(etudiantId);
+            String participantName = getUserName(etudiantId);
+            Evenement evenement = getEvenementDetails(evenementId);
+
+            if (email != null && participantName != null && evenement != null) {
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+                String eventDate = evenement.getDateDebut() != null ? sdf.format(evenement.getDateDebut()) : "Non spécifié";
+                String eventLocation = evenement.getLieu() != null ? evenement.getLieu() : "Non spécifié";
+
+                emailService.sendInscriptionConfirmation(
+                    email,
+                    participantName,
+                    evenement.getTitre(),
+                    eventDate,
+                    eventLocation
+                );
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de l'envoi de l'email d'inscription: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Envoyer l'email de confirmation d'annulation
+     */
+    private void sendAnnulationEmail(int etudiantId, int evenementId) {
+        try {
+            String email = getUserEmail(etudiantId);
+            String participantName = getUserName(etudiantId);
+            Evenement evenement = getEvenementDetails(evenementId);
+
+            if (email != null && participantName != null && evenement != null) {
+                emailService.sendAnnulationConfirmation(
+                    email,
+                    participantName,
+                    evenement.getTitre()
+                );
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de l'envoi de l'email d'annulation: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**

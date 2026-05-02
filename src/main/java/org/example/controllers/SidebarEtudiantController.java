@@ -12,6 +12,7 @@ import org.example.entities.User;
 import org.example.services.VoiceAssistantService;
 import org.example.services.VoiceAssistantService.NavigationCommand;
 import org.example.utils.MyDataBase_Unimind;
+import org.example.utils.NavigationContext;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;

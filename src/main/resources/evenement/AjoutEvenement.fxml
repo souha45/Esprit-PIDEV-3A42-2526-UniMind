@@ -22,42 +22,67 @@
         <ScrollPane fitToWidth="true" styleClass="scroll-pane">
             <VBox spacing="16" alignment="TOP_CENTER" styleClass="padding-large">
                 <children>
-                    <!-- Titre -->
-                    <VBox spacing="8">
+                    <VBox spacing="16" styleClass="card-white">
                         <children>
-                            <Label text="Titre *" styleClass="form-label" />
-                            <TextField fx:id="txtTitre" promptText="Titre de l'événement" prefWidth="400" styleClass="form-input" />
-                            <Label fx:id="lblErreurTitre" text="Le titre est obligatoire" styleClass="error-label" visible="false" />
-                            <Label fx:id="lblErreurUnicite" text="Un événement avec ce titre et cette date existe déjà" styleClass="error-label" visible="false" />
-                        </children>
-                    </VBox>
-
-                    <!-- Description -->
-                    <VBox spacing="8">
-                        <children>
-                            <Label text="Description" styleClass="form-label" />
-                            <TextArea fx:id="txtDescription" promptText="Description de l'événement" 
-                                      prefRowCount="3" prefWidth="400" wrapText="true" styleClass="form-textarea" />
-                        </children>
-                    </VBox>
-
-                    <!-- Type et Statut -->
-                    <HBox spacing="20" alignment="CENTER">
-                        <children>
-                            <VBox spacing="8" prefWidth="200">
+                            <!-- Titre -->
+                            <VBox spacing="8">
                                 <children>
-                                    <Label text="Type *" styleClass="form-label" />
-                                    <ComboBox fx:id="comboType" promptText="Type" prefWidth="200" styleClass="form-input" />
+                                    <Label text="Titre *" styleClass="form-label" />
+                                    <TextField fx:id="txtTitre" promptText="Titre de l'événement" prefWidth="400" styleClass="form-input" />
+                                    <Label fx:id="lblErreurTitre" text="Le titre est obligatoire" styleClass="error-label" visible="false" />
+                                    <Label fx:id="lblErreurUnicite" text="Un événement avec ce titre et cette date existe déjà" styleClass="error-label" visible="false" />
                                 </children>
                             </VBox>
-                            <VBox spacing="8" prefWidth="200">
+
+                            <!-- Description -->
+                            <VBox spacing="8">
                                 <children>
-                                    <Label text="Statut *" styleClass="form-label" />
-                                    <ComboBox fx:id="comboStatut" promptText="Statut" prefWidth="200" styleClass="form-input" />
+                                    <Label text="Description" styleClass="form-label" />
+                                    <TextArea fx:id="txtDescription" promptText="Description de l'événement"
+                                              prefRowCount="3" prefWidth="400" wrapText="true" styleClass="form-textarea" />
                                 </children>
                             </VBox>
-                        </children>
-                    </HBox>
+
+                            <!-- Section IA -->
+                            <VBox spacing="8" styleClass="ai-section">
+                                <children>
+                                    <Label text="🤖 Génération IA" styleClass="form-label" style="-fx-text-fill: #667eea; -fx-font-weight: bold;" />
+                                    <TextField fx:id="txtTopicAi" promptText="Sujet de l'événement (ex: intelligence artificielle)" prefWidth="400" styleClass="form-input" />
+                                    <HBox spacing="10" alignment="CENTER_LEFT">
+                                        <children>
+                                            <Button text="✨ Générer avec IA" onAction="#genererAvecIA" styleClass="btn-primary" />
+                                            <CheckBox fx:id="chkGenererDescription" text="Générer aussi la description" styleClass="form-checkbox" />
+                                        </children>
+                                    </HBox>
+                                    <VBox spacing="4" fx:id="vboxResultatsIA" visible="false">
+                                        <children>
+                                            <Label text="Titres suggérés :" styleClass="form-label" />
+                                            <ComboBox fx:id="comboTitresIA" prefWidth="400" styleClass="form-input" />
+                                            <Button text="Appliquer ce titre" onAction="#appliquerTitreIA" styleClass="btn-secondary" />
+                                        </children>
+                                    </VBox>
+                                    <Label fx:id="lblErreurIA" text="Erreur lors de la génération IA" styleClass="error-label" visible="false" />
+                                    <ProgressIndicator fx:id="progressIA" visible="false" prefWidth="20" prefHeight="20" />
+                                </children>
+                            </VBox>
+
+                            <!-- Type et Statut -->
+                            <HBox spacing="20" alignment="CENTER">
+                                <children>
+                                    <VBox spacing="8" prefWidth="200">
+                                        <children>
+                                            <Label text="Type *" styleClass="form-label" />
+                                            <ComboBox fx:id="comboType" promptText="Type" prefWidth="200" styleClass="form-input" />
+                                        </children>
+                                    </VBox>
+                                    <VBox spacing="8" prefWidth="200">
+                                        <children>
+                                            <Label text="Statut *" styleClass="form-label" />
+                                            <ComboBox fx:id="comboStatut" promptText="Statut" prefWidth="200" styleClass="form-input" />
+                                        </children>
+                                    </VBox>
+                                </children>
+                            </HBox>
 
                     <!-- Dates + Heures -->
                     <VBox spacing="8">
@@ -109,8 +134,16 @@
                     <VBox spacing="8">
                         <children>
                             <Label text="Lieu *" styleClass="form-label" />
-                            <TextField fx:id="txtLieu" promptText="Lieu de l'événement" prefWidth="400" styleClass="form-input" />
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <children>
+                                    <TextField fx:id="txtLieu" promptText="Lieu de l'événement" prefWidth="400" styleClass="form-input" HBox.hgrow="ALWAYS" />
+                                    <Button text="📍 Carte" onAction="#ouvrirCarteLieu" prefWidth="100" styleClass="btn-secondary" />
+                                </children>
+                            </HBox>
                             <Label fx:id="lblErreurLieu" text="Le lieu est obligatoire" styleClass="error-label" visible="false" />
+                            <!-- Champs cachés pour stocker les coordonnées -->
+                            <TextField fx:id="txtLatitude" visible="false" managed="false" />
+                            <TextField fx:id="txtLongitude" visible="false" managed="false" />
                         </children>
                     </VBox>
 
@@ -142,6 +175,23 @@
                                     <Button text="📁 Parcourir" onAction="#parcourirImage" prefWidth="120" styleClass="btn-secondary" />
                                 </children>
                             </HBox>
+                            
+                            <!-- Aperçu Image IA -->
+                            <VBox fx:id="vboxImagePreview" spacing="10" visible="false" managed="false" alignment="CENTER" style="-fx-padding: 10 0 0 0;">
+                                <children>
+                                    <Label text="Image générée par l'IA :" styleClass="form-label" style="-fx-text-fill: #667eea; -fx-font-weight: bold;" />
+                                    <HBox spacing="15" alignment="CENTER">
+                                        <children>
+                                            <VBox alignment="CENTER" spacing="5" style="-fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-padding: 5;">
+                                                <children>
+                                                    <javafx.scene.image.ImageView fx:id="imgPreview1" fitWidth="200" fitHeight="150" preserveRatio="true" />
+                                                    <Button text="Sélectionner Image IA" onAction="#choisirImage1" styleClass="btn-secondary" />
+                                                </children>
+                                            </VBox>
+                                        </children>
+                                    </HBox>
+                                </children>
+                            </VBox>
                         </children>
                     </VBox>
 
@@ -160,6 +210,8 @@
                     <!-- Message de succès -->
                     <Label fx:id="lblSucces" text="Événement enregistré avec succès !" 
                            styleClass="label-success" visible="false" />
+                        </children>
+                    </VBox>
                 </children>
             </VBox>
         </ScrollPane>

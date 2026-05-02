@@ -24,6 +24,8 @@
                         </children>
                     </VBox>
                     <Button text="➕ Nouvelle Attribution" onAction="#ajouterAttribution" styleClass="btn-primary"/>
+                    <Button text="📊 Export Excel" onAction="#exporterExcel" styleClass="btn-secondary"/>
+                    <Button text="📄 Export PDF" onAction="#exporterPdf" styleClass="btn-secondary"/>
                 </children>
             </HBox>
         </children>
@@ -115,16 +117,28 @@
         </children>
     </HBox>
 
-    <TableView fx:id="tableAttributions" VBox.vgrow="ALWAYS" styleClass="data-table">
-        <columns>
-            <TableColumn fx:id="colEvenement" text="Événement" prefWidth="300" sortable="true"/>
-            <TableColumn fx:id="colSponsor" text="Sponsor" prefWidth="150" sortable="true"/>
-            <TableColumn fx:id="colMontant" text="Montant" prefWidth="100" sortable="true"/>
-            <TableColumn fx:id="colType" text="Type" prefWidth="120" sortable="true"/>
-            <TableColumn fx:id="colStatut" text="Statut" prefWidth="100" sortable="true"/>
-            <TableColumn fx:id="colDate" text="Date" prefWidth="150" sortable="true"/>
-            <TableColumn fx:id="colActions" text="Actions" prefWidth="150"/>
-        </columns>
-    </TableView>
+    <VBox spacing="10" VBox.vgrow="ALWAYS">
+        <children>
+            <TableView fx:id="tableAttributions" VBox.vgrow="ALWAYS" styleClass="data-table">
+                <columns>
+                    <TableColumn fx:id="colEvenement" text="Événement" prefWidth="300" sortable="true"/>
+                    <TableColumn fx:id="colSponsor" text="Sponsor" prefWidth="150" sortable="true"/>
+                    <TableColumn fx:id="colMontant" text="Montant" prefWidth="100" sortable="true"/>
+                    <TableColumn fx:id="colType" text="Type" prefWidth="120" sortable="true"/>
+                    <TableColumn fx:id="colStatut" text="Statut" prefWidth="100" sortable="true"/>
+                    <TableColumn fx:id="colDate" text="Date" prefWidth="150" sortable="true"/>
+                    <TableColumn fx:id="colActions" text="Actions" prefWidth="150"/>
+                </columns>
+            </TableView>
+
+            <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 6 0 0 0;">
+                <children>
+                    <Label fx:id="lblPageInfo" text="" styleClass="form-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Pagination fx:id="paginationAttributions" maxPageIndicatorCount="7" prefHeight="40"/>
+                </children>
+            </HBox>
+        </children>
+    </VBox>
 
 </VBox>
