@@ -30,9 +30,6 @@
                         style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
                 <Button fx:id="btnQuestion" text="❓  Questions" onAction="#showQuestion"
                         style="-fx-background-color: #e2e8f0; -fx-text-fill: #64748b; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
-                <Button fx:id="btnStatQuestionnaire" text="📈  Stat Questionnaires"
-                        onAction="#showStatQuestionnaire"
-                        style="-fx-background-color: transparent; -fx-text-fill: #E9D5FF; -fx-pref-width: 210; -fx-pref-height: 42; -fx-alignment: CENTER_LEFT; -fx-padding: 0 0 0 20; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-size: 13;"/>
                 <Button fx:id="btnReponse" text="📝  Réponses" onAction="#showReponse"
                         style="-fx-background-color: #e2e8f0; -fx-text-fill: #64748b; -fx-font-weight: bold; -fx-padding: 7 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
                 <Button fx:id="btnStats" text="📊  Statistiques" onAction="#showStats"

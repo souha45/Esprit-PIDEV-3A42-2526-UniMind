@@ -2,358 +2,350 @@ package org.example.services;
 
 import org.example.entities.Question;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Scanner;
+import java.util.*;
 
-/**
- * Service IA pour générer des questions QCM selon le type du questionnaire.
- * Utilise l'API Groq (llama-3.3-70b-versatile).
- */
 public class GenerateurQuestionsIAService {
 
-    private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
-    private static final String MODEL   = "llama-3.3-70b-versatile";
-
-    private static final String API_KEY = chargerCle();
+    // ✅ Groq API URL et modèle
+    private static final String GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+    private static final String MODEL = "llama-3.3-70b-versatile"; // gratuit et rapide
 
     private static String chargerCle() {
-        String sysProp = System.getProperty("GROQ_API_KEY");
-        if (sysProp != null && !sysProp.isBlank()) return sysProp;
-
-        String envKey = System.getenv("GROQ_API_KEY");
-        if (envKey != null && !envKey.isBlank()) return envKey;
-
-        try (InputStream is = GenerateurQuestionsIAService.class.getResourceAsStream("/config.properties")) {
+        try (InputStream is = GenerateurQuestionsIAService.class
+                .getResourceAsStream("/config.properties")) {
             if (is != null) {
                 Properties props = new Properties();
                 props.load(is);
                 String key = props.getProperty("groq.api.key");
-                if (key != null && !key.isBlank() && !key.equals("VOTRE_CLE_ICI")) return key;
+                if (key != null && !key.isBlank()) {
+                    System.out.println("🔑 Clé Groq utilisée: " +
+                            key.substring(0, Math.min(10, key.length())) + "...");
+                    return key;
+                }
             }
         } catch (IOException e) {
             System.out.println("⚠ config.properties introuvable");
         }
+        System.out.println("❌ Clé Groq non configurée");
         return null;
     }
 
-    /**
-     * Génère une liste de questions QCM selon le type et le nombre demandé.
-     *
-     * @param typeQuestionnaire  ex: "DEPRESSION", "ANXIETE", "STRESS"
-     * @param nomQuestionnaire   nom du questionnaire pour contextualiser
-     * @param nombreQuestions    nombre de questions à générer
-     * @param questionnaireId    ID du questionnaire pour lier les questions
-     * @return liste de Question prêtes à être insérées en BDD
-     */
+    // 🎯 Méthode principale
     public static List<Question> genererQuestions(
             String typeQuestionnaire,
             String nomQuestionnaire,
             int nombreQuestions,
             int questionnaireId) {
 
-        if (API_KEY == null || API_KEY.isBlank()) {
-            System.out.println("❌ Clé API non configurée");
-            return null;
-        }
+        String apiKey = chargerCle();
+        if (apiKey == null) return null;
 
         try {
-            String prompt = construirePrompt(typeQuestionnaire, nomQuestionnaire, nombreQuestions);
-            String jsonBrut = appellerGroq(prompt);
-            if (jsonBrut == null) return null;
-
-            return parserQuestions(jsonBrut, questionnaireId);
-
+            String prompt  = construirePrompt(typeQuestionnaire, nomQuestionnaire, nombreQuestions);
+            String contenu = appellerGroq(prompt, apiKey);
+            System.out.println("📦 Contenu extrait : " + contenu);
+            if (contenu == null) return null;
+            return parserQuestions(contenu, questionnaireId);
         } catch (Exception e) {
             System.out.println("❌ Erreur génération : " + e.getMessage());
-            e.printStackTrace();
             return null;
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  CONSTRUCTION DU PROMPT
-    // ─────────────────────────────────────────────────────────────
-
+    // 🧠 Construction du prompt
     private static String construirePrompt(String type, String nom, int nombre) {
         return "Tu es un expert en psychologie clinique. Génère exactement " + nombre
                 + " questions QCM en français pour un questionnaire de type " + type
                 + " intitulé \"" + nom + "\".\n\n"
-                + "RÈGLES STRICTES :\n"
-                + "1. Chaque question doit avoir exactement 4 options de réponse\n"
-                + "2. Les scores doivent être 0, 1, 2, 3 (du moins grave au plus grave)\n"
-                + "3. Les questions doivent être cliniquement pertinentes pour évaluer " + type + "\n"
-                + "4. Réponds UNIQUEMENT en JSON valide, sans texte avant ou après\n\n"
-                + "FORMAT JSON OBLIGATOIRE :\n"
+                + "Réponds UNIQUEMENT avec un tableau JSON valide, sans texte avant ou après, "
+                + "sans balises markdown.\n"
+                + "Format EXACT à respecter :\n"
                 + "[\n"
                 + "  {\n"
-                + "    \"texte\": \"Texte de la question ?\",\n"
+                + "    \"texte\": \"Question ici ?\",\n"
                 + "    \"options\": [\"Jamais\", \"Parfois\", \"Souvent\", \"Toujours\"],\n"
                 + "    \"scores\": [0, 1, 2, 3]\n"
                 + "  }\n"
-                + "]\n\n"
-                + "Génère maintenant " + nombre + " questions pour le type " + type + ".";
+                + "]\n"
+                + "Génère exactement " + nombre + " objets dans le tableau.";
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  APPEL API GROQ
-    // ─────────────────────────────────────────────────────────────
-
-    private static String appellerGroq(String prompt) {
+    // 🤖 Appel API Groq (format OpenAI compatible)
+    private static String appellerGroq(String prompt, String apiKey) {
         try {
-            URL url = new URL(API_URL);
+            URL url = new URL(GROQ_API_URL);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
-            conn.setRequestProperty("Authorization", "Bearer " + API_KEY);
             conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+            conn.setRequestProperty("Authorization", "Bearer " + apiKey);
             conn.setDoOutput(true);
-            conn.setConnectTimeout(30000);
+            conn.setConnectTimeout(15000);
             conn.setReadTimeout(60000);
 
+            // ✅ Format OpenAI compatible (Groq utilise le même format)
             String body = "{"
                     + "\"model\": \"" + MODEL + "\","
                     + "\"messages\": ["
-                    + "{\"role\": \"system\", \"content\": \"Tu es un expert en psychologie. Tu réponds UNIQUEMENT en JSON valide, sans markdown, sans texte supplémentaire.\"},"
-                    + "{\"role\": \"user\", \"content\": " + toJsonString(prompt) + "}"
+                    + "  {\"role\": \"system\", \"content\": \"Tu es un expert en psychologie clinique. "
+                    + "Réponds UNIQUEMENT en JSON valide sans markdown.\"},"
+                    + "  {\"role\": \"user\", \"content\": " + toJsonString(prompt) + "}"
                     + "],"
-                    + "\"max_tokens\": 3000,"
-                    + "\"temperature\": 0.6"
+                    + "\"max_tokens\": 2000,"
+                    + "\"temperature\": 0.7"
                     + "}";
+
+            System.out.println("📤 Envoi requête Groq...");
 
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(body.getBytes(StandardCharsets.UTF_8));
             }
 
             int code = conn.getResponseCode();
-            System.out.println("Code HTTP Groq : " + code);
+            System.out.println("📡 Code HTTP Groq : " + code);
 
             if (code == 200) {
-                Scanner scanner = new Scanner(conn.getInputStream(), StandardCharsets.UTF_8);
-                StringBuilder response = new StringBuilder();
-                while (scanner.hasNextLine()) response.append(scanner.nextLine());
-                scanner.close();
-                return extraireContenu(response.toString());
+                Scanner sc = new Scanner(conn.getInputStream(), StandardCharsets.UTF_8);
+                StringBuilder res = new StringBuilder();
+                while (sc.hasNextLine()) res.append(sc.nextLine());
+                sc.close();
+                String raw = res.toString();
+                System.out.println("📥 Réponse brute : " +
+                        raw.substring(0, Math.min(400, raw.length())));
+                return extraireContenuGroq(raw);
+
             } else {
                 Scanner sc = new Scanner(conn.getErrorStream(), StandardCharsets.UTF_8);
                 StringBuilder err = new StringBuilder();
                 while (sc.hasNextLine()) err.append(sc.nextLine());
                 sc.close();
-                System.out.println("❌ Erreur Groq : " + err);
+                System.out.println("❌ Erreur API Groq : " + err);
+
+                if (code == 401) System.out.println("🔑 Clé API invalide ou expirée !");
+                if (code == 429) System.out.println("⏳ Quota dépassé. Attendez quelques secondes.");
+                if (code == 400) System.out.println("❌ Requête invalide. Vérifiez le format.");
                 return null;
             }
 
         } catch (Exception e) {
-            System.out.println("❌ Exception appel Groq : " + e.getMessage());
+            System.out.println("❌ Exception Groq API : " + e.getMessage());
             return null;
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  EXTRACTION DU CONTENU JSON DEPUIS LA RÉPONSE GROQ
-    // ─────────────────────────────────────────────────────────────
-
-    private static String extraireContenu(String json) {
+    // 📦 Extraction contenu Groq (format OpenAI)
+    // Structure : {"choices":[{"message":{"content":"..."}}]}
+    private static String extraireContenuGroq(String json) {
         try {
-            int idx = json.indexOf("\"content\"");
-            if (idx == -1) return null;
-            idx += 9;
-            while (idx < json.length() && (json.charAt(idx) == ':' || json.charAt(idx) == ' ')) idx++;
-            if (idx >= json.length() || json.charAt(idx) != '"') return null;
-            idx++;
+            // ✅ Chercher "content" dans choices[0].message
+            int choicesIdx = json.indexOf("\"choices\"");
+            if (choicesIdx == -1) {
+                System.out.println("⚠ 'choices' non trouvé dans la réponse Groq");
+                return null;
+            }
+
+            int contentIdx = json.indexOf("\"content\"", choicesIdx);
+            if (contentIdx == -1) {
+                System.out.println("⚠ 'content' non trouvé dans la réponse Groq");
+                return null;
+            }
+
+            contentIdx += 9; // sauter "content"
+            while (contentIdx < json.length() &&
+                    (json.charAt(contentIdx) == ':' || json.charAt(contentIdx) == ' '))
+                contentIdx++;
+
+            if (contentIdx >= json.length() || json.charAt(contentIdx) != '"') return null;
+            contentIdx++;
 
             StringBuilder result = new StringBuilder();
-            while (idx < json.length()) {
-                char c = json.charAt(idx);
-                if (c == '\\' && idx + 1 < json.length()) {
-                    char next = json.charAt(idx + 1);
+            while (contentIdx < json.length()) {
+                char c = json.charAt(contentIdx);
+                if (c == '\\' && contentIdx + 1 < json.length()) {
+                    char next = json.charAt(contentIdx + 1);
                     switch (next) {
-                        case '"':  result.append('"');  idx += 2; continue;
-                        case 'n':  result.append('\n'); idx += 2; continue;
-                        case 't':  result.append('\t'); idx += 2; continue;
-                        case '\\': result.append('\\'); idx += 2; continue;
-                        case 'r':  result.append('\r'); idx += 2; continue;
-                        default:   result.append(next); idx += 2; continue;
+                        case '"':  result.append('"');  contentIdx += 2; continue;
+                        case 'n':  result.append('\n'); contentIdx += 2; continue;
+                        case 't':  result.append('\t'); contentIdx += 2; continue;
+                        case '\\': result.append('\\'); contentIdx += 2; continue;
+                        case 'r':  result.append('\r'); contentIdx += 2; continue;
+                        default:   result.append(next); contentIdx += 2; continue;
                     }
                 }
                 if (c == '"') break;
                 result.append(c);
-                idx++;
+                contentIdx++;
             }
-            return result.toString().trim();
+
+            String contenu = result.toString().trim();
+
+            // ✅ Supprimer les balises markdown si présentes
+            if (contenu.startsWith("```")) {
+                contenu = contenu
+                        .replaceAll("^```[a-zA-Z]*\\n?", "")
+                        .replaceAll("```$", "")
+                        .trim();
+            }
+
+            System.out.println("✅ Contenu extrait OK (" + contenu.length() + " chars)");
+            return contenu.isBlank() ? null : contenu;
+
         } catch (Exception e) {
+            System.out.println("❌ Erreur extraction contenu Groq : " + e.getMessage());
             return null;
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  PARSING DU JSON → LIST<QUESTION>
-    // ─────────────────────────────────────────────────────────────
-
+    // 🧾 Parser le tableau JSON de questions
     private static List<Question> parserQuestions(String jsonBrut, int questionnaireId) {
         List<Question> questions = new ArrayList<>();
 
         try {
-            // Nettoyer le JSON (enlever éventuels backticks markdown)
-            String json = jsonBrut.trim();
-            if (json.startsWith("```")) {
-                json = json.replaceAll("```json", "").replaceAll("```", "").trim();
+            int arrayStart = jsonBrut.indexOf('[');
+            int arrayEnd   = jsonBrut.lastIndexOf(']');
+            if (arrayStart == -1 || arrayEnd == -1) {
+                System.out.println("❌ Pas de tableau JSON trouvé dans : " +
+                        jsonBrut.substring(0, Math.min(200, jsonBrut.length())));
+                return questions;
             }
 
-            System.out.println("JSON reçu : " + json.substring(0, Math.min(300, json.length())));
+            String arrayContent = jsonBrut.substring(arrayStart + 1, arrayEnd);
+            int depth    = 0;
+            int objStart = -1;
 
-            // Parser le tableau JSON manuellement
-            // Format : [{"texte":"...","options":["...","...","...","..."],"scores":[0,1,2,3]}, ...]
-            int i = 0;
-            while (i < json.length()) {
-                // Chercher le début d'un objet question
-                int debutObj = json.indexOf("{", i);
-                if (debutObj == -1) break;
-
-                // Trouver la fin de cet objet
-                int finObj = trouverFinObjet(json, debutObj);
-                if (finObj == -1) break;
-
-                String objJson = json.substring(debutObj, finObj + 1);
-
-                // Extraire texte
-                String texte = extraireChamp(objJson, "texte");
-
-                // Extraire options
-                List<String> options = extraireTableauStrings(objJson, "options");
-
-                // Extraire scores
-                List<Integer> scores = extraireTableauIntegers(objJson, "scores");
-
-                if (texte != null && options.size() == 4 && scores.size() == 4) {
-                    // Construire optionsQuest : "Option1|Option2|Option3|Option4"
-                    String optionsStr = String.join("|", options);
-
-                    // Construire scoreOptions : "0|1|2|3"
-                    StringBuilder scoresStr = new StringBuilder();
-                    for (int s = 0; s < scores.size(); s++) {
-                        if (s > 0) scoresStr.append("|");
-                        scoresStr.append(scores.get(s));
+            for (int i = 0; i < arrayContent.length(); i++) {
+                char c = arrayContent.charAt(i);
+                if (c == '{') {
+                    if (depth == 0) objStart = i;
+                    depth++;
+                } else if (c == '}') {
+                    depth--;
+                    if (depth == 0 && objStart != -1) {
+                        String obj = arrayContent.substring(objStart, i + 1);
+                        Question q = parserUneQuestion(obj, questionnaireId);
+                        if (q != null) questions.add(q);
+                        objStart = -1;
                     }
-
-                    Question q = new Question(
-                            texte,
-                            optionsStr,
-                            scoresStr.toString(),
-                            "QCM",
-                            questionnaireId
-                    );
-                    questions.add(q);
-                    System.out.println("✅ Question parsée : " + texte.substring(0, Math.min(50, texte.length())));
                 }
-
-                i = finObj + 1;
             }
 
         } catch (Exception e) {
             System.out.println("❌ Erreur parsing JSON : " + e.getMessage());
-            e.printStackTrace();
         }
 
+        System.out.println("✅ Questions parsées : " + questions.size());
         return questions;
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  HELPERS PARSING JSON MANUEL
-    // ─────────────────────────────────────────────────────────────
+    private static Question parserUneQuestion(String obj, int questionnaireId) {
+        try {
+            String texte         = extraireValeurString(obj, "texte");
+            List<String>  options = extraireTableauStrings(obj, "options");
+            List<Integer> scores  = extraireTableauIntegers(obj, "scores");
 
-    private static int trouverFinObjet(String json, int debut) {
-        int depth = 0;
-        boolean inString = false;
-        for (int i = debut; i < json.length(); i++) {
-            char c = json.charAt(i);
-            if (c == '\\') { i++; continue; }
-            if (c == '"') { inString = !inString; continue; }
-            if (inString) continue;
-            if (c == '{') depth++;
-            else if (c == '}') {
-                depth--;
-                if (depth == 0) return i;
+            if (texte == null || texte.isBlank()) {
+                System.out.println("⚠ Texte vide, question ignorée");
+                return null;
             }
+            if (options.size() < 2) {
+                System.out.println("⚠ Pas assez d'options (" + options.size() + "), ignorée");
+                return null;
+            }
+
+            // ✅ Compléter les scores si manquants
+            while (scores.size() < options.size()) scores.add(scores.size());
+
+            String optStr = String.join("|", options);
+            StringBuilder scStr = new StringBuilder();
+            for (int j = 0; j < scores.size(); j++) {
+                if (j > 0) scStr.append("|");
+                scStr.append(scores.get(j));
+            }
+
+            return new Question(texte, optStr, scStr.toString(), "QCM", questionnaireId);
+
+        } catch (Exception e) {
+            System.out.println("⚠ Erreur parsing question : " + e.getMessage());
+            return null;
         }
-        return -1;
     }
 
-    private static String extraireChamp(String obj, String champ) {
+    // ── Helpers ──────────────────────────────────────────────────────
+
+    private static String extraireValeurString(String obj, String champ) {
         String key = "\"" + champ + "\"";
         int idx = obj.indexOf(key);
         if (idx == -1) return null;
         idx += key.length();
-        while (idx < obj.length() && (obj.charAt(idx) == ':' || obj.charAt(idx) == ' ')) idx++;
+        while (idx < obj.length() &&
+                (obj.charAt(idx) == ':' || obj.charAt(idx) == ' ')) idx++;
         if (idx >= obj.length() || obj.charAt(idx) != '"') return null;
         idx++;
 
-        StringBuilder val = new StringBuilder();
+        StringBuilder result = new StringBuilder();
         while (idx < obj.length()) {
             char c = obj.charAt(idx);
             if (c == '\\' && idx + 1 < obj.length()) {
-                val.append(obj.charAt(idx + 1)); idx += 2; continue;
+                result.append(obj.charAt(idx + 1));
+                idx += 2;
+                continue;
             }
             if (c == '"') break;
-            val.append(c); idx++;
+            result.append(c);
+            idx++;
         }
-        return val.toString().trim();
+        return result.toString().trim();
     }
 
     private static List<String> extraireTableauStrings(String obj, String champ) {
-        List<String> result = new ArrayList<>();
-        String key = "\"" + champ + "\"";
-        int idx = obj.indexOf(key);
-        if (idx == -1) return result;
-        idx = obj.indexOf("[", idx);
-        if (idx == -1) return result;
-        int fin = obj.indexOf("]", idx);
-        if (fin == -1) return result;
+        List<String> list = new ArrayList<>();
+        try {
+            int champIdx = obj.indexOf("\"" + champ + "\"");
+            if (champIdx == -1) return list;
+            int start = obj.indexOf('[', champIdx);
+            int end   = obj.indexOf(']', start);
+            if (start == -1 || end == -1) return list;
+            String content = obj.substring(start + 1, end);
 
-        String tableau = obj.substring(idx + 1, fin);
-        int i = 0;
-        while (i < tableau.length()) {
-            int debut = tableau.indexOf("\"", i);
-            if (debut == -1) break;
-            debut++;
-            StringBuilder val = new StringBuilder();
-            while (debut < tableau.length()) {
-                char c = tableau.charAt(debut);
-                if (c == '\\' && debut + 1 < tableau.length()) {
-                    val.append(tableau.charAt(debut + 1)); debut += 2; continue;
+            int i = 0;
+            while (i < content.length()) {
+                int q1 = content.indexOf('"', i);
+                if (q1 == -1) break;
+                int q2 = q1 + 1;
+                while (q2 < content.length()) {
+                    if (content.charAt(q2) == '"' &&
+                            content.charAt(q2 - 1) != '\\') break;
+                    q2++;
                 }
-                if (c == '"') break;
-                val.append(c); debut++;
+                list.add(content.substring(q1 + 1, q2));
+                i = q2 + 1;
             }
-            result.add(val.toString());
-            i = debut + 1;
+        } catch (Exception e) {
+            System.out.println("⚠ extraireTableauStrings : " + e.getMessage());
         }
-        return result;
+        return list;
     }
 
     private static List<Integer> extraireTableauIntegers(String obj, String champ) {
-        List<Integer> result = new ArrayList<>();
-        String key = "\"" + champ + "\"";
-        int idx = obj.indexOf(key);
-        if (idx == -1) return result;
-        idx = obj.indexOf("[", idx);
-        if (idx == -1) return result;
-        int fin = obj.indexOf("]", idx);
-        if (fin == -1) return result;
-
-        String tableau = obj.substring(idx + 1, fin);
-        for (String part : tableau.split(",")) {
-            try {
-                result.add(Integer.parseInt(part.trim()));
-            } catch (NumberFormatException ignored) {}
+        List<Integer> list = new ArrayList<>();
+        try {
+            int champIdx = obj.indexOf("\"" + champ + "\"");
+            if (champIdx == -1) return list;
+            int start = obj.indexOf('[', champIdx);
+            int end   = obj.indexOf(']', start);
+            if (start == -1 || end == -1) return list;
+            String content = obj.substring(start + 1, end);
+            for (String s : content.split(",")) {
+                String trimmed = s.trim();
+                if (!trimmed.isEmpty()) list.add(Integer.parseInt(trimmed));
+            }
+        } catch (Exception e) {
+            System.out.println("⚠ extraireTableauIntegers : " + e.getMessage());
         }
-        return result;
+        return list;
     }
 
     private static String toJsonString(String s) {

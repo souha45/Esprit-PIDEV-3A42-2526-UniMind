@@ -172,36 +172,49 @@ public class GenerateurQuestionsIAController {
     //  SAUVEGARDE EN BASE DE DONNÉES
     // ════════════════════════════════════════════════════════════════
 
-    @FXML
-    public void handleSauvegarder() {
-        if (questionsGenerees == null || questionsGenerees.isEmpty()) return;
-
-        btnSauvegarder.setDisable(true);
-        lblStatus.setText("💾 Sauvegarde en cours...");
-        lblStatus.setStyle("-fx-text-fill: #6b7280;");
-
-        new Thread(() -> {
-            try {
-                QuestionServices questionService = new QuestionServices();
-                int count = 0;
-                for (Question q : questionsGenerees) {
-                    questionService.ajouter(q);
-                    count++;
-                }
-                final int total = count;
-                Platform.runLater(() -> {
-                    lblStatus.setText("✅ " + total + " questions sauvegardées en base de données !");
-                    lblStatus.setStyle("-fx-text-fill: #10b981;");
-                    btnSauvegarder.setDisable(true); // éviter double sauvegarde
-                });
-            } catch (Exception e) {
-                Platform.runLater(() -> {
-                    afficherErreur("❌ Erreur sauvegarde : " + e.getMessage());
-                    btnSauvegarder.setDisable(false);
-                });
+   @FXML
+        public void handleSauvegarder() {
+            if (questionsGenerees == null || questionsGenerees.isEmpty()) {
+                System.out.println("❌ questionsGenerees est null ou vide !");
+                return;
             }
-        }).start();
-    }
+
+            System.out.println("💾 Tentative sauvegarde de " + questionsGenerees.size() + " questions...");
+
+            btnSauvegarder.setDisable(true);
+            lblStatus.setText("💾 Sauvegarde en cours...");
+            lblStatus.setStyle("-fx-text-fill: #6b7280;");
+
+            new Thread(() -> {
+                try {
+                    QuestionServices questionService = new QuestionServices();
+                    int count = 0;
+                    for (Question q : questionsGenerees) {
+                        System.out.println("➡ Sauvegarde question : " + q.getTexte());
+                        System.out.println("   questionnaireId : " + q.getQuestionnaireId());
+                        System.out.println("   options : " + q.getOptionsQuest());
+                        System.out.println("   scores  : " + q.getScoreOptions());
+                        System.out.println("   type    : " + q.getTypeQuestion());
+                        questionService.ajouter(q);
+                        count++;
+                        System.out.println("✅ Question " + count + " sauvegardée !");
+                    }
+                    final int total = count;
+                    Platform.runLater(() -> {
+                        lblStatus.setText("✅ " + total + " questions sauvegardées !");
+                        lblStatus.setStyle("-fx-text-fill: #10b981;");
+                        btnSauvegarder.setDisable(true);
+                    });
+                } catch (Exception e) {
+                    System.out.println("❌ ERREUR SAUVEGARDE : " + e.getMessage());
+                    e.printStackTrace();
+                    Platform.runLater(() -> {
+                        afficherErreur("❌ Erreur : " + e.getMessage());
+                        btnSauvegarder.setDisable(false);
+                    });
+                }
+            }).start();
+        }
 
     // ════════════════════════════════════════════════════════════════
     //  RESET

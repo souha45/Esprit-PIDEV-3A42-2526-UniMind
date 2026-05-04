@@ -6,6 +6,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -33,12 +34,19 @@ public class EtudiantMesReponsesController implements Initializable {
     @FXML private TableColumn<Reponsequestionnaire, String>  colNiveau, colPsy, colDate;
     @FXML private Label lblStatus;
 
+    // ✅ contentArea pour navigation
+    private StackPane contentArea;
+
     private final ReponseQuestionnaireServices service = new ReponseQuestionnaireServices();
     private final ObservableList<Reponsequestionnaire> data = FXCollections.observableArrayList();
 
-    // ── Polices PDFBox 3.x ──
     private final PDType1Font FONT_BOLD    = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
     private final PDType1Font FONT_REGULAR = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+
+    // ✅ Setter pour recevoir contentArea
+    public void setContentArea(StackPane contentArea) {
+        this.contentArea = contentArea;
+    }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -97,7 +105,6 @@ public class EtudiantMesReponsesController implements Initializable {
                 float pageWidth = PDRectangle.A4.getWidth();
                 float yPos      = PDRectangle.A4.getHeight() - margin;
 
-                // ── TITRE ──
                 cs.setFont(FONT_BOLD, 18);
                 cs.setNonStrokingColor(0.49f, 0.23f, 0.93f);
                 cs.beginText();
@@ -106,7 +113,6 @@ public class EtudiantMesReponsesController implements Initializable {
                 cs.endText();
                 yPos -= 25;
 
-                // ── DATE EXPORT ──
                 cs.setFont(FONT_REGULAR, 10);
                 cs.setNonStrokingColor(0.6f, 0.6f, 0.6f);
                 cs.beginText();
@@ -116,7 +122,6 @@ public class EtudiantMesReponsesController implements Initializable {
                 cs.endText();
                 yPos -= 30;
 
-                // ── LIGNE SÉPARATRICE ──
                 cs.setStrokingColor(0.49f, 0.23f, 0.93f);
                 cs.setLineWidth(1.5f);
                 cs.moveTo(margin, yPos);
@@ -124,7 +129,6 @@ public class EtudiantMesReponsesController implements Initializable {
                 cs.stroke();
                 yPos -= 20;
 
-                // ── EN-TÊTES TABLEAU ──
                 float[] colX     = {margin, 130, 230, 320, 400};
                 String[] headers = {"Score", "Niveau", "Besoin Psy", "Duree", "Date"};
 
@@ -138,7 +142,6 @@ public class EtudiantMesReponsesController implements Initializable {
                 }
                 yPos -= 5;
 
-                // ── LIGNE SOUS EN-TÊTES ──
                 cs.setStrokingColor(0.8f, 0.8f, 0.8f);
                 cs.setLineWidth(0.5f);
                 cs.moveTo(margin, yPos);
@@ -146,12 +149,10 @@ public class EtudiantMesReponsesController implements Initializable {
                 cs.stroke();
                 yPos -= 15;
 
-                // ── LIGNES DONNÉES ──
                 cs.setFont(FONT_REGULAR, 10);
                 boolean altRow = false;
 
                 for (Reponsequestionnaire r : data) {
-
                     if (yPos < 60) break;
 
                     if (altRow) {
@@ -163,32 +164,27 @@ public class EtudiantMesReponsesController implements Initializable {
 
                     cs.setNonStrokingColor(0.2f, 0.2f, 0.2f);
 
-                    // Score
                     cs.beginText();
                     cs.newLineAtOffset(colX[0], yPos);
                     cs.showText(String.valueOf(r.getScoreTotale()));
                     cs.endText();
 
-                    // Niveau
                     cs.beginText();
                     cs.newLineAtOffset(colX[1], yPos);
                     cs.showText(r.getNiveau() != null ? r.getNiveau() : "-");
                     cs.endText();
 
-                    // Besoin Psy
                     cs.beginText();
                     cs.newLineAtOffset(colX[2], yPos);
                     cs.showText(r.isaBesoinPsy() ? "Oui" : "Non");
                     cs.endText();
 
-                    // Durée
                     cs.beginText();
                     cs.newLineAtOffset(colX[3], yPos);
                     cs.showText(r.getDureePassage() != null ?
                             r.getDureePassage() + " min" : "-");
                     cs.endText();
 
-                    // Date
                     cs.beginText();
                     cs.newLineAtOffset(colX[4], yPos);
                     cs.showText(r.getCreatedAt() != null ?
@@ -198,7 +194,6 @@ public class EtudiantMesReponsesController implements Initializable {
                     yPos -= 18;
                 }
 
-                // ── STATISTIQUES EN BAS ──
                 yPos -= 10;
                 cs.setStrokingColor(0.49f, 0.23f, 0.93f);
                 cs.setLineWidth(1f);

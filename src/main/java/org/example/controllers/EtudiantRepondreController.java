@@ -11,11 +11,11 @@ import org.example.entities.Question;
 import org.example.entities.Questionnaire;
 import org.example.entities.Reponsequestionnaire;
 import org.example.services.EmailServiceQuestionnaire;
+import org.example.services.OpenAIService;
 import org.example.services.QuestionServices;
 import org.example.services.ReponseQuestionnaireServices;
 import org.example.services.TraductionService;
 import org.example.utils.LimiteQuestionnaire;
-import org.example.utils.NavigationContext;
 import org.example.utils.SessionManager;
 
 import java.net.URL;
@@ -30,6 +30,9 @@ public class EtudiantRepondreController implements Initializable {
     @FXML private Button btnFR;
     @FXML private Button btnEN;
     @FXML private Button btnAR;
+
+    // ✅ contentArea pour navigation
+    private StackPane contentArea;
 
     private Questionnaire questionnaire;
     private List<Question> questions;
@@ -51,6 +54,10 @@ public class EtudiantRepondreController implements Initializable {
                     "-fx-font-size: 12px; -fx-padding: 6 12; " +
                     "-fx-background-radius: 20; -fx-cursor: hand;";
 
+    public void setContentArea(StackPane contentArea) {
+        this.contentArea = contentArea;
+    }
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         if (btnFR != null) btnFR.setOnAction(e -> handleLangFR());
@@ -66,9 +73,8 @@ public class EtudiantRepondreController implements Initializable {
 
     private boolean isArabic(String text) {
         if (text == null || text.isEmpty()) return false;
-        for (char c : text.toCharArray()) {
+        for (char c : text.toCharArray())
             if (Character.UnicodeBlock.of(c) == Character.UnicodeBlock.ARABIC) return true;
-        }
         return false;
     }
 
@@ -96,9 +102,8 @@ public class EtudiantRepondreController implements Initializable {
                 return;
             }
 
-            for (int i = 0; i < questions.size(); i++) {
+            for (int i = 0; i < questions.size(); i++)
                 questionsContainer.getChildren().add(buildQuestionBox(i + 1, questions.get(i)));
-            }
 
             if (btnFR != null) setLangActive(btnFR);
 
@@ -127,14 +132,12 @@ public class EtudiantRepondreController implements Initializable {
                     copie.setTexte(TraductionService.versAnglais(q.getTexte()));
                     if (q.getOptionsQuest() != null && !q.getOptionsQuest().isBlank()) {
                         String[] opts = splitOptions(q.getOptionsQuest());
-                        StringBuilder newOpts = new StringBuilder();
+                        StringBuilder sb = new StringBuilder();
                         for (String opt : opts)
-                            newOpts.append(TraductionService.versAnglais(opt.trim())).append("|");
-                        copie.setOptionsQuest(newOpts.toString().replaceAll("\\|$", ""));
+                            sb.append(TraductionService.versAnglais(opt.trim())).append("|");
+                        copie.setOptionsQuest(sb.toString().replaceAll("\\|$", ""));
                     }
-                } catch (Exception e) {
-                    copie = copierQuestion(q);
-                }
+                } catch (Exception e) { copie = copierQuestion(q); }
                 traduits.add(copie);
             }
             javafx.application.Platform.runLater(() -> {
@@ -157,14 +160,12 @@ public class EtudiantRepondreController implements Initializable {
                     copie.setTexte(TraductionService.versArabe(q.getTexte()));
                     if (q.getOptionsQuest() != null && !q.getOptionsQuest().isBlank()) {
                         String[] opts = splitOptions(q.getOptionsQuest());
-                        StringBuilder newOpts = new StringBuilder();
+                        StringBuilder sb = new StringBuilder();
                         for (String opt : opts)
-                            newOpts.append(TraductionService.versArabe(opt.trim())).append("|");
-                        copie.setOptionsQuest(newOpts.toString().replaceAll("\\|$", ""));
+                            sb.append(TraductionService.versArabe(opt.trim())).append("|");
+                        copie.setOptionsQuest(sb.toString().replaceAll("\\|$", ""));
                     }
-                } catch (Exception e) {
-                    copie = copierQuestion(q);
-                }
+                } catch (Exception e) { copie = copierQuestion(q); }
                 traduits.add(copie);
             }
             javafx.application.Platform.runLater(() -> {
@@ -179,9 +180,8 @@ public class EtudiantRepondreController implements Initializable {
         questionsContainer.getChildren().clear();
         reponsesChoisies.clear();
         scoresChoisis.clear();
-        for (int i = 0; i < questions.size(); i++) {
+        for (int i = 0; i < questions.size(); i++)
             questionsContainer.getChildren().add(buildQuestionBox(i + 1, questions.get(i)));
-        }
     }
 
     private Question copierQuestion(Question q) {
@@ -204,10 +204,9 @@ public class EtudiantRepondreController implements Initializable {
 
     private VBox buildQuestionBox(int numero, Question question) {
         VBox box = new VBox(8);
-        box.setStyle(
-                "-fx-background-color: #3b1f6e; -fx-background-radius: 10; " +
-                        "-fx-border-color: #6d28d9; -fx-border-radius: 10; " +
-                        "-fx-border-width: 1; -fx-padding: 14;");
+        box.setStyle("-fx-background-color: #3b1f6e; -fx-background-radius: 10; " +
+                "-fx-border-color: #6d28d9; -fx-border-radius: 10; " +
+                "-fx-border-width: 1; -fx-padding: 14;");
 
         boolean arabe = isArabic(question.getTexte());
         box.setNodeOrientation(arabe ? NodeOrientation.RIGHT_TO_LEFT : NodeOrientation.LEFT_TO_RIGHT);
@@ -234,8 +233,8 @@ public class EtudiantRepondreController implements Initializable {
                 rb.setStyle("-fx-text-fill: #c084fc; -fx-font-size: 13px;");
                 if (arabe) rb.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
 
-                String reponseExistante = reponsesChoisies.get(question.getQuestionId());
-                if (reponseExistante != null && reponseExistante.equals(option)) rb.setSelected(true);
+                String rep = reponsesChoisies.get(question.getQuestionId());
+                if (rep != null && rep.equals(option)) rb.setSelected(true);
 
                 rb.setOnAction(e -> {
                     reponsesChoisies.put(question.getQuestionId(), option);
@@ -253,14 +252,13 @@ public class EtudiantRepondreController implements Initializable {
         } else {
             TextField tfReponse = new TextField();
             tfReponse.setPromptText("Votre reponse...");
-            tfReponse.setStyle(
-                    "-fx-background-color: #1a0a2e; -fx-text-fill: #e2e8f0; " +
-                            "-fx-border-color: #6d28d9; -fx-border-radius: 6; " +
-                            "-fx-background-radius: 6; -fx-padding: 7;");
+            tfReponse.setStyle("-fx-background-color: #1a0a2e; -fx-text-fill: #e2e8f0; " +
+                    "-fx-border-color: #6d28d9; -fx-border-radius: 6; " +
+                    "-fx-background-radius: 6; -fx-padding: 7;");
             if (arabe) tfReponse.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
 
-            String reponseExistante = reponsesChoisies.get(question.getQuestionId());
-            if (reponseExistante != null) tfReponse.setText(reponseExistante);
+            String rep = reponsesChoisies.get(question.getQuestionId());
+            if (rep != null) tfReponse.setText(rep);
 
             tfReponse.textProperty().addListener((obs, old, val) ->
                     reponsesChoisies.put(question.getQuestionId(), val));
@@ -309,22 +307,44 @@ public class EtudiantRepondreController implements Initializable {
         try {
             repService.ajouter(reponse);
 
+            // ✅ Email en arrière-plan
+            String emailUser = null;
             try {
-                String emailUser = SessionManager.getInstance().getCurrentUser().getEmail();
-                if (emailUser != null && !emailUser.isBlank()) {
-                    final String niveauF         = niveau;
-                    final double scoreF          = scoreTotale;
-                    final String nomQ            = questionnaire.getNom();
-                    final String interpretationF = interpretation;
-                    new Thread(() ->
-                            EmailServiceQuestionnaire.envoyerResultat(
-                                    emailUser, nomQ, scoreF, niveauF, interpretationF)
-                    ).start();
-                }
-            } catch (Exception ex) {
-                System.out.println("Email non envoye : " + ex.getMessage());
+                emailUser = SessionManager.getInstance().getCurrentUser().getEmail();
+            } catch (Exception ignored) {}
+
+            if (emailUser != null && !emailUser.isBlank()) {
+                final String nF = niveau;
+                final double sF = scoreTotale;
+                final String nQ = questionnaire.getNom();
+                final String iF = interpretation;
+                final String eF = emailUser;
+                new Thread(() ->
+                        EmailServiceQuestionnaire.envoyerResultat(eF, nQ, sF, nF, iF)
+                ).start();
             }
 
+            // ✅ Alert résultat
+            String emoji = switch (niveau != null ? niveau.toLowerCase() : "") {
+                case "legere", "leger" -> "🟢";
+                case "modere"          -> "🟡";
+                case "severe"          -> "🔴";
+                default                -> "📊";
+            };
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Resultat du Questionnaire");
+            alert.setHeaderText("📋 " + questionnaire.getNom());
+            alert.setContentText(
+                    "🎯 Score : " + String.format("%.0f", scoreTotale) + "\n" +
+                            emoji + " Niveau : " + (niveau != null ? niveau.toUpperCase() : "—") + "\n\n" +
+                            "📝 Interpretation :\n" + (interpretation != null ? interpretation : "—") + "\n\n" +
+                            "🤖 Analyse IA en cours de génération...\n" +
+                            (emailUser != null ? "📧 Email envoyé à : " + emailUser : "")
+            );
+            alert.showAndWait();
+
+            // ✅ Navigation vers Analyse IA
             naviguerVersAnalyseIA(scoreTotale, niveau, interpretation, jsonReponses.toString());
 
         } catch (Exception e) {
@@ -341,8 +361,7 @@ public class EtudiantRepondreController implements Initializable {
         }
     }
 
-    // ✅ CORRECTION : utilise NermineIAAnalyseController (le vrai nom)
-    //                et appelle setDonnees() qui existe déjà dedans
+    // ✅ Navigation vers la page Analyse IA
     private void naviguerVersAnalyseIA(
             double score, String niveau,
             String interpretation, String reponsesJson) {
@@ -351,7 +370,6 @@ public class EtudiantRepondreController implements Initializable {
                     getClass().getResource("/fxml/AnalyseIAView.fxml"));
             Parent view = loader.load();
 
-            // ✅ Bon nom de classe
             NermineIAAnalyseController ctrl = loader.getController();
 
             org.example.entities.User user = null;
@@ -359,31 +377,102 @@ public class EtudiantRepondreController implements Initializable {
                 user = SessionManager.getInstance().getCurrentUser();
             } catch (Exception ignored) {}
 
-            // ✅ setDonnees() existe bien dans NermineIAAnalyseController
             ctrl.setDonnees(questionnaire, score, niveau, interpretation, reponsesJson, user);
 
-            if (NavigationContext.getContentScrollPane() != null) {
-                NavigationContext.getContentScrollPane().setContent(view);
+            // ✅ Utiliser contentArea directement
+            if (contentArea != null) {
+                contentArea.getChildren().setAll(view);
+            } else {
+                // ✅ Chercher contentArea dans le parent
+                javafx.scene.Node node = questionsContainer;
+                while (node.getParent() != null) {
+                    node = node.getParent();
+                    if (node instanceof StackPane) {
+                        ((StackPane) node).getChildren().setAll(view);
+                        return;
+                    }
+                }
+                // ✅ Fallback — Alert avec analyse IA
+                afficherAnalyseIADansAlert(score, niveau, interpretation, reponsesJson);
             }
 
         } catch (Exception e) {
             System.err.println("Erreur navigation AnalyseIA : " + e.getMessage());
-            try {
-                NavigationContext.loadContentInCenter("/fxml/EtudiantMesReponsesView.fxml");
-            } catch (Exception ignored) {}
+            // ✅ Fallback — afficher dans une Alert
+            afficherAnalyseIADansAlert(score, niveau, interpretation, reponsesJson);
         }
+    }
+
+    // ✅ Fallback — affiche l'analyse IA dans une Alert si navigation impossible
+    private void afficherAnalyseIADansAlert(
+            double score, String niveau,
+            String interpretation, String reponsesJson) {
+
+        setStatus("🤖 Génération analyse IA...", true);
+
+        String nomQ  = questionnaire != null ? questionnaire.getNom()  : "Questionnaire";
+        String typeQ = questionnaire != null && questionnaire.getType() != null
+                ? questionnaire.getType().toString() : "GENERAL";
+
+        new Thread(() -> {
+            String analyse = OpenAIService.analyserReponsesDetaillees(
+                    nomQ, typeQ, score, niveau, interpretation, reponsesJson);
+
+            javafx.application.Platform.runLater(() -> {
+                if (analyse != null && !analyse.isBlank()) {
+                    Alert alertIA = new Alert(Alert.AlertType.INFORMATION);
+                    alertIA.setTitle("🤖 Analyse IA Personnalisée");
+                    alertIA.setHeaderText("UniMind AI — Conseils personnalisés");
+
+                    TextArea textArea = new TextArea(analyse);
+                    textArea.setEditable(false);
+                    textArea.setWrapText(true);
+                    textArea.setStyle(
+                            "-fx-font-size: 13px;" +
+                                    "-fx-font-family: 'Segoe UI';" +
+                                    "-fx-background-color: #f5f3ff;");
+                    textArea.setPrefSize(500, 300);
+
+                    alertIA.getDialogPane().setContent(textArea);
+                    alertIA.getDialogPane().setMinWidth(550);
+                    alertIA.showAndWait();
+                }
+
+                // ✅ Navigation vers Mes Réponses après l'analyse
+                if (contentArea != null) {
+                    try {
+                        FXMLLoader loader = new FXMLLoader(
+                                getClass().getResource("/fxml/EtudiantMesReponsesView.fxml"));
+                        Parent view = loader.load();
+                        EtudiantMesReponsesController ctrl = loader.getController();
+                        ctrl.setContentArea(contentArea);
+                        contentArea.getChildren().setAll(view);
+                    } catch (Exception ex) {
+                        System.out.println("Erreur navigation MesReponses : " + ex.getMessage());
+                    }
+                }
+            });
+        }).start();
     }
 
     @FXML
     public void handleRetour() {
-        try {
-            NavigationContext.loadContentInCenter("/fxml/EtudiantQuestionnairesView.fxml");
-        } catch (Exception e) {
-            System.out.println("Erreur retour : " + e.getMessage());
+        if (contentArea != null) {
+            try {
+                FXMLLoader loader = new FXMLLoader(
+                        getClass().getResource("/fxml/EtudiantQuestionnairesView.fxml"));
+                Parent view = loader.load();
+                EtudiantQuestionnairesController ctrl = loader.getController();
+                ctrl.setContentArea(contentArea);
+                contentArea.getChildren().setAll(view);
+            } catch (Exception e) {
+                System.out.println("Erreur retour : " + e.getMessage());
+            }
         }
     }
 
     private void setStatus(String msg, boolean success) {
+        if (lblStatus == null) return;
         lblStatus.setText(msg);
         lblStatus.setStyle("-fx-font-size: 12px; -fx-text-fill: "
                 + (success ? "#22c55e" : "#ef4444") + ";");

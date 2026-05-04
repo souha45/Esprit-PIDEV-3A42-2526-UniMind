@@ -16,8 +16,12 @@ public class QuestionServices implements ICrud<Question> {
     }
 
     //  AJOUTER
+    //  AJOUTER
     @Override
     public void ajouter(Question q) throws SQLException {
+
+        // ✅ Connexion fraîche à chaque appel
+        Connection con = MyDataBase_Unimind.getInstance().getConnection();
 
         // Vérifier que le questionnaire_id existe
         String checkSql = "SELECT COUNT(*) FROM questionnaire WHERE questionnaire_id = ?";
@@ -28,7 +32,6 @@ public class QuestionServices implements ICrud<Question> {
             throw new SQLException("Questionnaire introuvable avec l'ID=" + q.getQuestionnaireId());
         }
 
-        // Vérifier que le texte n'est pas vide
         if (q.getTexte() == null || q.getTexte().trim().isEmpty()) {
             throw new SQLException("Le texte de la question ne peut pas être vide !");
         }
@@ -44,7 +47,7 @@ public class QuestionServices implements ICrud<Question> {
         pst.setString(5, q.getTypeQuestion());
 
         pst.executeUpdate();
-        System.out.println("Question ajoutée avec succès !");
+        System.out.println("✅ Question ajoutée : " + q.getTexte().substring(0, Math.min(30, q.getTexte().length())));
     }
 
     //  AFFICHER (toutes les questions)

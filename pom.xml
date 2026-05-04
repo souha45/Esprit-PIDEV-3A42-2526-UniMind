@@ -268,7 +268,8 @@
                     <mainClass>org.example.main.MainApp</mainClass>
                     <options>
                         <option>-Dfile.encoding=UTF-8</option>
-                        <option>-DGROQ_API_KEY=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</option>
+                        <!-- ⚠️ À MODIFIER : Utilisez une nouvelle clé Groq valide -->
+                        <option>-DGROQ_API_KEY=gsk_votre_nouvelle_cle_ici</option>
                     </options>
                 </configuration>
             </plugin>

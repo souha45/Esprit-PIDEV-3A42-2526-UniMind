@@ -6,8 +6,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import org.example.entities.Questionnaire;
 import org.example.entities.SuiviTraitement;
 import org.example.entities.Traitement;
+import org.example.entities.User;
 import org.example.services.TraitementIAService;
 
 import javafx.fxml.FXML;
@@ -309,5 +311,8 @@ public class AnalyseIAController implements Initializable {
     private String capitalize(String str) {
         if (str == null || str.isEmpty()) return str;
         return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
+    }
+
+    public void setDonnees(Questionnaire questionnaire, double score, String niveau, String interpretation, String reponsesJson, User user) {
     }
 }
